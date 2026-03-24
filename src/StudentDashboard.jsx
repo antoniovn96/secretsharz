@@ -155,36 +155,6 @@ const NAV_ITEMS = [
   { id: "counsellor", icon: "📅", label: "Book Expert" },
 ];
 
-// --- MOCK EXTENSIONS (Fallbacks until your backend provides them) ---
-const EXTENSIONS = {
-  streamRec: { name: "Science (PCM)", match: 88, reasons: ["Strong Investigative score", "High analytical thinking", "Suitable for engineering & research"] },
-  compareStats: [
-    { title: "Clinical Psychology", salary: "₹6L - ₹18L/yr", years: "5-7 Years", difficulty: "High (Entrance)", wlb: "Excellent" },
-    { title: "Behavioural Science", salary: "₹5L - ₹15L/yr", years: "5 Years", difficulty: "Medium", wlb: "Good" },
-    { title: "Social Research", salary: "₹4L - ₹12L/yr", years: "3-5 Years", difficulty: "Medium", wlb: "Excellent" }
-  ],
-  parentData: {
-    "Clinical Psychology": { stability: "Very High", demand: "Growing 22% YoY", safety: "High" },
-    "Behavioural Science": { stability: "High", demand: "Growing 15% YoY", safety: "High" },
-    "Social Research": { stability: "Medium", demand: "Stable", safety: "High" }
-  },
-  explainability: {
-    "Clinical Psychology": { pros: ["High Investigative (9/10)", "Strong Social (8/10)"], cons: ["Needs structured routine (Low C)"] },
-    "Behavioural Science": { pros: ["Perfect for analytical mind", "High creative freedom"], cons: ["Requires public speaking (Low E)"] },
-    "Social Research": { pros: ["Independent work friendly", "High impact"], cons: ["Can be repetitive"] }
-  },
-  collegesExt: [
-    { name: "NIMHANS Bengaluru", cutoffs: "98% / NIMHANS Test", fees: "₹45,000/yr", placement: "100% (Clinical)", loc: "Bengaluru" },
-    { name: "TISS Mumbai", cutoffs: "TISS-NET: 75+", fees: "₹1.2L/yr", placement: "Avg ₹8LPA", loc: "Mumbai" },
-    { name: "Christ University", cutoffs: "CUET / Interview", fees: "₹1.5L/yr", placement: "Avg ₹6LPA", loc: "Bengaluru" }
-  ],
-  skillGaps: [
-    { skill: "Analytical Logic", student: 8, ideal: 9, status: "Good" },
-    { skill: "Empathy/Listening", student: 9, ideal: 8, status: "Excellent" },
-    { skill: "Public Speaking", student: 4, ideal: 7, status: "Needs Work" }
-  ]
-};
-
 export default function StudentDashboard({ user, userData, onStartAssessment, onBack, onLogout }) {
   const [activeTab, setActiveTab] = useState("home");
   const [isParentMode, setIsParentMode] = useState(false);
@@ -202,6 +172,7 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
     setTimeout(() => setToast(null), 3000);
   };
 
+  // Safe Data Extraction from Firebase (userData)
   const studentName = userData?.name || user?.displayName || "Student";
   const firstName = studentName.split(" ")[0];
   const hasAssessment = !!userData?.riasecCode;
@@ -210,9 +181,17 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
   const level = userData?.level || "Explorer";
   const profileStrength = hasAssessment ? 100 : 50;
 
+  // Careers
   const bestCareer = userData?.bestCareer || null;
   const recommendedCareer = userData?.recommendedCareer || null;
   const leastCareer = userData?.leastCareer || null;
+
+  // New Data Points (Safely expecting them from backend eventually)
+  const streamRec = userData?.streamRec || null; 
+  const compareStats = userData?.compareStats || [];
+  const collegesExt = userData?.collegesExt || [];
+  const skillGaps = userData?.skillGaps || [];
+  const executionPlan = userData?.executionPlan || [];
 
   return (
     <div className="db-root">
@@ -301,15 +280,15 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                 </div>
               </div>
 
-              {hasAssessment && (
+              {hasAssessment && streamRec && (
                 <div className="db-stream-box">
                   <div>
                     <div style={{ fontSize: "12px", color: "var(--success)", fontWeight: "800", textTransform: "uppercase", letterSpacing: "1px" }}>🎯 Stream Recommendation</div>
                     <div style={{ fontFamily: "Fraunces", fontSize: "24px", fontWeight: "700", color: "var(--ink)", margin: "4px 0" }}>
-                      {EXTENSIONS.streamRec.name} <span style={{ color: "var(--success)", fontSize: "18px" }}>({EXTENSIONS.streamRec.match}% Match)</span>
+                      {streamRec.name} <span style={{ color: "var(--success)", fontSize: "18px" }}>({streamRec.match}% Match)</span>
                     </div>
                     <ul style={{ margin: "8px 0 0 20px", fontSize: "13px", color: "var(--ink-soft)", fontWeight: "500" }}>
-                      {EXTENSIONS.streamRec.reasons.map((r, i) => <li key={i}>{r}</li>)}
+                      {(streamRec.reasons || []).map((r, i) => <li key={i}>{r}</li>)}
                     </ul>
                   </div>
                   <button className="db-btn" onClick={() => setActiveTab("colleges")}>Explore Colleges</button>
@@ -330,13 +309,16 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                 <>
                   <div className="db-three-col">
                     {[
-                      { data: bestCareer, rank: "best", label: "🏆 Best Match", cls: "high", key: "Clinical Psychology" },
-                      { data: recommendedCareer, rank: "good", label: "✅ Recommended", cls: "mid", key: "Behavioural Science" },
-                      { data: leastCareer, rank: "low", label: "⚠️ Least Suited", cls: "low", key: "Social Research" }
+                      { data: bestCareer, rank: "best", label: "🏆 Best Match", cls: "high" },
+                      { data: recommendedCareer, rank: "good", label: "✅ Recommended", cls: "mid" },
+                      { data: leastCareer, rank: "low", label: "⚠️ Least Suited", cls: "low" }
                     ].map((career, i) => {
                       if (!career.data) return null;
-                      const exp = EXTENSIONS.explainability[career.key] || EXTENSIONS.explainability["Clinical Psychology"];
-                      const pData = EXTENSIONS.parentData[career.key] || EXTENSIONS.parentData["Clinical Psychology"];
+                      
+                      // Using actual pros/cons and parentMetrics from the career object if they exist
+                      const pros = career.data.pros || ["Pending AI analysis"];
+                      const cons = career.data.cons || ["Pending AI analysis"];
+                      const pMetrics = career.data.parentMetrics || { stability: "Pending", demand: "Pending", safety: "Pending" };
                       
                       return (
                         <div key={i} className="db-career-card">
@@ -358,16 +340,16 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                           {isParentMode ? (
                             <div className="db-explain-box" style={{ background: "#EEF2FF", border: "1px solid #C7D2FE" }}>
                               <div style={{ fontSize: "11px", fontWeight: "800", color: "#4F46E5", marginBottom: "8px", textTransform: "uppercase" }}>👪 Parent Metrics</div>
-                              <div className="db-parent-metric"><span>Stability</span><strong>{pData.stability}</strong></div>
-                              <div className="db-parent-metric"><span>Demand</span><strong>{pData.demand}</strong></div>
-                              <div className="db-parent-metric"><span>Safety</span><strong>{pData.safety}</strong></div>
+                              <div className="db-parent-metric"><span>Stability</span><strong>{pMetrics.stability}</strong></div>
+                              <div className="db-parent-metric"><span>Demand</span><strong>{pMetrics.demand}</strong></div>
+                              <div className="db-parent-metric"><span>Safety</span><strong>{pMetrics.safety}</strong></div>
                             </div>
                           ) : (
                             <div className="db-explain-box">
                               <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--ink)", marginBottom: "6px" }}>Why it fits you:</div>
-                              {exp.pros.map((p, j) => <div key={j} className="db-explain-item"><span className="db-explain-icon" style={{color:"var(--success)"}}>✔</span> {p}</div>)}
+                              {pros.map((p, j) => <div key={j} className="db-explain-item"><span className="db-explain-icon" style={{color:"var(--success)"}}>✔</span> {p}</div>)}
                               <div style={{ height: "1px", background: "var(--border)", margin: "8px 0" }}/>
-                              {exp.cons.map((c, j) => <div key={j} className="db-explain-item"><span className="db-explain-icon" style={{color:"var(--warn)"}}>⚠</span> {c}</div>)}
+                              {cons.map((c, j) => <div key={j} className="db-explain-item"><span className="db-explain-icon" style={{color:"var(--warn)"}}>⚠</span> {c}</div>)}
                             </div>
                           )}
                         </div>
@@ -390,6 +372,8 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
             <div className="db-tab">
               {!hasAssessment ? (
                 <div className="db-empty-state"><div className="db-empty-icon">⚖️</div><div className="db-empty-title">Compare Tool Locked</div><button className="db-btn" onClick={onStartAssessment}>Take Assessment</button></div>
+              ) : compareStats.length === 0 ? (
+                 <div className="db-empty-state"><div className="db-empty-icon">⏳</div><div className="db-empty-title">Comparison Data Pending</div><div className="db-empty-desc">Your AI engine is still fetching salary and study data for these paths.</div></div>
               ) : (
                 <>
                   <div style={{ marginBottom: "20px" }}>
@@ -399,20 +383,20 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                   <div className="db-compare-grid">
                     {/* Headers */}
                     <div className="db-compare-header" style={{ background: "white" }}>Metrics</div>
-                    {EXTENSIONS.compareStats.map((c, i) => <div key={i} className="db-compare-header">{c.title}</div>)}
+                    {compareStats.map((c, i) => <div key={i} className="db-compare-header">{c.title}</div>)}
                     
                     {/* Rows */}
                     <div className="db-compare-cell" style={{ color: "var(--muted)" }}>Average Salary</div>
-                    {EXTENSIONS.compareStats.map((c, i) => <div key={i} className="db-compare-cell" style={{ color: "var(--success)" }}>{c.salary}</div>)}
+                    {compareStats.map((c, i) => <div key={i} className="db-compare-cell" style={{ color: "var(--success)" }}>{c.salary}</div>)}
 
                     <div className="db-compare-cell" style={{ color: "var(--muted)" }}>Years of Study</div>
-                    {EXTENSIONS.compareStats.map((c, i) => <div key={i} className="db-compare-cell">{c.years}</div>)}
+                    {compareStats.map((c, i) => <div key={i} className="db-compare-cell">{c.years}</div>)}
 
                     <div className="db-compare-cell" style={{ color: "var(--muted)" }}>Difficulty (Entry)</div>
-                    {EXTENSIONS.compareStats.map((c, i) => <div key={i} className="db-compare-cell" style={{ color: c.difficulty.includes("High") ? "var(--rose)" : "var(--warn)" }}>{c.difficulty}</div>)}
+                    {compareStats.map((c, i) => <div key={i} className="db-compare-cell" style={{ color: c.difficulty?.includes("High") ? "var(--rose)" : "var(--warn)" }}>{c.difficulty}</div>)}
 
                     <div className="db-compare-cell" style={{ color: "var(--muted)" }}>Work-Life Balance</div>
-                    {EXTENSIONS.compareStats.map((c, i) => <div key={i} className="db-compare-cell" style={{ color: "var(--teal)" }}>{c.wlb}</div>)}
+                    {compareStats.map((c, i) => <div key={i} className="db-compare-cell" style={{ color: "var(--teal)" }}>{c.wlb}</div>)}
                   </div>
                   <div style={{ textAlign: "center", marginTop: "32px" }}>
                     <button className="db-btn" onClick={() => setActiveTab("counsellor")}>Discuss with an Expert →</button>
@@ -427,13 +411,15 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
             <div className="db-tab">
               {!hasAssessment ? (
                 <div className="db-empty-state"><div className="db-empty-icon">🏫</div><div className="db-empty-title">College Explorer Locked</div><button className="db-btn" onClick={onStartAssessment}>Take Assessment</button></div>
+              ) : collegesExt.length === 0 ? (
+                <div className="db-empty-state"><div className="db-empty-icon">⏳</div><div className="db-empty-title">Fetching Colleges</div><div className="db-empty-desc">College cutoff and fee data is being populated.</div></div>
               ) : (
                 <>
                   <div style={{ marginBottom: "20px" }}>
                     <h2 style={{ fontFamily: "Fraunces", fontSize: "24px", color: "var(--ink)" }}>Target Colleges</h2>
                     <p style={{ color: "var(--muted)", fontSize: "14px" }}>Based on your {userData.riasecCode} profile and Stream.</p>
                   </div>
-                  {EXTENSIONS.collegesExt.map((c, i) => (
+                  {collegesExt.map((c, i) => (
                     <div key={i} className="db-college-ext">
                       <div className="db-avatar" style={{ borderRadius: "12px", background: "var(--surface)", color: "var(--ink)", border: "1px solid var(--border)" }}>🏫</div>
                       <div className="db-college-ext-main">
@@ -467,17 +453,22 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                     <div className="db-card-header"><div className="db-card-title">🧠 Skill Gap Analysis</div></div>
                     <div className="db-card-body">
                       <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "20px" }}>You vs. Ideal {bestCareer?.title || "Professional"}</p>
-                      {EXTENSIONS.skillGaps.map((s, i) => (
-                        <div key={i} className="db-skill-row">
-                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: "700", marginBottom: "4px" }}>
-                            <span>{s.skill}</span>
-                            <span style={{ color: s.status === "Needs Work" ? "var(--rose)" : "var(--success)" }}>{s.status}</span>
+                      
+                      {skillGaps.length === 0 ? (
+                        <div style={{ fontSize: "13px", color: "var(--muted)", textAlign: "center", padding: "20px 0" }}>Pending skill gap analysis from AI.</div>
+                      ) : (
+                        skillGaps.map((s, i) => (
+                          <div key={i} className="db-skill-row">
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: "700", marginBottom: "4px" }}>
+                              <span>{s.skill}</span>
+                              <span style={{ color: s.status === "Needs Work" ? "var(--rose)" : "var(--success)" }}>{s.status}</span>
+                            </div>
+                            <div style={{ height: "6px", background: "var(--surface)", borderRadius: "6px", overflow: "hidden", display: "flex" }}>
+                              <div style={{ width: `${(s.student/10)*100}%`, background: "var(--teal)", borderRadius: "6px" }} />
+                            </div>
                           </div>
-                          <div style={{ height: "6px", background: "var(--surface)", borderRadius: "6px", overflow: "hidden", display: "flex" }}>
-                            <div style={{ width: `${(s.student/10)*100}%`, background: "var(--teal)", borderRadius: "6px" }} />
-                          </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
 
@@ -485,7 +476,7 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                   <div className="db-card">
                     <div className="db-card-header"><div className="db-card-title">🎥 Career Reality</div></div>
                     <div className="db-card-body">
-                      <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "16px" }}>Day in the Life of a Psychologist</p>
+                      <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "16px" }}>Day in the Life of a {bestCareer?.title || "Professional"}</p>
                       <div className="db-video-ph" onClick={() => showToast("YouTube embed coming soon!")}>
                         <div className="db-video-play">▶</div>
                       </div>
@@ -495,15 +486,19 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                   {/* Progress Tracker */}
                   <div className="db-card" style={{ gridColumn: "1 / -1" }}>
                     <div className="db-card-header"><div className="db-card-title">🚀 Your Execution Plan</div></div>
-                    <div className="db-card-body" style={{ display: "flex", gap: "16px" }}>
-                      <div style={{ flex: 1, padding: "16px", background: "var(--surface)", borderRadius: "var(--r-sm)", border: "1px solid var(--border)" }}>
-                        <div style={{ fontSize: "14px", fontWeight: "700", marginBottom: "8px" }}>Improve Communication</div>
-                        <div style={{ fontSize: "13px", color: "var(--muted)" }}>Action: Join the school debate club or Secret Sharz speaking circles.</div>
-                      </div>
-                      <div style={{ flex: 1, padding: "16px", background: "var(--surface)", borderRadius: "var(--r-sm)", border: "1px solid var(--border)" }}>
-                        <div style={{ fontSize: "14px", fontWeight: "700", marginBottom: "8px" }}>Explore Colleges</div>
-                        <div style={{ fontSize: "13px", color: "var(--muted)" }}>Action: Review NIMHANS cutoffs in the College Explorer tab.</div>
-                      </div>
+                    <div className="db-card-body" style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                      
+                      {executionPlan.length === 0 ? (
+                         <div style={{ fontSize: "13px", color: "var(--muted)" }}>Complete profile to unlock your personalized execution plan.</div>
+                      ) : (
+                        executionPlan.map((plan, i) => (
+                          <div key={i} style={{ flex: 1, minWidth: "200px", padding: "16px", background: "var(--surface)", borderRadius: "var(--r-sm)", border: "1px solid var(--border)" }}>
+                            <div style={{ fontSize: "14px", fontWeight: "700", marginBottom: "8px" }}>{plan.title}</div>
+                            <div style={{ fontSize: "13px", color: "var(--muted)" }}>Action: {plan.action}</div>
+                          </div>
+                        ))
+                      )}
+
                     </div>
                   </div>
                 </div>
