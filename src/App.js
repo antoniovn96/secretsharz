@@ -207,6 +207,11 @@ export default function App() {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
+        
+        // This ensures that if the user refreshes the page while logged in, 
+        // they are automatically placed back on their dashboard.
+        setScreen(prevScreen => (prevScreen === 'home' || prevScreen === 'auth') ? 'dashboard' : prevScreen);
+        
         try {
           const snap = await getDoc(doc(db, 'users', user.uid));
           if (snap.exists()) setUserData(snap.data());
