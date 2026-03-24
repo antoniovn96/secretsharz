@@ -45,7 +45,6 @@ const CSS = `
 .db-nav-item.active { background: rgba(232,101,10,0.15); color: white; }
 .db-nav-icon { font-size: 16px; width: 20px; text-align: center; }
 .db-nav-badge { margin-left: auto; background: var(--saffron); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
-.db-nav-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 8px 0; }
 
 .db-sidebar-footer { padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 8px; }
 .db-back-btn { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--r-sm); color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
@@ -58,6 +57,13 @@ const CSS = `
 .db-topbar { background: white; border-bottom: 1px solid var(--border); padding: 0 40px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
 .db-topbar-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; color: var(--ink); }
 .db-topbar-right { display: flex; align-items: center; gap: 12px; }
+
+/* ── PARENT TOGGLE ── */
+.db-parent-toggle { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1.5px solid var(--border); padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--muted); transition: all 0.2s; }
+.db-parent-toggle.active { background: #E0E7FF; border-color: #93C5FD; color: #1E40AF; }
+.db-parent-toggle-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.db-parent-toggle.active .db-parent-toggle-dot { background: #2563EB; }
+
 .db-xp-chip { display: flex; align-items: center; gap: 6px; background: #FFFBEB; border: 1.5px solid #FDE68A; color: #92400E; padding: 6px 14px; border-radius: 30px; font-size: 13px; font-weight: 700; }
 
 .db-content { padding: 40px; flex: 1; overflow-y: auto; }
@@ -66,8 +72,6 @@ const CSS = `
 
 /* ── WELCOME BANNER ── */
 .db-welcome { background: linear-gradient(135deg, var(--ink) 0%, #1C2850 100%); border-radius: var(--r-xl); padding: 36px 40px; margin-bottom: 28px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-.db-welcome::before { content: ''; position: absolute; top: -40px; right: -40px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(232,101,10,0.15), transparent 70%); }
-.db-welcome::after { content: ''; position: absolute; bottom: -30px; left: 30%; width: 160px; height: 160px; background: radial-gradient(circle, rgba(10,124,110,0.12), transparent 70%); }
 .db-welcome-text { position: relative; z-index: 1; }
 .db-welcome-eyebrow { font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
 .db-welcome-h1 { font-family: 'Fraunces', serif; font-size: clamp(24px, 3vw, 36px); font-weight: 700; color: white; line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 10px; }
@@ -77,21 +81,12 @@ const CSS = `
 
 /* ── BUTTONS ── */
 .db-welcome-btn { background: linear-gradient(135deg, var(--saffron), var(--gold)); color: white; border: none; padding: 14px 28px; border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 8px 24px rgba(232,101,10,0.35); transition: all 0.2s; white-space: nowrap; }
-.db-welcome-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(232,101,10,0.45); }
 .db-btn { background: linear-gradient(135deg, var(--saffron), var(--gold)); color: white; border: none; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px rgba(232,101,10,0.3); transition: all 0.2s; }
-.db-btn:hover { transform: translateY(-1px); }
 .db-btn-outline { background: white; color: var(--saffron); border: 1.5px solid var(--saffron); padding: 10px 20px; border-radius: 50px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; }
-.db-btn-outline:hover { background: var(--saffron); color: white; }
 
 /* ── STAT CARDS ── */
 .db-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
-.db-stat-card { background: white; border-radius: var(--r-lg); padding: 24px; border: 1.5px solid var(--border); box-shadow: var(--shadow-sm); transition: all 0.25s; position: relative; overflow: hidden; }
-.db-stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
-.db-stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
-.db-stat-card.saffron::before { background: linear-gradient(90deg, var(--saffron), var(--gold)); }
-.db-stat-card.teal::before { background: linear-gradient(90deg, var(--teal), var(--teal-light)); }
-.db-stat-card.lavender::before { background: linear-gradient(90deg, var(--lavender), var(--lav-light)); }
-.db-stat-card.sage::before { background: linear-gradient(90deg, var(--sage), #6FAA80); }
+.db-stat-card { background: white; border-radius: var(--r-lg); padding: 24px; border: 1.5px solid var(--border); box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
 .db-stat-icon { font-size: 28px; margin-bottom: 14px; display: block; }
 .db-stat-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
 .db-stat-value { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700; color: var(--ink); line-height: 1; }
@@ -102,15 +97,13 @@ const CSS = `
 .db-three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .db-card { background: white; border-radius: var(--r-lg); border: 1.5px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 20px; }
 .db-card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.db-card-title { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 700; color: var(--ink); }
+.db-card-title { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 8px; }
 .db-card-body { padding: 24px; }
 
-/* ── CAREER MATCH CARDS ── */
-.db-career-card { background: white; border-radius: var(--r-md); border: 1.5px solid var(--border); padding: 20px; transition: all 0.25s; position: relative; overflow: hidden; }
+/* ── STREAM & CAREER CARDS ── */
+.db-stream-box { background: #F0FDF4; border: 1px solid #A7F3D0; border-radius: var(--r-md); padding: 24px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.db-career-card { background: white; border-radius: var(--r-md); border: 1.5px solid var(--border); padding: 20px; position: relative; overflow: hidden; display: flex; flex-direction: column; }
 .db-career-rank { position: absolute; top: 14px; right: 14px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-.db-career-rank.best { background: #D1FAE5; color: #065F46; }
-.db-career-rank.good { background: #FEF3C7; color: #92400E; }
-.db-career-rank.low { background: #FEE2E2; color: #991B1B; }
 .db-career-name { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 4px; padding-right: 60px; }
 .db-career-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; font-weight: 500; }
 .db-match-bar-wrap { margin-bottom: 14px; }
@@ -118,82 +111,83 @@ const CSS = `
 .db-match-label { font-size: 12px; color: var(--muted); font-weight: 600; }
 .db-match-pct { font-size: 13px; font-weight: 800; }
 .db-match-bg { height: 6px; background: var(--surface); border-radius: 6px; overflow: hidden; }
-.db-match-fill { height: 100%; border-radius: 6px; }
-.db-career-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-.db-career-tag { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
 
-/* ── RIASEC CHART ── */
-.db-riasec-chart { display: flex; flex-direction: column; gap: 10px; }
-.db-riasec-row { display: flex; align-items: center; gap: 12px; }
-.db-riasec-code { font-size: 11px; font-weight: 800; width: 24px; text-align: center; color: var(--ink); }
-.db-riasec-label { font-size: 12px; font-weight: 600; color: var(--muted); width: 100px; }
-.db-riasec-bar-bg { flex: 1; height: 8px; background: var(--surface); border-radius: 8px; overflow: hidden; }
-.db-riasec-bar-fill { height: 100%; border-radius: 8px; transition: width 1s ease; }
-.db-riasec-score { font-size: 12px; font-weight: 700; color: var(--ink); width: 32px; text-align: right; }
+/* ── EXPLAINABILITY / PARENT MODE ── */
+.db-explain-box { background: var(--surface); border-radius: var(--r-sm); padding: 12px; margin-top: auto; }
+.db-explain-item { font-size: 12px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: flex-start; gap: 6px; }
+.db-explain-icon { flex-shrink: 0; }
+.db-parent-metric { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 8px 0; font-size: 13px; }
+.db-parent-metric:last-child { border-bottom: none; padding-bottom: 0; }
 
-/* ── TIMELINE ── */
-.db-timeline { display: flex; flex-direction: column; gap: 0; }
-.db-timeline-item { display: flex; gap: 16px; position: relative; padding-bottom: 20px; }
-.db-timeline-item:last-child { padding-bottom: 0; }
-.db-timeline-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
-.db-timeline-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
-.db-timeline-dot.done { background: #D1FAE5; }
-.db-timeline-dot.active { background: #FEF3C7; }
-.db-timeline-dot.locked { background: var(--surface); border: 2px dashed var(--border); }
-.db-timeline-line { flex: 1; width: 2px; background: var(--border); margin: 4px 0; }
-.db-timeline-content { padding-top: 4px; }
-.db-timeline-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-.db-timeline-desc { font-size: 12px; color: var(--muted); font-weight: 500; }
+/* ── DECISION SIMULATOR (COMPARE) ── */
+.db-compare-grid { display: grid; grid-template-columns: 200px 1fr 1fr 1fr; gap: 0; background: white; border-radius: var(--r-md); border: 1.5px solid var(--border); overflow: hidden; }
+.db-compare-header { background: var(--surface); font-weight: 700; padding: 16px; font-size: 14px; border-bottom: 1.5px solid var(--border); border-right: 1px solid var(--border); }
+.db-compare-cell { padding: 16px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--ink); }
+.db-compare-row:last-child .db-compare-cell { border-bottom: none; }
 
-/* ── EMPTY STATE ── */
+/* ── COLLEGES & GROWTH ── */
+.db-college-ext { background: white; border: 1.5px solid var(--border); border-radius: var(--r-md); padding: 20px; display: flex; gap: 16px; margin-bottom: 16px; }
+.db-college-ext-main { flex: 1; }
+.db-college-stats { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+.db-college-stat-pill { background: var(--surface); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--ink-soft); }
+
+.db-skill-row { margin-bottom: 12px; }
+.db-video-ph { background: var(--ink); border-radius: var(--r-md); aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; position: relative; overflow: hidden; }
+.db-video-play { width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; backdrop-filter: blur(4px); }
+
+/* ── CONFUSION STATE ── */
+.db-confusion-banner { background: #EEF2FF; border: 1px dashed #A5B4FC; border-radius: var(--r-md); padding: 20px; text-align: center; margin-top: 24px; }
+
+/* ── MISC ── */
 .db-empty-state { text-align: center; padding: 60px 20px; background: white; border-radius: var(--r-lg); border: 1.5px dashed var(--border); }
-.db-empty-icon { font-size: 48px; margin-bottom: 16px; }
-.db-empty-title { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
-.db-empty-desc { font-size: 15px; color: var(--muted); max-width: 400px; margin: 0 auto 24px; line-height: 1.6; }
-
-/* ── PROFILE SECTION ── */
-.db-profile-field { margin-bottom: 20px; }
-.db-profile-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-.db-profile-value { font-size: 15px; font-weight: 600; color: var(--ink); padding: 12px 16px; background: var(--surface); border-radius: var(--r-sm); border: 1.5px solid var(--border); }
-
-/* ── PILL TAG ── */
 .db-pill { display: inline-block; padding: 5px 14px; border-radius: 30px; font-size: 12px; font-weight: 700; }
-.db-pill-green { background: #D1FAE5; color: #065F46; }
-.db-pill-amber { background: #FEF3C7; color: #92400E; }
-.db-pill-blue { background: #DBEAFE; color: #1E40AF; }
-.db-pill-purple { background: #EDE9FE; color: #5B21B6; }
-
-/* ── TOAST ── */
-.db-toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: white; padding: 14px 20px; border-radius: var(--r-md); font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); z-index: 9999; animation: slideInRight 0.3s ease; display: flex; align-items: center; gap: 10px; max-width: 320px; }
-@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-/* ── MOBILE ── */
-@media (max-width: 900px) {
-  .db-sidebar { display: none; }
-  .db-content { padding: 20px; }
-  .db-topbar { padding: 0 20px; }
-  .db-stats-grid { grid-template-columns: 1fr 1fr; }
-  .db-two-col, .db-three-col { grid-template-columns: 1fr; }
-  .db-welcome { flex-direction: column; text-align: center; }
-  .db-welcome-action { width: 100%; }
-  .db-welcome-btn { width: 100%; }
-}
 `;
 
-const RIASEC_COLORS = {
-  R: "#E65100", I: "#1565C0", A: "#6A1B9A",
-  S: "#2E7D32", E: "#F57F17", C: "#00695C",
-};
+const RIASEC_COLORS = { R: "#E65100", I: "#1565C0", A: "#6A1B9A", S: "#2E7D32", E: "#F57F17", C: "#00695C" };
 
 const NAV_ITEMS = [
   { id: "home", icon: "🏠", label: "Dashboard" },
   { id: "careers", icon: "🎯", label: "Career Matches" },
-  { id: "profile", icon: "👤", label: "My Profile" },
+  { id: "compare", icon: "⚖️", label: "Compare Paths", badge: "Hot" },
+  { id: "colleges", icon: "🏫", label: "College Explorer" },
+  { id: "growth", icon: "📈", label: "Growth & Reality" },
   { id: "report", icon: "📄", label: "Full Report" },
+  { id: "counsellor", icon: "📅", label: "Book Expert" },
 ];
+
+// --- MOCK EXTENSIONS (Fallbacks until your backend provides them) ---
+const EXTENSIONS = {
+  streamRec: { name: "Science (PCM)", match: 88, reasons: ["Strong Investigative score", "High analytical thinking", "Suitable for engineering & research"] },
+  compareStats: [
+    { title: "Clinical Psychology", salary: "₹6L - ₹18L/yr", years: "5-7 Years", difficulty: "High (Entrance)", wlb: "Excellent" },
+    { title: "Behavioural Science", salary: "₹5L - ₹15L/yr", years: "5 Years", difficulty: "Medium", wlb: "Good" },
+    { title: "Social Research", salary: "₹4L - ₹12L/yr", years: "3-5 Years", difficulty: "Medium", wlb: "Excellent" }
+  ],
+  parentData: {
+    "Clinical Psychology": { stability: "Very High", demand: "Growing 22% YoY", safety: "High" },
+    "Behavioural Science": { stability: "High", demand: "Growing 15% YoY", safety: "High" },
+    "Social Research": { stability: "Medium", demand: "Stable", safety: "High" }
+  },
+  explainability: {
+    "Clinical Psychology": { pros: ["High Investigative (9/10)", "Strong Social (8/10)"], cons: ["Needs structured routine (Low C)"] },
+    "Behavioural Science": { pros: ["Perfect for analytical mind", "High creative freedom"], cons: ["Requires public speaking (Low E)"] },
+    "Social Research": { pros: ["Independent work friendly", "High impact"], cons: ["Can be repetitive"] }
+  },
+  collegesExt: [
+    { name: "NIMHANS Bengaluru", cutoffs: "98% / NIMHANS Test", fees: "₹45,000/yr", placement: "100% (Clinical)", loc: "Bengaluru" },
+    { name: "TISS Mumbai", cutoffs: "TISS-NET: 75+", fees: "₹1.2L/yr", placement: "Avg ₹8LPA", loc: "Mumbai" },
+    { name: "Christ University", cutoffs: "CUET / Interview", fees: "₹1.5L/yr", placement: "Avg ₹6LPA", loc: "Bengaluru" }
+  ],
+  skillGaps: [
+    { skill: "Analytical Logic", student: 8, ideal: 9, status: "Good" },
+    { skill: "Empathy/Listening", student: 9, ideal: 8, status: "Excellent" },
+    { skill: "Public Speaking", student: 4, ideal: 7, status: "Needs Work" }
+  ]
+};
 
 export default function StudentDashboard({ user, userData, onStartAssessment, onBack, onLogout }) {
   const [activeTab, setActiveTab] = useState("home");
+  const [isParentMode, setIsParentMode] = useState(false);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
@@ -208,22 +202,17 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Safe defaults derived from Firebase data
   const studentName = userData?.name || user?.displayName || "Student";
   const firstName = studentName.split(" ")[0];
   const hasAssessment = !!userData?.riasecCode;
   
   const xp = userData?.xp || 10;
-  const level = userData?.level || "Level 1 - Explorer";
+  const level = userData?.level || "Explorer";
   const profileStrength = hasAssessment ? 100 : 50;
 
-  // Extract careers safely if they exist in Firebase
   const bestCareer = userData?.bestCareer || null;
   const recommendedCareer = userData?.recommendedCareer || null;
   const leastCareer = userData?.leastCareer || null;
-  const topColleges = bestCareer?.colleges || [];
-
-  const tabTitle = NAV_ITEMS.find((n) => n.id === activeTab)?.label || "Dashboard";
 
   return (
     <div className="db-root">
@@ -231,49 +220,27 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
       <aside className="db-sidebar">
         <div className="db-sidebar-brand">
           <div className="db-sidebar-logo">Vidya<span>Vantage</span></div>
-          <div className="db-sidebar-sub">Student Portal</div>
+          <div className="db-sidebar-sub">Decision Engine</div>
         </div>
 
         <div className="db-student-info">
           <div className="db-avatar">{studentName.charAt(0)}</div>
           <div className="db-student-name">{studentName}</div>
           <div className="db-student-class">{userData?.classLevel || "Class Not Set"}</div>
-          {hasAssessment && (
-            <div className="db-riasec-badge">RIASEC: {userData.riasecCode}</div>
-          )}
-        </div>
-
-        <div className="db-progress-wrap" onClick={() => !hasAssessment && showToast("Take the assessment to reach 100%!")}>
-          <div className="db-progress-label">
-            <span className="db-progress-text">Profile Strength</span>
-            <span className="db-progress-pct">{profileStrength}%</span>
-          </div>
-          <div className="db-progress-bar">
-            <div className="db-progress-fill" style={{ width: `${profileStrength}%` }} />
-          </div>
         </div>
 
         <nav className="db-nav">
           {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              className={`db-nav-item ${activeTab === item.id ? "active" : ""}`}
-              onClick={() => setActiveTab(item.id)}
-            >
-              <span className="db-nav-icon">{item.icon}</span>
-              {item.label}
+            <button key={item.id} className={`db-nav-item ${activeTab === item.id ? "active" : ""}`} onClick={() => setActiveTab(item.id)}>
+              <span className="db-nav-icon">{item.icon}</span> {item.label}
               {item.badge && <span className="db-nav-badge">{item.badge}</span>}
             </button>
           ))}
         </nav>
 
         <div className="db-sidebar-footer">
-          {onBack && (
-            <button className="db-back-btn" onClick={onBack}>← Back to Secret Sharz</button>
-          )}
-          {onLogout && (
-            <button className="db-logout-btn" onClick={onLogout}>Sign Out</button>
-          )}
+          {onBack && <button className="db-back-btn" onClick={onBack}>← Back to Secret Sharz</button>}
+          {onLogout && <button className="db-logout-btn" onClick={onLogout}>Sign Out</button>}
         </div>
       </aside>
 
@@ -281,10 +248,12 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
       <div className="db-main">
         {/* Top Bar */}
         <div className="db-topbar">
-          <div className="db-topbar-title">{tabTitle}</div>
+          <div className="db-topbar-title">{NAV_ITEMS.find(n => n.id === activeTab)?.label}</div>
           <div className="db-topbar-right">
-            <div className="db-xp-chip">⚡ {xp} XP · {level}</div>
-            <div className="db-notif-btn" onClick={() => showToast("No new notifications")}>🔔</div>
+            <button className={`db-parent-toggle ${isParentMode ? 'active' : ''}`} onClick={() => setIsParentMode(!isParentMode)}>
+              <div className="db-parent-toggle-dot" /> 👨‍👩‍👧 Parent View
+            </button>
+            <div className="db-xp-chip">⚡ {xp} XP</div>
           </div>
         </div>
 
@@ -294,154 +263,58 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
           {/* ── HOME TAB ── */}
           {activeTab === "home" && (
             <div className="db-tab">
-              
-              {/* Conditional Welcome Banner */}
               <div className="db-welcome">
                 <div className="db-welcome-text">
                   <div className="db-welcome-eyebrow">Welcome Back</div>
-                  <h1 className="db-welcome-h1">
-                    Hey {firstName},<br />
-                    {hasAssessment ? "your future is " : "ready to discover " }
-                    <em>{hasAssessment ? "taking shape" : "your path?"}</em>
-                  </h1>
+                  <h1 className="db-welcome-h1">Hey {firstName},<br /><em>own your future.</em></h1>
                   <p className="db-welcome-p">
-                    {hasAssessment 
-                      ? `Your RIASEC code is ${userData.riasecCode}. ${bestCareer?.title || "Your best match"} is waiting for you.`
-                      : "Take our free AI-powered career assessment to unlock your RIASEC personality code, best career matches, and top Indian colleges."
-                    }
+                    {hasAssessment ? `Your RIASEC code is ${userData.riasecCode}. Your best path is ${bestCareer?.title}.` : "Take our free AI assessment to unlock your career roadmap."}
                   </p>
                 </div>
                 <div className="db-welcome-action">
-                  {!hasAssessment && (
-                    <button className="db-welcome-btn" onClick={onStartAssessment}>
-                      Take Free Assessment 🚀
-                    </button>
-                  )}
+                  {!hasAssessment && <button className="db-welcome-btn" onClick={onStartAssessment}>Take Assessment 🚀</button>}
+                  {hasAssessment && <button className="db-welcome-btn" onClick={() => setActiveTab("careers")}>View Matches →</button>}
                 </div>
               </div>
 
-              {/* Stats */}
               <div className="db-stats-grid">
                 <div className="db-stat-card saffron">
                   <span className="db-stat-icon">🎯</span>
-                  <div className="db-stat-label">Clarity Score</div>
+                  <div className="db-stat-label">Career Clarity Index</div>
                   <div className="db-stat-value">{hasAssessment ? "8" : "0"}</div>
                   <div className="db-stat-sub">out of 10</div>
                 </div>
                 <div className="db-stat-card teal">
                   <span className="db-stat-icon">🧠</span>
                   <div className="db-stat-label">Assessment</div>
-                  <div className="db-stat-value" style={{ fontSize: hasAssessment ? "24px" : "20px" }}>
-                    {hasAssessment ? "Done" : "Pending"}
-                  </div>
-                  <div className="db-stat-sub">{hasAssessment ? `Code: ${userData.riasecCode}` : "Unlock your profile"}</div>
+                  <div className="db-stat-value" style={{ fontSize: hasAssessment ? "24px" : "20px" }}>{hasAssessment ? "Done" : "Pending"}</div>
                 </div>
-                <div className="db-stat-card lavender">
-                  <span className="db-stat-icon">⚡</span>
-                  <div className="db-stat-label">Your XP</div>
-                  <div className="db-stat-value">{xp}</div>
-                  <div className="db-stat-sub">{level}</div>
+                <div className="db-stat-card lavender" style={{ cursor: "pointer" }} onClick={() => setActiveTab("growth")}>
+                  <span className="db-stat-icon">📈</span>
+                  <div className="db-stat-label">Growth Plan</div>
+                  <div className="db-stat-value" style={{ fontSize: "20px" }}>View Path</div>
                 </div>
-                <div className="db-stat-card sage" onClick={() => showToast("Counsellor booking coming soon!")} style={{ cursor: "pointer" }}>
+                <div className="db-stat-card sage" style={{ cursor: "pointer" }} onClick={() => setActiveTab("counsellor")}>
                   <span className="db-stat-icon">📅</span>
-                  <div className="db-stat-label">Next Step</div>
+                  <div className="db-stat-label">Next Action</div>
                   <div className="db-stat-value" style={{ fontSize: "20px" }}>Book Expert</div>
-                  <div className="db-stat-sub">1-on-1 Guidance</div>
                 </div>
               </div>
 
-              <div className="db-two-col">
-                {/* Journey Timeline */}
-                <div className="db-card">
-                  <div className="db-card-header">
-                    <div className="db-card-title">🗺️ Your Journey</div>
-                    <span className="db-pill db-pill-blue">{hasAssessment ? "2" : "1"} of 4 done</span>
-                  </div>
-                  <div className="db-card-body">
-                    <div className="db-timeline">
-                      <div className="db-timeline-item">
-                        <div className="db-timeline-left">
-                          <div className="db-timeline-dot done">✅</div>
-                          <div className="db-timeline-line" />
-                        </div>
-                        <div className="db-timeline-content">
-                          <div className="db-timeline-title">Profile Created</div>
-                          <div className="db-timeline-desc">Basic info saved</div>
-                        </div>
-                      </div>
-                      
-                      <div className="db-timeline-item">
-                        <div className="db-timeline-left">
-                          <div className={`db-timeline-dot ${hasAssessment ? "done" : "active"}`}>
-                            {hasAssessment ? "✅" : "⏳"}
-                          </div>
-                          <div className="db-timeline-line" />
-                        </div>
-                        <div className="db-timeline-content">
-                          <div className="db-timeline-title" style={{ color: !hasAssessment ? "var(--warn)" : "inherit" }}>
-                            Career Assessment
-                          </div>
-                          <div className="db-timeline-desc">
-                            {hasAssessment ? `Completed. Code: ${userData.riasecCode}` : "Required to unlock matches"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="db-timeline-item">
-                        <div className="db-timeline-left">
-                          <div className="db-timeline-dot locked">🔒</div>
-                        </div>
-                        <div className="db-timeline-content">
-                          <div className="db-timeline-title" style={{ color: "var(--muted)" }}>Lock Final Career Path</div>
-                          <div className="db-timeline-desc">Commit to your chosen direction</div>
-                        </div>
-                      </div>
+              {hasAssessment && (
+                <div className="db-stream-box">
+                  <div>
+                    <div style={{ fontSize: "12px", color: "var(--success)", fontWeight: "800", textTransform: "uppercase", letterSpacing: "1px" }}>🎯 Stream Recommendation</div>
+                    <div style={{ fontFamily: "Fraunces", fontSize: "24px", fontWeight: "700", color: "var(--ink)", margin: "4px 0" }}>
+                      {EXTENSIONS.streamRec.name} <span style={{ color: "var(--success)", fontSize: "18px" }}>({EXTENSIONS.streamRec.match}% Match)</span>
                     </div>
+                    <ul style={{ margin: "8px 0 0 20px", fontSize: "13px", color: "var(--ink-soft)", fontWeight: "500" }}>
+                      {EXTENSIONS.streamRec.reasons.map((r, i) => <li key={i}>{r}</li>)}
+                    </ul>
                   </div>
+                  <button className="db-btn" onClick={() => setActiveTab("colleges")}>Explore Colleges</button>
                 </div>
-
-                {/* RIASEC Profile */}
-                <div className="db-card">
-                  <div className="db-card-header">
-                    <div className="db-card-title">🧠 RIASEC Profile</div>
-                    {hasAssessment && <span className="db-pill db-pill-purple">Code: {userData.riasecCode}</span>}
-                  </div>
-                  <div className="db-card-body">
-                    {!hasAssessment ? (
-                      <div className="db-empty-state" style={{ padding: "30px 20px" }}>
-                        <div className="db-empty-icon">🔒</div>
-                        <div className="db-empty-title" style={{ fontSize: "18px" }}>Profile Locked</div>
-                        <div className="db-empty-desc" style={{ fontSize: "13px" }}>Take the assessment to reveal your psychological career traits.</div>
-                        <button className="db-btn" onClick={onStartAssessment}>Start Assessment</button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="db-riasec-chart">
-                          {userData.riasecScores && Object.entries(userData.riasecScores).map(([code, score]) => {
-                            const labels = { R: "Realistic", I: "Investigative", A: "Artistic", S: "Social", E: "Enterprising", C: "Conventional" };
-                            return (
-                              <div key={code} className="db-riasec-row">
-                                <div className="db-riasec-code" style={{ color: RIASEC_COLORS[code] }}>{code}</div>
-                                <div className="db-riasec-label">{labels[code]}</div>
-                                <div className="db-riasec-bar-bg">
-                                  <div className="db-riasec-bar-fill" style={{ width: `${score * 10}%`, background: RIASEC_COLORS[code] + "99" }} />
-                                </div>
-                                <div className="db-riasec-score">{score}/10</div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div style={{ marginTop: "20px", padding: "14px 16px", background: "var(--surface)", borderRadius: "var(--r-sm)", border: "1px solid var(--border)" }}>
-                          <div style={{ fontSize: "12px", color: "var(--muted)", fontWeight: "600", marginBottom: "4px" }}>AI Summary</div>
-                          <div style={{ fontSize: "13px", color: "var(--ink)", fontWeight: "500", lineHeight: "1.6" }}>
-                            {userData.riasecSummary || "Your personality profile is ready for review."}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -450,25 +323,21 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
             <div className="db-tab">
               {!hasAssessment ? (
                 <div className="db-empty-state">
-                  <div className="db-empty-icon">🎯</div>
-                  <div className="db-empty-title">Unlock Your Career Matches</div>
-                  <div className="db-empty-desc">We need to map your personality before we can recommend your best career paths.</div>
+                  <div className="db-empty-icon">🎯</div><div className="db-empty-title">Unlock Matches</div>
                   <button className="db-btn" onClick={onStartAssessment}>Take Assessment</button>
                 </div>
               ) : (
                 <>
-                  <div style={{ marginBottom: "24px" }}>
-                    <div style={{ fontSize: "14px", color: "var(--muted)", fontWeight: "600" }}>
-                      Based on your RIASEC code <strong style={{ color: "var(--ink)" }}>{userData.riasecCode}</strong>
-                    </div>
-                  </div>
                   <div className="db-three-col">
                     {[
-                      { data: bestCareer, rank: "best", label: "🏆 Best Match", matchClass: "high" },
-                      { data: recommendedCareer, rank: "good", label: "✅ Recommended", matchClass: "mid" },
-                      { data: leastCareer, rank: "low", label: "⚠️ Least Suited", matchClass: "low" }
+                      { data: bestCareer, rank: "best", label: "🏆 Best Match", cls: "high", key: "Clinical Psychology" },
+                      { data: recommendedCareer, rank: "good", label: "✅ Recommended", cls: "mid", key: "Behavioural Science" },
+                      { data: leastCareer, rank: "low", label: "⚠️ Least Suited", cls: "low", key: "Social Research" }
                     ].map((career, i) => {
                       if (!career.data) return null;
+                      const exp = EXTENSIONS.explainability[career.key] || EXTENSIONS.explainability["Clinical Psychology"];
+                      const pData = EXTENSIONS.parentData[career.key] || EXTENSIONS.parentData["Clinical Psychology"];
+                      
                       return (
                         <div key={i} className="db-career-card">
                           <span className={`db-career-rank ${career.rank}`}>{career.label}</span>
@@ -478,58 +347,200 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                           <div className="db-match-bar-wrap">
                             <div className="db-match-row">
                               <span className="db-match-label">Profile Match</span>
-                              <span className={`db-match-pct ${career.matchClass}`}>{career.data.matchPercent}%</span>
+                              <span className={`db-match-pct`} style={{ color: career.rank === 'best'?'#059669':career.rank==='good'?'#D97706':'#E11D48' }}>{career.data.matchPercent}%</span>
                             </div>
                             <div className="db-match-bg">
-                              <div className={`db-match-fill ${career.matchClass}`} 
-                                style={{ 
-                                  width: `${career.data.matchPercent}%`, 
-                                  background: career.rank === 'best' ? 'linear-gradient(90deg, #059669, #34D399)' : career.rank === 'good' ? 'linear-gradient(90deg, #D97706, #FCD34D)' : 'linear-gradient(90deg, #E11D48, #FB7185)' 
-                                }} 
-                              />
+                              <div style={{ height:'100%', width: `${career.data.matchPercent}%`, background: career.rank === 'best' ? '#34D399' : career.rank === 'good' ? '#FCD34D' : '#FB7185' }} />
                             </div>
                           </div>
 
-                          <div style={{ fontSize: "13px", color: "var(--muted)", lineHeight: "1.6", marginBottom: "12px", fontWeight: "500" }}>
-                            {career.data.analysis}
-                          </div>
+                          {/* PARENT MODE VS STUDENT MODE */}
+                          {isParentMode ? (
+                            <div className="db-explain-box" style={{ background: "#EEF2FF", border: "1px solid #C7D2FE" }}>
+                              <div style={{ fontSize: "11px", fontWeight: "800", color: "#4F46E5", marginBottom: "8px", textTransform: "uppercase" }}>👪 Parent Metrics</div>
+                              <div className="db-parent-metric"><span>Stability</span><strong>{pData.stability}</strong></div>
+                              <div className="db-parent-metric"><span>Demand</span><strong>{pData.demand}</strong></div>
+                              <div className="db-parent-metric"><span>Safety</span><strong>{pData.safety}</strong></div>
+                            </div>
+                          ) : (
+                            <div className="db-explain-box">
+                              <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--ink)", marginBottom: "6px" }}>Why it fits you:</div>
+                              {exp.pros.map((p, j) => <div key={j} className="db-explain-item"><span className="db-explain-icon" style={{color:"var(--success)"}}>✔</span> {p}</div>)}
+                              <div style={{ height: "1px", background: "var(--border)", margin: "8px 0" }}/>
+                              {exp.cons.map((c, j) => <div key={j} className="db-explain-item"><span className="db-explain-icon" style={{color:"var(--warn)"}}>⚠</span> {c}</div>)}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
+                  </div>
+                  
+                  <div className="db-confusion-banner">
+                    <div style={{ fontSize: "16px", fontWeight: "700", color: "#3730A3", marginBottom: "8px" }}>Not sure which path to choose?</div>
+                    <div style={{ fontSize: "14px", color: "#4338CA", marginBottom: "16px" }}>Compare salaries, study years, and work-life balance side-by-side.</div>
+                    <button className="db-btn" style={{ background: "#4F46E5" }} onClick={() => setActiveTab("compare")}>⚖️ Compare Careers Now</button>
                   </div>
                 </>
               )}
             </div>
           )}
 
-          {/* ── PROFILE TAB ── */}
-          {activeTab === "profile" && (
+          {/* ── COMPARE TAB (DECISION SIMULATOR) ── */}
+          {activeTab === "compare" && (
             <div className="db-tab">
-              <div className="db-card">
-                <div className="db-card-header">
-                  <div className="db-card-title">👤 Academic Profile</div>
+              {!hasAssessment ? (
+                <div className="db-empty-state"><div className="db-empty-icon">⚖️</div><div className="db-empty-title">Compare Tool Locked</div><button className="db-btn" onClick={onStartAssessment}>Take Assessment</button></div>
+              ) : (
+                <>
+                  <div style={{ marginBottom: "20px" }}>
+                    <h2 style={{ fontFamily: "Fraunces", fontSize: "24px", color: "var(--ink)" }}>Decision Simulator</h2>
+                    <p style={{ color: "var(--muted)", fontSize: "14px" }}>Compare your top matched careers across real-world metrics.</p>
+                  </div>
+                  <div className="db-compare-grid">
+                    {/* Headers */}
+                    <div className="db-compare-header" style={{ background: "white" }}>Metrics</div>
+                    {EXTENSIONS.compareStats.map((c, i) => <div key={i} className="db-compare-header">{c.title}</div>)}
+                    
+                    {/* Rows */}
+                    <div className="db-compare-cell" style={{ color: "var(--muted)" }}>Average Salary</div>
+                    {EXTENSIONS.compareStats.map((c, i) => <div key={i} className="db-compare-cell" style={{ color: "var(--success)" }}>{c.salary}</div>)}
+
+                    <div className="db-compare-cell" style={{ color: "var(--muted)" }}>Years of Study</div>
+                    {EXTENSIONS.compareStats.map((c, i) => <div key={i} className="db-compare-cell">{c.years}</div>)}
+
+                    <div className="db-compare-cell" style={{ color: "var(--muted)" }}>Difficulty (Entry)</div>
+                    {EXTENSIONS.compareStats.map((c, i) => <div key={i} className="db-compare-cell" style={{ color: c.difficulty.includes("High") ? "var(--rose)" : "var(--warn)" }}>{c.difficulty}</div>)}
+
+                    <div className="db-compare-cell" style={{ color: "var(--muted)" }}>Work-Life Balance</div>
+                    {EXTENSIONS.compareStats.map((c, i) => <div key={i} className="db-compare-cell" style={{ color: "var(--teal)" }}>{c.wlb}</div>)}
+                  </div>
+                  <div style={{ textAlign: "center", marginTop: "32px" }}>
+                    <button className="db-btn" onClick={() => setActiveTab("counsellor")}>Discuss with an Expert →</button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── COLLEGES TAB ── */}
+          {activeTab === "colleges" && (
+            <div className="db-tab">
+              {!hasAssessment ? (
+                <div className="db-empty-state"><div className="db-empty-icon">🏫</div><div className="db-empty-title">College Explorer Locked</div><button className="db-btn" onClick={onStartAssessment}>Take Assessment</button></div>
+              ) : (
+                <>
+                  <div style={{ marginBottom: "20px" }}>
+                    <h2 style={{ fontFamily: "Fraunces", fontSize: "24px", color: "var(--ink)" }}>Target Colleges</h2>
+                    <p style={{ color: "var(--muted)", fontSize: "14px" }}>Based on your {userData.riasecCode} profile and Stream.</p>
+                  </div>
+                  {EXTENSIONS.collegesExt.map((c, i) => (
+                    <div key={i} className="db-college-ext">
+                      <div className="db-avatar" style={{ borderRadius: "12px", background: "var(--surface)", color: "var(--ink)", border: "1px solid var(--border)" }}>🏫</div>
+                      <div className="db-college-ext-main">
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <div style={{ fontSize: "16px", fontWeight: "700", color: "var(--ink)" }}>{c.name}</div>
+                          <span className="db-pill db-pill-green">Top Match</span>
+                        </div>
+                        <div className="db-college-stats">
+                          <div className="db-college-stat-pill">📍 {c.loc}</div>
+                          <div className="db-college-stat-pill">🎯 {c.cutoffs}</div>
+                          <div className="db-college-stat-pill">💰 {c.fees}</div>
+                          <div className="db-college-stat-pill">📈 {c.placement}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── GROWTH & REALITY TAB (NEW) ── */}
+          {activeTab === "growth" && (
+            <div className="db-tab">
+              {!hasAssessment ? (
+                <div className="db-empty-state"><div className="db-empty-icon">📈</div><div className="db-empty-title">Growth Plan Locked</div><button className="db-btn" onClick={onStartAssessment}>Take Assessment</button></div>
+              ) : (
+                <div className="db-two-col">
+                  {/* Skill Gap */}
+                  <div className="db-card">
+                    <div className="db-card-header"><div className="db-card-title">🧠 Skill Gap Analysis</div></div>
+                    <div className="db-card-body">
+                      <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "20px" }}>You vs. Ideal {bestCareer?.title || "Professional"}</p>
+                      {EXTENSIONS.skillGaps.map((s, i) => (
+                        <div key={i} className="db-skill-row">
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: "700", marginBottom: "4px" }}>
+                            <span>{s.skill}</span>
+                            <span style={{ color: s.status === "Needs Work" ? "var(--rose)" : "var(--success)" }}>{s.status}</span>
+                          </div>
+                          <div style={{ height: "6px", background: "var(--surface)", borderRadius: "6px", overflow: "hidden", display: "flex" }}>
+                            <div style={{ width: `${(s.student/10)*100}%`, background: "var(--teal)", borderRadius: "6px" }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Career Reality */}
+                  <div className="db-card">
+                    <div className="db-card-header"><div className="db-card-title">🎥 Career Reality</div></div>
+                    <div className="db-card-body">
+                      <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "16px" }}>Day in the Life of a Psychologist</p>
+                      <div className="db-video-ph" onClick={() => showToast("YouTube embed coming soon!")}>
+                        <div className="db-video-play">▶</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Tracker */}
+                  <div className="db-card" style={{ gridColumn: "1 / -1" }}>
+                    <div className="db-card-header"><div className="db-card-title">🚀 Your Execution Plan</div></div>
+                    <div className="db-card-body" style={{ display: "flex", gap: "16px" }}>
+                      <div style={{ flex: 1, padding: "16px", background: "var(--surface)", borderRadius: "var(--r-sm)", border: "1px solid var(--border)" }}>
+                        <div style={{ fontSize: "14px", fontWeight: "700", marginBottom: "8px" }}>Improve Communication</div>
+                        <div style={{ fontSize: "13px", color: "var(--muted)" }}>Action: Join the school debate club or Secret Sharz speaking circles.</div>
+                      </div>
+                      <div style={{ flex: 1, padding: "16px", background: "var(--surface)", borderRadius: "var(--r-sm)", border: "1px solid var(--border)" }}>
+                        <div style={{ fontSize: "14px", fontWeight: "700", marginBottom: "8px" }}>Explore Colleges</div>
+                        <div style={{ fontSize: "13px", color: "var(--muted)" }}>Action: Review NIMHANS cutoffs in the College Explorer tab.</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="db-card-body">
-                  <div className="db-profile-grid">
+              )}
+            </div>
+          )}
+
+          {/* ── COUNSELLOR TAB ── */}
+          {activeTab === "counsellor" && (
+            <div className="db-tab">
+              <div className="db-two-col">
+                <div className="db-card" style={{ marginBottom: 0 }}>
+                  <div className="db-card-header"><div className="db-card-title">📅 Book Expert Session</div></div>
+                  <div className="db-card-body">
+                    {/* Calendar Slots UI */}
+                    <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "16px", marginBottom: "16px", borderBottom: "1px solid var(--border)" }}>
+                      {["Today", "Tomorrow", "Thu 26", "Fri 27"].map((d, i) => (
+                        <div key={i} style={{ padding: "10px 16px", border: i===0?"1.5px solid var(--saffron)":"1px solid var(--border)", borderRadius: "var(--r-sm)", background: i===0?"#FFFBEB":"white", textAlign: "center", cursor: "pointer", minWidth: "80px" }}>
+                          <div style={{ fontSize: "12px", color: i===0?"var(--saffron)":"var(--muted)", fontWeight: "600" }}>{d}</div>
+                        </div>
+                      ))}
+                    </div>
+
                     {[
-                      { label: "Full Name", val: studentName },
-                      { label: "Email Address", val: userData?.email || user?.email },
-                      { label: "Class / Level", val: userData?.classLevel || "Not provided" },
-                      { label: "State", val: userData?.state || "Not provided" },
-                      { label: "Stream", val: userData?.stream || "Not provided" },
-                      { label: "Gender", val: userData?.gender || "Not provided" },
-                    ].map((f, i) => (
-                      <div key={i} className="db-profile-field">
-                        <div className="db-profile-label">{f.label}</div>
-                        <div className="db-profile-value">{f.val}</div>
+                      { name: "Dr. Meera", spec: "Clinical Psych", type: "Free 15-min Video Call" },
+                      { name: "Prof. Arjun", spec: "Career Coach", type: "Paid 1-hr Deep Dive" }
+                    ].map((c, i) => (
+                      <div key={i} style={{ padding: "16px", background: "var(--surface)", borderRadius: "var(--r-md)", border: "1.5px solid var(--border)", marginBottom: "12px", display: "flex", gap: "14px", alignItems: "center" }}>
+                        <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "var(--teal)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>👩‍⚕️</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: "15px", fontWeight: "700", color: "var(--ink)" }}>{c.name}</div>
+                          <div style={{ fontSize: "12px", color: "var(--muted)" }}>{c.spec}</div>
+                          <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--saffron)", marginTop: "4px", display: "flex", alignItems: "center", gap: "4px" }}>🎥 {c.type}</div>
+                        </div>
+                        <button className="db-btn-outline" onClick={() => showToast("Booking portal loading...")}>Select Time</button>
                       </div>
                     ))}
-                  </div>
-                  <div className="db-profile-field">
-                    <div className="db-profile-label">Career Aspiration</div>
-                    <div className="db-profile-value" style={{ color: "var(--saffron)", fontStyle: "italic" }}>
-                      {userData?.aspiration || "None provided during registration."}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -540,52 +551,18 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
           {activeTab === "report" && (
             <div className="db-tab">
               {!hasAssessment ? (
-                <div className="db-empty-state">
-                  <div className="db-empty-icon">📄</div>
-                  <div className="db-empty-title">Report Unavailable</div>
-                  <div className="db-empty-desc">Your full PDF report is generated instantly after completing the assessment.</div>
-                  <button className="db-btn" onClick={onStartAssessment}>Start Assessment</button>
-                </div>
+                <div className="db-empty-state"><div className="db-empty-icon">📄</div><div className="db-empty-title">Report Locked</div><button className="db-btn" onClick={onStartAssessment}>Start Assessment</button></div>
               ) : (
                 <div className="db-card">
                   <div className="db-card-header">
-                    <div className="db-card-title">📄 Full Career Report</div>
-                    <button className="db-btn" onClick={() => showToast("PDF export coming soon!")}>Export PDF</button>
+                    <div className="db-card-title">📄 Instant Career Report</div>
+                    <button className="db-btn" onClick={() => showToast("Downloading PDF...")}>⬇ Download PDF</button>
                   </div>
                   <div className="db-card-body">
                     <div style={{ background: "linear-gradient(135deg, var(--ink), #1C2850)", borderRadius: "var(--r-lg)", padding: "32px", marginBottom: "24px", color: "white" }}>
-                      <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", fontWeight: "700", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "8px" }}>
-                        RIASEC Career Report — {studentName}
-                      </div>
-                      <div style={{ fontFamily: "Fraunces, serif", fontSize: "36px", fontWeight: "700", color: "var(--gold)", marginBottom: "8px" }}>
-                        {userData.riasecCode}
-                      </div>
-                      <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.7)", lineHeight: "1.7", maxWidth: "600px" }}>
-                        {userData.riasecSummary}
-                      </div>
-                    </div>
-
-                    <div className="db-two-col">
-                      <div>
-                        <div style={{ fontSize: "14px", fontWeight: "800", color: "var(--ink)", marginBottom: "12px" }}>✅ Top College Matches</div>
-                        {topColleges.length > 0 ? topColleges.map((c, i) => (
-                          <div key={i} style={{ padding: "10px 14px", background: "#D1FAE5", borderRadius: "var(--r-sm)", marginBottom: "8px", fontSize: "14px", fontWeight: "700", color: "#065F46" }}>
-                            → {c}
-                          </div>
-                        )) : (
-                          <div style={{ fontSize: "13px", color: "var(--muted)" }}>No specific colleges listed for this path.</div>
-                        )}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: "14px", fontWeight: "800", color: "var(--ink)", marginBottom: "12px" }}>🎯 Your Next Steps</div>
-                        {userData?.nextSteps ? userData.nextSteps.map((c, i) => (
-                          <div key={i} style={{ padding: "10px 14px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--r-sm)", marginBottom: "8px", fontSize: "14px", fontWeight: "600", color: "var(--ink)" }}>
-                            • {c}
-                          </div>
-                        )) : (
-                          <div style={{ fontSize: "13px", color: "var(--muted)" }}>Take the assessment to unlock steps.</div>
-                        )}
-                      </div>
+                      <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", fontWeight: "700", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "8px" }}>RIASEC Career Report — {studentName}</div>
+                      <div style={{ fontFamily: "Fraunces, serif", fontSize: "36px", fontWeight: "700", color: "var(--gold)", marginBottom: "8px" }}>{userData.riasecCode}</div>
+                      <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.7)", lineHeight: "1.7", maxWidth: "600px" }}>{userData.riasecSummary}</div>
                     </div>
                   </div>
                 </div>
@@ -596,13 +573,7 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
         </div>
       </div>
 
-      {/* Toast */}
-      {toast && (
-        <div className="db-toast">
-          <span>🔔</span>
-          <span>{toast}</span>
-        </div>
-      )}
+      {toast && <div className="db-toast"><span>🔔</span><span>{toast}</span></div>}
     </div>
   );
 }
