@@ -13,20 +13,79 @@ const STYLES = `
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;}
   .vv-root{min-height:100vh;background:var(--cream);background-image:radial-gradient(ellipse at 10% 20%,rgba(232,101,10,0.06) 0%,transparent 50%),radial-gradient(ellipse at 90% 80%,rgba(10,92,99,0.06) 0%,transparent 50%);}
+  
   .vv-header{background:var(--dark);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--saffron);}
   .vv-logo{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--white);letter-spacing:-0.5px;}
   .vv-logo span{color:var(--gold);}
   .vv-tagline{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-weight:500;}
   .vv-badge{background:var(--saffron);color:white;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;}
-  .vv-hero{padding:80px 40px 60px;max-width:900px;margin:0 auto;text-align:center;}
-  .vv-hero-eyebrow{display:inline-block;background:linear-gradient(135deg,rgba(232,101,10,0.12),rgba(240,165,0,0.12));border:1px solid rgba(232,101,10,0.3);color:var(--saffron);padding:6px 18px;border-radius:30px;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px;}
-  .vv-hero h1{font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,58px);font-weight:700;line-height:1.15;color:var(--dark);margin-bottom:20px;}
-  .vv-hero h1 em{font-style:italic;color:var(--saffron);}
-  .vv-hero p{font-size:18px;color:var(--muted);line-height:1.7;max-width:640px;margin:0 auto 40px;font-weight:300;}
-  .vv-start-btn{background:linear-gradient(135deg,var(--saffron),var(--gold));color:white;border:none;padding:18px 48px;border-radius:50px;font-size:17px;font-weight:600;cursor:pointer;box-shadow:0 8px 24px rgba(232,101,10,0.35);transition:all 0.25s ease;font-family:'DM Sans',sans-serif;}
-  .vv-start-btn:hover{transform:translateY(-2px);}
-  .vv-riasec-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:48px;}
-  .riasec-pill{padding:8px 18px;border-radius:30px;font-size:13px;font-weight:600;}
+  
+  /* --- NEW LANDING PAGE STYLES --- */
+  .vv-hero-new { display: flex; gap: 40px; align-items: center; padding: 80px 40px; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; }
+  .vv-hero-content { flex: 1.2; min-width: 320px; }
+  .vv-hero-eyebrow { display: inline-block; background: linear-gradient(135deg, rgba(232,101,10,0.12), rgba(240,165,0,0.12)); border: 1px solid rgba(232,101,10,0.3); color: var(--saffron); padding: 6px 18px; border-radius: 30px; font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px; }
+  .feature-tags { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+  .f-tag { background: white; border: 1px solid rgba(61,34,5,0.1); padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 700; color: var(--brown); box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+  
+  .vv-hero-cta { flex: 0.8; background: white; padding: 40px; border-radius: 24px; box-shadow: var(--shadow); border: 1px solid rgba(61,34,5,0.1); text-align: center; min-width: 320px; }
+  .vv-start-btn { background: linear-gradient(135deg, var(--saffron), var(--gold)); color: white; border: none; padding: 18px 48px; border-radius: 50px; font-size: 17px; font-weight: 600; cursor: pointer; box-shadow: 0 8px 24px rgba(232,101,10,0.35); transition: all 0.25s ease; font-family: 'DM Sans', sans-serif; }
+  .vv-start-btn:hover { transform: translateY(-2px); }
+
+  .vv-trust-strip { background: white; padding: 40px 20px; border-bottom: 1px solid rgba(61,34,5,0.1); border-top: 1px solid rgba(61,34,5,0.1); }
+  .vv-trust-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1200px; margin: 0 auto; text-align: center; }
+  .vv-trust-item h3 { font-size: 42px; font-family: 'Playfair Display', serif; color: var(--saffron); margin: 0 0 4px 0; line-height: 1; }
+  .vv-trust-item p { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin: 0;}
+
+  .vv-section { padding: 80px 40px; max-width: 1200px; margin: 0 auto; }
+  .vv-section-alt { background: var(--parchment); padding: 80px 40px; }
+  .vv-section-inner { max-width: 1200px; margin: 0 auto; }
+  .vv-sec-title { font-family: 'Playfair Display', serif; font-size: 36px; color: var(--dark); text-align: center; margin-bottom: 16px; line-height: 1.2; }
+  .vv-sec-sub { text-align: center; color: var(--muted); font-size: 16px; max-width: 600px; margin: 0 auto 40px; line-height: 1.6; }
+
+  .vv-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .vv-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .vv-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+
+  .vv-card { background: white; border: 1px solid rgba(61,34,5,0.1); padding: 32px 24px; border-radius: 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.02); transition: transform 0.3s; }
+  .vv-card:hover { transform: translateY(-5px); border-color: var(--saffron); box-shadow: var(--shadow); }
+  .vv-card-icon { font-size: 40px; margin-bottom: 16px; }
+  .vv-card h4 { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--dark); margin-bottom: 8px; }
+  .vv-card p { font-size: 14px; color: var(--saffron); font-weight: 700; text-transform: uppercase; margin: 0;}
+
+  .vv-problem-list { list-style: none; padding: 0; }
+  .vv-problem-list li { background: white; padding: 16px 20px; border-radius: 12px; border: 1px solid rgba(61,34,5,0.1); margin-bottom: 16px; font-weight: 600; color: var(--dark); display: flex; gap: 12px; align-items: flex-start; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+  .vv-problem-list li::before { content: '✗'; color: var(--danger); font-size: 18px; font-weight: 900; }
+  .vv-conclusion { background: linear-gradient(135deg, var(--dark), var(--brown)); color: white; padding: 40px; border-radius: 24px; font-size: 22px; font-family: 'Playfair Display', serif; text-align: center; line-height: 1.5; box-shadow: var(--shadow); }
+  .vv-conclusion span { color: var(--gold); font-style: italic; }
+
+  .vv-step-card { background: white; border: 1px solid rgba(61,34,5,0.1); padding: 32px 20px; border-radius: 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.02); position: relative; }
+  .vv-step-num { width: 48px; height: 48px; background: var(--parchment); color: var(--saffron); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; margin: 0 auto 16px; border: 2px solid var(--gold); }
+  .vv-step-final { background: linear-gradient(135deg, rgba(232,101,10,0.05), rgba(240,165,0,0.05)); border-color: var(--saffron); }
+  .vv-step-final .vv-step-num { background: var(--saffron); color: white; border-color: var(--saffron); }
+
+  .vv-story-card { background: white; padding: 40px; border-radius: 24px; border: 1px solid rgba(61,34,5,0.1); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .vv-story-card::before { content: ''; position: absolute; left: 0; top: 0; width: 6px; height: 100%; background: linear-gradient(to bottom, var(--danger), var(--saffron), var(--success)); }
+  .vv-badge-sm { display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+
+  .vv-founder { background: white; border-radius: 24px; padding: 40px; display: flex; gap: 40px; align-items: center; box-shadow: var(--shadow); border: 1px solid rgba(61,34,5,0.1); max-width: 1000px; margin: 0 auto; }
+  .vv-founder-img { width: 160px; height: 160px; border-radius: 50%; background: var(--parchment); border: 4px solid var(--gold); display: flex; align-items: center; justify-content: center; font-size: 64px; flex-shrink: 0; }
+  
+  .vv-parent-sec { background: var(--dark); color: white; padding: 80px 40px; }
+  .vv-parent-sec .vv-sec-title { color: white; }
+  .vv-parent-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 32px 24px; border-radius: 20px; text-align: center; }
+  .vv-parent-card h4 { color: var(--gold); font-family: 'Playfair Display', serif; font-size: 20px; margin: 16px 0 8px; }
+
+  .vv-faq details { background: white; border: 1px solid rgba(61,34,5,0.1); border-radius: 16px; margin-bottom: 12px; overflow: hidden; }
+  .vv-faq summary { padding: 20px; font-weight: 700; font-size: 16px; cursor: pointer; list-style: none; display: flex; justify-content: space-between; color: var(--dark); outline: none; }
+  .vv-faq summary::-webkit-details-marker { display: none; }
+  .vv-faq summary::after { content: '+'; color: var(--saffron); font-size: 24px; transition: 0.3s; }
+  .vv-faq details[open] summary::after { content: '×'; color: var(--danger); transform: rotate(90deg); }
+  .vv-faq details[open] summary { border-bottom: 1px solid rgba(61,34,5,0.1); background: var(--parchment); }
+  .vv-faq-body { padding: 20px; color: var(--muted); font-size: 15px; line-height: 1.6; }
+
+  .vv-footer { background: var(--dark); color: white; padding: 80px 40px 40px; border-top: 4px solid var(--saffron); text-align: center; }
+
+  /* --- ASSESSMENT FORM & RESULTS STYLES --- */
   .vv-progress-wrap{background:var(--dark);padding:16px 40px;display:flex;align-items:center;gap:20px;}
   .vv-progress-label{color:var(--muted);font-size:13px;font-weight:500;white-space:nowrap;}
   .vv-progress-bar-bg{flex:1;height:6px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;}
@@ -41,7 +100,6 @@ const STYLES = `
   .vv-field label{display:block;font-size:14px;font-weight:600;color:var(--brown);margin-bottom:8px;}
   .vv-field input,.vv-field select{width:100%;padding:14px 18px;border:2px solid rgba(61,34,5,0.15);border-radius:12px;font-size:15px;font-family:'DM Sans',sans-serif;background:white;color:var(--dark);transition:border-color 0.2s;outline:none;}
   .vv-field input:focus,.vv-field select:focus{border-color:var(--saffron);}
-  .vv-two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   .q-card{background:white;border-radius:var(--radius);padding:24px 28px;margin-bottom:18px;border:2px solid transparent;box-shadow:0 2px 12px rgba(28,18,8,0.06);transition:border-color 0.2s;}
   .q-card:hover{border-color:rgba(232,101,10,0.2);}
   .q-number{font-size:11px;font-weight:700;color:var(--saffron);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
@@ -65,7 +123,6 @@ const STYLES = `
   .vv-loading-spinner{width:64px;height:64px;border:4px solid rgba(232,101,10,0.15);border-top-color:var(--saffron);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 32px;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .vv-loading h3{font-family:'Playfair Display',serif;font-size:26px;color:var(--dark);margin-bottom:12px;}
-  .vv-loading p{color:var(--muted);font-size:15px;line-height:1.6;}
   .vv-loading-steps{margin-top:32px;text-align:left;display:inline-block;}
   .loading-step{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:14px;color:var(--muted);transition:color 0.3s;}
   .loading-step.active{color:var(--saffron);font-weight:600;}
@@ -74,63 +131,39 @@ const STYLES = `
   .loading-step.active .step-dot{background:var(--saffron);}
   .loading-step.done .step-dot{background:var(--success);}
   .vv-results{max-width:900px;margin:0 auto;padding:40px 20px 80px;}
-  .results-hero{text-align:center;padding:48px 20px 40px;background:linear-gradient(135deg,var(--dark) 0%,var(--brown) 100%);border-radius:24px;margin-bottom:32px;position:relative;overflow:hidden;}
-  .results-name{font-size:13px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:12px;position:relative;z-index:1;}
-  .results-hero h2{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,42px);color:white;margin-bottom:16px;position:relative;z-index:1;}
-  .riasec-result-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1;}
+  .results-hero{text-align:center;padding:48px 20px 40px;background:linear-gradient(135deg,var(--dark) 0%,var(--brown) 100%);border-radius:24px;margin-bottom:32px;}
+  .riasec-result-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
   .riasec-chip{padding:8px 20px;border-radius:30px;font-size:14px;font-weight:700;}
   .career-card{background:white;border-radius:20px;padding:32px;margin-bottom:20px;box-shadow:var(--shadow);border-left:5px solid transparent;animation:slideUp 0.5s ease both;}
   @keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
   .career-card.best{border-left-color:var(--success);}
   .career-card.recommended{border-left-color:var(--gold);}
   .career-card.least{border-left-color:var(--danger);}
-  .career-badge{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;display:inline-block;margin-bottom:10px;}
+  .career-badge{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block;margin-bottom:10px;}
   .best .career-badge{background:rgba(45,125,70,0.1);color:var(--success);}
   .recommended .career-badge{background:rgba(240,165,0,0.12);color:var(--warn);}
   .least .career-badge{background:rgba(139,26,26,0.1);color:var(--danger);}
-  .career-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--dark);line-height:1.3;}
-  .career-subtitle{font-size:13px;color:var(--muted);margin-top:4px;font-weight:500;}
-  .match-bar-wrap{margin:16px 0;}
-  .match-bar-label{display:flex;justify-content:space-between;margin-bottom:6px;}
-  .match-bar-text{font-size:13px;font-weight:600;color:var(--brown);}
-  .match-pct{font-size:16px;font-weight:800;}
-  .best .match-pct{color:var(--success);}
-  .recommended .match-pct{color:var(--warn);}
-  .least .match-pct{color:var(--danger);}
+  .career-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--dark);}
   .match-bar-bg{height:8px;background:rgba(61,34,5,0.08);border-radius:10px;overflow:hidden;}
   .match-bar-fill{height:100%;border-radius:10px;transition:width 1s ease 0.3s;}
-  .best .match-bar-fill{background:linear-gradient(90deg,var(--success),#4CAF79);}
-  .recommended .match-bar-fill{background:linear-gradient(90deg,var(--gold),#FFD04D);}
-  .least .match-bar-fill{background:linear-gradient(90deg,var(--danger),#C0392B);}
   .ai-analysis{background:var(--cream);border-radius:12px;padding:20px 24px;line-height:1.75;color:var(--brown);font-family:'Cormorant Garamond',serif;font-size:17px;border-left:3px solid var(--saffron);margin-top:16px;}
   .pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
   .pros,.cons{background:var(--parchment);border-radius:12px;padding:16px 18px;}
-  .pros h5{color:var(--success);font-size:13px;font-weight:700;margin-bottom:10px;text-transform:uppercase;}
-  .cons h5{color:var(--danger);font-size:13px;font-weight:700;margin-bottom:10px;text-transform:uppercase;}
-  .pros ul,.cons ul{list-style:none;}
-  .pros li,.cons li{font-size:13px;color:var(--brown);padding:4px 0;line-height:1.4;}
   .pros li::before{content:"✓ ";color:var(--success);font-weight:700;}
   .cons li::before{content:"✗ ";color:var(--danger);font-weight:700;}
   .colleges-section{background:var(--cream);border-radius:12px;padding:16px 20px;margin-top:16px;}
-  .colleges-section h5{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;}
-  .college-tags{display:flex;flex-wrap:wrap;gap:8px;}
-  .college-tag{background:white;border:1px solid rgba(61,34,5,0.15);color:var(--teal);font-size:13px;font-weight:600;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all 0.2s;}
-  .college-tag:hover{background:var(--teal);color:white;}
+  .college-tag{background:white;border:1px solid rgba(61,34,5,0.15);color:var(--teal);font-size:13px;font-weight:600;padding:6px 14px;border-radius:20px;}
   .next-steps{background:linear-gradient(135deg,var(--dark),var(--brown));border-radius:20px;padding:40px;text-align:center;margin-top:32px;color:white;}
-  .next-steps h3{font-family:'Playfair Display',serif;font-size:26px;margin-bottom:12px;}
-  .next-steps p{color:rgba(255,255,255,0.65);font-size:15px;margin-bottom:28px;}
-  .next-steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:left;}
   .next-step-item{background:rgba(255,255,255,0.07);border-radius:14px;padding:20px;border:1px solid rgba(255,255,255,0.1);}
-  .next-step-num{font-size:28px;font-weight:800;color:var(--gold);font-family:'Playfair Display',serif;margin-bottom:8px;}
-  .next-step-desc{font-size:12px;color:rgba(255,255,255,0.55);line-height:1.5;}
-  .btn-restart{margin-top:24px;padding:14px 36px;background:var(--saffron);border:none;border-radius:50px;color:white;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
-  .btn-restart:hover{transform:translateY(-2px);}
-  .error-box{background:#FFF3F3;border:1px solid #FFCDD2;border-radius:12px;padding:16px 20px;color:var(--danger);font-size:14px;margin-bottom:16px;line-height:1.5;}
-  @media(max-width:600px){
-    .vv-header{padding:16px 20px;}.vv-hero{padding:48px 20px 40px;}
-    .vv-two-col{grid-template-columns:1fr;}.choice-grid{grid-template-columns:1fr;}
-    .pros-cons{grid-template-columns:1fr;}.next-steps-grid{grid-template-columns:1fr;}
-    .vv-progress-wrap{padding:12px 20px;}.vv-section-tag{display:none;}
+
+  @media(max-width:900px){
+    .vv-hero-new { padding: 40px 20px; }
+    .vv-grid-4, .vv-grid-3, .vv-grid-2 { grid-template-columns: 1fr; gap: 30px; }
+    .vv-trust-grid { grid-template-columns: 1fr 1fr; }
+    .vv-founder { flex-direction: column; text-align: center; }
+    .vv-two-col { grid-template-columns: 1fr; }
+    .choice-grid { grid-template-columns: 1fr; }
+    .pros-cons { grid-template-columns: 1fr; }
   }
 `;
 
@@ -315,8 +348,11 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
   const isLast = currentSection === ALL_SECTIONS.length-1;
   const isFirst = currentSection === 0;
 
+  // ────────────────────────────────────────────────────────────────────────
+  // HERO / LANDING PAGE (Incorporating HTML Content with VV Style)
+  // ────────────────────────────────────────────────────────────────────────
   if (screen === 'hero') return (
-    <div className="vv-root">
+    <div className="vv-root" ref={topRef}>
       <header className="vv-header">
         <div>
           <div className="vv-logo" onClick={() => setScreen('hero')} style={{ cursor: 'pointer' }}>Vidya<span>Vantage</span></div>
@@ -324,20 +360,184 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
         </div>
         <div className="vv-badge">🇮🇳 India's Career AI</div>
       </header>
-      <div className="vv-hero" ref={topRef}>
-        <div className="vv-hero-eyebrow">Powered by Holland's RIASEC Theory + AI</div>
-        <h1>Find the career that was<br/><em>made for you</em></h1>
-        <p>Answer 25 thoughtful questions about your personality, academics and values. Our AI will map your unique profile and reveal your best, recommended, and least-suited career paths.</p>
-        <button className="vv-start-btn" onClick={() => setScreen('form')}>Begin Your Career Discovery →</button>
-        <div className="vv-riasec-row">
-          {Object.entries(RIASEC_COLORS).map(([k,v]) => (
-            <div key={k} className="riasec-pill" style={{background:v.bg,color:v.color}}>{k} · {v.label}</div>
-          ))}
+
+      {/* HERO SECTION */}
+      <div className="vv-hero-new">
+        <div className="vv-hero-content">
+          <span className="vv-hero-eyebrow">For Class 8th - 12th & Undergraduates</span>
+          <h1 style={{fontFamily: "'Playfair Display', serif", fontSize: 'clamp(36px, 5vw, 56px)', color: 'var(--dark)', lineHeight: 1.1, marginBottom: '20px'}}>
+            Confused About <br/><em style={{color: 'var(--saffron)', fontStyle: 'italic'}}>Science, Commerce or Arts?</em>
+          </h1>
+          <p style={{fontSize: '18px', color: 'var(--muted)', lineHeight: 1.7, marginBottom: '30px'}}>
+            Discover the Right Career Path Before It's Too Late. AI-powered psychometric testing combined with expert human counsellors to help you make confident, data-driven decisions.
+          </p>
+          <div className="feature-tags">
+            <div className="f-tag">🧠 Psychometric Matching</div>
+            <div className="f-tag">📈 Stream Comparisons</div>
+            <div className="f-tag">🤝 Expert Counselling</div>
+          </div>
         </div>
+        <div className="vv-hero-cta">
+          <h3 style={{fontFamily: "'Playfair Display', serif", fontSize: '24px', color: 'var(--dark)', marginBottom: '16px'}}>Start Your Journey</h3>
+          <p style={{color: 'var(--muted)', marginBottom: '24px', fontSize: '15px'}}>Answer 25 thoughtful questions about your personality, academics and values. Our AI will map your unique profile and reveal your best career paths.</p>
+          <button className="vv-start-btn" style={{width: '100%'}} onClick={() => setScreen('form')}>Begin Career Assessment →</button>
+          <div style={{marginTop: '20px', fontSize: '13px', color: 'var(--muted)', fontWeight: 600}}>
+            Takes only 25 minutes • 100% Free
+          </div>
+        </div>
+      </div>
+
+      {/* TRUST STRIP */}
+      <div className="vv-trust-strip">
+        <div className="vv-trust-grid">
+          <div className="vv-trust-item"><h3>5000+</h3><p>Students Guided</p></div>
+          <div className="vv-trust-item"><h3>98%</h3><p>Clarity Improvement</p></div>
+          <div className="vv-trust-item"><h3>75+</h3><p>Data Points Analyzed</p></div>
+          <div className="vv-trust-item"><h3>100%</h3><p>Scientific Method</p></div>
+        </div>
+      </div>
+
+      {/* WHO IS THIS FOR */}
+      <div className="vv-section vv-section-alt">
+        <div className="vv-section-inner">
+          <h2 className="vv-sec-title">Who Is This Platform For?</h2>
+          <p className="vv-sec-sub">Tailored career intelligence depending on where you are in your academic journey.</p>
+          <div className="vv-grid-4">
+            <div className="vv-card"><div className="vv-card-icon">🎒</div><h4>Class 8–10</h4><p>Stream Selection</p></div>
+            <div className="vv-card"><div className="vv-card-icon">🎓</div><h4>Class 11–12</h4><p>Career Locking</p></div>
+            <div className="vv-card"><div className="vv-card-icon">🏫</div><h4>Undergraduates</h4><p>Major Correction</p></div>
+            <div className="vv-card"><div className="vv-card-icon">👨‍👩‍👧</div><h4>Parents</h4><p>Decision Clarity</p></div>
+          </div>
+        </div>
+      </div>
+
+      {/* WHY STUDENTS CHOOSE WRONG */}
+      <div className="vv-section">
+        <div className="vv-grid-2">
+          <div>
+            <h2 className="vv-sec-title" style={{textAlign: 'left'}}>Why Most Students Choose the Wrong Career</h2>
+            <p style={{color: 'var(--muted)', fontSize: '16px', marginBottom: '24px', lineHeight: 1.6}}>Every year, millions of students make life-altering stream and college choices based on flawed metrics. Are you making these common mistakes?</p>
+            <ul className="vv-problem-list">
+              <li>Choosing Science just because you got good marks.</li>
+              <li>Following the exact same path as your friends.</li>
+              <li>Succumbing to pressure from relatives and society.</li>
+              <li>Discovering you hate the subjects only after 12th grade.</li>
+            </ul>
+          </div>
+          <div className="vv-conclusion">
+            "Career decisions should be based on <span>natural aptitude</span>, <span>inherent personality</span>, and <span>long-term strengths</span> — not guesswork."
+          </div>
+        </div>
+      </div>
+
+      {/* HOW IT WORKS */}
+      <div className="vv-section vv-section-alt">
+        <div className="vv-section-inner">
+          <h2 className="vv-sec-title">How Our Intelligence System Works</h2>
+          <p className="vv-sec-sub">A simple, 5-step scientific approach to completely eliminate career confusion.</p>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px'}}>
+             <div className="vv-step-card"><div className="vv-step-num">1</div><h4 style={{fontFamily: "'Playfair Display', serif", fontSize: '18px', marginBottom: '8px', color: 'var(--dark)'}}>Create Profile</h4><p style={{fontSize: '13px', color: 'var(--muted)', margin: 0}}>Log your academic history & interests.</p></div>
+             <div className="vv-step-card"><div className="vv-step-num">2</div><h4 style={{fontFamily: "'Playfair Display', serif", fontSize: '18px', marginBottom: '8px', color: 'var(--dark)'}}>Take Assessment</h4><p style={{fontSize: '13px', color: 'var(--muted)', margin: 0}}>Complete the 25-min AI Psychometric Test.</p></div>
+             <div className="vv-step-card"><div className="vv-step-num">3</div><h4 style={{fontFamily: "'Playfair Display', serif", fontSize: '18px', marginBottom: '8px', color: 'var(--dark)'}}>Get Matches</h4><p style={{fontSize: '13px', color: 'var(--muted)', margin: 0}}>Review your RIASEC code and pathways.</p></div>
+             <div className="vv-step-card"><div className="vv-step-num">4</div><h4 style={{fontFamily: "'Playfair Display', serif", fontSize: '18px', marginBottom: '8px', color: 'var(--dark)'}}>Meet Expert</h4><p style={{fontSize: '13px', color: 'var(--muted)', margin: 0}}>Discuss results 1-on-1 with a counsellor.</p></div>
+             <div className="vv-step-card vv-step-final"><div className="vv-step-num">5</div><h4 style={{fontFamily: "'Playfair Display', serif", fontSize: '18px', marginBottom: '8px', color: 'var(--saffron)'}}>Get Roadmap</h4><p style={{fontSize: '13px', color: 'var(--muted)', margin: 0}}>Lock your path and receive an execution strategy.</p></div>
+          </div>
+        </div>
+      </div>
+
+      {/* TRANSFORMATION */}
+      <div className="vv-section">
+        <div className="vv-grid-2">
+          <div className="vv-story-card">
+            <h3 style={{fontFamily: "'Playfair Display', serif", fontSize: '26px', color: 'var(--dark)', margin: '0 0 24px 0'}}>Real Student Transformation</h3>
+            <div style={{marginBottom: '24px'}}>
+              <span className="vv-badge-sm" style={{background: '#FFF3F3', color: 'var(--danger)'}}>Before Assessment</span>
+              <p style={{color: 'var(--muted)', fontStyle: 'italic', fontSize: '15px', margin: '8px 0 0 0'}}>"Wanted to do Engineering because my friends chose it. I hated math but felt I had no choice."</p>
+            </div>
+            <div style={{marginBottom: '24px'}}>
+              <span className="vv-badge-sm" style={{background: '#E3F2FD', color: 'var(--teal)'}}>AI Discovery</span>
+              <p style={{color: 'var(--dark)', fontWeight: 600, fontSize: '15px', margin: '8px 0 0 0'}}>High Artistic + Investigative profile discovered. Strong aptitude for design logic.</p>
+            </div>
+            <div>
+              <span className="vv-badge-sm" style={{background: '#E8F5E9', color: 'var(--success)'}}>Now (Clarity Score: 9/10)</span>
+              <p style={{color: 'var(--dark)', fontWeight: 800, fontSize: '16px', margin: '8px 0 0 0'}}>Successfully preparing for Architecture (B.Arch) with high confidence.</p>
+            </div>
+          </div>
+          <div>
+            <h2 className="vv-sec-title" style={{textAlign: 'left', marginBottom: '20px'}}>Your Career Intelligence Report Includes:</h2>
+            <ul style={{listStyle: 'none', padding: 0, fontSize: '16px', color: 'var(--dark)', fontWeight: 600}}>
+              <li style={{marginBottom: '16px', display: 'flex', gap: '12px'}}><span style={{color: 'var(--saffron)'}}>✔</span> Detailed RIASEC Personality Code Breakdown</li>
+              <li style={{marginBottom: '16px', display: 'flex', gap: '12px'}}><span style={{color: 'var(--saffron)'}}>✔</span> Top 5 Career Matches (Ranked by Compatibility)</li>
+              <li style={{marginBottom: '16px', display: 'flex', gap: '12px'}}><span style={{color: 'var(--saffron)'}}>✔</span> Optimal Stream & Subject Recommendations</li>
+              <li style={{marginBottom: '16px', display: 'flex', gap: '12px'}}><span style={{color: 'var(--saffron)'}}>✔</span> Vulnerability Zones (Careers leading to burnout)</li>
+              <li style={{display: 'flex', gap: '12px'}}><span style={{color: 'var(--saffron)'}}>✔</span> 1-Year Career Execution & Study Plan</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* FOUNDER */}
+      <div className="vv-section vv-section-alt">
+        <div className="vv-founder">
+          <div className="vv-founder-img">👨‍💼</div>
+          <div>
+            <p style={{textTransform: 'uppercase', fontWeight: 700, color: 'var(--muted)', fontSize: '12px', letterSpacing: '1px', margin: '0 0 8px 0'}}>Meet the Career Architect</p>
+            <h3 style={{fontFamily: "'Playfair Display', serif", fontSize: '32px', color: 'var(--dark)', margin: '0 0 4px 0'}}>Antonio Vian Noronha</h3>
+            <h4 style={{color: 'var(--saffron)', fontSize: '16px', margin: '0 0 16px 0'}}>Lead School Counsellor</h4>
+            <p style={{color: 'var(--brown)', fontSize: '16px', lineHeight: 1.6, fontStyle: 'italic', margin: '0 0 20px 0'}}>"My mission is to replace career anxiety with data-driven confidence. Combining deep psychometric testing with human empathy allows us to find the exact intersection of what a student loves and what they are naturally built to succeed in."</p>
+            <div style={{display: 'flex', gap: '16px', flexWrap: 'wrap'}}>
+               <span style={{background: 'var(--cream)', padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(61,34,5,0.1)', fontSize: '13px', fontWeight: 700}}>🎓 MSW (Medical & Psychiatric)</span>
+               <span style={{background: 'var(--cream)', padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(61,34,5,0.1)', fontSize: '13px', fontWeight: 700}}>🌟 5000+ Students Guided</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* PARENTS */}
+      <div className="vv-parent-sec">
+        <div style={{maxWidth: '1200px', margin: '0 auto'}}>
+          <h2 className="vv-sec-title">Built for Parents Who Want Clarity — Not Conflict</h2>
+          <p className="vv-sec-sub" style={{color: 'rgba(255,255,255,0.7)'}}>We bridge the gap between student aspirations and parental expectations using hard data.</p>
+          <div className="vv-grid-3">
+            <div className="vv-parent-card"><div style={{fontSize: '40px'}}>📊</div><h4>Scientific Decisions</h4><p style={{color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.6, margin: 0}}>Remove emotional bias. We use proven psychometric science to identify what your child is built for.</p></div>
+            <div className="vv-parent-card"><div style={{fontSize: '40px'}}>👁️</div><h4>Transparent Tracking</h4><p style={{color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.6, margin: 0}}>Our "Parent View" allows you to log in to review reports and track execution progress.</p></div>
+            <div className="vv-parent-card"><div style={{fontSize: '40px'}}>🤝</div><h4>Family Alignment</h4><p style={{color: 'rgba(255,255,255,0.7)', fontSize: '14px', lineHeight: 1.6, margin: 0}}>Our expert counsellors mediate sessions to ensure everyone is excited about the final path.</p></div>
+          </div>
+        </div>
+      </div>
+
+      {/* FAQ */}
+      <div className="vv-section">
+        <h2 className="vv-sec-title">Frequently Asked Questions</h2>
+        <div className="vv-faq" style={{maxWidth: '800px', margin: '0 auto'}}>
+          <details open>
+            <summary>When is the right time to take a career assessment?</summary>
+            <div className="vv-faq-body">The ideal time is between Class 9 and Class 11. Testing in Class 9 or 10 helps you choose the correct stream (Science/Commerce/Arts). Testing in Class 11 or 12 helps you narrow down specific degrees and entrance exams.</div>
+          </details>
+          <details>
+            <summary>How accurate are the psychometric tests?</summary>
+            <div className="vv-faq-body">Our system is based on the globally recognized Holland Code (RIASEC) theory, combined with modern cognitive pattern analysis. It boasts a 92%+ accuracy rate in identifying natural aptitudes.</div>
+          </details>
+          <details>
+            <summary>Can parents attend the expert counselling session?</summary>
+            <div className="vv-faq-body">Absolutely. We strongly encourage at least one parent to be present during the final roadmap session to ensure family alignment and proper execution of the plan.</div>
+          </details>
+        </div>
+      </div>
+      
+      {/* FINAL CTA FOOTER */}
+      <div className="vv-footer">
+         <h2 style={{fontFamily: "'Playfair Display', serif", fontSize: '32px', marginBottom: '16px'}}>Still Confused About Your Career?</h2>
+         <p style={{color: 'rgba(255,255,255,0.7)', marginBottom: '32px', fontSize: '16px'}}>Stop guessing. Take the 25-Minute Assessment to reveal the exact path you were built to walk on.</p>
+         <button className="vv-start-btn" onClick={() => setScreen('form')}>Take Assessment Now →</button>
+         <p style={{marginTop: '40px', fontSize: '12px', color: 'rgba(255,255,255,0.3)'}}>© 2026 VidyaVantage. A subsidiary of SecretSharz.</p>
       </div>
     </div>
   );
 
+  // ────────────────────────────────────────────────────────────────────────
+  // LOADING SCREEN
+  // ────────────────────────────────────────────────────────────────────────
   if (screen === 'loading') return (
     <div className="vv-root">
       <header className="vv-header">
@@ -359,6 +559,9 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
     </div>
   );
 
+  // ────────────────────────────────────────────────────────────────────────
+  // RESULTS SCREEN
+  // ────────────────────────────────────────────────────────────────────────
   if (screen === 'results' && results) {
     const {riasec,riasecSummary,bestCareer,recommendedCareer,leastCareer,nextSteps} = results;
     return (
@@ -417,6 +620,9 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
     );
   }
 
+  // ────────────────────────────────────────────────────────────────────────
+  // FORM SCREEN
+  // ────────────────────────────────────────────────────────────────────────
   return (
     <div className="vv-root">
       <header className="vv-header">
