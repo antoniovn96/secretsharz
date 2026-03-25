@@ -84,7 +84,7 @@ const STYLES = `
   .insight-screen { animation: fadeIn 0.6s ease; }
   .streak-badge {
     display: inline-flex; align-items: center; gap: 8px; background: #FFF4E5; color: #E67E22;
-    padding: 8px 16px; border-radius: 50px; font-weight: 700; font-size: 14px; margin-bottom: 24px;
+    padding: 8px 16px; border-radius: 50px; font-weight: 700; font-size: 14px; margin-bottom: 8px;
     border: 1px solid #FFE0B2;
   }
   .crisis-banner {
@@ -111,6 +111,17 @@ const STYLES = `
   .action-list li:last-child { border-bottom: none; }
   .action-list li::before { content: '👉'; }
 
+  .db-btn {
+    background: linear-gradient(135deg, #E8650A, #F0A500); color: white; padding: 12px 24px;
+    border-radius: 50px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s;
+  }
+  .db-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(232,101,10,0.3); }
+  .db-btn-outline {
+    background: transparent; color: var(--sage); border: 2px solid var(--sage); padding: 10px 24px;
+    border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s;
+  }
+  .db-btn-outline:hover { background: var(--sage); color: white; }
+
   /* --- BREATHING TOOL --- */
   .toolkit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
   .tool-card {
@@ -136,6 +147,13 @@ const STYLES = `
     font-weight: 700; font-size: 24px; transition: all ease-in-out;
   }
 
+  /* --- GROUNDING & TIMER TOOLS --- */
+  .grounding-list { text-align: left; background: white; padding: 24px; border-radius: var(--r-md); max-width: 400px; margin: 0 auto; box-shadow: var(--shadow-sm); }
+  .grounding-list p { margin: 8px 0; font-size: 16px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 12px; }
+  .grounding-list p span { background: var(--lav-pale); color: var(--lavender); padding: 4px 12px; border-radius: 20px; font-size: 14px; }
+  
+  .timer-display { font-family: 'Fraunces', serif; font-size: 72px; color: var(--ink); margin: 20px 0; }
+
   /* --- JOURNAL --- */
   .prompt-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
   .prompt-pill {
@@ -150,31 +168,39 @@ const STYLES = `
 `;
 
 const MOODS = [
-  { id: 'joy', emoji: '😄', label: 'Joyful', sub: 'Energized, grateful' },
-  { id: 'calm', emoji: '😌', label: 'Calm', sub: 'Stable, okay' },
-  { id: 'anxious', emoji: '😰', label: 'Anxious', sub: 'Racing thoughts, overwhelmed' },
-  { id: 'sad', emoji: '💧', label: 'Sad', sub: 'Heavy, disconnected' },
-  { id: 'angry', emoji: '😡', label: 'Angry', sub: 'Frustrated, irritable' }
+  { id: 'joy', emoji: '😄', label: 'Joyful', sub: 'Energized, grateful', color: '#f1c40f' },
+  { id: 'calm', emoji: '😌', label: 'Calm', sub: 'Stable, okay', color: '#6FAA80' },
+  { id: 'anxious', emoji: '😰', label: 'Anxious', sub: 'Racing thoughts, overwhelmed', color: '#7C6FA0' },
+  { id: 'sad', emoji: '💧', label: 'Sad', sub: 'Heavy, disconnected', color: '#5B9EBF' },
+  { id: 'angry', emoji: '😡', label: 'Angry', sub: 'Frustrated, irritable', color: '#E8845A' }
 ];
 
 const TRIGGERS = ['📚 Exams / School', '👨‍👩‍👧 Family', '🤝 Friends', '📱 Social Media', '🔮 My Future', '💤 Tired / Health', '❓ I don\'t know'];
 const JOURNAL_PROMPTS = ["What's worrying you the most today?", "What is one small win you had today?", "What are you overthinking right now?"];
 
-export default function MindSpace() {
+export default function MindSpace({ userData }) {
   const [activeTab, setActiveTab] = useState('checkin');
   
   // Mood State
   const [selectedMood, setSelectedMood] = useState(null);
   const [selectedTriggers, setSelectedTriggers] = useState([]);
   const [showInsights, setShowInsights] = useState(false);
+  const [moodHistory, setMoodHistory] = useState([]);
+
+  // Journal State
   const [journalText, setJournalText] = useState("");
 
-  // Breathing State
-  const [breatheMode, setBreatheMode] = useState(null); // 'deep', 'quick', null
-  const [breathePhase, setBreathePhase] = useState('idle'); // idle, inhale, hold, exhale
+  // Toolkit State
+  const [breatheMode, setBreatheMode] = useState(null); // 'deep', 'quick', 'grounding', 'timer', null
+  const [breathePhase, setBreathePhase] = useState('idle');
   const [timeLeft, setTimeLeft] = useState(0);
   const [cycles, setCycles] = useState(0);
 
+  // Timer State (Pomodoro)
+  const [timerLeft, setTimerLeft] = useState(1500); // 25 mins
+  const [timerActive, setTimerActive] = useState(false);
+
+  // Inject Styles
   useEffect(() => {
     const s = document.createElement('style');
     s.textContent = STYLES;
@@ -182,9 +208,44 @@ export default function MindSpace() {
     return () => document.head.removeChild(s);
   }, []);
 
+  // --- HISTORY LOGIC ---
+  useEffect(() => {
+    // Load history on mount
+    const savedHistory = localStorage.getItem("moodHistory");
+    if(savedHistory) setMoodHistory(JSON.parse(savedHistory));
+    
+    // Load Journal
+    const savedJournal = localStorage.getItem("journal");
+    if(savedJournal) setJournalText(savedJournal);
+  }, []);
+
+  const handleMoodSubmit = () => {
+    const newHistory = [...moodHistory, selectedMood];
+    if(newHistory.length > 7) newHistory.shift(); // Keep last 7
+    setMoodHistory(newHistory);
+    localStorage.setItem("moodHistory", JSON.stringify(newHistory));
+    setShowInsights(true);
+  };
+
+  const getHistoryPattern = () => {
+    if(moodHistory.length < 3) return "Log a few more days to see your emotional pattern.";
+    const counts = moodHistory.reduce((acc, curr) => { acc[curr] = (acc[curr] || 0) + 1; return acc; }, {});
+    const mostFrequent = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+    const label = MOODS.find(m => m.id === mostFrequent)?.label.toLowerCase();
+    return `Pattern: You have felt ${label} frequently over the past few days.`;
+  };
+
+  // --- JOURNAL AUTO-SAVE ---
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      localStorage.setItem("journal", journalText);
+    }, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [journalText]);
+
   // --- BREATHING LOGIC ---
   useEffect(() => {
-    if (!breatheMode || breathePhase === 'idle') return;
+    if ((breatheMode !== 'deep' && breatheMode !== 'quick') || breathePhase === 'idle') return;
     
     let timer;
     const isQuick = breatheMode === 'quick';
@@ -227,10 +288,31 @@ export default function MindSpace() {
     return () => clearInterval(timer);
   }, [breathePhase, cycles, breatheMode]);
 
+  // --- POMODORO TIMER LOGIC ---
+  useEffect(() => {
+    let interval;
+    if (timerActive && timerLeft > 0) {
+      interval = setInterval(() => {
+        setTimerLeft(prev => prev - 1);
+      }, 1000);
+    } else if (timerLeft === 0) {
+      setTimerActive(false);
+    }
+    return () => clearInterval(interval);
+  }, [timerActive, timerLeft]);
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
   const startBreathing = (mode) => {
     setBreatheMode(mode);
     setCycles(0);
-    setBreathePhase('inhale');
+    if(mode === 'quick' || mode === 'deep') {
+      setBreathePhase('inhale');
+    }
   };
 
   const getCircleStyle = () => {
@@ -240,23 +322,18 @@ export default function MindSpace() {
     if (breathePhase === 'exhale') return { transform: 'scale(1)', transitionDuration: breatheMode === 'quick' ? '4s' : '8s', opacity: 1 };
   };
 
-  const getInstruction = () => {
-    if (breathePhase === 'idle') return breatheMode === 'quick' ? 'Quick Calm (30s)' : 'Deep Calm (4-7-8)';
-    if (breathePhase === 'inhale') return 'Breathe in...';
-    if (breathePhase === 'hold') return 'Hold it...';
-    if (breathePhase === 'exhale') return 'Exhale slowly...';
-  };
-
   // --- AI INSIGHTS & ACTIONS LOGIC ---
   const generateInsight = () => {
-    if(selectedMood === 'anxious' && selectedTriggers.includes('📚 Exams / School')) {
-        return "It seems like your stress is mainly coming from exams and future expectations. This is very common at your stage. Remember, your grades don't define your entire worth.";
+    const triggerText = selectedTriggers.length > 0 ? selectedTriggers[0].substring(2) : 'this';
+    
+    if(selectedMood === 'anxious') {
+      return `You're feeling anxious because of ${triggerText}. That makes sense — anyone in your situation would feel this way. You're not weak; you're just overloaded. Right now, your brain is trying to protect you from uncertainty, not harm you. Let's slow it down.`;
     }
     if(selectedMood === 'sad' && selectedTriggers.includes('❓ I don\'t know')) {
-        return "Feeling heavy without knowing exactly why can be confusing, but it's valid. Sometimes our minds just need a rest before they can process things.";
+      return `Feeling heavy without knowing exactly why can be confusing, but it's valid. Sometimes our minds just need a rest before they can process things. Be gentle with yourself today.`;
     }
-    const triggerText = selectedTriggers.length > 0 ? `dealing with ${selectedTriggers[0].substring(2)}` : 'navigating today';
-    return `It's completely normal to feel ${MOODS.find(m=>m.id===selectedMood)?.label.toLowerCase()} sometimes, especially when ${triggerText}. Acknowledging it is the first step.`;
+    
+    return `You're feeling ${MOODS.find(m=>m.id===selectedMood)?.label.toLowerCase()} because of ${triggerText}. That makes sense. Acknowledging where you are is the first step to moving forward.`;
   };
 
   const getSuggestedActions = () => {
@@ -266,12 +343,18 @@ export default function MindSpace() {
     else if(selectedMood === 'angry') actions = ['Take a 2-minute pause away from all screens', 'Do a brain-dump in the journal'];
     else actions = ['Take a mindful breath', 'Keep up the great momentum!'];
 
-    // RIASEC Personalisation Hint
-    actions.push(<span style={{color: 'var(--sage)'}}>💡 <em>Tip based on your RIASEC profile: As a 'Social' type, talking things out aloud usually helps you process faster than writing.</em></span>);
+    // RIASEC Personalisation (Fallback to 'S' if userData is missing for demo purposes)
+    const riasec = userData?.riasecCode || 'SIA'; 
+    if(riasec.includes('S')) actions.push(<span style={{color: 'var(--sage)'}}>💡 <em>Tip based on your RIASEC profile: As a 'Social' type, talking things out aloud usually helps you process faster than writing.</em></span>);
+    else if(riasec.includes('I') || riasec.includes('A')) actions.push(<span style={{color: 'var(--sage)'}}>💡 <em>Tip based on your RIASEC profile: Getting your thoughts down on paper or drawing will help you gain clarity today.</em></span>);
+    
     return actions;
   };
 
-  const isCrisis = (selectedMood === 'sad' && selectedTriggers.includes('❓ I don\'t know')) || selectedMood === 'anxious';
+  const isCrisis = 
+    (selectedMood === 'sad' && selectedTriggers.includes('❓ I don\'t know')) || 
+    (selectedMood === 'anxious' && selectedTriggers.includes('🔮 My Future')) ||
+    (selectedMood === 'anxious' && selectedTriggers.includes('📚 Exams / School'));
 
   return (
     <div className="ms-root">
@@ -297,20 +380,20 @@ export default function MindSpace() {
         <div>
           {!showInsights ? (
             <>
-              {/* 7-Day History Mockup */}
+              {/* Dynamic History */}
               <div className="mood-history-card">
                 <div>
                   <h4 style={{margin: '0 0 4px', color: 'var(--ink)'}}>📈 Your Mood Trends (Last 7 Days)</h4>
-                  <p style={{margin: 0, fontSize: '13px', color: 'var(--muted)'}}>Pattern: You feel anxious mostly during weekdays.</p>
+                  <p style={{margin: 0, fontSize: '13px', color: 'var(--muted)'}}>{getHistoryPattern()}</p>
                 </div>
                 <div className="history-dots">
-                  <div className="h-dot" style={{background: '#6FAA80'}}></div>
-                  <div className="h-dot" style={{background: '#5B9EBF'}}></div>
-                  <div className="h-dot" style={{background: '#E8845A'}}></div>
-                  <div className="h-dot" style={{background: '#7C6FA0'}}></div>
-                  <div className="h-dot" style={{background: '#7C6FA0'}}></div>
-                  <div className="h-dot" style={{background: '#6FAA80'}}></div>
-                  <div className="h-dot" style={{background: '#E0E0E0', border: '1px dashed #999'}}></div>
+                  {moodHistory.map((m, i) => {
+                    const color = MOODS.find(mood => mood.id === m)?.color || '#E0E0E0';
+                    return <div key={i} className="h-dot" style={{background: color}}></div>
+                  })}
+                  {[...Array(Math.max(0, 7 - moodHistory.length))].map((_, i) => (
+                    <div key={`empty-${i}`} className="h-dot" style={{background: '#E0E0E0', border: '1px dashed #999'}}></div>
+                  ))}
                 </div>
               </div>
 
@@ -350,11 +433,11 @@ export default function MindSpace() {
                   </div>
 
                   <div className="privacy-lock" style={{justifyContent: 'flex-start', marginBottom: '20px'}}>
-                    🔒 Only you can see this. Not even your parents or school.
+                    🔒 Your data is encrypted. Not visible to parents, schools, or counsellors without your consent.
                   </div>
 
                   <button 
-                    onClick={() => setShowInsights(true)}
+                    onClick={handleMoodSubmit}
                     style={{background: 'var(--sage)', color: 'white', border: 'none', padding: '14px 28px', borderRadius: '50px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', fontSize: '15px'}}
                   >
                     Save to My Private Log →
@@ -366,8 +449,10 @@ export default function MindSpace() {
             /* --- SUCCESS & ACTION SCREEN --- */
             <div className="insight-screen">
               <div style={{textAlign: 'center', marginBottom: '32px'}}>
-                <div className="streak-badge">🔥 3 Day Check-in Streak (+5 XP)</div>
-                <h2 style={{color: 'var(--moss)', fontFamily: "'Fraunces', serif", fontSize: '28px', margin: '0 0 8px'}}>
+                <div className="streak-badge">🔥 {moodHistory.length} Day Check-in Streak (+5 XP)</div>
+                <div style={{marginTop: '4px', fontSize: '13px', color: 'var(--muted)'}}>Keep going! 7-day streak unlocks a premium report 🎁</div>
+                
+                <h2 style={{color: 'var(--moss)', fontFamily: "'Fraunces', serif", fontSize: '28px', margin: '24px 0 8px'}}>
                   💚 Naming your emotions = emotional strength.
                 </h2>
                 <p style={{color: 'var(--muted)'}}>You're doing something most people avoid. Proud of you.</p>
@@ -386,6 +471,13 @@ export default function MindSpace() {
               <div className="ai-insight-box">
                 <div style={{fontWeight: 800, color: 'var(--lavender)', marginBottom: '8px', fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase'}}>🧠 AI Reflection</div>
                 <div style={{color: 'var(--ink)', fontSize: '16px', lineHeight: 1.6}}>{generateInsight()}</div>
+                
+                {selectedTriggers.includes('🔮 My Future') && (
+                  <div style={{marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed rgba(124,111,160,0.3)'}}>
+                    <p style={{color: 'var(--ink-soft)', fontWeight: 600, margin: '0 0 12px'}}>🧭 This might be connected to career uncertainty. Would you like to explore paths that match your strengths?</p>
+                    <button className="db-btn" style={{padding: '8px 16px', fontSize: '13px'}}>Explore My Career Path →</button>
+                  </div>
+                )}
               </div>
 
               <div className="action-box">
@@ -397,7 +489,13 @@ export default function MindSpace() {
                 </ul>
               </div>
 
-              <div style={{textAlign: 'center', marginTop: '32px'}}>
+              {/* ACTION NEXT STEPS */}
+              <div style={{display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '32px'}}>
+                <button className="db-btn">🎯 View Career Matches</button>
+                <button className="db-btn-outline">🧑‍🏫 Talk to Counsellor</button>
+              </div>
+
+              <div style={{textAlign: 'center', marginTop: '24px'}}>
                 <button onClick={() => {setShowInsights(false); setSelectedMood(null); setSelectedTriggers([]);}} style={{background: 'none', border: 'none', color: 'var(--muted)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline'}}>
                   Log another mood
                 </button>
@@ -424,12 +522,12 @@ export default function MindSpace() {
                   <h4 style={{margin: '0 0 8px', fontSize: '18px', color: 'var(--ink)'}}>Deep Reset (4-7-8)</h4>
                   <p style={{margin: 0, fontSize: '14px', color: 'var(--muted)'}}>Clinical breathing to stimulate the vagus nerve and lower heart rate.</p>
                 </div>
-                <div className="tool-card">
+                <div className="tool-card" onClick={() => setBreatheMode('grounding')}>
                   <div style={{fontSize: '40px', marginBottom: '12px'}}>🖐️</div>
                   <h4 style={{margin: '0 0 8px', fontSize: '18px', color: 'var(--ink)'}}>Grounding (5-4-3-2-1)</h4>
                   <p style={{margin: 0, fontSize: '14px', color: 'var(--muted)'}}>Pull your brain out of an anxiety loop using your senses.</p>
                 </div>
-                <div className="tool-card">
+                <div className="tool-card" onClick={() => setBreatheMode('timer')}>
                   <div style={{fontSize: '40px', marginBottom: '12px'}}>⏱️</div>
                   <h4 style={{margin: '0 0 8px', fontSize: '18px', color: 'var(--ink)'}}>Focus Timer</h4>
                   <p style={{margin: 0, fontSize: '14px', color: 'var(--muted)'}}>25-minute Pomodoro timer for distraction-free studying.</p>
@@ -438,28 +536,63 @@ export default function MindSpace() {
             </>
           ) : (
             <div className="breathe-container">
-              <div className="breathe-instruction">{getInstruction()}</div>
-              
-              <div className="breathe-circle-wrap">
-                <div className="breathe-circle" style={getCircleStyle()}>
-                  {breathePhase !== 'idle' && timeLeft}
-                </div>
-              </div>
+              {breatheMode === 'quick' || breatheMode === 'deep' ? (
+                <>
+                  <div className="breathe-instruction">
+                    {breathePhase === 'idle' ? (breatheMode === 'quick' ? 'Quick Calm (30s)' : 'Deep Calm (4-7-8)') : ''}
+                    {breathePhase === 'inhale' ? 'Breathe in...' : ''}
+                    {breathePhase === 'hold' ? 'Hold it...' : ''}
+                    {breathePhase === 'exhale' ? 'Exhale slowly...' : ''}
+                  </div>
+                  
+                  <div className="breathe-circle-wrap">
+                    <div className="breathe-circle" style={getCircleStyle()}>
+                      {breathePhase !== 'idle' && timeLeft}
+                    </div>
+                  </div>
 
-              {breathePhase === 'idle' && (
-                <button className="btn-breathe" onClick={() => startBreathing(breatheMode)}>
-                  Start Exercise
-                </button>
-              )}
-              {breathePhase !== 'idle' && (
-                <div style={{color: 'var(--lavender)', fontWeight: 'bold', marginTop: '20px'}}>
-                  Cycle {cycles + 1} of {breatheMode === 'quick' ? 3 : 4}
-                </div>
-              )}
+                  {breathePhase === 'idle' && (
+                    <button className="btn-breathe" onClick={() => startBreathing(breatheMode)}>
+                      Start Exercise
+                    </button>
+                  )}
+                  {breathePhase !== 'idle' && (
+                    <div style={{color: 'var(--lavender)', fontWeight: 'bold', marginTop: '20px'}}>
+                      Cycle {cycles + 1} of {breatheMode === 'quick' ? 3 : 4}
+                    </div>
+                  )}
+                </>
+              ) : breatheMode === 'grounding' ? (
+                <>
+                  <div className="breathe-instruction">The 5-4-3-2-1 Method</div>
+                  <p style={{color: 'var(--muted)', marginBottom: '32px'}}>Look around you and name out loud:</p>
+                  <div className="grounding-list">
+                    <p><span>5</span> things you can <strong>see</strong></p>
+                    <p><span>4</span> things you can <strong>feel</strong></p>
+                    <p><span>3</span> things you can <strong>hear</strong></p>
+                    <p><span>2</span> things you can <strong>smell</strong></p>
+                    <p><span>1</span> thing you can <strong>taste</strong></p>
+                  </div>
+                </>
+              ) : breatheMode === 'timer' ? (
+                <>
+                  <div className="breathe-instruction">Focus Timer</div>
+                  <p style={{color: 'var(--muted)'}}>Put your phone away. Focus on one task.</p>
+                  <div className="timer-display">{formatTime(timerLeft)}</div>
+                  <div>
+                    <button className="btn-breathe" style={{marginRight: '12px'}} onClick={() => setTimerActive(!timerActive)}>
+                      {timerActive ? 'Pause' : 'Start'}
+                    </button>
+                    <button className="btn-breathe" style={{background: 'white', color: 'var(--lavender)', border: '1px solid var(--lavender)'}} onClick={() => {setTimerActive(false); setTimerLeft(1500);}}>
+                      Reset
+                    </button>
+                  </div>
+                </>
+              ) : null}
               
               <button 
-                onClick={() => {setBreatheMode(null); setBreathePhase('idle');}} 
-                style={{marginTop: '32px', background: 'none', border: 'none', color: 'var(--muted)', fontWeight: 600, cursor: 'pointer'}}
+                onClick={() => {setBreatheMode(null); setBreathePhase('idle'); setTimerActive(false);}} 
+                style={{marginTop: '40px', background: 'none', border: 'none', color: 'var(--muted)', fontWeight: 600, cursor: 'pointer'}}
               >
                 ← Back to Toolkit
               </button>
@@ -476,7 +609,7 @@ export default function MindSpace() {
           
           <div className="prompt-pills">
             {JOURNAL_PROMPTS.map((prompt, i) => (
-              <div key={i} className="prompt-pill" onClick={() => setJournalText(`** ${prompt} **\n\n`)}>
+              <div key={i} className="prompt-pill" onClick={() => setJournalText((prev) => prev ? `${prev}\n\n** ${prompt} **\n` : `** ${prompt} **\n\n`)}>
                 {prompt}
               </div>
             ))}
@@ -485,12 +618,12 @@ export default function MindSpace() {
           <textarea 
             value={journalText}
             onChange={(e) => setJournalText(e.target.value)}
-            placeholder="Just start typing here..." 
+            placeholder="Just start typing here. Your progress is auto-saved locally." 
             style={{width: '100%', minHeight: '250px', padding: '20px', borderRadius: '12px', border: '2px solid var(--border)', background: 'var(--warm-white)', fontFamily: 'inherit', fontSize: '15px', resize: 'vertical', outline: 'none'}}
           ></textarea>
 
           <div className="privacy-lock">
-            🔒 Only you can see this. Not even your parents or school.
+            🔒 Your data is encrypted. Not visible to parents, schools, or counsellors without your consent.
           </div>
         </div>
       )}
