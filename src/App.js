@@ -184,17 +184,21 @@ const PILLARS = [
   { cls:'safe', icon:'🛡️', title:'Safe Corner', desc:"If things feel too heavy to carry, you don't have to carry them alone. Access trained counsellors, crisis support, and emergency helplines instantly.", features:['24/7 crisis helpline access','Connect with trained counsellors','Report unsafe situations privately','Parent & teacher guidance portal'] },
 ];
 
-// ── Main App ──────────────────────────────────────────────────────────────
-
 export default function App() {
-  const [screen, setScreen] = useState('home');
-  // screen: 'home' | 'auth' | 'dashboard' | 'vidyavantage' | 'assessment' | 'mindspace'
+  // 🔥 FIX 1: Remember the last screen the user was on instead of defaulting to 'home'
+  const [screen, setScreen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('currentScreen') || 'home';
+    }
+    return 'home';
+  });
+  
+  const [dashboardTab, setDashboardTab] = useState('home'); 
   const [currentUser, setCurrentUser] = useState(null);
   const [userData, setUserData]       = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const [modal, setModal]             = useState(null); // null | 'join' | 'talk'
+  const [modal, setModal]             = useState(null); 
   
-  // Safe Next.js check for sessionStorage
   const [showVV, setShowVV] = useState(() => {
     if (typeof window !== 'undefined') {
       return sessionStorage.getItem('showVV') === 'true';
@@ -202,7 +206,6 @@ export default function App() {
     return false; 
   });
 
-  // Inject styles once
   useEffect(() => {
     const s = document.createElement('style');
     s.textContent = FONTS + CSS;
@@ -210,13 +213,13 @@ export default function App() {
     return () => document.head.removeChild(s);
   }, []);
 
-  // Firebase auth listener
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
         
-        setScreen(prevScreen => (prevScreen === 'home' || prevScreen === 'auth') ? 'dashboard' : prevScreen);
+        // 🔥 FIX 3: ONLY redirect to dashboard if they literally just logged in
+        setScreen(prevScreen => prevScreen === 'auth' ? 'dashboard' : prevScreen);
         
         try {
           const snap = await getDoc(doc(db, 'users', user.uid));
@@ -235,6 +238,11 @@ export default function App() {
     sessionStorage.setItem('showVV', showVV);
   }, [showVV]);
 
+  // 🔥 FIX 2: Save the screen to memory whenever it changes
+  useEffect(() => {
+    sessionStorage.setItem('currentScreen', screen);
+  }, [screen]);
+
   const handleAuthSuccess = (user, isNew) => {
     setCurrentUser(user);
     setScreen('dashboard');
@@ -247,7 +255,6 @@ export default function App() {
     setScreen('home');
   };
 
-  // 🔥 Firebase Save Handler for VidyaVantage Results
   const handleSaveAssessment = async (results) => {
     if (!currentUser) {
       alert("Please sign in to save your results!");
@@ -256,7 +263,6 @@ export default function App() {
     }
 
     try {
-      // 1. Save to Firebase
       const userRef = doc(db, 'users', currentUser.uid);
       await setDoc(userRef, {
         riasecCode: results.riasec.code,
@@ -267,7 +273,6 @@ export default function App() {
         nextSteps: results.nextSteps
       }, { merge: true });
 
-      // 2. Update Local State (So Dashboard updates instantly)
       setUserData(prev => ({
         ...prev,
         riasecCode: results.riasec.code,
@@ -278,8 +283,8 @@ export default function App() {
         nextSteps: results.nextSteps
       }));
 
-      // 3. Send user back to dashboard to see their results
       setShowVV(false);
+      setDashboardTab('home'); 
       setScreen('dashboard');
       
     } catch (err) {
@@ -287,17 +292,16 @@ export default function App() {
     }
   };
 
-  // ── Show auth page ──
   if (screen === 'auth') {
     return <AuthPage onAuthSuccess={handleAuthSuccess} />;
   }
 
-  // ── Show dashboard ──
   if (screen === 'dashboard' && currentUser) {
     return (
       <StudentDashboard
         user={currentUser}
         userData={userData}
+        initialTab={dashboardTab} 
         onBack={() => setScreen('home')}
         onLogout={handleLogout}
         onStartAssessment={() => setScreen('assessment')}
@@ -305,7 +309,6 @@ export default function App() {
     );
   }
 
-  // ── Show Mind Space page ──
   if (screen === 'mindspace') {
     return (
       <div>
@@ -315,12 +318,22 @@ export default function App() {
           </div>
           <button className="nav-cta-outline" onClick={() => setScreen('home')}>← Back Home</button>
         </nav>
-        <MindSpace userData={userData} />
+        <MindSpace 
+          userData={userData} 
+          onNavigate={(targetTab) => {
+            if(!currentUser) {
+              alert("You must be logged in to view your career data.");
+              setScreen('auth');
+              return;
+            }
+            setDashboardTab(targetTab); 
+            setScreen('dashboard');
+          }} 
+        />
       </div>
     );
   }
 
-  // ── Show VidyaVantage full page ──
   if (showVV) {
     return (
       <div>
@@ -328,7 +341,6 @@ export default function App() {
           <button className="vv-back-btn" onClick={() => setShowVV(false)}>← Back to Secret Sharz</button>
           <div className="vv-back-label">VidyaVantage is a subsidiary of <span>SecretSharz</span></div>
         </div>
-        {/* 🔥 Passed the handleSaveAssessment function here */}
         <VidyaVantage onBack={() => setShowVV(false)} onSave={handleSaveAssessment} />
       </div>
     );
@@ -348,7 +360,7 @@ export default function App() {
 
           {currentUser ? (
             <>
-              <button className="nav-user-chip" onClick={() => setScreen('dashboard')}>
+              <button className="nav-user-chip" onClick={() => {setDashboardTab('home'); setScreen('dashboard');}}>
                 👤 {currentUser.displayName?.split(' ')[0] || 'My Dashboard'}
               </button>
               <button className="nav-cta-outline" onClick={handleLogout}>Logout</button>
@@ -467,10 +479,9 @@ export default function App() {
             <div className="footer-links-title">VidyaVantage</div>
             <a className="footer-link" onClick={() => setShowVV(true)}>Career Assessment</a>
             <a className="footer-link" onClick={() => setShowVV(true)}>College Database</a>
-            <a className="footer-link" onClick={() => currentUser ? setScreen('dashboard') : setScreen('auth')}>My Dashboard</a>
+            <a className="footer-link" onClick={() => {setDashboardTab('home'); currentUser ? setScreen('dashboard') : setScreen('auth')}}>My Dashboard</a>
           </div>
 
-          {/* RESOURCES TAB */}
           <div style={{minWidth:'160px'}}>
             <div className="footer-links-title">Resources</div>
             <a className="footer-link">Blog & Articles</a>
@@ -483,7 +494,7 @@ export default function App() {
             <div className="footer-links-title">Account</div>
             {currentUser ? (
               <>
-                <a className="footer-link" onClick={() => setScreen('dashboard')}>My Dashboard</a>
+                <a className="footer-link" onClick={() => {setDashboardTab('home'); setScreen('dashboard');}}>My Dashboard</a>
                 <a className="footer-link" onClick={handleLogout}>Sign Out</a>
               </>
             ) : (
@@ -497,14 +508,13 @@ export default function App() {
         </div>
         
         <div className="footer-bottom">
-          <div className="footer-copy">© 2025 Secret Sharz. Made with ❤️ for India's youth.</div>
+          <div className="footer-copy">© 2026 Secret Sharz. Made with ❤️ for India's youth.</div>
           <div style={{fontFamily:'Fraunces,serif',fontSize:'14px',fontWeight:600,color:'rgba(255,255,255,0.25)'}}>
             VidyaVantage is a subsidiary of Secret<span style={{color:'#F0A500'}}>Sharz</span>
           </div>
         </div>
       </footer>
 
-      {/* TALK MODAL */}
       {modal === 'talk' && (
         <div className="modal-overlay" onClick={() => setModal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
