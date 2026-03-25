@@ -141,6 +141,9 @@ const CSS = `
 /* ── MISC ── */
 .db-empty-state { text-align: center; padding: 60px 20px; background: white; border-radius: var(--r-lg); border: 1.5px dashed var(--border); }
 .db-pill { display: inline-block; padding: 5px 14px; border-radius: 30px; font-size: 12px; font-weight: 700; }
+
+/* ── TOAST NOTIFICATION FIX ── */
+.db-toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: white; padding: 12px 24px; border-radius: var(--r-md); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); z-index: 9999; animation: fadeSlideUp 0.3s ease forwards; }
 `;
 
 const RIASEC_COLORS = { R: "#E65100", I: "#1565C0", A: "#6A1B9A", S: "#2E7D32", E: "#F57F17", C: "#00695C" };
