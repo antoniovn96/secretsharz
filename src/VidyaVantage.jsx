@@ -318,7 +318,10 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
   if (screen === 'hero') return (
     <div className="vv-root">
       <header className="vv-header">
-        <div><div className="vv-logo">Vidya<span>Vantage</span></div><div className="vv-tagline">Discover your calling</div></div>
+        <div>
+          <div className="vv-logo" onClick={() => setScreen('hero')} style={{ cursor: 'pointer' }}>Vidya<span>Vantage</span></div>
+          <div className="vv-tagline">Discover your calling</div>
+        </div>
         <div className="vv-badge">🇮🇳 India's Career AI</div>
       </header>
       <div className="vv-hero" ref={topRef}>
@@ -337,7 +340,10 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
 
   if (screen === 'loading') return (
     <div className="vv-root">
-      <header className="vv-header"><div className="vv-logo">Vidya<span>Vantage</span></div><div className="vv-badge">Analysing...</div></header>
+      <header className="vv-header">
+        <div className="vv-logo" onClick={() => setScreen('hero')} style={{ cursor: 'pointer' }}>Vidya<span>Vantage</span></div>
+        <div className="vv-badge">Analysing...</div>
+      </header>
       <div className="vv-loading" ref={topRef}>
         <div className="vv-loading-spinner"/>
         <h3>Building your career profile, {info.name.split(' ')[0]}…</h3>
@@ -357,7 +363,10 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
     const {riasec,riasecSummary,bestCareer,recommendedCareer,leastCareer,nextSteps} = results;
     return (
       <div className="vv-root">
-        <header className="vv-header"><div className="vv-logo">Vidya<span>Vantage</span></div><div className="vv-badge">Your Results</div></header>
+        <header className="vv-header">
+          <div className="vv-logo" onClick={() => setScreen('hero')} style={{ cursor: 'pointer' }}>Vidya<span>Vantage</span></div>
+          <div className="vv-badge">Your Results</div>
+        </header>
         <div className="vv-results" ref={topRef}>
           <div className="results-hero">
             <div className="results-name">Career Report for {info.name} · {info.class}</div>
@@ -411,7 +420,7 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
   return (
     <div className="vv-root">
       <header className="vv-header">
-        <div className="vv-logo">Vidya<span>Vantage</span></div>
+        <div className="vv-logo" onClick={() => setScreen('hero')} style={{ cursor: 'pointer' }}>Vidya<span>Vantage</span></div>
         <div className="vv-tagline">Career Discovery Assessment</div>
         <div className="vv-badge">Step {currentSection+1} of {ALL_SECTIONS.length}</div>
       </header>
