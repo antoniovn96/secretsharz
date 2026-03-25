@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore'; // 🔥 Added setDoc here
 import { auth, db } from './firebase';
 import VidyaVantage from './VidyaVantage';
 import AuthPage from './AuthPage';
 import StudentDashboard from './StudentDashboard';
-import MindSpace from './MindSpace'; // 🔥 IMPORT ADDED HERE
+import MindSpace from './MindSpace'; 
 
 // ── Secret Sharz homepage styles & data ──────────
 
@@ -247,6 +247,46 @@ export default function App() {
     setScreen('home');
   };
 
+  // 🔥 Firebase Save Handler for VidyaVantage Results
+  const handleSaveAssessment = async (results) => {
+    if (!currentUser) {
+      alert("Please sign in to save your results!");
+      setScreen('auth');
+      return;
+    }
+
+    try {
+      // 1. Save to Firebase
+      const userRef = doc(db, 'users', currentUser.uid);
+      await setDoc(userRef, {
+        riasecCode: results.riasec.code,
+        riasecSummary: results.riasecSummary,
+        bestCareer: results.bestCareer,
+        recommendedCareer: results.recommendedCareer,
+        leastCareer: results.leastCareer,
+        nextSteps: results.nextSteps
+      }, { merge: true });
+
+      // 2. Update Local State (So Dashboard updates instantly)
+      setUserData(prev => ({
+        ...prev,
+        riasecCode: results.riasec.code,
+        riasecSummary: results.riasecSummary,
+        bestCareer: results.bestCareer,
+        recommendedCareer: results.recommendedCareer,
+        leastCareer: results.leastCareer,
+        nextSteps: results.nextSteps
+      }));
+
+      // 3. Send user back to dashboard to see their results
+      setShowVV(false);
+      setScreen('dashboard');
+      
+    } catch (err) {
+      console.error("Error saving assessment: ", err);
+    }
+  };
+
   // ── Show auth page ──
   if (screen === 'auth') {
     return <AuthPage onAuthSuccess={handleAuthSuccess} />;
@@ -275,7 +315,7 @@ export default function App() {
           </div>
           <button className="nav-cta-outline" onClick={() => setScreen('home')}>← Back Home</button>
         </nav>
-        <MindSpace />
+        <MindSpace userData={userData} />
       </div>
     );
   }
@@ -288,7 +328,8 @@ export default function App() {
           <button className="vv-back-btn" onClick={() => setShowVV(false)}>← Back to Secret Sharz</button>
           <div className="vv-back-label">VidyaVantage is a subsidiary of <span>SecretSharz</span></div>
         </div>
-        <VidyaVantage onBack={() => setShowVV(false)} />
+        {/* 🔥 Passed the handleSaveAssessment function here */}
+        <VidyaVantage onBack={() => setShowVV(false)} onSave={handleSaveAssessment} />
       </div>
     );
   }
@@ -300,7 +341,6 @@ export default function App() {
       <nav className="ss-nav">
         <div className="ss-nav-logo">Secret<span>Sharz</span></div>
         <div className="ss-nav-links">
-          {/* 🔥 MIND SPACE CLICK EVENT UPDATED */}
           <button className="nav-link" onClick={() => setScreen('mindspace')}>Mind Space</button>
           <button className="nav-link">Community</button>
           <button className="nav-link">For Schools</button>
@@ -417,7 +457,6 @@ export default function App() {
           
           <div style={{minWidth:'160px'}}>
             <div className="footer-links-title">Platform</div>
-            {/* 🔥 MIND SPACE CLICK EVENT UPDATED */}
             <a className="footer-link" onClick={() => setScreen('mindspace')}>Mind Space</a>
             <a className="footer-link">Sharz Wall</a>
             <a className="footer-link">Life Guide</a>
