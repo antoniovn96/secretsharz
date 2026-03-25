@@ -185,9 +185,12 @@ const PILLARS = [
 ];
 
 export default function App() {
+  
+  // 🔥 URL HASH ROUTING: Check URL hash first to determine starting screen
   const [screen, setScreen] = useState(() => {
     if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('currentScreen') || 'home';
+      const hash = window.location.hash.replace('#', '');
+      return hash || 'home';
     }
     return 'home';
   });
@@ -197,13 +200,6 @@ export default function App() {
   const [userData, setUserData]       = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [modal, setModal]             = useState(null); 
-  
-  const [showVV, setShowVV] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('showVV') === 'true';
-    }
-    return false; 
-  });
 
   useEffect(() => {
     const s = document.createElement('style');
@@ -212,11 +208,34 @@ export default function App() {
     return () => document.head.removeChild(s);
   }, []);
 
+  // 🔥 URL HASH ROUTING: Listen to browser Back/Forward buttons
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash) setScreen(hash);
+      else setScreen('home');
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // 🔥 URL HASH ROUTING: Push state to URL when screen changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const currentHash = window.location.hash.replace('#', '');
+      if (currentHash !== screen) {
+        window.history.pushState(null, '', `#${screen}`);
+      }
+    }
+  }, [screen]);
+
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
         
+        // ONLY redirect to dashboard if they literally just logged in
         setScreen(prevScreen => prevScreen === 'auth' ? 'dashboard' : prevScreen);
         
         try {
@@ -231,14 +250,6 @@ export default function App() {
     });
     return () => unsub();
   }, []);
-
-  useEffect(() => {
-    sessionStorage.setItem('showVV', showVV);
-  }, [showVV]);
-
-  useEffect(() => {
-    sessionStorage.setItem('currentScreen', screen);
-  }, [screen]);
 
   const handleAuthSuccess = (user, isNew) => {
     setCurrentUser(user);
@@ -280,7 +291,6 @@ export default function App() {
         nextSteps: results.nextSteps
       }));
 
-      setShowVV(false);
       setDashboardTab('home'); 
       setScreen('dashboard');
       
@@ -301,7 +311,7 @@ export default function App() {
         initialTab={dashboardTab} 
         onBack={() => setScreen('home')}
         onLogout={handleLogout}
-        onStartAssessment={() => setShowVV(true)}
+        onStartAssessment={() => setScreen('vidyavantage')}
       />
     );
   }
@@ -331,14 +341,14 @@ export default function App() {
     );
   }
 
-  if (showVV) {
+  if (screen === 'vidyavantage') {
     return (
       <div>
         <div className="vv-back-bar">
-          <button className="vv-back-btn" onClick={() => setShowVV(false)}>← Back to Secret Sharz</button>
+          <button className="vv-back-btn" onClick={() => setScreen(currentUser ? 'dashboard' : 'home')}>← Back to Secret Sharz</button>
           <div className="vv-back-label">VidyaVantage is a subsidiary of <span>SecretSharz</span></div>
         </div>
-        <VidyaVantage onBack={() => setShowVV(false)} onSave={handleSaveAssessment} />
+        <VidyaVantage onBack={() => setScreen(currentUser ? 'dashboard' : 'home')} onSave={handleSaveAssessment} />
       </div>
     );
   }
@@ -348,12 +358,12 @@ export default function App() {
     <div>
       {/* NAV */}
       <nav className="ss-nav">
-        <div className="ss-nav-logo">Secret<span>Sharz</span></div>
+        <div className="ss-nav-logo" onClick={() => setScreen('home')} style={{cursor:'pointer'}}>Secret<span>Sharz</span></div>
         <div className="ss-nav-links">
           <button className="nav-link" onClick={() => setScreen('mindspace')}>Mind Space</button>
           <button className="nav-link" onClick={() => setModal('talk')}>Community</button>
           <button className="nav-link" onClick={() => setModal('talk')}>For Schools</button>
-          <button className="nav-vv-link" onClick={() => setShowVV(true)}>🎓 VidyaVantage</button>
+          <button className="nav-vv-link" onClick={() => setScreen('vidyavantage')}>🎓 VidyaVantage</button>
 
           {currentUser ? (
             <>
@@ -379,7 +389,7 @@ export default function App() {
           <h1 className="hero-h1 anim-up-1">A place where<br/>your <em>feelings</em> are<br/><span className="underline-word">always valid</span></h1>
           <p className="hero-p anim-up-2">Secret Sharz is a safe, anonymous digital space for children and young people across India — to share, heal, grow, and discover who they truly are.</p>
           <div className="hero-actions anim-up-3">
-            <button className="btn-primary" onClick={() => setScreen('auth')}>
+            <button className="btn-primary" onClick={() => setScreen(currentUser ? 'dashboard' : 'auth')}>
               {currentUser ? '🏠 My Dashboard' : 'Create My Safe Space 🌱'}
             </button>
             <button className="btn-ghost" onClick={() => setModal('talk')}>💬 Talk to Someone</button>
@@ -424,8 +434,8 @@ export default function App() {
             <div className="vv-banner-tag">⚡ Powered by Secret Sharz</div>
             <h3>Discover your <em>perfect career</em><br/>with VidyaVantage</h3>
             <p>Our AI-powered career guidance subsidiary uses Holland's RIASEC theory to map your unique personality to the careers and colleges that truly fit you.</p>
-            <button className="btn-vv" onClick={() => currentUser ? setScreen('dashboard') : setScreen('auth')}>
-              🎓 {currentUser ? 'Go to My Dashboard' : 'Start Career Assessment'} <span style={{fontSize:'18px'}}>→</span>
+            <button className="btn-vv" onClick={() => { setScreen(currentUser ? 'vidyavantage' : 'auth'); }}>
+              🎓 {currentUser ? 'Start Career Assessment' : 'Login to Start Assessment'} <span style={{fontSize:'18px'}}>→</span>
             </button>
           </div>
           <div className="vv-banner-right">
@@ -474,8 +484,8 @@ export default function App() {
 
           <div style={{minWidth:'160px'}}>
             <div className="footer-links-title">VidyaVantage</div>
-            <a className="footer-link" onClick={() => setShowVV(true)} style={{cursor: 'pointer'}}>Career Assessment</a>
-            <a className="footer-link" onClick={() => setShowVV(true)} style={{cursor: 'pointer'}}>College Database</a>
+            <a className="footer-link" onClick={() => setScreen('vidyavantage')} style={{cursor: 'pointer'}}>Career Assessment</a>
+            <a className="footer-link" onClick={() => setScreen('vidyavantage')} style={{cursor: 'pointer'}}>College Database</a>
             <a className="footer-link" onClick={() => {setDashboardTab('home'); currentUser ? setScreen('dashboard') : setScreen('auth')}} style={{cursor: 'pointer'}}>My Dashboard</a>
           </div>
 
