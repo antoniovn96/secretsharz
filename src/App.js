@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore'; // 🔥 Added setDoc here
+import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 import { auth, db } from './firebase';
 import VidyaVantage from './VidyaVantage';
 import AuthPage from './AuthPage';
@@ -304,7 +304,7 @@ export default function App() {
         initialTab={dashboardTab} 
         onBack={() => setScreen('home')}
         onLogout={handleLogout}
-        onStartAssessment={() => setScreen('assessment')}
+        onStartAssessment={() => setShowVV(true)} // 🔥 FIX APPLIED HERE
       />
     );
   }
