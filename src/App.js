@@ -6,7 +6,7 @@ import VidyaVantage from './VidyaVantage';
 import AuthPage from './AuthPage';
 import StudentDashboard from './StudentDashboard';
 
-// ── Secret Sharz homepage styles & data (keep exactly as before) ──────────
+// ── Secret Sharz homepage styles & data ──────────
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');`;
 
@@ -192,7 +192,11 @@ export default function App() {
   const [userData, setUserData]       = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [modal, setModal]             = useState(null); // null | 'join' | 'talk'
-  const [showVV, setShowVV]           = useState(false);
+  
+  // 🔥 FIX 1: Initialize VidyaVantage visibility from sessionStorage
+  const [showVV, setShowVV] = useState(() => {
+    return sessionStorage.getItem('showVV') === 'true';
+  });
 
   // Inject styles once
   useEffect(() => {
@@ -224,6 +228,11 @@ export default function App() {
     });
     return () => unsub();
   }, []);
+
+  // 🔥 FIX 2: Save VidyaVantage state to sessionStorage whenever it changes
+  useEffect(() => {
+    sessionStorage.setItem('showVV', showVV);
+  }, [showVV]);
 
   const handleAuthSuccess = (user, isNew) => {
     setCurrentUser(user);
@@ -381,7 +390,7 @@ export default function App() {
         </div>
       </section>
 
-{/* FOOTER */}
+      {/* FOOTER */}
       <footer className="ss-footer">
         <div className="footer-top">
           <div style={{flex:1,minWidth:'220px'}}>
@@ -404,7 +413,7 @@ export default function App() {
             <a className="footer-link" onClick={() => currentUser ? setScreen('dashboard') : setScreen('auth')}>My Dashboard</a>
           </div>
 
-          {/* NEW RESOURCES TAB */}
+          {/* RESOURCES TAB */}
           <div style={{minWidth:'160px'}}>
             <div className="footer-links-title">Resources</div>
             <a className="footer-link">Blog & Articles</a>
