@@ -381,13 +381,14 @@ export default function App() {
         </div>
       </section>
 
-      {/* FOOTER */}
+{/* FOOTER */}
       <footer className="ss-footer">
         <div className="footer-top">
           <div style={{flex:1,minWidth:'220px'}}>
             <div className="footer-logo">Secret<span>Sharz</span></div>
             <div className="footer-tagline">A safe space for every young person in India to share, heal, and grow — anonymously and without judgement.</div>
           </div>
+          
           <div style={{minWidth:'160px'}}>
             <div className="footer-links-title">Platform</div>
             <a className="footer-link">Mind Space</a>
@@ -395,12 +396,23 @@ export default function App() {
             <a className="footer-link">Life Guide</a>
             <a className="footer-link">Safe Corner</a>
           </div>
+
           <div style={{minWidth:'160px'}}>
             <div className="footer-links-title">VidyaVantage</div>
             <a className="footer-link" onClick={() => setShowVV(true)}>Career Assessment</a>
             <a className="footer-link" onClick={() => setShowVV(true)}>College Database</a>
             <a className="footer-link" onClick={() => currentUser ? setScreen('dashboard') : setScreen('auth')}>My Dashboard</a>
           </div>
+
+          {/* NEW RESOURCES TAB */}
+          <div style={{minWidth:'160px'}}>
+            <div className="footer-links-title">Resources</div>
+            <a className="footer-link">Blog & Articles</a>
+            <a className="footer-link">Helpline Directory</a>
+            <a className="footer-link">For Parents & Educators</a>
+            <a className="footer-link">FAQ & Support</a>
+          </div>
+
           <div style={{minWidth:'160px'}}>
             <div className="footer-links-title">Account</div>
             {currentUser ? (
@@ -417,6 +429,7 @@ export default function App() {
             <a className="footer-link">Contact Us</a>
           </div>
         </div>
+        
         <div className="footer-bottom">
           <div className="footer-copy">© 2025 Secret Sharz. Made with ❤️ for India's youth.</div>
           <div style={{fontFamily:'Fraunces,serif',fontSize:'14px',fontWeight:600,color:'rgba(255,255,255,0.25)'}}>
