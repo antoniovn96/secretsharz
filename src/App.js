@@ -5,6 +5,7 @@ import { auth, db } from './firebase';
 import VidyaVantage from './VidyaVantage';
 import AuthPage from './AuthPage';
 import StudentDashboard from './StudentDashboard';
+import MindSpace from './MindSpace'; // 🔥 IMPORT ADDED HERE
 
 // ── Secret Sharz homepage styles & data ──────────
 
@@ -187,19 +188,18 @@ const PILLARS = [
 
 export default function App() {
   const [screen, setScreen] = useState('home');
-  // screen: 'home' | 'auth' | 'dashboard' | 'vidyavantage' | 'assessment'
+  // screen: 'home' | 'auth' | 'dashboard' | 'vidyavantage' | 'assessment' | 'mindspace'
   const [currentUser, setCurrentUser] = useState(null);
   const [userData, setUserData]       = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [modal, setModal]             = useState(null); // null | 'join' | 'talk'
   
-// 🔥 FIX 1: Safe Next.js check for sessionStorage
+  // Safe Next.js check for sessionStorage
   const [showVV, setShowVV] = useState(() => {
-    // Check if we are in the browser (client-side) before using sessionStorage
     if (typeof window !== 'undefined') {
       return sessionStorage.getItem('showVV') === 'true';
     }
-    return false; // Default state for the server build
+    return false; 
   });
 
   // Inject styles once
@@ -216,8 +216,6 @@ export default function App() {
       if (user) {
         setCurrentUser(user);
         
-        // This ensures that if the user refreshes the page while logged in, 
-        // they are automatically placed back on their dashboard.
         setScreen(prevScreen => (prevScreen === 'home' || prevScreen === 'auth') ? 'dashboard' : prevScreen);
         
         try {
@@ -233,7 +231,6 @@ export default function App() {
     return () => unsub();
   }, []);
 
-  // 🔥 FIX 2: Save VidyaVantage state to sessionStorage whenever it changes
   useEffect(() => {
     sessionStorage.setItem('showVV', showVV);
   }, [showVV]);
@@ -268,6 +265,21 @@ export default function App() {
     );
   }
 
+  // ── Show Mind Space page ──
+  if (screen === 'mindspace') {
+    return (
+      <div>
+        <nav className="ss-nav">
+          <div className="ss-nav-logo" onClick={() => setScreen('home')} style={{ cursor: 'pointer' }}>
+            Secret<span>Sharz</span>
+          </div>
+          <button className="nav-cta-outline" onClick={() => setScreen('home')}>← Back Home</button>
+        </nav>
+        <MindSpace />
+      </div>
+    );
+  }
+
   // ── Show VidyaVantage full page ──
   if (showVV) {
     return (
@@ -288,7 +300,8 @@ export default function App() {
       <nav className="ss-nav">
         <div className="ss-nav-logo">Secret<span>Sharz</span></div>
         <div className="ss-nav-links">
-          <button className="nav-link">Mind Space</button>
+          {/* 🔥 MIND SPACE CLICK EVENT UPDATED */}
+          <button className="nav-link" onClick={() => setScreen('mindspace')}>Mind Space</button>
           <button className="nav-link">Community</button>
           <button className="nav-link">For Schools</button>
           <button className="nav-vv-link" onClick={() => setShowVV(true)}>🎓 VidyaVantage</button>
@@ -404,7 +417,8 @@ export default function App() {
           
           <div style={{minWidth:'160px'}}>
             <div className="footer-links-title">Platform</div>
-            <a className="footer-link">Mind Space</a>
+            {/* 🔥 MIND SPACE CLICK EVENT UPDATED */}
+            <a className="footer-link" onClick={() => setScreen('mindspace')}>Mind Space</a>
             <a className="footer-link">Sharz Wall</a>
             <a className="footer-link">Life Guide</a>
             <a className="footer-link">Safe Corner</a>
