@@ -185,7 +185,6 @@ const PILLARS = [
 ];
 
 export default function App() {
-  // 🔥 FIX 1: Remember the last screen the user was on instead of defaulting to 'home'
   const [screen, setScreen] = useState(() => {
     if (typeof window !== 'undefined') {
       return sessionStorage.getItem('currentScreen') || 'home';
@@ -218,7 +217,6 @@ export default function App() {
       if (user) {
         setCurrentUser(user);
         
-        // 🔥 FIX 3: ONLY redirect to dashboard if they literally just logged in
         setScreen(prevScreen => prevScreen === 'auth' ? 'dashboard' : prevScreen);
         
         try {
@@ -238,7 +236,6 @@ export default function App() {
     sessionStorage.setItem('showVV', showVV);
   }, [showVV]);
 
-  // 🔥 FIX 2: Save the screen to memory whenever it changes
   useEffect(() => {
     sessionStorage.setItem('currentScreen', screen);
   }, [screen]);
@@ -304,7 +301,7 @@ export default function App() {
         initialTab={dashboardTab} 
         onBack={() => setScreen('home')}
         onLogout={handleLogout}
-        onStartAssessment={() => setShowVV(true)} // 🔥 FIX APPLIED HERE
+        onStartAssessment={() => setShowVV(true)}
       />
     );
   }
@@ -354,8 +351,8 @@ export default function App() {
         <div className="ss-nav-logo">Secret<span>Sharz</span></div>
         <div className="ss-nav-links">
           <button className="nav-link" onClick={() => setScreen('mindspace')}>Mind Space</button>
-          <button className="nav-link">Community</button>
-          <button className="nav-link">For Schools</button>
+          <button className="nav-link" onClick={() => setModal('talk')}>Community</button>
+          <button className="nav-link" onClick={() => setModal('talk')}>For Schools</button>
           <button className="nav-vv-link" onClick={() => setShowVV(true)}>🎓 VidyaVantage</button>
 
           {currentUser ? (
@@ -469,41 +466,41 @@ export default function App() {
           
           <div style={{minWidth:'160px'}}>
             <div className="footer-links-title">Platform</div>
-            <a className="footer-link" onClick={() => setScreen('mindspace')}>Mind Space</a>
-            <a className="footer-link">Sharz Wall</a>
-            <a className="footer-link">Life Guide</a>
-            <a className="footer-link">Safe Corner</a>
+            <a className="footer-link" onClick={() => setScreen('mindspace')} style={{cursor: 'pointer'}}>Mind Space</a>
+            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Sharz Wall</a>
+            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Life Guide</a>
+            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Safe Corner</a>
           </div>
 
           <div style={{minWidth:'160px'}}>
             <div className="footer-links-title">VidyaVantage</div>
-            <a className="footer-link" onClick={() => setShowVV(true)}>Career Assessment</a>
-            <a className="footer-link" onClick={() => setShowVV(true)}>College Database</a>
-            <a className="footer-link" onClick={() => {setDashboardTab('home'); currentUser ? setScreen('dashboard') : setScreen('auth')}}>My Dashboard</a>
+            <a className="footer-link" onClick={() => setShowVV(true)} style={{cursor: 'pointer'}}>Career Assessment</a>
+            <a className="footer-link" onClick={() => setShowVV(true)} style={{cursor: 'pointer'}}>College Database</a>
+            <a className="footer-link" onClick={() => {setDashboardTab('home'); currentUser ? setScreen('dashboard') : setScreen('auth')}} style={{cursor: 'pointer'}}>My Dashboard</a>
           </div>
 
           <div style={{minWidth:'160px'}}>
             <div className="footer-links-title">Resources</div>
-            <a className="footer-link">Blog & Articles</a>
-            <a className="footer-link">Helpline Directory</a>
-            <a className="footer-link">For Parents & Educators</a>
-            <a className="footer-link">FAQ & Support</a>
+            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Blog & Articles</a>
+            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Helpline Directory</a>
+            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>For Parents & Educators</a>
+            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>FAQ & Support</a>
           </div>
 
           <div style={{minWidth:'160px'}}>
             <div className="footer-links-title">Account</div>
             {currentUser ? (
               <>
-                <a className="footer-link" onClick={() => {setDashboardTab('home'); setScreen('dashboard');}}>My Dashboard</a>
-                <a className="footer-link" onClick={handleLogout}>Sign Out</a>
+                <a className="footer-link" onClick={() => {setDashboardTab('home'); setScreen('dashboard');}} style={{cursor: 'pointer'}}>My Dashboard</a>
+                <a className="footer-link" onClick={handleLogout} style={{cursor: 'pointer'}}>Sign Out</a>
               </>
             ) : (
               <>
-                <a className="footer-link" onClick={() => setScreen('auth')}>Sign In</a>
-                <a className="footer-link" onClick={() => setScreen('auth')}>Create Account</a>
+                <a className="footer-link" onClick={() => setScreen('auth')} style={{cursor: 'pointer'}}>Sign In</a>
+                <a className="footer-link" onClick={() => setScreen('auth')} style={{cursor: 'pointer'}}>Create Account</a>
               </>
             )}
-            <a className="footer-link">Contact Us</a>
+            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Contact Us</a>
           </div>
         </div>
         
