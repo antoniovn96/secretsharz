@@ -146,6 +146,30 @@ const CSS = `
 .db-toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: white; padding: 12px 24px; border-radius: var(--r-md); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); z-index: 9999; animation: fadeSlideUp 0.3s ease forwards; }
 `;
 
+// 🔥 NEW: 20 Randomized Advisory Messages to discourage cheating the assessment
+const ADVISORY_MESSAGES = [
+  "Answer with full concentration; your first instinct is usually the most accurate.",
+  "Please find a quiet space. Deep focus yields the most accurate career map.",
+  "Don't overthink! Answer honestly based on who you are, not who others want you to be.",
+  "This is not a test to pass or fail. It's a mirror reflecting your true potential.",
+  "Changing your answers to 'game the system' will only result in a mismatched career report.",
+  "Take your time, read carefully, but trust your gut feelings.",
+  "There are no right or wrong answers, only what is right for YOU.",
+  "Your future is worth 25 minutes of undivided attention. Please avoid distractions.",
+  "Answer as you are today, not as you wish to be tomorrow.",
+  "Consistency is key. Answer truthfully to get a report that actually helps you.",
+  "A distracted mind gives distracted results. Take a deep breath before you begin.",
+  "Your career report relies entirely on your honesty. Don't try to outsmart the AI!",
+  "Treat this assessment like a conversation with yourself. Be completely honest.",
+  "Every question is a stepping stone to your future. Step carefully and honestly.",
+  "Turn off your notifications. Give yourself the gift of complete focus for the next 25 minutes.",
+  "The AI can only map what you give it. Feed it your truth.",
+  "Don't choose answers based on what pays the most; choose based on what feels right.",
+  "Remember, taking this assessment multiple times with different answers will dilute your real profile.",
+  "Your uniqueness is your strength. Let your genuine preferences shine through your answers.",
+  "Focus inward. The best career insights come from genuine self-reflection."
+];
+
 const RIASEC_COLORS = { R: "#E65100", I: "#1565C0", A: "#6A1B9A", S: "#2E7D32", E: "#F57F17", C: "#00695C" };
 
 const NAV_ITEMS = [
@@ -158,16 +182,29 @@ const NAV_ITEMS = [
   { id: "counsellor", icon: "📅", label: "Book Expert" },
 ];
 
-export default function StudentDashboard({ user, userData, onStartAssessment, onBack, onLogout }) {
-  const [activeTab, setActiveTab] = useState("home");
+export default function StudentDashboard({ user, userData, initialTab = "home", onStartAssessment, onBack, onLogout }) {
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [isParentMode, setIsParentMode] = useState(false);
   const [toast, setToast] = useState(null);
+  
+  // State for the random advisory message
+  const [advisoryMsg, setAdvisoryMsg] = useState("");
 
   useEffect(() => {
     const style = document.createElement("style");
     style.textContent = FONTS + CSS;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
+  }, []);
+
+  // When initialTab changes (from App.js navigation), update local state
+  useEffect(() => {
+    if(initialTab) setActiveTab(initialTab);
+  }, [initialTab]);
+
+  // Pick a random message when the dashboard mounts
+  useEffect(() => {
+    setAdvisoryMsg(ADVISORY_MESSAGES[Math.floor(Math.random() * ADVISORY_MESSAGES.length)]);
   }, []);
 
   const showToast = (msg) => {
@@ -189,12 +226,27 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
   const recommendedCareer = userData?.recommendedCareer || null;
   const leastCareer = userData?.leastCareer || null;
 
-  // New Data Points (Safely expecting them from backend eventually)
   const streamRec = userData?.streamRec || null; 
   const compareStats = userData?.compareStats || [];
   const collegesExt = userData?.collegesExt || [];
   const skillGaps = userData?.skillGaps || [];
   const executionPlan = userData?.executionPlan || [];
+
+  // Helper function to render a beautiful locked state with the advisory message
+  const renderLockedState = (icon, title, desc = "") => (
+    <div className="db-empty-state">
+      <div style={{fontSize: "48px", marginBottom: "16px"}}>{icon}</div>
+      <div style={{fontFamily: "'Fraunces', serif", fontSize: "24px", fontWeight: "700", color: "var(--ink)", marginBottom: "12px"}}>{title}</div>
+      {desc && <div style={{color: "var(--muted)", fontSize: "14px", marginBottom: "20px"}}>{desc}</div>}
+      
+      <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", padding: "16px 24px", borderRadius: "12px", margin: "0 auto 24px", maxWidth: "500px", color: "#92400E", fontSize: "14px", lineHeight: "1.6", textAlign: "left" }}>
+        <strong>💡 Assessment Rule:</strong><br/>
+        <span style={{color: "#B45309"}}>{advisoryMsg}</span>
+      </div>
+      
+      <button className="db-btn" onClick={onStartAssessment} style={{fontSize: "16px", padding: "14px 32px"}}>Start Assessment 🚀</button>
+    </div>
+  );
 
   return (
     <div className="db-root">
@@ -304,10 +356,7 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
           {activeTab === "careers" && (
             <div className="db-tab">
               {!hasAssessment ? (
-                <div className="db-empty-state">
-                  <div className="db-empty-icon">🎯</div><div className="db-empty-title">Unlock Matches</div>
-                  <button className="db-btn" onClick={onStartAssessment}>Take Assessment</button>
-                </div>
+                renderLockedState("🎯", "Unlock Career Matches", "You need to complete your profile before we can generate your career matches.")
               ) : (
                 <>
                   <div className="db-three-col">
@@ -318,7 +367,6 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                     ].map((career, i) => {
                       if (!career.data) return null;
                       
-                      // Using actual pros/cons and parentMetrics from the career object if they exist
                       const pros = career.data.pros || ["Pending AI analysis"];
                       const cons = career.data.cons || ["Pending AI analysis"];
                       const pMetrics = career.data.parentMetrics || { stability: "Pending", demand: "Pending", safety: "Pending" };
@@ -339,7 +387,6 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                             </div>
                           </div>
 
-                          {/* PARENT MODE VS STUDENT MODE */}
                           {isParentMode ? (
                             <div className="db-explain-box" style={{ background: "#EEF2FF", border: "1px solid #C7D2FE" }}>
                               <div style={{ fontSize: "11px", fontWeight: "800", color: "#4F46E5", marginBottom: "8px", textTransform: "uppercase" }}>👪 Parent Metrics</div>
@@ -374,7 +421,7 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
           {activeTab === "compare" && (
             <div className="db-tab">
               {!hasAssessment ? (
-                <div className="db-empty-state"><div className="db-empty-icon">⚖️</div><div className="db-empty-title">Compare Tool Locked</div><button className="db-btn" onClick={onStartAssessment}>Take Assessment</button></div>
+                renderLockedState("⚖️", "Compare Tool Locked")
               ) : compareStats.length === 0 ? (
                  <div className="db-empty-state"><div className="db-empty-icon">⏳</div><div className="db-empty-title">Comparison Data Pending</div><div className="db-empty-desc">Your AI engine is still fetching salary and study data for these paths.</div></div>
               ) : (
@@ -384,11 +431,9 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                     <p style={{ color: "var(--muted)", fontSize: "14px" }}>Compare your top matched careers across real-world metrics.</p>
                   </div>
                   <div className="db-compare-grid">
-                    {/* Headers */}
                     <div className="db-compare-header" style={{ background: "white" }}>Metrics</div>
                     {compareStats.map((c, i) => <div key={i} className="db-compare-header">{c.title}</div>)}
                     
-                    {/* Rows */}
                     <div className="db-compare-cell" style={{ color: "var(--muted)" }}>Average Salary</div>
                     {compareStats.map((c, i) => <div key={i} className="db-compare-cell" style={{ color: "var(--success)" }}>{c.salary}</div>)}
 
@@ -413,7 +458,7 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
           {activeTab === "colleges" && (
             <div className="db-tab">
               {!hasAssessment ? (
-                <div className="db-empty-state"><div className="db-empty-icon">🏫</div><div className="db-empty-title">College Explorer Locked</div><button className="db-btn" onClick={onStartAssessment}>Take Assessment</button></div>
+                renderLockedState("🏫", "College Explorer Locked")
               ) : collegesExt.length === 0 ? (
                 <div className="db-empty-state"><div className="db-empty-icon">⏳</div><div className="db-empty-title">Fetching Colleges</div><div className="db-empty-desc">College cutoff and fee data is being populated.</div></div>
               ) : (
@@ -428,7 +473,7 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                       <div className="db-college-ext-main">
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
                           <div style={{ fontSize: "16px", fontWeight: "700", color: "var(--ink)" }}>{c.name}</div>
-                          <span className="db-pill db-pill-green">Top Match</span>
+                          <span className="db-pill db-pill-green" style={{background: "#D1FAE5", color: "#065F46"}}>Top Match</span>
                         </div>
                         <div className="db-college-stats">
                           <div className="db-college-stat-pill">📍 {c.loc}</div>
@@ -444,11 +489,11 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
             </div>
           )}
 
-          {/* ── GROWTH & REALITY TAB (NEW) ── */}
+          {/* ── GROWTH & REALITY TAB ── */}
           {activeTab === "growth" && (
             <div className="db-tab">
               {!hasAssessment ? (
-                <div className="db-empty-state"><div className="db-empty-icon">📈</div><div className="db-empty-title">Growth Plan Locked</div><button className="db-btn" onClick={onStartAssessment}>Take Assessment</button></div>
+                renderLockedState("📈", "Growth Plan Locked")
               ) : (
                 <div className="db-two-col">
                   {/* Skill Gap */}
@@ -490,7 +535,6 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                   <div className="db-card" style={{ gridColumn: "1 / -1" }}>
                     <div className="db-card-header"><div className="db-card-title">🚀 Your Execution Plan</div></div>
                     <div className="db-card-body" style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                      
                       {executionPlan.length === 0 ? (
                          <div style={{ fontSize: "13px", color: "var(--muted)" }}>Complete profile to unlock your personalized execution plan.</div>
                       ) : (
@@ -501,7 +545,6 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                           </div>
                         ))
                       )}
-
                     </div>
                   </div>
                 </div>
@@ -516,7 +559,6 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
                 <div className="db-card" style={{ marginBottom: 0 }}>
                   <div className="db-card-header"><div className="db-card-title">📅 Book Expert Session</div></div>
                   <div className="db-card-body">
-                    {/* Calendar Slots UI */}
                     <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "16px", marginBottom: "16px", borderBottom: "1px solid var(--border)" }}>
                       {["Today", "Tomorrow", "Thu 26", "Fri 27"].map((d, i) => (
                         <div key={i} style={{ padding: "10px 16px", border: i===0?"1.5px solid var(--saffron)":"1px solid var(--border)", borderRadius: "var(--r-sm)", background: i===0?"#FFFBEB":"white", textAlign: "center", cursor: "pointer", minWidth: "80px" }}>
@@ -549,7 +591,7 @@ export default function StudentDashboard({ user, userData, onStartAssessment, on
           {activeTab === "report" && (
             <div className="db-tab">
               {!hasAssessment ? (
-                <div className="db-empty-state"><div className="db-empty-icon">📄</div><div className="db-empty-title">Report Locked</div><button className="db-btn" onClick={onStartAssessment}>Start Assessment</button></div>
+                renderLockedState("📄", "Full Report Locked")
               ) : (
                 <div className="db-card">
                   <div className="db-card-header">
