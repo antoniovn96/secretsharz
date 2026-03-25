@@ -193,9 +193,13 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [modal, setModal]             = useState(null); // null | 'join' | 'talk'
   
-  // 🔥 FIX 1: Initialize VidyaVantage visibility from sessionStorage
+// 🔥 FIX 1: Safe Next.js check for sessionStorage
   const [showVV, setShowVV] = useState(() => {
-    return sessionStorage.getItem('showVV') === 'true';
+    // Check if we are in the browser (client-side) before using sessionStorage
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('showVV') === 'true';
+    }
+    return false; // Default state for the server build
   });
 
   // Inject styles once
