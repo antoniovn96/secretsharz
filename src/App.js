@@ -8,8 +8,6 @@ import StudentDashboard from './StudentDashboard';
 import MindSpace from './MindSpace'; 
 import AdminDashboard from './AdminDashboard'; 
 
-// ── Secret Sharz homepage styles & data ──────────
-
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');`;
 
 const CSS = `
@@ -202,9 +200,10 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [modal, setModal]             = useState(null); 
   
-  // 🔥 THE MAGIC FIX: Encrypted Admin Validation
-  // "YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t" is the Base64 encoded version of your email.
-  const isAdmin = currentUser?.email && btoa(currentUser.email) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
+  // 🔥 FOOLPROOF ADMIN VALIDATION
+  // Encrypted email check + Firebase Database check combined
+  const isMasterEmail = currentUser?.email && btoa(currentUser.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
+  const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
 
   useEffect(() => {
     const s = document.createElement('style');
@@ -236,8 +235,6 @@ export default function App() {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
-        setScreen(prevScreen => prevScreen === 'auth' ? 'dashboard' : prevScreen);
-        
         try {
           const snap = await getDoc(doc(db, 'users', user.uid));
           if (snap.exists()) setUserData(snap.data());
@@ -251,9 +248,27 @@ export default function App() {
     return () => unsub();
   }, []);
 
-  const handleAuthSuccess = (user, isNew) => {
+  // 🔥 THE FIX: handleAuthSuccess is now responsible for routing you!
+  const handleAuthSuccess = async (user, isNew) => {
     setCurrentUser(user);
-    setScreen('dashboard');
+    
+    // Check admin status immediately so we know where to route you
+    let isDbAdmin = false;
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) {
+        setUserData(snap.data());
+        if (snap.data().role === 'super_admin') isDbAdmin = true;
+      }
+    } catch (err) { console.error(err); }
+
+    const isMaster = user?.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
+
+    if (isDbAdmin || isMaster) {
+      setScreen('admin');
+    } else {
+      setScreen('dashboard');
+    }
   };
 
   const handleLogout = async () => {
@@ -299,7 +314,7 @@ export default function App() {
     }
   };
 
-  // ── SECURE ADMIN ROUTE (FOOLPROOF CHECK) ──
+  // ── SECURE ADMIN ROUTE ──
   if (screen === 'admin') {
     if (!isAdmin) {
       setScreen('home');
@@ -323,6 +338,8 @@ export default function App() {
         user={currentUser}
         userData={userData}
         initialTab={dashboardTab} 
+        isAdmin={isAdmin}
+        onAdmin={() => setScreen('admin')}
         onBack={() => setScreen('home')}
         onLogout={handleLogout}
         onStartAssessment={() => setScreen('vidyavantage')}
@@ -380,7 +397,6 @@ export default function App() {
 
           {currentUser ? (
             <>
-              {/* 🔒 FOOLPROOF ADMIN BUTTON */}
               {isAdmin && (
                 <button className="nav-link" onClick={() => setScreen('admin')} style={{color: 'var(--saffron)', fontWeight: 'bold'}}>
                   ⚙️ Admin Panel
@@ -566,3 +582,4 @@ export default function App() {
     </div>
   );
 }
+"
