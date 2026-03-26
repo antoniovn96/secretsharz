@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   updateProfile,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
@@ -365,44 +364,33 @@ export default function AuthPage({ onAuthSuccess }) {
     return () => document.head.removeChild(style);
   }, []);
 
-  // 🔥 Catch the user when they return from the Google Redirect
-  useEffect(() => {
-    const checkRedirectResult = async () => {
-      try {
-        setLoading(true);
-        const result = await getRedirectResult(auth);
-        if (result) {
-          const user = result.user;
-          // Check if profile exists
-          const snap = await getDoc(doc(db, "users", user.uid));
-          if (!snap.exists()) {
-            await createUserProfile(user.uid, {
-              name: user.displayName || "",
-              email: user.email || "",
-              photo: user.photoURL || "",
-              gender: "", classLevel: "", state: "", stream: "", aspiration: "",
-              loginMethod: "social",
-              isNewUser: true,
-            });
-          }
-          onAuthSuccess(user, !snap.exists());
-        }
-      } catch (err) {
-        setError(friendlyError(err.code));
-      } finally {
-        setLoading(false);
-      }
-    };
-    checkRedirectResult();
-  }, [onAuthSuccess]);
-
   const clearMessages = () => { setError(""); setSuccess(""); };
 
-  // ── Social Login (Using Redirect instead of Popup) ──
-  const handleSocialLogin = (provider) => {
-    setLoading(true); 
-    clearMessages();
-    signInWithRedirect(auth, provider);
+  // ── Social Login (Restored to Popup for stability) ──
+  const handleSocialLogin = async (provider) => {
+    setLoading(true); clearMessages();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (!snap.exists()) {
+        await createUserProfile(user.uid, {
+          name: user.displayName || "",
+          email: user.email || "",
+          photo: user.photoURL || "",
+          gender: "", classLevel: "", state: "", stream: "", aspiration: "",
+          loginMethod: "social",
+          isNewUser: true,
+        });
+      }
+      onAuthSuccess(user, !snap.exists());
+    } catch (err) {
+      console.error(err);
+      setError(friendlyError(err.code));
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ── Email Register ──
