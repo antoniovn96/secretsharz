@@ -235,18 +235,32 @@ export default function App() {
     }
   }, [screen]);
 
+  // 🔥 THE RACE CONDITION FIX: Global listener respects Admin!
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
         
-        // ONLY redirect to dashboard if they literally just logged in
-        setScreen(prevScreen => prevScreen === 'auth' ? 'dashboard' : prevScreen);
-        
+        let isDbAdmin = false;
         try {
           const snap = await getDoc(doc(db, 'users', user.uid));
-          if (snap.exists()) setUserData(snap.data());
+          if (snap.exists()) {
+            setUserData(snap.data());
+            if (snap.data().role === 'super_admin') isDbAdmin = true;
+          }
         } catch (e) { console.error(e); }
+
+        const isMaster = user.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
+        const isUserAdmin = isDbAdmin || isMaster;
+
+        // ONLY route away from 'auth' if they just logged in, and route correctly!
+        setScreen(prevScreen => {
+          if (prevScreen === 'auth') {
+            return isUserAdmin ? 'admin' : 'dashboard';
+          }
+          return prevScreen;
+        });
+
       } else {
         setCurrentUser(null);
         setUserData(null);
@@ -256,19 +270,9 @@ export default function App() {
     return () => unsub();
   }, []);
 
-  useEffect(() => {
-    sessionStorage.setItem('showVV', showVV);
-  }, [showVV]);
-
-  useEffect(() => {
-    sessionStorage.setItem('currentScreen', screen);
-  }, [screen]);
-
-  // 🔥 THE FIX: handleAuthSuccess is now responsible for routing you!
   const handleAuthSuccess = async (user, isNew) => {
     setCurrentUser(user);
     
-    // Check admin status immediately so we know where to route you
     let isDbAdmin = false;
     try {
       const snap = await getDoc(doc(db, 'users', user.uid));
@@ -598,5 +602,3 @@ export default function App() {
     </div>
   );
 }
-"
-Please make the necssary changes.
