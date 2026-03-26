@@ -185,14 +185,9 @@ const PILLARS = [
 
 export default function App() {
   
-  // URL HASH ROUTING
-  const [screen, setScreen] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const hash = window.location.hash.replace('#', '');
-      return hash || 'home';
-    }
-    return 'home';
-  });
+  // 1. Give them static defaults so the Server and Client match perfectly at first
+  const [screen, setScreen] = useState('home');
+  const [showVV, setShowVV] = useState(false);
   
   const [dashboardTab, setDashboardTab] = useState('home'); 
   const [currentUser, setCurrentUser] = useState(null);
@@ -201,7 +196,6 @@ export default function App() {
   const [modal, setModal]             = useState(null); 
   
   // 🔥 FOOLPROOF ADMIN VALIDATION
-  // Encrypted email check + Firebase Database check combined
   const isMasterEmail = currentUser?.email && btoa(currentUser.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
   const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
 
@@ -212,7 +206,17 @@ export default function App() {
     return () => document.head.removeChild(s);
   }, []);
 
+  // 2. 🔥 THE HYDRATION FIX: Check browser memory ONLY after the first safe render
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '');
+      if (hash) setScreen(hash);
+      
+      const savedVV = sessionStorage.getItem('showVV') === 'true';
+      if (savedVV) setShowVV(true);
+    }
+
+    // Hash change listener
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
       if (hash) setScreen(hash);
@@ -235,6 +239,10 @@ export default function App() {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
+        
+        // ONLY redirect to dashboard if they literally just logged in
+        setScreen(prevScreen => prevScreen === 'auth' ? 'dashboard' : prevScreen);
+        
         try {
           const snap = await getDoc(doc(db, 'users', user.uid));
           if (snap.exists()) setUserData(snap.data());
@@ -247,6 +255,14 @@ export default function App() {
     });
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    sessionStorage.setItem('showVV', showVV);
+  }, [showVV]);
+
+  useEffect(() => {
+    sessionStorage.setItem('currentScreen', screen);
+  }, [screen]);
 
   // 🔥 THE FIX: handleAuthSuccess is now responsible for routing you!
   const handleAuthSuccess = async (user, isNew) => {
@@ -583,3 +599,4 @@ export default function App() {
   );
 }
 "
+Please make the necssary changes.
