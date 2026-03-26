@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { onAuthStateChanged, signOut, getRedirectResult } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 import { auth, db } from './firebase';
 import VidyaVantage from './VidyaVantage';
@@ -205,27 +205,7 @@ export default function App() {
     return () => document.head.removeChild(s);
   }, []);
 
-  // 🔥 THE CATCHER: Grabs you the millisecond you return from Google
-  useEffect(() => {
-    getRedirectResult(auth).then(async (result) => {
-      if (result && result.user) {
-        const user = result.user;
-        const snap = await getDoc(doc(db, 'users', user.uid));
-        
-        // If it's a brand new user from Google, create their DB profile
-        if (!snap.exists()) {
-          await setDoc(doc(db, "users", user.uid), {
-            name: user.displayName || "",
-            email: user.email || "",
-            photo: user.photoURL || "",
-            loginMethod: "google_redirect",
-            createdAt: new Date().toISOString()
-          });
-        }
-      }
-    }).catch(err => console.error("Redirect Error:", err));
-  }, []);
-
+  // Hydration Fix & Hash Router
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '');
@@ -288,7 +268,7 @@ export default function App() {
     return () => unsub();
   }, []);
 
-  // For manual Email/Password logins
+  // For manual Email/Password & Popup logins
   const handleAuthSuccess = async (user, isNew) => {
     setCurrentUser(user);
     
