@@ -6,6 +6,7 @@ import VidyaVantage from './VidyaVantage';
 import AuthPage from './AuthPage';
 import StudentDashboard from './StudentDashboard';
 import MindSpace from './MindSpace'; 
+import AdminDashboard from './AdminDashboard'; // 🔥 Admin Imported
 
 // ── Secret Sharz homepage styles & data ──────────
 
@@ -186,7 +187,7 @@ const PILLARS = [
 
 export default function App() {
   
-  // 🔥 URL HASH ROUTING: Check URL hash first to determine starting screen
+  // URL HASH ROUTING: Check URL hash first to determine starting screen
   const [screen, setScreen] = useState(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '');
@@ -208,7 +209,7 @@ export default function App() {
     return () => document.head.removeChild(s);
   }, []);
 
-  // 🔥 URL HASH ROUTING: Listen to browser Back/Forward buttons
+  // URL HASH ROUTING: Listen to browser Back/Forward buttons
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
@@ -219,7 +220,7 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // 🔥 URL HASH ROUTING: Push state to URL when screen changes
+  // URL HASH ROUTING: Push state to URL when screen changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const currentHash = window.location.hash.replace('#', '');
@@ -228,7 +229,6 @@ export default function App() {
       }
     }
   }, [screen]);
-
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -299,6 +299,21 @@ export default function App() {
     }
   };
 
+  // ── SECURE ADMIN ROUTE ──
+  if (screen === 'admin') {
+    // 🔒 Security Check: If they aren't an admin in the database, kick them out
+    if (userData?.role !== 'super_admin') {
+      setScreen('home');
+      return null; 
+    }
+    return (
+      <AdminDashboard 
+        user={currentUser} 
+        onBackToApp={() => setScreen('home')} 
+      />
+    );
+  }
+
   if (screen === 'auth') {
     return <AuthPage onAuthSuccess={handleAuthSuccess} />;
   }
@@ -367,6 +382,12 @@ export default function App() {
 
           {currentUser ? (
             <>
+              {/* 🔒 Secret Admin Button: Only renders if database says 'super_admin' */}
+              {userData?.role === 'super_admin' && (
+                <button className="nav-link" onClick={() => setScreen('admin')} style={{color: 'var(--saffron)', fontWeight: 'bold'}}>
+                  ⚙️ Admin Panel
+                </button>
+              )}
               <button className="nav-user-chip" onClick={() => {setDashboardTab('home'); setScreen('dashboard');}}>
                 👤 {currentUser.displayName?.split(' ')[0] || 'My Dashboard'}
               </button>
