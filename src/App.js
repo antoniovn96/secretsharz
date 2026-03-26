@@ -204,7 +204,7 @@ export default function App() {
   
   // 🔥 THE MAGIC FIX: Encrypted Admin Validation
   // "YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t" is the Base64 encoded version of your email.
-  const isAdmin = currentUser?.email && btoa(currentUser.email) === 'cLpUM4RsZ3fUtJYFF3LAO1hgQSI2';
+  const isAdmin = currentUser?.email && btoa(currentUser.email) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
 
   useEffect(() => {
     const s = document.createElement('style');
