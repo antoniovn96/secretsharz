@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut, getRedirectResult } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 import { auth, db } from './firebase';
 import VidyaVantage from './VidyaVantage';
@@ -185,7 +185,6 @@ const PILLARS = [
 
 export default function App() {
   
-  // 1. Give them static defaults so the Server and Client match perfectly at first
   const [screen, setScreen] = useState('home');
   const [showVV, setShowVV] = useState(false);
   
@@ -206,7 +205,27 @@ export default function App() {
     return () => document.head.removeChild(s);
   }, []);
 
-  // 2. 🔥 THE HYDRATION FIX: Check browser memory ONLY after the first safe render
+  // 🔥 THE CATCHER: Grabs you the millisecond you return from Google
+  useEffect(() => {
+    getRedirectResult(auth).then(async (result) => {
+      if (result && result.user) {
+        const user = result.user;
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        
+        // If it's a brand new user from Google, create their DB profile
+        if (!snap.exists()) {
+          await setDoc(doc(db, "users", user.uid), {
+            name: user.displayName || "",
+            email: user.email || "",
+            photo: user.photoURL || "",
+            loginMethod: "google_redirect",
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
+    }).catch(err => console.error("Redirect Error:", err));
+  }, []);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '');
@@ -216,7 +235,6 @@ export default function App() {
       if (savedVV) setShowVV(true);
     }
 
-    // Hash change listener
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
       if (hash) setScreen(hash);
@@ -235,7 +253,7 @@ export default function App() {
     }
   }, [screen]);
 
-  // 🔥 THE RACE CONDITION FIX: Global listener respects Admin!
+  // 🔥 AUTO-ROUTER: Constantly watches your login status and moves you
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -253,9 +271,9 @@ export default function App() {
         const isMaster = user.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
         const isUserAdmin = isDbAdmin || isMaster;
 
-        // ONLY route away from 'auth' if they just logged in, and route correctly!
+        // Auto-route if you are sitting on the home or auth page
         setScreen(prevScreen => {
-          if (prevScreen === 'auth') {
+          if (prevScreen === 'auth' || prevScreen === 'home') {
             return isUserAdmin ? 'admin' : 'dashboard';
           }
           return prevScreen;
@@ -270,6 +288,7 @@ export default function App() {
     return () => unsub();
   }, []);
 
+  // For manual Email/Password logins
   const handleAuthSuccess = async (user, isNew) => {
     setCurrentUser(user);
     
