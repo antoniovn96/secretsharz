@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -71,6 +71,7 @@ const STYLES = `
   
   .admin-btn { background: linear-gradient(45deg, var(--primary), #a855f7); color: white; border: none; padding: 10px 20px; font-size: 0.95rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
   .admin-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+  .admin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .admin-btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;}
   .admin-btn-outline:hover { border-color: var(--primary); color: var(--primary); }
 
@@ -119,8 +120,10 @@ export default function AdminDashboard({ user, onBackToApp }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [timeStr, setTimeStr] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const fileInputRef = useRef(null);
   
-  // Profile State (Matching the HTML form)
+  // Profile State
   const [profile, setProfile] = useState({
     name: user?.displayName || 'Admin User',
     title: 'Lead Counsellor',
@@ -130,11 +133,13 @@ export default function AdminDashboard({ user, onBackToApp }) {
     website: '',
     hobbies: [],
     workHistory: [],
-    eduHistory: []
+    eduHistory: [],
+    photo: '' // Stores Base64
   });
   
   const [hobbyInput, setHobbyInput] = useState("");
 
+  // Inject Styles
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = STYLES;
@@ -142,6 +147,7 @@ export default function AdminDashboard({ user, onBackToApp }) {
     return () => document.head.removeChild(style);
   }, []);
 
+  // Clock
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
@@ -150,15 +156,58 @@ export default function AdminDashboard({ user, onBackToApp }) {
     return () => clearInterval(timer);
   }, []);
 
+  // 🔥 LOAD PROFILE FROM FIREBASE
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const docSnap = await getDoc(doc(db, "system_settings", "superadmin_profile"));
+        if (docSnap.exists()) {
+          setProfile(prev => ({ ...prev, ...docSnap.data() }));
+        } else {
+          // If no profile exists, add default empty blocks
+          addWork();
+          addEdu();
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  // 🔥 SAVE PROFILE TO FIREBASE
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      await setDoc(doc(db, "system_settings", "superadmin_profile"), {
+        ...profile,
+        lastUpdated: new Date().toISOString()
+      }, { merge: true });
+      alert("Profile saved successfully!");
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      alert("Failed to save profile.");
+    }
+    setIsSaving(false);
+  };
+
   const handleLogout = async () => {
     await signOut(auth);
     onBackToApp();
   };
 
+  // --- ARRAYS UPDATE LOGIC ---
   const addWork = () => {
     setProfile(p => ({
       ...p, 
-      workHistory: [...p.workHistory, { id: Date.now(), company: '', role: '', from: '', to: '', current: false, type: 'On site', desc: '' }]
+      workHistory: [...p.workHistory, { id: Date.now(), company: '', position: '', from: '', to: '', current: false, type: 'On site', desc: '' }]
+    }));
+  };
+
+  const updateWork = (id, field, value) => {
+    setProfile(p => ({
+      ...p,
+      workHistory: p.workHistory.map(w => w.id === id ? { ...w, [field]: value } : w)
     }));
   };
 
@@ -169,7 +218,14 @@ export default function AdminDashboard({ user, onBackToApp }) {
   const addEdu = () => {
     setProfile(p => ({
       ...p, 
-      eduHistory: [...p.eduHistory, { id: Date.now(), level: 'School', inst: '', from: '', to: '', subjects: '' }]
+      eduHistory: [...p.eduHistory, { id: Date.now(), level: 'School', name: '', from: '', to: '', subjects: '' }]
+    }));
+  };
+
+  const updateEdu = (id, field, value) => {
+    setProfile(p => ({
+      ...p,
+      eduHistory: p.eduHistory.map(e => e.id === id ? { ...e, [field]: value } : e)
     }));
   };
 
@@ -177,6 +233,7 @@ export default function AdminDashboard({ user, onBackToApp }) {
     setProfile(p => ({ ...p, eduHistory: p.eduHistory.filter(e => e.id !== id) }));
   };
 
+  // --- HOBBIES LOGIC ---
   const addHobby = () => {
     if (hobbyInput.trim() && profile.hobbies.length < 10 && !profile.hobbies.includes(hobbyInput.trim())) {
       setProfile(p => ({ ...p, hobbies: [...p.hobbies, hobbyInput.trim()] }));
@@ -188,6 +245,28 @@ export default function AdminDashboard({ user, onBackToApp }) {
     setProfile(p => ({ ...p, hobbies: p.hobbies.filter(x => x !== h) }));
   };
 
+  // --- IMAGE UPLOAD LOGIC ---
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const scaleSize = 200 / img.width;
+        canvas.width = 200;
+        canvas.height = img.height * scaleSize;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const base64 = canvas.toDataURL("image/jpeg", 0.8);
+        setProfile(p => ({ ...p, photo: base64 }));
+      };
+    };
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -196,7 +275,7 @@ export default function AdminDashboard({ user, onBackToApp }) {
             <div className="header-bar"><h1>Overview Dashboard</h1><p>Real-time snapshot of platform activity and metrics.</p></div>
             <div className="kpi-grid">
               <div className="kpi-box" style={{borderTop: '3px solid var(--primary)'}}><h4>Total Institutions</h4><div className="val">14</div></div>
-              <div className="kpi-box" style={{borderTop: '3px solid var(--success)'}}><h4>Active Students</h4><div class="val">1,204</div></div>
+              <div className="kpi-box" style={{borderTop: '3px solid var(--success)'}}><h4>Active Students</h4><div className="val">1,204</div></div>
               <div className="kpi-box" style={{borderTop: '3px solid var(--secondary)'}}><h4>Assessments Taken</h4><div className="val">982</div></div>
               <div className="kpi-box" style={{borderTop: '3px solid var(--accent)'}}><h4>Active Counsellors</h4><div className="val">8</div></div>
             </div>
@@ -220,7 +299,23 @@ export default function AdminDashboard({ user, onBackToApp }) {
             </div>
 
             <div className="admin-card" style={{display:'flex', alignItems:'center', gap:'20px', borderTop:'4px solid var(--primary)'}}>
-              <div style={{width:'100px', height:'100px', borderRadius:'50%', border:'3px solid var(--primary)', background:'var(--bg)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'32px'}}>👤</div>
+              {profile.photo ? (
+                <img 
+                  src={profile.photo} 
+                  alt="Profile Avatar" 
+                  style={{width:'100px', height:'100px', borderRadius:'50%', border:'3px solid var(--primary)', objectFit:'cover', cursor:'pointer'}} 
+                  onClick={() => fileInputRef.current.click()}
+                />
+              ) : (
+                <div 
+                  style={{width:'100px', height:'100px', borderRadius:'50%', border:'3px solid var(--primary)', background:'var(--bg)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'32px', cursor:'pointer'}}
+                  onClick={() => fileInputRef.current.click()}
+                >
+                  👤
+                </div>
+              )}
+              <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/png, image/jpeg" onChange={handlePhotoUpload} />
+
               <div style={{flex: 1}}>
                 <div className="grid-2col">
                   <div className="form-group"><label className="form-label">Full Name</label><input type="text" className="form-input" value={profile.name} onChange={e => setProfile({...profile, name: e.target.value})} /></div>
@@ -243,14 +338,14 @@ export default function AdminDashboard({ user, onBackToApp }) {
             <details className="profile-acc">
               <summary>Work Experience</summary>
               <div className="acc-body">
-                {profile.workHistory.map((work, idx) => (
+                {profile.workHistory.map((work) => (
                   <div key={work.id} className="entry-block">
                     <button className="remove-entry-btn" onClick={() => removeWork(work.id)}>✕ Remove</button>
                     <div className="grid-2col">
-                      <div className="form-group"><label className="form-label">Company / Organization</label><input type="text" className="form-input" placeholder="e.g. Google" /></div>
-                      <div className="form-group"><label className="form-label">Position / Role</label><input type="text" className="form-input" placeholder="e.g. Senior Counsellor" /></div>
-                      <div className="form-group"><label className="form-label">From Date</label><input type="date" className="form-input" /></div>
-                      <div className="form-group"><label className="form-label">To Date</label><input type="date" className="form-input" /></div>
+                      <div className="form-group"><label className="form-label">Company / Organization</label><input type="text" className="form-input" placeholder="e.g. Google" value={work.company || ''} onChange={e => updateWork(work.id, 'company', e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Position / Role</label><input type="text" className="form-input" placeholder="e.g. Senior Counsellor" value={work.position || ''} onChange={e => updateWork(work.id, 'position', e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">From Date</label><input type="date" className="form-input" value={work.from || ''} onChange={e => updateWork(work.id, 'from', e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">To Date</label><input type="date" className="form-input" value={work.to || ''} onChange={e => updateWork(work.id, 'to', e.target.value)} /></div>
                     </div>
                   </div>
                 ))}
@@ -261,20 +356,20 @@ export default function AdminDashboard({ user, onBackToApp }) {
             <details className="profile-acc">
               <summary>Education & Certifications</summary>
               <div className="acc-body">
-                {profile.eduHistory.map((edu, idx) => (
+                {profile.eduHistory.map((edu) => (
                   <div key={edu.id} className="entry-block">
                     <button className="remove-entry-btn" onClick={() => removeEdu(edu.id)}>✕ Remove</button>
                     <div className="grid-2col">
                       <div className="form-group">
                         <label className="form-label">Level</label>
-                        <select className="form-select">
+                        <select className="form-select" value={edu.level || 'School'} onChange={e => updateEdu(edu.id, 'level', e.target.value)}>
                           <option value="School">School (10th)</option>
                           <option value="PUC">PUC / 12th</option>
                           <option value="UG">Undergraduate (UG)</option>
                           <option value="PG">Postgraduate (PG)</option>
                         </select>
                       </div>
-                      <div className="form-group"><label className="form-label">Institution Name</label><input type="text" className="form-input" /></div>
+                      <div className="form-group"><label className="form-label">Institution Name</label><input type="text" className="form-input" value={edu.name || ''} onChange={e => updateEdu(edu.id, 'name', e.target.value)} /></div>
                     </div>
                   </div>
                 ))}
@@ -298,7 +393,9 @@ export default function AdminDashboard({ user, onBackToApp }) {
               </div>
             </details>
 
-            <button className="admin-btn" style={{width: '100%', padding: '15px', fontSize: '1.1rem', marginTop: '10px', background: 'var(--success)'}}>💾 Save Complete Profile</button>
+            <button className="admin-btn" disabled={isSaving} onClick={handleSaveProfile} style={{width: '100%', padding: '15px', fontSize: '1.1rem', marginTop: '10px', background: 'var(--success)'}}>
+              {isSaving ? 'Saving...' : '💾 Save Complete Profile'}
+            </button>
           </div>
         );
       
@@ -347,7 +444,7 @@ export default function AdminDashboard({ user, onBackToApp }) {
             <button onClick={onBackToApp} className="site-link" style={{border:'none', cursor:'pointer', fontFamily:'inherit'}}>🌐 Live Site</button>
             <div className="profile-menu">
               <div className="avatar-btn" onClick={() => setDropdownOpen(!dropdownOpen)}>
-                {profile.name.charAt(0).toUpperCase()}
+                {profile.photo ? <img src={profile.photo} alt="Avatar" style={{width:'100%', height:'100%', borderRadius:'50%', objectFit:'cover'}} /> : profile.name.charAt(0).toUpperCase()}
               </div>
               {dropdownOpen && (
                 <div className="dropdown-content">
