@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
+// import { ref, uploadString, getDownloadURL } from 'firebase/storage'; // <-- Import storage when ready
 import { doc, setDoc, getDoc, collection, getDocs, addDoc } from 'firebase/firestore';
 
+// 🧪 10. CODE QUALITY: Constants for Collections
+const COLLECTIONS = {
+  USERS: 'users',
+  INSTITUTIONS: 'institutions',
+  SETTINGS: 'system_settings'
+};
+
+// 🎨 7. CSS STYLES (Consider moving to admin.css in the future!)
 const STYLES = `
   :root {
     --bg: #0f172a; --sidebar: #1e1b4b; --card-bg: #1e293b; 
@@ -104,6 +113,11 @@ const STYLES = `
   .hobby-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;}
   .hobby-tag { background: rgba(139, 92, 246, 0.2); border: 1px solid var(--primary); color: white; padding: 5px 12px; border-radius: 50px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;}
   .hobby-tag span { cursor: pointer; color: var(--accent); font-weight: bold;}
+
+  /* --- TOAST NOTIFICATIONS --- */
+  .admin-toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 24px; border-radius: 8px; color: white; font-weight: bold; z-index: 9999; animation: floatUp 0.3s ease; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 10px; }
+  .admin-toast.success { background: var(--success); border: 1px solid #059669; }
+  .admin-toast.error { background: var(--danger); border: 1px solid #b91c1c; }
 `;
 
 const NAV_TABS = [
@@ -118,20 +132,79 @@ const NAV_TABS = [
   { id: 'access', icon: '🔑', label: 'Access Control' },
 ];
 
+// 🧩 5. COMPONENT SPLITTING: Sidebar Component
+const Sidebar = ({ activeTab, setActiveTab }) => (
+  <div className="admin-sidebar">
+    <div className="admin-brand" onClick={() => setActiveTab('overview')} title="Return to Dashboard">
+      <h2>Admin Dashboard</h2>
+    </div>
+    {NAV_TABS.map(tab => (
+      <button 
+        key={tab.id}
+        className={`nav-btn ${activeTab === tab.id ? 'active' : ''}`}
+        onClick={() => setActiveTab(tab.id)}
+        style={tab.id === 'access' ? {borderTop: '1px solid #334155', marginTop: '10px'} : {}}
+      >
+        {tab.icon} {tab.label}
+      </button>
+    ))}
+  </div>
+);
+
+// 🧩 5. COMPONENT SPLITTING: Top Header Component
+const TopHeader = ({ activeTab, profile, user, onBackToApp, handleLogout }) => {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) setDropdownOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="top-header">
+      <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
+        <h2 style={{margin:0, fontSize:'1.1rem', color:'var(--text-muted)'}}>{NAV_TABS.find(t => t.id === activeTab)?.label}</h2>
+      </div>
+      <div className="header-actions">
+        <button onClick={onBackToApp} className="site-link" style={{border:'none', cursor:'pointer', fontFamily:'inherit'}}>🌐 Live Site</button>
+        <div className="profile-menu" ref={menuRef}>
+          <div className="avatar-btn" onClick={() => setDropdownOpen(!dropdownOpen)}>
+            {profile.photo ? <img src={profile.photo} alt="Avatar" style={{width:'100%', height:'100%', borderRadius:'50%', objectFit:'cover'}} /> : profile?.name?.charAt(0)?.toUpperCase()}
+          </div>
+          {dropdownOpen && (
+            <div className="dropdown-content">
+              <div style={{padding: '15px', borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.2)'}}>
+                <strong style={{color:'white', display:'block'}}>{profile.name}</strong>
+                <span style={{fontSize:'0.8rem', color:'var(--text-muted)'}}>{user?.email || 'admin@secretsharz.com'}</span>
+              </div>
+              <button style={{color: 'var(--danger)'}} onClick={handleLogout}>🚪 Secure Logout</button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- MAIN DASHBOARD COMPONENT ---
 export default function AdminDashboard({ user, onBackToApp }) {
   const [activeTab, setActiveTab] = useState('overview');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [timeStr, setTimeStr] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef(null);
-  const menuRef = useRef(null); // Ref for closing dropdown
   
-  // Database States
+  // 🚀 9. UX UPGRADE: Toast State
+  const [toast, setToast] = useState(null); // { type: 'success' | 'error', message: '' }
+  
   const [institutions, setInstitutions] = useState([]);
   const [newInst, setNewInst] = useState({ name: '', email: '', plan: 'Basic' });
   const [students, setStudents] = useState([]);
 
-  // Profile State
   const [profile, setProfile] = useState({
     name: user?.displayName || 'Admin User',
     title: 'Lead Counsellor',
@@ -142,12 +215,16 @@ export default function AdminDashboard({ user, onBackToApp }) {
     hobbies: [],
     workHistory: [],
     eduHistory: [],
-    photo: ''
+    photo: '' 
   });
   
   const [hobbyInput, setHobbyInput] = useState("");
 
-  // Inject Styles
+  // 🧠 4. STATE MANAGEMENT: Reusable Profile Updater
+  const updateProfileData = (field, value) => {
+    setProfile(prev => ({ ...prev, [field]: value }));
+  };
+
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = STYLES;
@@ -155,7 +232,6 @@ export default function AdminDashboard({ user, onBackToApp }) {
     return () => document.head.removeChild(style);
   }, []);
 
-  // Clock
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
@@ -164,87 +240,92 @@ export default function AdminDashboard({ user, onBackToApp }) {
     return () => clearInterval(timer);
   }, []);
 
-  // 🔥 CLICK OUTSIDE TO CLOSE DROPDOWN
+  // 🚀 Toast Auto-Clear
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
-  // 🔥 LOAD DATA BASED ON TABS
+  // 🔧 1. PERFORMANCE IMPROVEMENTS: Optimized Data Fetching
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
       if (activeTab === 'profile') {
-        const docSnap = await getDoc(doc(db, "system_settings", "superadmin_profile"));
-        if (docSnap.exists()) {
-          setProfile(prev => ({ ...prev, ...docSnap.data() }));
-        } else {
-          addWork();
-          addEdu();
-        }
+        try {
+          const docSnap = await getDoc(doc(db, COLLECTIONS.SETTINGS, "superadmin_profile"));
+          if (isMounted && docSnap.exists()) {
+            setProfile(prev => ({ ...prev, ...docSnap.data() }));
+          } else if (isMounted) {
+            addWork(); addEdu();
+          }
+        } catch (e) { console.error("Error fetching profile", e); }
       }
       
-      if (activeTab === 'institutions') {
+      if (activeTab === 'institutions' && institutions.length === 0) {
         try {
-          const snap = await getDocs(collection(db, 'institutions'));
-          setInstitutions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          const snap = await getDocs(collection(db, COLLECTIONS.INSTITUTIONS));
+          if (isMounted) setInstitutions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
         } catch (e) { console.error("Error fetching institutions", e); }
       }
 
-      if (activeTab === 'students') {
+      if (activeTab === 'students' && students.length === 0) {
         try {
-          const snap = await getDocs(collection(db, 'users'));
-          // Filter to only show students who actually completed the assessment
-          const assessedStudents = snap.docs
-            .map(d => ({ id: d.id, ...d.data() }))
-            .filter(u => u.riasecCode);
-          setStudents(assessedStudents);
+          const snap = await getDocs(collection(db, COLLECTIONS.USERS));
+          if (isMounted) {
+            const assessedStudents = snap.docs
+              .map(d => ({ id: d.id, ...d.data() }))
+              .filter(u => u.riasecCode);
+            setStudents(assessedStudents);
+          }
         } catch (e) { console.error("Error fetching students", e); }
       }
     };
+    
     fetchData();
-  }, [activeTab]);
+    return () => { isMounted = false; };
+  }, [activeTab, institutions.length, students.length]);
 
-  // 🔥 ADD INSTITUTION
+  // 🔒 2. ERROR HANDLING & UX UPGRADE
   const handleAddInstitution = async (e) => {
     e.preventDefault();
-    if (!newInst.name || !newInst.email) return alert("Please fill name and email.");
+    if (!newInst.name || !newInst.email) return setToast({ type: 'error', message: 'Please fill name and email.'});
     
     setIsSaving(true);
     try {
-      const docRef = await addDoc(collection(db, 'institutions'), {
+      // 🔐 8. SECURITY NOTE: Ensure Firebase Firestore Rules only allow Admins to write to 'institutions'
+      const docRef = await addDoc(collection(db, COLLECTIONS.INSTITUTIONS), {
         ...newInst,
         status: 'Active',
         dateAdded: new Date().toISOString()
       });
       setInstitutions([{ id: docRef.id, ...newInst, status: 'Active', dateAdded: new Date().toISOString() }, ...institutions]);
       setNewInst({ name: '', email: '', plan: 'Basic' });
-      alert("Institution access granted successfully.");
+      setToast({ type: 'success', message: 'Institution added successfully!' });
     } catch (e) {
       console.error(e);
-      alert("Failed to add institution.");
+      setToast({ type: 'error', message: 'Failed to add institution.' });
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
 
-  // 🔥 SAVE PROFILE TO FIREBASE
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
-      await setDoc(doc(db, "system_settings", "superadmin_profile"), {
+      await setDoc(doc(db, COLLECTIONS.SETTINGS, "superadmin_profile"), {
         ...profile,
         lastUpdated: new Date().toISOString()
       }, { merge: true });
-      alert("Profile saved successfully!");
+      setToast({ type: 'success', message: 'Profile saved successfully!' });
     } catch (error) {
       console.error("Error saving profile:", error);
-      alert("Failed to save profile.");
+      setToast({ type: 'error', message: 'Failed to save profile.' });
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
 
   const handleLogout = async () => {
@@ -252,57 +333,54 @@ export default function AdminDashboard({ user, onBackToApp }) {
     onBackToApp();
   };
 
-  // --- ARRAYS UPDATE LOGIC ---
-  const addWork = () => {
-    setProfile(p => ({
-      ...p, 
-      workHistory: [...p.workHistory, { id: Date.now(), company: '', position: '', from: '', to: '', current: false, type: 'On site', desc: '' }]
-    }));
-  };
+  // 🎯 6a. Unique ID Fix (Using crypto.randomUUID fallback)
+  const generateId = () => window.crypto?.randomUUID ? crypto.randomUUID() : Date.now().toString();
 
-  const updateWork = (id, field, value) => {
-    setProfile(p => ({
-      ...p,
-      workHistory: p.workHistory.map(w => w.id === id ? { ...w, [field]: value } : w)
-    }));
-  };
+  const addWork = () => setProfile(p => ({ ...p, workHistory: [...p.workHistory, { id: generateId(), company: '', position: '', from: '', to: '', current: false, type: 'On site', desc: '' }] }));
+  const updateWork = (id, field, value) => setProfile(p => ({ ...p, workHistory: p.workHistory.map(w => w.id === id ? { ...w, [field]: value } : w) }));
+  const removeWork = (id) => setProfile(p => ({ ...p, workHistory: p.workHistory.filter(w => w.id !== id) }));
 
-  const removeWork = (id) => {
-    setProfile(p => ({ ...p, workHistory: p.workHistory.filter(w => w.id !== id) }));
-  };
+  const addEdu = () => setProfile(p => ({ ...p, eduHistory: [...p.eduHistory, { id: generateId(), level: 'School', name: '', from: '', to: '', subjects: '' }] }));
+  const updateEdu = (id, field, value) => setProfile(p => ({ ...p, eduHistory: p.eduHistory.map(e => e.id === id ? { ...e, [field]: value } : e) }));
+  const removeEdu = (id) => setProfile(p => ({ ...p, eduHistory: p.eduHistory.filter(e => e.id !== id) }));
 
-  const addEdu = () => {
-    setProfile(p => ({
-      ...p, 
-      eduHistory: [...p.eduHistory, { id: Date.now(), level: 'School', name: '', from: '', to: '', subjects: '' }]
-    }));
-  };
-
-  const updateEdu = (id, field, value) => {
-    setProfile(p => ({
-      ...p,
-      eduHistory: p.eduHistory.map(e => e.id === id ? { ...e, [field]: value } : e)
-    }));
-  };
-
-  const removeEdu = (id) => {
-    setProfile(p => ({ ...p, eduHistory: p.eduHistory.filter(e => e.id !== id) }));
-  };
-
+  // 🎯 6b & 6c. Hobby Input fixes
   const addHobby = () => {
-    if (hobbyInput.trim() && profile.hobbies.length < 10 && !profile.hobbies.includes(hobbyInput.trim())) {
-      setProfile(p => ({ ...p, hobbies: [...p.hobbies, hobbyInput.trim()] }));
+    const trimmedHobby = hobbyInput.trim();
+    if (!trimmedHobby) return;
+    if (profile.hobbies.length < 10 && !profile.hobbies.includes(trimmedHobby)) {
+      updateProfileData('hobbies', [...profile.hobbies, trimmedHobby]);
       setHobbyInput("");
     }
   };
+  const removeHobby = (h) => updateProfileData('hobbies', profile.hobbies.filter(x => x !== h));
 
-  const removeHobby = (h) => {
-    setProfile(p => ({ ...p, hobbies: p.hobbies.filter(x => x !== h) }));
-  };
-
-  const handlePhotoUpload = (e) => {
+  // ⚡ 3. OPTIMIZE IMAGE UPLOAD
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    /* =============================================================================
+      🔥 FIREBASE STORAGE UPGRADE (Recommended for Production)
+      To switch to the faster, cheaper Storage method, uncomment this code 
+      and ensure you have exported `storage` from your `firebase.js` file.
+      =============================================================================
+      
+      const storageRef = ref(storage, `admin_profiles/${user.uid}`);
+      try {
+        setToast({ type: 'success', message: 'Uploading image...' });
+        await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(storageRef);
+        updateProfileData('photo', downloadURL);
+        setToast({ type: 'success', message: 'Image uploaded!' });
+      } catch (err) {
+        setToast({ type: 'error', message: 'Failed to upload image.' });
+      }
+      
+      =============================================================================
+    */
+
+    // 👇 Fallback Base64 Method (Kept active so your app doesn't crash today)
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
@@ -316,7 +394,7 @@ export default function AdminDashboard({ user, onBackToApp }) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         const base64 = canvas.toDataURL("image/jpeg", 0.8);
-        setProfile(p => ({ ...p, photo: base64 }));
+        updateProfileData('photo', base64);
       };
     };
   };
@@ -459,10 +537,10 @@ export default function AdminDashboard({ user, onBackToApp }) {
 
               <div style={{flex: 1}}>
                 <div className="grid-2col">
-                  <div className="form-group"><label className="form-label">Full Name</label><input type="text" className="form-input" value={profile.name} onChange={e => setProfile({...profile, name: e.target.value})} /></div>
-                  <div className="form-group"><label className="form-label">Professional Title</label><input type="text" className="form-input" value={profile.title} onChange={e => setProfile({...profile, title: e.target.value})} /></div>
+                  <div className="form-group"><label className="form-label">Full Name</label><input type="text" className="form-input" value={profile.name} onChange={e => updateProfileData('name', e.target.value)} /></div>
+                  <div className="form-group"><label className="form-label">Professional Title</label><input type="text" className="form-input" value={profile.title} onChange={e => updateProfileData('title', e.target.value)} /></div>
                 </div>
-                <div className="form-group"><label className="form-label">Short Bio</label><textarea className="form-textarea" rows="2" value={profile.bio} onChange={e => setProfile({...profile, bio: e.target.value})}></textarea></div>
+                <div className="form-group"><label className="form-label">Short Bio</label><textarea className="form-textarea" rows="2" value={profile.bio} onChange={e => updateProfileData('bio', e.target.value)}></textarea></div>
               </div>
             </div>
 
@@ -470,9 +548,9 @@ export default function AdminDashboard({ user, onBackToApp }) {
               <summary>Contact Information</summary>
               <div className="acc-body grid-2col">
                 <div className="form-group"><label className="form-label">Email Address</label><input type="email" className="form-input" disabled style={{opacity:0.7}} value={user?.email || ''} /></div>
-                <div className="form-group"><label className="form-label">Phone Number</label><input type="tel" className="form-input" placeholder="+91 " value={profile.phone} onChange={e => setProfile({...profile, phone: e.target.value})} /></div>
-                <div className="form-group"><label className="form-label">LinkedIn URL</label><input type="url" className="form-input" placeholder="https://linkedin.com/in/..." value={profile.linkedin} onChange={e => setProfile({...profile, linkedin: e.target.value})} /></div>
-                <div className="form-group"><label className="form-label">Personal Website</label><input type="url" className="form-input" placeholder="https://..." value={profile.website} onChange={e => setProfile({...profile, website: e.target.value})} /></div>
+                <div className="form-group"><label className="form-label">Phone Number</label><input type="tel" className="form-input" placeholder="+91 " value={profile.phone} onChange={e => updateProfileData('phone', e.target.value)} /></div>
+                <div className="form-group"><label className="form-label">LinkedIn URL</label><input type="url" className="form-input" placeholder="https://linkedin.com/in/..." value={profile.linkedin} onChange={e => updateProfileData('linkedin', e.target.value)} /></div>
+                <div className="form-group"><label className="form-label">Personal Website</label><input type="url" className="form-input" placeholder="https://..." value={profile.website} onChange={e => updateProfileData('website', e.target.value)} /></div>
               </div>
             </details>
 
@@ -490,7 +568,6 @@ export default function AdminDashboard({ user, onBackToApp }) {
                         <label className="form-label">From Date</label>
                         <input type="date" className="form-input" value={work.from || ''} onChange={e => updateWork(work.id, 'from', e.target.value)} />
                         
-                        {/* THE NEW CHECKBOX FOR CURRENT JOB */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
                           <input 
                             type="checkbox" 
@@ -505,7 +582,6 @@ export default function AdminDashboard({ user, onBackToApp }) {
                         </div>
                       </div>
 
-                      {/* HIDES TO DATE IF CURRENTLY WORKING HERE */}
                       {!work.current && (
                         <div className="form-group">
                           <label className="form-label">To Date</label>
@@ -548,8 +624,16 @@ export default function AdminDashboard({ user, onBackToApp }) {
               <div className="acc-body">
                 <p style={{fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 0}}>Add up to 10 hobbies.</p>
                 <div style={{display: 'flex', gap: '10px'}}>
-                  <input type="text" className="form-input" placeholder="Type a hobby..." style={{maxWidth: '300px'}} value={hobbyInput} onChange={e => setHobbyInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && addHobby()} />
-                  <button className="admin-btn" onClick={addHobby}>Add</button>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    placeholder="Type a hobby..." 
+                    style={{maxWidth: '300px'}} 
+                    value={hobbyInput} 
+                    onChange={e => setHobbyInput(e.target.value)} 
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addHobby(); } }} 
+                  />
+                  <button className="admin-btn" onClick={(e) => { e.preventDefault(); addHobby(); }}>Add</button>
                 </div>
                 <div className="hobby-container">
                   {profile.hobbies.map((h, i) => (
@@ -583,56 +667,12 @@ export default function AdminDashboard({ user, onBackToApp }) {
 
   return (
     <div className="admin-root">
-      <div className="admin-sidebar">
-        {/* CLICKABLE BRAND LINK */}
-        <div className="admin-brand" onClick={() => setActiveTab('overview')} title="Return to Dashboard">
-          <h2>Admin Dashboard</h2>
-        </div>
-        
-        {NAV_TABS.map(tab => (
-          <button 
-            key={tab.id}
-            className={`nav-btn ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-            style={tab.id === 'access' ? {borderTop: '1px solid #334155', marginTop: '10px'} : {}}
-          >
-            {tab.icon} {tab.label}
-          </button>
-        ))}
-      </div>
-
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="admin-main">
-        <div className="top-header">
-          <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
-            <h2 style={{margin:0, fontSize:'1.1rem', color:'var(--text-muted)'}}>{NAV_TABS.find(t => t.id === activeTab)?.label}</h2>
-          </div>
-          
-          <div className="header-actions">
-            <button onClick={onBackToApp} className="site-link" style={{border:'none', cursor:'pointer', fontFamily:'inherit'}}>🌐 Live Site</button>
-            <div className="profile-menu" ref={menuRef}>
-              <div className="avatar-btn" onClick={() => setDropdownOpen(!dropdownOpen)}>
-                {profile.photo ? <img src={profile.photo} alt="Avatar" style={{width:'100%', height:'100%', borderRadius:'50%', objectFit:'cover'}} /> : profile.name.charAt(0).toUpperCase()}
-              </div>
-              {dropdownOpen && (
-                <div className="dropdown-content">
-                  <div style={{padding: '15px', borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.2)'}}>
-                    <strong style={{color:'white', display:'block'}}>{profile.name}</strong>
-                    <span style={{fontSize:'0.8rem', color:'var(--text-muted)'}}>{user?.email || 'admin@secretsharz.com'}</span>
-                  </div>
-                  <button onClick={() => { setActiveTab('profile'); setDropdownOpen(false); }}>👤 My Profile</button>
-                  <button style={{color: 'var(--danger)'}} onClick={handleLogout}>🚪 Secure Logout</button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
+        <TopHeader activeTab={activeTab} profile={profile} user={user} onBackToApp={onBackToApp} handleLogout={handleLogout} />
+        
         <div className="welcome-banner">
-          <div>
-            <p className="quote-text">
-              <strong>Welcome back, {profile.name.split(' ')[0]}.</strong> "Quality is not an act, it is a habit."
-            </p>
-          </div>
+          <div><p className="quote-text"><strong>Welcome back, {profile?.name?.split(' ')[0]}.</strong> "Quality is not an act, it is a habit."</p></div>
           <div className="clock-container">{timeStr}</div>
         </div>
 
@@ -640,6 +680,13 @@ export default function AdminDashboard({ user, onBackToApp }) {
           {renderTabContent()}
         </div>
       </div>
+
+      {/* 🚀 9. UX UPGRADE: Custom Toast Notification */}
+      {toast && (
+        <div className={`admin-toast ${toast.type}`}>
+          {toast.type === 'success' ? '✅' : '⚠️'} {toast.message}
+        </div>
+      )}
     </div>
   );
 }
