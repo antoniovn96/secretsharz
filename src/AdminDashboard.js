@@ -248,6 +248,17 @@ export default function AdminDashboard({ user, onBackToApp }) {
     }
   }, [toast]);
 
+  // ✅ 1. TAB PERSISTENCE (Restore on load)
+  useEffect(() => {
+    const savedTab = localStorage.getItem('admin_active_tab');
+    if (savedTab) setActiveTab(savedTab);
+  }, []);
+
+  // ✅ 1. TAB PERSISTENCE (Save on change)
+  useEffect(() => {
+    localStorage.setItem('admin_active_tab', activeTab);
+  }, [activeTab]);
+
   // 🔧 1. PERFORMANCE IMPROVEMENTS: Optimized Data Fetching
   useEffect(() => {
     let isMounted = true;
@@ -295,7 +306,6 @@ export default function AdminDashboard({ user, onBackToApp }) {
     
     setIsSaving(true);
     try {
-      // 🔐 8. SECURITY NOTE: Ensure Firebase Firestore Rules only allow Admins to write to 'institutions'
       const docRef = await addDoc(collection(db, COLLECTIONS.INSTITUTIONS), {
         ...newInst,
         status: 'Active',
@@ -337,7 +347,26 @@ export default function AdminDashboard({ user, onBackToApp }) {
   const generateId = () => window.crypto?.randomUUID ? crypto.randomUUID() : Date.now().toString();
 
   const addWork = () => setProfile(p => ({ ...p, workHistory: [...p.workHistory, { id: generateId(), company: '', position: '', from: '', to: '', current: false, type: 'On site', desc: '' }] }));
-  const updateWork = (id, field, value) => setProfile(p => ({ ...p, workHistory: p.workHistory.map(w => w.id === id ? { ...w, [field]: value } : w) }));
+  
+  // ✅ 3. BUG FIX: Clear out 'to' date if 'current' is set to true
+  const updateWork = (id, field, value) => {
+    setProfile(p => ({
+      ...p,
+      workHistory: p.workHistory.map(w => {
+        if (w.id !== id) return w;
+        
+        let updated = { ...w, [field]: value };
+        
+        // 🔥 If user selects "current", naturally strip any residual "to" date out
+        if (field === 'current' && value === true) {
+          updated.to = '';
+        }
+        
+        return updated;
+      })
+    }));
+  };
+
   const removeWork = (id) => setProfile(p => ({ ...p, workHistory: p.workHistory.filter(w => w.id !== id) }));
 
   const addEdu = () => setProfile(p => ({ ...p, eduHistory: [...p.eduHistory, { id: generateId(), level: 'School', name: '', from: '', to: '', subjects: '' }] }));
@@ -360,27 +389,7 @@ export default function AdminDashboard({ user, onBackToApp }) {
     const file = e.target.files[0];
     if (!file) return;
 
-    /* =============================================================================
-      🔥 FIREBASE STORAGE UPGRADE (Recommended for Production)
-      To switch to the faster, cheaper Storage method, uncomment this code 
-      and ensure you have exported `storage` from your `firebase.js` file.
-      =============================================================================
-      
-      const storageRef = ref(storage, `admin_profiles/${user.uid}`);
-      try {
-        setToast({ type: 'success', message: 'Uploading image...' });
-        await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(storageRef);
-        updateProfileData('photo', downloadURL);
-        setToast({ type: 'success', message: 'Image uploaded!' });
-      } catch (err) {
-        setToast({ type: 'error', message: 'Failed to upload image.' });
-      }
-      
-      =============================================================================
-    */
-
-    // 👇 Fallback Base64 Method (Kept active so your app doesn't crash today)
+    // 👇 Fallback Base64 Method
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
@@ -568,24 +577,28 @@ export default function AdminDashboard({ user, onBackToApp }) {
                         <label className="form-label">From Date</label>
                         <input type="date" className="form-input" value={work.from || ''} onChange={e => updateWork(work.id, 'from', e.target.value)} />
                         
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
-                          <input 
-                            type="checkbox" 
-                            id={`curr-${work.id}`} 
-                            checked={work.current || false} 
-                            onChange={e => updateWork(work.id, 'current', e.target.checked)} 
-                            style={{cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--primary)'}}
-                          />
-                          <label htmlFor={`curr-${work.id}`} style={{color: 'var(--text-muted)', fontSize: '0.85rem', cursor: 'pointer', margin: 0}}>
-                            I currently work here
-                          </label>
-                        </div>
+                        {/* ✅ 2. LOGIC FIX: Hide checkbox if To Date is filled */}
+                        {!work.to && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                            <input 
+                              type="checkbox" 
+                              id={`curr-${work.id}`} 
+                              checked={work.current || false} 
+                              onChange={e => updateWork(work.id, 'current', e.target.checked)} 
+                              style={{cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--primary)'}}
+                            />
+                            <label htmlFor={`curr-${work.id}`} style={{color: 'var(--text-muted)', fontSize: '0.85rem', cursor: 'pointer', margin: 0}}>
+                              I currently work here
+                            </label>
+                          </div>
+                        )}
                       </div>
 
+                      {/* ✅ 2 & 4. UX UPGRADE: Disable and hide the To Date field correctly */}
                       {!work.current && (
                         <div className="form-group">
                           <label className="form-label">To Date</label>
-                          <input type="date" className="form-input" value={work.to || ''} onChange={e => updateWork(work.id, 'to', e.target.value)} />
+                          <input type="date" className="form-input" value={work.to || ''} disabled={work.current} onChange={e => updateWork(work.id, 'to', e.target.value)} />
                         </div>
                       )}
                     </div>
