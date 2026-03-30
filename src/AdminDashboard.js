@@ -6,7 +6,8 @@ import { doc, setDoc, getDoc, collection, getDocs, addDoc, updateDoc } from 'fir
 const COLLECTIONS = {
   USERS: 'users',
   INSTITUTIONS: 'institutions',
-  SETTINGS: 'system_settings'
+  SETTINGS: 'system_settings',
+  STAFF: 'staff' // Added staff collection for profile saving
 };
 
 // Mock Counsellors for Assignment System (In production, fetch from a 'staff' collection)
@@ -80,6 +81,8 @@ const STYLES = `
   .admin-btn:hover { opacity: 0.9; transform: translateY(-2px); }
   .admin-btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 10px 20px; border-radius:8px; cursor:pointer; font-weight:bold; display: inline-flex; align-items: center; gap: 8px;}
   .admin-btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+  .admin-btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+  .admin-btn-danger:hover { background: var(--danger); color: white; }
 
   .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; min-width: 600px;}
   .data-table th, .data-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); }
@@ -117,9 +120,15 @@ const STYLES = `
 
   .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
   .empty-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+  
+  /* Dynamic Array Items */
+  .array-item-card { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px; position: relative;}
+  .remove-item-btn { position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; }
 `;
 
+// Added 'profile' to the top of the array
 const ALL_NAV_TABS = [
+  { id: 'profile', icon: '👤', label: 'My Profile', roles: ['super_admin', 'counsellor'] },
   { id: 'overview', icon: '🏠', label: 'Overview Dashboard', roles: ['super_admin', 'counsellor'] },
   { id: 'students', icon: '🎓', label: 'Student Master', roles: ['super_admin', 'counsellor'] },
   { id: 'counselling', icon: '🧠', label: 'Counselling Workflow', roles: ['super_admin', 'counsellor'] },
@@ -142,6 +151,24 @@ export default function AdminDashboard({ user, onBackToApp }) {
   const [profile, setProfile] = useState({ name: user?.displayName || 'User', role: 'super_admin' });
   const isCounsellor = profile.role === 'counsellor';
   const allowedTabs = ALL_NAV_TABS.filter(t => t.roles.includes(profile.role));
+
+  // --- MY PROFILE STATE ---
+  const [personalProfile, setPersonalProfile] = useState({
+    name: user?.displayName || 'Antonio',
+    email: user?.email || '',
+    title: 'School Counselor',
+    phone: '',
+    linkedin: '',
+    bio: '',
+    experience: [
+      { id: Date.now(), company: 'The Knowledge Habitat', role: 'School Counsellor', duration: 'Jan 2026 - Present' }
+    ],
+    education: [
+      { id: Date.now()+1, degree: 'Master of Social Work (MSW)', institution: '', year: '2020' }
+    ],
+    hobbies: ''
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
 
   // Search & Filter (Debounced)
   const [searchInput, setSearchInput] = useState('');
@@ -185,16 +212,6 @@ export default function AdminDashboard({ user, onBackToApp }) {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // URL Routing
-  useEffect(() => {
-    const hash = window.location.hash.replace('#admin/', '');
-    if (allowedTabs.find(t => t.id === hash)) setActiveTab(hash);
-  }, [allowedTabs]);
-
-  useEffect(() => {
-    window.location.hash = `#admin/${activeTab}`;
-  }, [activeTab]);
-
   // Toast Auto-Clear
   useEffect(() => {
     if (toast) {
@@ -211,6 +228,14 @@ export default function AdminDashboard({ user, onBackToApp }) {
       try {
         const docSnap = await getDoc(doc(db, COLLECTIONS.SETTINGS, "superadmin_profile"));
         if (isMounted && docSnap.exists()) setProfile(prev => ({ ...prev, ...docSnap.data() }));
+
+        // Fetch Personal Profile if it exists
+        if(user?.uid) {
+           const profileSnap = await getDoc(doc(db, COLLECTIONS.STAFF, user.uid));
+           if(profileSnap.exists() && isMounted) {
+               setPersonalProfile(prev => ({...prev, ...profileSnap.data()}));
+           }
+        }
 
         const instSnap = await getDocs(collection(db, COLLECTIONS.INSTITUTIONS));
         if (isMounted) setInstitutions(instSnap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -243,7 +268,7 @@ export default function AdminDashboard({ user, onBackToApp }) {
     };
     fetchPlatformData();
     return () => { isMounted = false; };
-  }, [isCounsellor, user.uid]);
+  }, [isCounsellor, user?.uid]);
 
   // --- ACTIONS ---
   const handleUpdateStudent = async (studentId, updates) => {
@@ -267,6 +292,76 @@ export default function AdminDashboard({ user, onBackToApp }) {
       counsellingStatus: selectedStudent.counsellingStatus === 'Not Started' ? 'In Progress' : selectedStudent.counsellingStatus
     });
     setNewSession({ date: '', duration: '30', outcome: '' });
+  };
+
+  const handleLogout = async () => {
+      try {
+          await signOut(auth);
+          // Redirect or handle logout state
+      } catch (error) {
+          console.error('Logout failed', error);
+      }
+  };
+
+  // --- PROFILE ACTIONS ---
+  const handleSaveProfile = async () => {
+      setSavingProfile(true);
+      try {
+          if(user?.uid) {
+             await setDoc(doc(db, COLLECTIONS.STAFF, user.uid), personalProfile, { merge: true });
+             setToast({ type: 'success', message: 'Profile updated successfully!' });
+          } else {
+             setToast({ type: 'error', message: 'No user ID found. Cannot save.' });
+          }
+      } catch (error) {
+          console.error('Error saving profile:', error);
+          setToast({ type: 'error', message: 'Failed to save profile.' });
+      } finally {
+          setSavingProfile(false);
+      }
+  };
+
+  // Dynamic Array Handlers for Profile
+  const addExperience = () => {
+    setPersonalProfile(prev => ({
+        ...prev,
+        experience: [...prev.experience, { id: Date.now(), company: '', role: '', duration: '' }]
+    }));
+  };
+
+  const removeExperience = (id) => {
+    setPersonalProfile(prev => ({
+        ...prev,
+        experience: prev.experience.filter(exp => exp.id !== id)
+    }));
+  };
+
+  const updateExperience = (id, field, value) => {
+      setPersonalProfile(prev => ({
+          ...prev,
+          experience: prev.experience.map(exp => exp.id === id ? { ...exp, [field]: value } : exp)
+      }));
+  };
+
+  const addEducation = () => {
+    setPersonalProfile(prev => ({
+        ...prev,
+        education: [...prev.education, { id: Date.now(), degree: '', institution: '', year: '' }]
+    }));
+  };
+
+  const removeEducation = (id) => {
+    setPersonalProfile(prev => ({
+        ...prev,
+        education: prev.education.filter(edu => edu.id !== id)
+    }));
+  };
+
+  const updateEducation = (id, field, value) => {
+      setPersonalProfile(prev => ({
+          ...prev,
+          education: prev.education.map(edu => edu.id === id ? { ...edu, [field]: value } : edu)
+      }));
   };
 
   // --- DERIVED METRICS ---
@@ -297,6 +392,156 @@ export default function AdminDashboard({ user, onBackToApp }) {
     if (loadingData) return <div className="empty-state"><div className="empty-icon">⏳</div><h2>Loading Platform Data...</h2></div>;
 
     switch (activeTab) {
+      case 'profile':
+          return (
+            <div className="tab-content anim-fade-in">
+              <div className="header-bar">
+                <div>
+                  <h1>My Profile</h1>
+                  <p>Manage your professional details, experience, and interests.</p>
+                </div>
+                <button 
+                  className="admin-btn" 
+                  onClick={handleSaveProfile} 
+                  disabled={savingProfile}
+                >
+                  {savingProfile ? 'Saving...' : '💾 Save Profile'}
+                </button>
+              </div>
+              
+              <div className="admin-card" style={{borderTop: '4px solid var(--primary)'}}>
+                <h3>Personal Information</h3>
+                <div className="grid-2col">
+                  <div className="form-group">
+                    <label className="form-label">Full Name</label>
+                    <input 
+                        type="text" 
+                        className="form-input" 
+                        value={personalProfile.name} 
+                        onChange={(e) => setPersonalProfile({...personalProfile, name: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Registered Email</label>
+                    <input type="text" className="form-input" value={personalProfile.email} disabled style={{opacity: 0.7}} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Professional Title</label>
+                    <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="e.g. Senior Career Counsellor" 
+                        value={personalProfile.title}
+                        onChange={(e) => setPersonalProfile({...personalProfile, title: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Phone Number</label>
+                    <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="+91..." 
+                        value={personalProfile.phone}
+                        onChange={(e) => setPersonalProfile({...personalProfile, phone: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Professional Bio / Summary</label>
+                    <textarea 
+                        className="form-textarea" 
+                        rows="3" 
+                        placeholder="A brief overview of your counselling philosophy..."
+                        value={personalProfile.bio}
+                        onChange={(e) => setPersonalProfile({...personalProfile, bio: e.target.value})}
+                    ></textarea>
+                </div>
+              </div>
+
+              <div className="admin-card" style={{borderTop: '4px solid var(--secondary)'}}>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '15px'}}>
+                    <h3 style={{borderBottom: 'none', paddingBottom: 0, margin: 0}}>Work Experience</h3>
+                    <button className="admin-btn-outline" style={{padding: '5px 10px', fontSize: '0.8rem'}} onClick={addExperience}>+ Add Role</button>
+                </div>
+                
+                {personalProfile.experience.map((exp, index) => (
+                    <div key={exp.id} className="array-item-card">
+                        <button className="remove-item-btn" onClick={() => removeExperience(exp.id)}>✕</button>
+                        <div className="grid-3col">
+                            <div className="form-group">
+                                <label className="form-label">Institution / Company</label>
+                                <input type="text" className="form-input" value={exp.company} onChange={(e) => updateExperience(exp.id, 'company', e.target.value)} placeholder="e.g. St Joseph's School" />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Role / Position</label>
+                                <input type="text" className="form-input" value={exp.role} onChange={(e) => updateExperience(exp.id, 'role', e.target.value)} placeholder="School Counsellor" />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Duration</label>
+                                <input type="text" className="form-input" value={exp.duration} onChange={(e) => updateExperience(exp.id, 'duration', e.target.value)} placeholder="2022 - 2024" />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+                {personalProfile.experience.length === 0 && <p style={{color: 'var(--text-muted)'}}>No experience added yet.</p>}
+              </div>
+
+              <div className="admin-card" style={{borderTop: '4px solid var(--success)'}}>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '15px'}}>
+                    <h3 style={{borderBottom: 'none', paddingBottom: 0, margin: 0}}>Education & Certifications</h3>
+                    <button className="admin-btn-outline" style={{padding: '5px 10px', fontSize: '0.8rem'}} onClick={addEducation}>+ Add Degree</button>
+                </div>
+
+                {personalProfile.education.map((edu, index) => (
+                    <div key={edu.id} className="array-item-card">
+                        <button className="remove-item-btn" onClick={() => removeEducation(edu.id)}>✕</button>
+                        <div className="grid-3col">
+                            <div className="form-group">
+                                <label className="form-label">Degree / Certification</label>
+                                <input type="text" className="form-input" value={edu.degree} onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)} placeholder="e.g. MSW (Psychiatric Social Work)" />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Institution</label>
+                                <input type="text" className="form-input" value={edu.institution} onChange={(e) => updateEducation(edu.id, 'institution', e.target.value)} placeholder="University Name" />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Year</label>
+                                <input type="text" className="form-input" value={edu.year} onChange={(e) => updateEducation(edu.id, 'year', e.target.value)} placeholder="2020" />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+                {personalProfile.education.length === 0 && <p style={{color: 'var(--text-muted)'}}>No education added yet.</p>}
+              </div>
+
+              <div className="admin-card" style={{borderTop: '4px solid var(--warning)'}}>
+                <h3>Interests & Links</h3>
+                <div className="grid-2col">
+                   <div className="form-group">
+                    <label className="form-label">LinkedIn Profile URL</label>
+                    <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="https://linkedin.com/in/..." 
+                        value={personalProfile.linkedin}
+                        onChange={(e) => setPersonalProfile({...personalProfile, linkedin: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                      <label className="form-label">Hobbies & Interests</label>
+                      <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="e.g. Reading, Cooking, Trekking" 
+                          value={personalProfile.hobbies}
+                          onChange={(e) => setPersonalProfile({...personalProfile, hobbies: e.target.value})}
+                      />
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+
       case 'overview':
         return (
           <div className="tab-content">
