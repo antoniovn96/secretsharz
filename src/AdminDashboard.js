@@ -9,6 +9,13 @@ const COLLECTIONS = {
   SETTINGS: 'system_settings'
 };
 
+// Mock Counsellors for Assignment System (In production, fetch from a 'staff' collection)
+const COUNSELLORS = [
+  { id: 'c1', name: 'Dr. Sarah Menon' },
+  { id: 'c2', name: 'Arjun Patel' },
+  { id: 'c3', name: 'Priya Sharma' }
+];
+
 const STYLES = `
   :root {
     --bg: #0f172a; --sidebar: #1e1b4b; --card-bg: #1e293b; 
@@ -40,16 +47,10 @@ const STYLES = `
   .notify-bell:hover { color: white; }
   .notify-badge { position: absolute; top: 0; right: 0; background: var(--accent); color: white; font-size: 0.6rem; font-weight: bold; height: 16px; width: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
-  .profile-menu { position: relative; display: inline-block; }
-  .avatar-btn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--primary); cursor: pointer; object-fit: cover; background: #000; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;}
   .dropdown-content { position: absolute; right: 0; background-color: var(--card-bg); min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5); z-index: 100; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-top: 10px;}
-  .dropdown-content button { background:transparent; border:none; width:100%; text-align:left; color: var(--text-main); padding: 12px 16px; font-size: 0.9rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.05); cursor:pointer;}
-  .dropdown-content button:hover { background-color: rgba(255,255,255,0.05); color: var(--primary); }
-
-  .welcome-banner { background: linear-gradient(to right, rgba(139, 92, 246, 0.1), rgba(6, 182, 212, 0.05)); border-bottom: 1px solid var(--border); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;}
-  .quote-text { font-size: 0.95rem; font-style: italic; color: var(--text-main); margin: 0; }
-  .quote-text strong { color: var(--primary); font-style: normal;}
-  .clock-container { font-family: monospace; font-size: 1rem; color: var(--secondary); font-weight: bold; background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);}
+  .dropdown-content button, .dropdown-content .notify-item { background:transparent; border:none; width:100%; text-align:left; color: var(--text-main); padding: 12px 16px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.05); cursor:pointer;}
+  .dropdown-content button:hover, .dropdown-content .notify-item:hover { background-color: rgba(255,255,255,0.05); color: var(--primary); }
+  .avatar-btn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--primary); cursor: pointer; object-fit: cover; background: #000; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;}
 
   /* --- CONTENT AREA --- */
   .main-content { flex: 1; padding: 20px; overflow-y: auto; position: relative;}
@@ -57,10 +58,6 @@ const STYLES = `
   .header-bar h1 { margin: 0 0 5px 0; font-size: 1.5rem; color: white;}
   .header-bar p { margin: 0; color: var(--text-muted); font-size: 0.9rem;}
   
-  .tab-content { animation: fadeIn 0.3s ease; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  
-  /* UI COMPONENTS */
   .admin-card { background: var(--card-bg); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow-x: auto;}
   .admin-card h3 { margin-top: 0; color: white; border-bottom: 1px solid var(--border); padding-bottom: 10px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
   
@@ -77,19 +74,16 @@ const STYLES = `
   .form-label { display: block; font-weight: 700; margin-bottom: 6px; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;}
   .form-input, .form-select, .form-textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; color: white; background: #0f172a; box-sizing: border-box; font-family: inherit;}
   .form-input:focus, .form-select:focus { border-color: var(--primary); outline: none; }
-  
   .search-bar { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
   
   .admin-btn { background: linear-gradient(45deg, var(--primary), #a855f7); color: white; border: none; padding: 10px 20px; font-size: 0.95rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
   .admin-btn:hover { opacity: 0.9; transform: translateY(-2px); }
-  .admin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   .admin-btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 10px 20px; border-radius:8px; cursor:pointer; font-weight:bold; display: inline-flex; align-items: center; gap: 8px;}
   .admin-btn-outline:hover { border-color: var(--primary); color: var(--primary); }
 
   .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; min-width: 600px;}
   .data-table th, .data-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); }
   .data-table th { color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; background: rgba(0,0,0,0.2);}
-  .data-table tr { transition: background 0.2s; }
   .data-table tr.clickable:hover { background: rgba(139, 92, 246, 0.1); cursor: pointer; }
 
   .admin-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; white-space: nowrap;}
@@ -98,65 +92,45 @@ const STYLES = `
   .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger);}
   .badge-neutral { background: rgba(148, 163, 184, 0.2); color: var(--text-muted); border: 1px solid var(--text-muted);}
 
-  .list-item { padding: 12px 10px; border-bottom: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; border-radius: 6px;}
-  .list-item.clickable:hover { background: rgba(255,255,255,0.05); cursor: pointer; }
-  .list-item:last-child { border-bottom: none; }
-
-  /* Pagination */
-  .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; }
-  .page-controls { display: flex; gap: 10px; }
-  .page-btn { background: var(--sidebar); color: white; border: 1px solid var(--border); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-  .page-btn:hover:not(:disabled) { background: var(--primary); border-color: var(--primary); }
-  .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* Modals */
+  /* Modals & Tabs */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
-  .modal-content { background: var(--card-bg); width: 100%; max-width: 600px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; }
-  .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); }
-  .modal-header h2 { margin: 0; font-size: 1.2rem; color: white; }
-  .close-btn { background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: color 0.2s; }
-  .close-btn:hover { color: var(--danger); }
+  .modal-content { background: var(--card-bg); width: 100%; max-width: 700px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; }
+  .modal-header { padding: 20px 20px 0 20px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2); }
+  .modal-tabs { display: flex; gap: 20px; margin-top: 15px; }
+  .modal-tab { background: none; border: none; color: var(--text-muted); font-weight: bold; padding: 10px 0; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
+  .modal-tab.active { color: white; border-bottom-color: var(--primary); }
+  .close-btn { background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; position: absolute; right: 20px; top: 15px;}
   .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
-  .modal-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: rgba(0,0,0,0.2); }
 
-  /* Analytics Charts */
-  .bar-chart { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
-  .bar-row { display: flex; align-items: center; gap: 15px; }
-  .bar-label { width: 60px; font-weight: bold; color: var(--text-muted); font-size: 0.85rem; }
-  .bar-track { flex: 1; height: 12px; background: rgba(0,0,0,0.3); border-radius: 6px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 6px; transition: width 1s ease-out; }
-  .bar-value { width: 40px; text-align: right; font-weight: bold; font-size: 0.85rem; }
+  /* Timeline */
+  .timeline { border-left: 2px solid var(--border); margin-left: 10px; padding-left: 20px; position: relative; }
+  .timeline-item { margin-bottom: 20px; position: relative; }
+  .timeline-dot { position: absolute; left: -27px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); border: 2px solid var(--card-bg); }
+  .timeline-date { font-size: 0.75rem; color: var(--text-muted); font-weight: bold; }
+  
+  /* Funnel */
+  .funnel-container { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; border: 1px solid var(--border); }
+  .funnel-step { text-align: center; flex: 1; position: relative; }
+  .funnel-step:not(:last-child)::after { content: '➔'; position: absolute; right: -10px; top: 30%; color: var(--border); font-size: 1.5rem; }
+  .funnel-val { font-size: 1.8rem; font-weight: 900; color: white; }
+  .funnel-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
-  /* Profile Accordions */
-  .profile-acc { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
-  .profile-acc summary { padding: 18px 20px; font-weight: 800; font-size: 1.05rem; color: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center; list-style: none; outline: none; background: var(--card-bg); }
-  .profile-acc summary::-webkit-details-marker { display: none; }
-  .profile-acc summary::after { content: '+'; color: var(--primary); font-size: 1.5rem; transition: 0.3s;}
-  .profile-acc[open] summary::after { content: '×'; transform: rotate(45deg); color: var(--danger);}
-  .profile-acc[open] summary { border-bottom: 1px solid var(--border); }
-  .acc-body { padding: 20px; }
-
-  /* Toast */
-  .admin-toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 24px; border-radius: 8px; color: white; font-weight: bold; z-index: 9999; animation: floatUp 0.3s ease; box-shadow: 0 10px 25px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 10px; }
-  .admin-toast.success { background: var(--success); border: 1px solid #059669; }
-  .admin-toast.error { background: var(--danger); border: 1px solid #b91c1c; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+  .empty-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
 `;
 
-const NAV_TABS = [
-  { id: 'overview', icon: '🏠', label: 'Overview Dashboard' },
-  { id: 'students', icon: '🎓', label: 'Student Master' },
-  { id: 'institutions', icon: '🏫', label: 'Institution Control' },
-  { id: 'analytics', icon: '📊', label: 'Analytics & Intel' },
-  { id: 'counselling', icon: '🧠', label: 'Counselling Control' },
-  { id: 'settings', icon: '⚙️', label: 'System Settings' },
-  { id: 'profile', icon: '👤', label: 'My Profile' },
+const ALL_NAV_TABS = [
+  { id: 'overview', icon: '🏠', label: 'Overview Dashboard', roles: ['super_admin', 'counsellor'] },
+  { id: 'students', icon: '🎓', label: 'Student Master', roles: ['super_admin', 'counsellor'] },
+  { id: 'counselling', icon: '🧠', label: 'Counselling Workflow', roles: ['super_admin', 'counsellor'] },
+  { id: 'analytics', icon: '📊', label: 'Analytics & Funnel', roles: ['super_admin'] },
+  { id: 'institutions', icon: '🏫', label: 'Institution Control', roles: ['super_admin'] },
+  { id: 'settings', icon: '⚙️', label: 'System Settings', roles: ['super_admin'] },
 ];
 
 export default function AdminDashboard({ user, onBackToApp }) {
   // --- STATE ---
   const [activeTab, setActiveTab] = useState('overview');
-  const [timeStr, setTimeStr] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState(null);
   
   // Data
@@ -164,20 +138,26 @@ export default function AdminDashboard({ user, onBackToApp }) {
   const [students, setStudents] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  // Student Master: Search, Filter, Pagination
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  // Profile & RBAC
+  const [profile, setProfile] = useState({ name: user?.displayName || 'User', role: 'super_admin' });
+  const isCounsellor = profile.role === 'counsellor';
+  const allowedTabs = ALL_NAV_TABS.filter(t => t.roles.includes(profile.role));
 
-  // Modals
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  // Search & Filter (Debounced)
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
   
-  const [profile, setProfile] = useState({
-    name: user?.displayName || 'Admin User',
-    role: 'super_admin',
-    photo: '' 
-  });
+  // Modals & Forms
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [modalTab, setModalTab] = useState('overview');
+  const [newSession, setNewSession] = useState({ date: '', duration: '30', outcome: '' });
+
+  // Notifications
+  const [notifyOpen, setNotifyOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  
+  const searchRef = useRef(null);
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -187,25 +167,32 @@ export default function AdminDashboard({ user, onBackToApp }) {
     return () => document.head.removeChild(style);
   }, []);
 
+  // 🚀 6. PRO UX: Keyboard Shortcuts
   useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      setTimeStr(`${now.toLocaleDateString('en-GB')}, ${now.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}`);
-    }, 1000);
-    return () => clearInterval(timer);
+    const handleKeyDown = (e) => {
+      if (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // 🚀 10. URL-BASED ROUTING
+  // 🚀 Debounce Search
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // URL Routing
   useEffect(() => {
     const hash = window.location.hash.replace('#admin/', '');
-    if (NAV_TABS.find(t => t.id === hash)) {
-      setActiveTab(hash);
-    }
-  }, []);
+    if (allowedTabs.find(t => t.id === hash)) setActiveTab(hash);
+  }, [allowedTabs]);
 
   useEffect(() => {
     window.location.hash = `#admin/${activeTab}`;
-    setCurrentPage(1); // Reset pagination on tab change
   }, [activeTab]);
 
   // Toast Auto-Clear
@@ -222,29 +209,30 @@ export default function AdminDashboard({ user, onBackToApp }) {
     const fetchPlatformData = async () => {
       setLoadingData(true);
       try {
-        // Fetch Profile
         const docSnap = await getDoc(doc(db, COLLECTIONS.SETTINGS, "superadmin_profile"));
         if (isMounted && docSnap.exists()) setProfile(prev => ({ ...prev, ...docSnap.data() }));
 
-        // Fetch Institutions
         const instSnap = await getDocs(collection(db, COLLECTIONS.INSTITUTIONS));
         if (isMounted) setInstitutions(instSnap.docs.map(d => ({ id: d.id, ...d.data() })));
 
-        // Fetch Students
         const stuSnap = await getDocs(collection(db, COLLECTIONS.USERS));
         if (isMounted) {
-          const assessedStudents = stuSnap.docs
-            .map(d => ({ id: d.id, ...d.data() }))
-            .filter(u => u.riasecCode);
-            
-          // Mocking counselling status for visual demo if not present
-          const formattedStudents = assessedStudents.map(s => ({
+          let allStudents = stuSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+          
+          // Role-Based Filtering: If counsellor, only show assigned students
+          if (isCounsellor) {
+            allStudents = allStudents.filter(s => s.assignedCounsellorId === user.uid);
+          }
+
+          // Mock empty arrays for new features if they don't exist in DB yet
+          const formatted = allStudents.map(s => ({
             ...s,
             counsellingStatus: s.counsellingStatus || 'Not Started',
-            counsellorNotes: s.counsellorNotes || ''
+            sessions: s.sessions || [],
+            assignedCounsellorId: s.assignedCounsellorId || ''
           }));
           
-          setStudents(formattedStudents);
+          setStudents(formatted);
         }
       } catch (e) {
         console.error("Data fetch error", e);
@@ -255,93 +243,75 @@ export default function AdminDashboard({ user, onBackToApp }) {
     };
     fetchPlatformData();
     return () => { isMounted = false; };
-  }, []);
+  }, [isCounsellor, user.uid]);
 
   // --- ACTIONS ---
-  const handleLogout = async () => {
-    await signOut(auth);
-    onBackToApp();
-  };
-
-  const handleUpdateStudentStatus = async (studentId, newStatus) => {
+  const handleUpdateStudent = async (studentId, updates) => {
     try {
-      await updateDoc(doc(db, COLLECTIONS.USERS, studentId), { counsellingStatus: newStatus });
-      setStudents(students.map(s => s.id === studentId ? { ...s, counsellingStatus: newStatus } : s));
-      setSelectedStudent(prev => prev ? { ...prev, counsellingStatus: newStatus } : null);
-      setToast({ type: 'success', message: 'Student status updated.' });
+      await updateDoc(doc(db, COLLECTIONS.USERS, studentId), updates);
+      setStudents(students.map(s => s.id === studentId ? { ...s, ...updates } : s));
+      setSelectedStudent(prev => prev ? { ...prev, ...updates } : null);
+      setToast({ type: 'success', message: 'Student record updated.' });
     } catch (err) {
-      setToast({ type: 'error', message: 'Failed to update status.' });
+      setToast({ type: 'error', message: 'Failed to update record.' });
     }
   };
 
-  const exportCSV = () => {
-    if (students.length === 0) return;
-    const headers = "Name,Email,Class,RIASEC,Top Career,Status\n";
-    const rows = students.map(s => `"${s.name || 'Unknown'}","${s.email}","${s.classLevel || ''}","${s.riasecCode}","${s.bestCareer || ''}","${s.counsellingStatus}"`).join("\n");
-    const blob = new Blob([headers + rows], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `VidyaVantage_Students_${new Date().toLocaleDateString('en-GB')}.csv`;
-    a.click();
-    setToast({ type: 'success', message: 'Download started!' });
+  const handleAddSession = async () => {
+    if (!newSession.date || !newSession.outcome) return setToast({type: 'error', message: 'Fill date & outcome.'});
+    const updatedSessions = [...(selectedStudent.sessions || []), { id: Date.now(), ...newSession }];
+    
+    // Auto-update status to "In Progress" when a session is logged
+    await handleUpdateStudent(selectedStudent.id, { 
+      sessions: updatedSessions,
+      counsellingStatus: selectedStudent.counsellingStatus === 'Not Started' ? 'In Progress' : selectedStudent.counsellingStatus
+    });
+    setNewSession({ date: '', duration: '30', outcome: '' });
   };
 
-  // --- FILTER & PAGINATION LOGIC ---
+  // --- DERIVED METRICS ---
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
-      const matchesSearch = (s.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (s.email || '').toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = (s.name || '').toLowerCase().includes(debouncedSearch.toLowerCase()) || (s.email || '').toLowerCase().includes(debouncedSearch.toLowerCase());
       const matchesStatus = statusFilter === 'All' || s.counsellingStatus === statusFilter;
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesStatus && s.riasecCode; // Only show assessed in table
     });
-  }, [students, searchQuery, statusFilter]);
+  }, [students, debouncedSearch, statusFilter]);
 
-  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
-  const currentStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const pendingInterventions = students.filter(s => s.counsellingStatus === 'Not Started' && s.riasecCode).length;
+  
+  // Analytics Funnel
+  const totalRegistered = students.length;
+  const totalAssessed = students.filter(s => s.riasecCode).length;
+  const totalCounselled = students.filter(s => s.counsellingStatus !== 'Not Started').length;
+  const totalCompleted = students.filter(s => s.counsellingStatus === 'Completed').length;
 
-  const pendingInterventions = students.filter(s => s.counsellingStatus === 'Not Started').length;
-  const inProgress = students.filter(s => s.counsellingStatus === 'In Progress').length;
-
-  // Analytics Calculation
-  const riasecCounts = useMemo(() => {
-    const counts = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
-    students.forEach(s => {
-      if (s.riasecCode) {
-        const primary = s.riasecCode.charAt(0);
-        if (counts[primary] !== undefined) counts[primary]++;
-      }
-    });
-    return counts;
-  }, [students]);
-  const maxRiasec = Math.max(...Object.values(riasecCounts), 1);
+  // Notifications Mock
+  const notifications = [
+    { id: 1, text: `${pendingInterventions} students need counsellor assignment.`, type: 'warning' },
+    { id: 2, text: "System backup completed successfully.", type: 'success' }
+  ].filter(n => n.text[0] !== '0');
 
   // --- RENDERERS ---
   const renderTabContent = () => {
-    if (loadingData) {
-      return (
-        <div className="tab-content" style={{textAlign: 'center', padding: '50px', color: 'var(--text-muted)'}}>
-          <div style={{fontSize: '2rem', marginBottom: '15px'}}>⏳</div>
-          <h2>Loading Platform Data...</h2>
-        </div>
-      );
-    }
+    if (loadingData) return <div className="empty-state"><div className="empty-icon">⏳</div><h2>Loading Platform Data...</h2></div>;
 
     switch (activeTab) {
       case 'overview':
         return (
           <div className="tab-content">
             <div className="header-bar">
-              <div><h1>Overview Dashboard</h1><p>Real-time snapshot of platform activity and metrics.</p></div>
-              <button className="admin-btn-outline" onClick={exportCSV}>📥 Export Data</button>
+              <div><h1>Overview Dashboard</h1><p>Real-time snapshot of your assigned metrics.</p></div>
             </div>
 
             <div className="kpi-grid">
-              <div className="kpi-box" style={{borderTop: '3px solid var(--primary)'}} onClick={() => setActiveTab('institutions')}>
-                <h4>Total Institutions</h4>
-                <div className="val">{institutions.length}</div>
-              </div>
+              {!isCounsellor && (
+                <div className="kpi-box" style={{borderTop: '3px solid var(--primary)'}} onClick={() => setActiveTab('institutions')}>
+                  <h4>Institutions</h4><div className="val">{institutions.length}</div>
+                </div>
+              )}
               <div className="kpi-box" style={{borderTop: '3px solid var(--success)'}} onClick={() => setActiveTab('students')}>
-                <h4>Assessed Students</h4>
-                <div className="val">{students.length}</div>
+                <h4>Your Students</h4><div className="val">{totalAssessed}</div>
               </div>
               <div className="kpi-box" style={{borderTop: '3px solid var(--danger)'}} onClick={() => { setStatusFilter('Not Started'); setActiveTab('students'); }}>
                 <h4>Pending Interventions</h4>
@@ -352,36 +322,14 @@ export default function AdminDashboard({ user, onBackToApp }) {
             <div className="grid-2col">
               <div className="admin-card" style={{borderTop: '4px solid var(--warning)'}}>
                 <h3>Action Queue</h3>
-                <div className="list-item clickable" onClick={() => { setStatusFilter('Not Started'); setActiveTab('students'); }}>
-                  <span>Unassigned Students</span> 
-                  <span className={`admin-badge ${pendingInterventions > 0 ? 'badge-danger' : 'badge-neutral'}`}>{pendingInterventions} Students</span>
-                </div>
-                <div className="list-item clickable" onClick={() => { setStatusFilter('In Progress'); setActiveTab('students'); }}>
-                  <span>Active Counselling Sessions</span> 
-                  <span className="admin-badge badge-warn">{inProgress} Students</span>
-                </div>
-                <div className="list-item">
-                  <span>System Alerts</span> 
-                  <span className="admin-badge badge-success">All Clear</span>
-                </div>
-              </div>
-
-              <div className="admin-card" style={{borderTop: '4px solid var(--secondary)'}}>
-                <h3>Quick Analytics: Primary Personality Types</h3>
-                <div className="bar-chart">
-                  {Object.entries(riasecCounts).map(([type, count]) => {
-                    const colors = { R:'#ef4444', I:'#f59e0b', A:'#8b5cf6', S:'#10b981', E:'#06b6d4', C:'#64748b' };
-                    return (
-                      <div key={type} className="bar-row">
-                        <div className="bar-label">{type} Type</div>
-                        <div className="bar-track">
-                          <div className="bar-fill" style={{ width: `${(count / maxRiasec) * 100}%`, background: colors[type] }}></div>
-                        </div>
-                        <div className="bar-value">{count}</div>
-                      </div>
-                    );
-                  })}
-                </div>
+                {pendingInterventions > 0 ? (
+                  <div className="list-item clickable" onClick={() => { setStatusFilter('Not Started'); setActiveTab('students'); }}>
+                    <span>Unassigned Students</span> 
+                    <span className="admin-badge badge-danger">{pendingInterventions} Students</span>
+                  </div>
+                ) : (
+                   <div className="empty-state" style={{padding: '20px'}}><div className="empty-icon" style={{fontSize:'2rem', marginBottom: '5px'}}>🎉</div><p style={{margin:0}}>Inbox Zero! All clear.</p></div>
+                )}
               </div>
             </div>
           </div>
@@ -391,27 +339,22 @@ export default function AdminDashboard({ user, onBackToApp }) {
         return (
           <div className="tab-content">
             <div className="header-bar">
-              <div><h1>Assessed Student Master</h1><p>Complete directory of all students who have taken the assessment.</p></div>
-              <button className="admin-btn" onClick={exportCSV}>📥 Download CSV</button>
+              <div><h1>Student Master Directory</h1><p>Search, filter, and manage all assessed students.</p></div>
             </div>
             
             <div className="admin-card" style={{ borderTop: '4px solid var(--success)' }}>
-              {/* 🚀 4. SEARCH + FILTER */}
               <div className="search-bar">
                 <input 
                   type="text" 
+                  id="student-search"
+                  ref={searchRef}
                   className="form-input" 
-                  placeholder="🔍 Search by name or email..." 
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                  placeholder="🔍 Search name (Press '/' to focus)..." 
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   style={{flex: 2}}
                 />
-                <select 
-                  className="form-select" 
-                  value={statusFilter} 
-                  onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-                  style={{flex: 1}}
-                >
+                <select className="form-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{flex: 1}}>
                   <option value="All">All Statuses</option>
                   <option value="Not Started">Not Started</option>
                   <option value="In Progress">In Progress</option>
@@ -420,108 +363,54 @@ export default function AdminDashboard({ user, onBackToApp }) {
               </div>
 
               {filteredStudents.length === 0 ? (
-                <p style={{color: 'var(--text-muted)', textAlign: 'center', padding: '20px'}}>No students found matching your criteria.</p>
+                <div className="empty-state"><div className="empty-icon">👻</div><h3>No students found</h3><p>Try adjusting your search or filters.</p></div>
               ) : (
-                <>
-                  <div style={{overflowX: 'auto'}}>
-                    <table className="data-table">
-                      <thead>
-                        <tr><th>Student Name</th><th>Email</th><th>RIASEC Code</th><th>Status</th><th>Action</th></tr>
-                      </thead>
-                      <tbody>
-                        {currentStudents.map(student => (
-                          <tr key={student.id} className="clickable" onClick={() => setSelectedStudent(student)}>
-                            <td style={{fontWeight: 'bold'}}>{student.name || 'Unknown'}</td>
-                            <td style={{color: 'var(--text-muted)'}}>{student.email}</td>
-                            <td><span className="admin-badge" style={{background: 'rgba(139, 92, 246, 0.2)', color: 'var(--primary)', letterSpacing:'1px'}}>{student.riasecCode}</span></td>
-                            <td>
-                              <span className={`admin-badge ${student.counsellingStatus === 'Not Started' ? 'badge-danger' : student.counsellingStatus === 'In Progress' ? 'badge-warn' : 'badge-success'}`}>
-                                {student.counsellingStatus}
-                              </span>
-                            </td>
-                            <td><button className="admin-btn-outline" style={{padding: '4px 10px', fontSize: '0.75rem'}}>View</button></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="pagination">
-                      <span>Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredStudents.length)} of {filteredStudents.length} entries</span>
-                      <div className="page-controls">
-                        <button className="page-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Prev</button>
-                        <span style={{padding: '5px 10px', fontWeight: 'bold'}}>{currentPage} / {totalPages}</span>
-                        <button className="page-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</button>
-                      </div>
-                    </div>
-                  )}
-                </>
+                <div style={{overflowX: 'auto'}}>
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Name</th><th>Email</th><th>RIASEC</th><th>Status</th><th>Counsellor</th></tr>
+                    </thead>
+                    <tbody>
+                      {filteredStudents.map(student => (
+                        <tr key={student.id} className="clickable" onClick={() => { setSelectedStudent(student); setModalTab('overview'); }}>
+                          <td style={{fontWeight: 'bold'}}>{student.name || 'Unknown'}</td>
+                          <td style={{color: 'var(--text-muted)'}}>{student.email}</td>
+                          <td><span className="admin-badge" style={{background: 'rgba(139, 92, 246, 0.2)', color: 'var(--primary)'}}>{student.riasecCode}</span></td>
+                          <td><span className={`admin-badge ${student.counsellingStatus === 'Not Started' ? 'badge-danger' : student.counsellingStatus === 'In Progress' ? 'badge-warn' : 'badge-success'}`}>{student.counsellingStatus}</span></td>
+                          <td style={{color: 'var(--text-muted)'}}>{COUNSELLORS.find(c=>c.id===student.assignedCounsellorId)?.name || 'Unassigned'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </div>
         );
 
-      case 'counselling':
-        return (
-          <div className="tab-content">
-            <div className="header-bar">
-              <h1>Counselling Workflow</h1>
-              <p>Manage active student interventions and session notes.</p>
-            </div>
-            <div className="grid-2col">
-              <div className="admin-card" style={{borderTop: '4px solid var(--warning)'}}>
-                <h3>In Progress ({inProgress})</h3>
-                {students.filter(s => s.counsellingStatus === 'In Progress').map(s => (
-                  <div key={s.id} className="list-item clickable" onClick={() => setSelectedStudent(s)}>
-                    <div>
-                      <strong style={{display: 'block', color: 'white'}}>{s.name || 'Unknown Student'}</strong>
-                      <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>{s.riasecCode} • {s.classLevel}</span>
-                    </div>
-                    <button className="admin-btn-outline" style={{padding: '4px 10px', fontSize: '0.75rem'}}>Open</button>
-                  </div>
-                ))}
-                {inProgress === 0 && <p style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>No active sessions.</p>}
-              </div>
-
-              <div className="admin-card" style={{borderTop: '4px solid var(--danger)'}}>
-                <h3>Needs Assignment ({pendingInterventions})</h3>
-                {students.filter(s => s.counsellingStatus === 'Not Started').slice(0, 5).map(s => (
-                  <div key={s.id} className="list-item clickable" onClick={() => setSelectedStudent(s)}>
-                    <div>
-                      <strong style={{display: 'block', color: 'white'}}>{s.name || 'Unknown Student'}</strong>
-                      <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>{s.email}</span>
-                    </div>
-                    <button className="admin-btn" style={{padding: '4px 10px', fontSize: '0.75rem', background: 'var(--danger)'}}>Assign</button>
-                  </div>
-                ))}
-                {pendingInterventions > 5 && <p style={{fontSize: '0.85rem', color: 'var(--primary)', textAlign: 'center', marginTop: '10px', cursor: 'pointer'}} onClick={() => {setStatusFilter('Not Started'); setActiveTab('students');}}>View all {pendingInterventions} pending...</p>}
-                {pendingInterventions === 0 && <p style={{fontSize: '0.85rem', color: 'var(--text-muted)'}}>All students assigned!</p>}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'institutions':
       case 'analytics':
-      case 'health':
-      case 'settings':
-      case 'access':
         return (
           <div className="tab-content">
-            <div className="header-bar">
-              <h1>{NAV_TABS.find(t => t.id === activeTab)?.label}</h1>
-              <p>Advanced administration module.</p>
-            </div>
-            <div className="admin-card">
-              <h3>🚧 Enterprise Feature</h3>
-              <p style={{color: 'var(--text-muted)'}}>This module requires a Super Admin or Enterprise tier to fully unlock configuration controls. Current active read-only metrics are shown on the Overview tab.</p>
+            <div className="header-bar"><h1>Analytics & Conversion</h1><p>Platform-wide pipeline and completion metrics.</p></div>
+            <div className="admin-card" style={{borderTop: '4px solid var(--secondary)'}}>
+              <h3>Conversion Funnel</h3>
+              <div className="funnel-container">
+                <div className="funnel-step"><div className="funnel-val">{totalRegistered}</div><div className="funnel-label">Registered</div></div>
+                <div className="funnel-step"><div className="funnel-val" style={{color:'var(--primary)'}}>{totalAssessed}</div><div className="funnel-label">Assessed</div></div>
+                <div className="funnel-step"><div className="funnel-val" style={{color:'var(--warning)'}}>{totalCounselled}</div><div className="funnel-label">In Counselling</div></div>
+                <div className="funnel-step"><div className="funnel-val" style={{color:'var(--success)'}}>{totalCompleted}</div><div className="funnel-label">Completed</div></div>
+              </div>
             </div>
           </div>
         );
 
-      default: return null;
+      default:
+        return (
+          <div className="tab-content">
+            <div className="header-bar"><h1>{allowedTabs.find(t => t.id === activeTab)?.label}</h1><p>Module configuration.</p></div>
+            <div className="empty-state"><div className="empty-icon">🚧</div><h3>Under Construction</h3><p>Enterprise features are locked for your current role tier.</p></div>
+          </div>
+        );
     }
   };
 
@@ -533,15 +422,11 @@ export default function AdminDashboard({ user, onBackToApp }) {
         <div className="admin-brand" onClick={() => setActiveTab('overview')}>
           <h2>Career Intel ⚡</h2>
         </div>
-        <div style={{padding: '0 20px', marginBottom: '15px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '1px', fontWeight: 'bold'}}>
-          Menu
-        </div>
-        {NAV_TABS.map(tab => (
+        {allowedTabs.map(tab => (
           <button 
             key={tab.id}
             className={`nav-btn ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
-            style={tab.id === 'settings' ? {borderTop: '1px solid #334155', marginTop: '20px', paddingTop: '20px'} : {}}
           >
             {tab.icon} {tab.label}
           </button>
@@ -552,87 +437,144 @@ export default function AdminDashboard({ user, onBackToApp }) {
         {/* 🧩 TOP HEADER */}
         <div className="top-header">
           <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
-            <span className="admin-badge badge-warn">Role: {profile.role?.replace('_', ' ').toUpperCase()}</span>
+            <span className={`admin-badge ${isCounsellor ? 'badge-primary' : 'badge-danger'}`}>
+              Role: {profile.role?.replace('_', ' ').toUpperCase()}
+            </span>
           </div>
           
           <div className="header-actions">
-            <button className="notify-bell">
-              🔔 <div className="notify-badge">{pendingInterventions > 9 ? '9+' : pendingInterventions}</div>
-            </button>
+            {/* Notifications Dropdown */}
+            <div style={{position: 'relative'}}>
+              <button className="notify-bell" onClick={() => setNotifyOpen(!notifyOpen)}>
+                🔔 {notifications.length > 0 && <div className="notify-badge">{notifications.length}</div>}
+              </button>
+              {notifyOpen && (
+                <div className="dropdown-content" style={{width: '300px'}}>
+                  <div style={{padding: '10px 15px', borderBottom: '1px solid var(--border)', fontWeight: 'bold'}}>Notifications</div>
+                  {notifications.length === 0 ? <div style={{padding: '15px', color:'var(--text-muted)'}}>No new alerts</div> : 
+                    notifications.map(n => <button key={n.id} className="notify-item" style={{color: n.type==='warning'?'var(--warning)':'var(--success)'}}>{n.text}</button>)
+                  }
+                </div>
+              )}
+            </div>
+
             <button onClick={onBackToApp} className="site-link" style={{border:'none', cursor:'pointer', fontFamily:'inherit'}}>🌐 Live Site</button>
             <div className="profile-menu">
-              <div className="avatar-btn" onClick={handleLogout} title="Click to Logout">
-                {profile.name.charAt(0).toUpperCase()}
-              </div>
+              <div className="avatar-btn" onClick={() => setProfileOpen(!profileOpen)}>{profile.name.charAt(0).toUpperCase()}</div>
+              {profileOpen && (
+                <div className="dropdown-content">
+                  <div style={{padding: '15px', borderBottom: '1px solid var(--border)'}}><strong style={{color:'white'}}>{profile.name}</strong></div>
+                  <button style={{color: 'var(--danger)'}} onClick={handleLogout}>🚪 Logout</button>
+                </div>
+              )}
             </div>
           </div>
         </div>
-        
-        {/* WELCOME */}
-        <div className="welcome-banner">
-          <div><p className="quote-text"><strong>Welcome back, {profile?.name?.split(' ')[0] || 'Admin'}.</strong> "Quality is not an act, it is a habit."</p></div>
-          <div className="clock-container">{timeStr}</div>
-        </div>
 
-        {/* CONTENT */}
         <div className="main-content">
           {renderTabContent()}
         </div>
       </div>
 
-      {/* 🚀 1. STUDENT DETAIL MODAL */}
+      {/* 🚀 1. MASSIVE STUDENT MODAL UPGRADE */}
       {selectedStudent && (
         <div className="modal-overlay" onClick={() => setSelectedStudent(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>🎓 Student Dossier: {selectedStudent.name || 'Unknown'}</h2>
+            
+            <div className="modal-header" style={{position:'relative'}}>
               <button className="close-btn" onClick={() => setSelectedStudent(null)}>✕</button>
-            </div>
-            <div className="modal-body">
-              <div className="grid-2col" style={{marginBottom: '20px'}}>
-                <div>
-                  <label className="form-label">Email</label>
-                  <div style={{fontWeight: 'bold', marginBottom: '10px'}}>{selectedStudent.email}</div>
-                  <label className="form-label">Class/Level</label>
-                  <div style={{fontWeight: 'bold'}}>{selectedStudent.classLevel || 'Not specified'}</div>
-                </div>
-                <div style={{background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border)'}}>
-                  <label className="form-label">Primary Career Match</label>
-                  <div style={{fontSize: '1.2rem', fontWeight: '900', color: 'var(--gold)', marginBottom: '5px'}}>{selectedStudent.bestCareer || 'N/A'}</div>
-                  <span className="admin-badge" style={{background: 'var(--primary)', color: 'white'}}>{selectedStudent.riasecCode} Profile</span>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">RIASEC Personality Summary</label>
-                <div style={{background: 'var(--bg)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-muted)'}}>
-                  {selectedStudent.riasecSummary || 'Detailed summary pending generation.'}
-                </div>
-              </div>
-
-              {/* 🚀 2. COUNSELLING WORKFLOW */}
-              <hr style={{border: 'none', borderTop: '1px solid var(--border)', margin: '25px 0'}} />
-              <h3 style={{marginTop: 0, fontSize: '1.1rem'}}>🧠 Counselling Workflow</h3>
+              <h2 style={{fontSize:'1.5rem'}}>🎓 {selectedStudent.name || 'Unknown'}</h2>
+              <span style={{color: 'var(--text-muted)', fontSize: '0.85rem'}}>{selectedStudent.email}</span>
               
-              <div className="grid-2col" style={{alignItems: 'end'}}>
-                <div className="form-group" style={{marginBottom: 0}}>
-                  <label className="form-label">Intervention Status</label>
-                  <select 
-                    className="form-select" 
-                    value={selectedStudent.counsellingStatus} 
-                    onChange={(e) => handleUpdateStudentStatus(selectedStudent.id, e.target.value)}
-                  >
-                    <option value="Not Started">Not Started (Needs Review)</option>
-                    <option value="In Progress">In Progress (Active Sessions)</option>
-                    <option value="Completed">Completed / Discharged</option>
-                  </select>
-                </div>
-                <button className="admin-btn-outline">Add Session Note</button>
+              {/* MODAL TABS */}
+              <div className="modal-tabs">
+                <button className={`modal-tab ${modalTab === 'overview' ? 'active' : ''}`} onClick={()=>setModalTab('overview')}>Overview</button>
+                <button className={`modal-tab ${modalTab === 'counselling' ? 'active' : ''}`} onClick={()=>setModalTab('counselling')}>Counselling Log</button>
+                <button className={`modal-tab ${modalTab === 'documents' ? 'active' : ''}`} onClick={()=>setModalTab('documents')}>Documents</button>
               </div>
             </div>
-            <div className="modal-footer">
-              <button className="admin-btn-outline" onClick={() => setSelectedStudent(null)}>Close</button>
-              <button className="admin-btn">Save Notes</button>
+
+            <div className="modal-body">
+              
+              {/* OVERVIEW TAB */}
+              {modalTab === 'overview' && (
+                <div className="anim-up">
+                  <div className="grid-2col" style={{marginBottom: '20px'}}>
+                    <div style={{background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border)'}}>
+                      <label className="form-label">RIASEC Profile</label>
+                      <div style={{fontSize: '1.5rem', fontWeight: '900', color: 'var(--primary)', marginBottom: '5px'}}>{selectedStudent.riasecCode}</div>
+                      <div style={{color: 'var(--gold)', fontWeight: 'bold'}}>{selectedStudent.bestCareer || 'Pending Match'}</div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label className="form-label">Assign Counsellor</label>
+                      <select 
+                        className="form-select" 
+                        value={selectedStudent.assignedCounsellorId || ''} 
+                        onChange={(e) => handleUpdateStudent(selectedStudent.id, { assignedCounsellorId: e.target.value })}
+                      >
+                        <option value="">-- Unassigned --</option>
+                        {COUNSELLORS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Current Status</label>
+                    <select className="form-select" value={selectedStudent.counsellingStatus} onChange={(e) => handleUpdateStudent(selectedStudent.id, {counsellingStatus: e.target.value})}>
+                      <option value="Not Started">Not Started</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* COUNSELLING TAB */}
+              {modalTab === 'counselling' && (
+                <div className="anim-up">
+                  {/* Session Timeline */}
+                  <div style={{marginBottom: '30px'}}>
+                    <h3 style={{marginTop: 0, borderBottom: '1px solid var(--border)', paddingBottom: '10px'}}>Session History</h3>
+                    {!selectedStudent.sessions || selectedStudent.sessions.length === 0 ? (
+                      <p style={{color: 'var(--text-muted)', fontStyle: 'italic'}}>No sessions logged yet.</p>
+                    ) : (
+                      <div className="timeline">
+                        {selectedStudent.sessions.map((sess, idx) => (
+                          <div key={idx} className="timeline-item">
+                            <div className="timeline-dot"></div>
+                            <div className="timeline-date">{new Date(sess.date).toLocaleDateString('en-GB')} • {sess.duration} mins</div>
+                            <div style={{background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '5px'}}>
+                              {sess.outcome}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Add Session Form */}
+                  <div style={{background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border)'}}>
+                    <h4 style={{marginTop: 0, color: 'var(--primary)'}}>➕ Log New Session</h4>
+                    <div className="grid-2col">
+                      <div className="form-group"><label className="form-label">Date</label><input type="date" className="form-input" value={newSession.date} onChange={e=>setNewSession({...newSession, date: e.target.value})}/></div>
+                      <div className="form-group"><label className="form-label">Duration (mins)</label><input type="number" className="form-input" value={newSession.duration} onChange={e=>setNewSession({...newSession, duration: e.target.value})}/></div>
+                    </div>
+                    <div className="form-group"><label className="form-label">Session Notes / Outcome</label><textarea className="form-textarea" rows="2" placeholder="Discussed parental pressure regarding science stream..." value={newSession.outcome} onChange={e=>setNewSession({...newSession, outcome: e.target.value})}></textarea></div>
+                    <button className="admin-btn" style={{width:'100%'}} onClick={handleAddSession}>Save Session</button>
+                  </div>
+                </div>
+              )}
+
+              {/* DOCUMENTS TAB */}
+              {modalTab === 'documents' && (
+                <div className="anim-up empty-state">
+                  <div className="empty-icon">📄</div>
+                  <h3>Document Vault</h3>
+                  <p>Upload psychometric reports and consent forms here.</p>
+                  <button className="admin-btn-outline" disabled>Cloud Storage Disabled</button>
+                </div>
+              )}
             </div>
           </div>
         </div>
