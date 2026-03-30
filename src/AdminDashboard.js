@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs, addDoc } from 'firebase/firestore';
 
 const STYLES = `
   :root {
@@ -17,8 +17,9 @@ const STYLES = `
   .admin-sidebar::-webkit-scrollbar { width: 4px; }
   .admin-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
   
-  .admin-brand { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; position: sticky; top:0; background: var(--sidebar); z-index: 10; display:flex; justify-content: space-between; align-items:center;}
-  .admin-brand h2 { margin: 0; font-size: 1.5rem; background: -webkit-linear-gradient(45deg, var(--secondary), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
+  .admin-brand { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; position: sticky; top:0; background: var(--sidebar); z-index: 10; display:flex; justify-content: space-between; align-items:center; cursor: pointer; transition: opacity 0.2s;}
+  .admin-brand:hover { opacity: 0.8; }
+  .admin-brand h2 { margin: 0; font-size: 1.3rem; background: -webkit-linear-gradient(45deg, var(--secondary), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
   
   .nav-btn { background: transparent; color: var(--text-muted); border: none; text-align: left; padding: 12px 25px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; width: 100%; display: flex; align-items: center; gap: 10px; }
   .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
@@ -76,12 +77,13 @@ const STYLES = `
   .admin-btn-outline:hover { border-color: var(--primary); color: var(--primary); }
 
   .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; min-width: 600px;}
-  .data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
+  .data-table th, .data-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); }
   .data-table th { color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; background: rgba(0,0,0,0.2);}
   .data-table tr:hover { background: rgba(255,255,255,0.02); }
 
   .admin-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;}
   .badge-warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning);}
+  .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success);}
   .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger);}
 
   .list-item { padding: 12px 0; border-bottom: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center;}
@@ -122,7 +124,13 @@ export default function AdminDashboard({ user, onBackToApp }) {
   const [timeStr, setTimeStr] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef(null);
+  const menuRef = useRef(null); // Ref for closing dropdown
   
+  // Database States
+  const [institutions, setInstitutions] = useState([]);
+  const [newInst, setNewInst] = useState({ name: '', email: '', plan: 'Basic' });
+  const [students, setStudents] = useState([]);
+
   // Profile State
   const [profile, setProfile] = useState({
     name: user?.displayName || 'Admin User',
@@ -134,7 +142,7 @@ export default function AdminDashboard({ user, onBackToApp }) {
     hobbies: [],
     workHistory: [],
     eduHistory: [],
-    photo: '' // Stores Base64
+    photo: ''
   });
   
   const [hobbyInput, setHobbyInput] = useState("");
@@ -156,24 +164,72 @@ export default function AdminDashboard({ user, onBackToApp }) {
     return () => clearInterval(timer);
   }, []);
 
-  // 🔥 LOAD PROFILE FROM FIREBASE
+  // 🔥 CLICK OUTSIDE TO CLOSE DROPDOWN
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // 🔥 LOAD DATA BASED ON TABS
+  useEffect(() => {
+    const fetchData = async () => {
+      if (activeTab === 'profile') {
         const docSnap = await getDoc(doc(db, "system_settings", "superadmin_profile"));
         if (docSnap.exists()) {
           setProfile(prev => ({ ...prev, ...docSnap.data() }));
         } else {
-          // If no profile exists, add default empty blocks
           addWork();
           addEdu();
         }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
+      }
+      
+      if (activeTab === 'institutions') {
+        try {
+          const snap = await getDocs(collection(db, 'institutions'));
+          setInstitutions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        } catch (e) { console.error("Error fetching institutions", e); }
+      }
+
+      if (activeTab === 'students') {
+        try {
+          const snap = await getDocs(collection(db, 'users'));
+          // Filter to only show students who actually completed the assessment
+          const assessedStudents = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(u => u.riasecCode);
+          setStudents(assessedStudents);
+        } catch (e) { console.error("Error fetching students", e); }
       }
     };
-    fetchProfile();
-  }, []);
+    fetchData();
+  }, [activeTab]);
+
+  // 🔥 ADD INSTITUTION
+  const handleAddInstitution = async (e) => {
+    e.preventDefault();
+    if (!newInst.name || !newInst.email) return alert("Please fill name and email.");
+    
+    setIsSaving(true);
+    try {
+      const docRef = await addDoc(collection(db, 'institutions'), {
+        ...newInst,
+        status: 'Active',
+        dateAdded: new Date().toISOString()
+      });
+      setInstitutions([{ id: docRef.id, ...newInst, status: 'Active', dateAdded: new Date().toISOString() }, ...institutions]);
+      setNewInst({ name: '', email: '', plan: 'Basic' });
+      alert("Institution access granted successfully.");
+    } catch (e) {
+      console.error(e);
+      alert("Failed to add institution.");
+    }
+    setIsSaving(false);
+  };
 
   // 🔥 SAVE PROFILE TO FIREBASE
   const handleSaveProfile = async () => {
@@ -233,7 +289,6 @@ export default function AdminDashboard({ user, onBackToApp }) {
     setProfile(p => ({ ...p, eduHistory: p.eduHistory.filter(e => e.id !== id) }));
   };
 
-  // --- HOBBIES LOGIC ---
   const addHobby = () => {
     if (hobbyInput.trim() && profile.hobbies.length < 10 && !profile.hobbies.includes(hobbyInput.trim())) {
       setProfile(p => ({ ...p, hobbies: [...p.hobbies, hobbyInput.trim()] }));
@@ -245,7 +300,6 @@ export default function AdminDashboard({ user, onBackToApp }) {
     setProfile(p => ({ ...p, hobbies: p.hobbies.filter(x => x !== h) }));
   };
 
-  // --- IMAGE UPLOAD LOGIC ---
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -274,18 +328,105 @@ export default function AdminDashboard({ user, onBackToApp }) {
           <div className="tab-content">
             <div className="header-bar"><h1>Overview Dashboard</h1><p>Real-time snapshot of platform activity and metrics.</p></div>
             <div className="kpi-grid">
-              <div className="kpi-box" style={{borderTop: '3px solid var(--primary)'}}><h4>Total Institutions</h4><div className="val">14</div></div>
-              <div className="kpi-box" style={{borderTop: '3px solid var(--success)'}}><h4>Active Students</h4><div className="val">1,204</div></div>
-              <div className="kpi-box" style={{borderTop: '3px solid var(--secondary)'}}><h4>Assessments Taken</h4><div className="val">982</div></div>
-              <div className="kpi-box" style={{borderTop: '3px solid var(--accent)'}}><h4>Active Counsellors</h4><div className="val">8</div></div>
+              <div className="kpi-box" style={{borderTop: '3px solid var(--primary)'}}><h4>Total Institutions</h4><div className="val">{institutions.length || 0}</div></div>
+              <div className="kpi-box" style={{borderTop: '3px solid var(--success)'}}><h4>Assessed Students</h4><div className="val">{students.length || 0}</div></div>
+              <div className="kpi-box" style={{borderTop: '3px solid var(--secondary)'}}><h4>Active Counsellors</h4><div className="val">8</div></div>
             </div>
             <div className="grid-2col">
               <div className="admin-card" style={{borderTop: '4px solid var(--warning)'}}>
                 <h3>Action Queue</h3>
-                <div className="list-item"><span>High Risk Interventions</span> <span className="admin-badge badge-danger">12 Students</span></div>
-                <div className="list-item"><span>Unassigned Students</span> <span className="admin-badge badge-warn">45 Students</span></div>
-                <div className="list-item"><span>Pending Reports</span> <span className="admin-badge" style={{background: 'rgba(139, 92, 246, 0.2)', color: 'var(--primary)'}}>8 Reports</span></div>
+                <div className="list-item"><span>High Risk Interventions</span> <span className="admin-badge badge-danger">2 Students</span></div>
+                <div className="list-item"><span>Unassigned Students</span> <span className="admin-badge badge-warn">15 Students</span></div>
+                <div className="list-item"><span>Pending Reports</span> <span className="admin-badge" style={{background: 'rgba(139, 92, 246, 0.2)', color: 'var(--primary)'}}>3 Reports</span></div>
               </div>
+            </div>
+          </div>
+        );
+
+      case 'institutions':
+        return (
+          <div className="tab-content">
+            <div className="header-bar">
+              <h1>Institution Control</h1>
+              <p>Manage school/college access and view currently onboarded institutions.</p>
+            </div>
+            
+            <div className="admin-card" style={{ borderTop: '4px solid var(--secondary)' }}>
+              <h3>➕ Grant Institution Access</h3>
+              <form onSubmit={handleAddInstitution} className="grid-3col" style={{alignItems: 'end', marginTop: '15px'}}>
+                <div className="form-group" style={{marginBottom: 0}}>
+                  <label className="form-label">Institution Name</label>
+                  <input type="text" className="form-input" placeholder="e.g. St. Joseph's Academy" value={newInst.name} onChange={e => setNewInst({...newInst, name: e.target.value})} required />
+                </div>
+                <div className="form-group" style={{marginBottom: 0}}>
+                  <label className="form-label">Admin Email</label>
+                  <input type="email" className="form-input" placeholder="admin@school.com" value={newInst.email} onChange={e => setNewInst({...newInst, email: e.target.value})} required />
+                </div>
+                <button type="submit" className="admin-btn" disabled={isSaving}>
+                  {isSaving ? 'Granting...' : 'Grant Access'}
+                </button>
+              </form>
+            </div>
+
+            <div className="admin-card">
+              <h3>🏫 Authorized Institutions</h3>
+              {institutions.length === 0 ? (
+                <p style={{color: 'var(--text-muted)'}}>No institutions found in database.</p>
+              ) : (
+                <div style={{overflowX: 'auto'}}>
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Institution Name</th><th>Admin Contact</th><th>Status</th><th>Date Added</th></tr>
+                    </thead>
+                    <tbody>
+                      {institutions.map(inst => (
+                        <tr key={inst.id}>
+                          <td style={{fontWeight: 'bold'}}>{inst.name}</td>
+                          <td>{inst.email}</td>
+                          <td><span className="admin-badge badge-success">{inst.status || 'Active'}</span></td>
+                          <td style={{color: 'var(--text-muted)'}}>{new Date(inst.dateAdded).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'students':
+        return (
+          <div className="tab-content">
+            <div className="header-bar">
+              <h1>Assessed Student Master</h1>
+              <p>Complete directory of all students who have taken the VidyaVantage career assessment.</p>
+            </div>
+            
+            <div className="admin-card" style={{ borderTop: '4px solid var(--success)' }}>
+              <h3>🎓 Assessed Students List ({students.length})</h3>
+              {students.length === 0 ? (
+                <p style={{color: 'var(--text-muted)'}}>No assessed students found in database.</p>
+              ) : (
+                <div style={{overflowX: 'auto'}}>
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Student Name</th><th>Email</th><th>Class / Level</th><th>RIASEC Code</th><th>Top Career Match</th></tr>
+                    </thead>
+                    <tbody>
+                      {students.map(student => (
+                        <tr key={student.id}>
+                          <td style={{fontWeight: 'bold'}}>{student.name || 'Unknown'}</td>
+                          <td style={{color: 'var(--text-muted)'}}>{student.email}</td>
+                          <td>{student.classLevel || 'N/A'}</td>
+                          <td><span className="admin-badge" style={{background: 'rgba(139, 92, 246, 0.2)', color: 'var(--primary)', letterSpacing:'1px'}}>{student.riasecCode}</span></td>
+                          <td>{student.bestCareer || 'Processing...'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -342,10 +483,35 @@ export default function AdminDashboard({ user, onBackToApp }) {
                   <div key={work.id} className="entry-block">
                     <button className="remove-entry-btn" onClick={() => removeWork(work.id)}>✕ Remove</button>
                     <div className="grid-2col">
-                      <div className="form-group"><label className="form-label">Company / Organization</label><input type="text" className="form-input" placeholder="e.g. Google" value={work.company || ''} onChange={e => updateWork(work.id, 'company', e.target.value)} /></div>
-                      <div className="form-group"><label className="form-label">Position / Role</label><input type="text" className="form-input" placeholder="e.g. Senior Counsellor" value={work.position || ''} onChange={e => updateWork(work.id, 'position', e.target.value)} /></div>
-                      <div className="form-group"><label className="form-label">From Date</label><input type="date" className="form-input" value={work.from || ''} onChange={e => updateWork(work.id, 'from', e.target.value)} /></div>
-                      <div className="form-group"><label className="form-label">To Date</label><input type="date" className="form-input" value={work.to || ''} onChange={e => updateWork(work.id, 'to', e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Company / Organization</label><input type="text" className="form-input" placeholder="e.g. St Joseph's School" value={work.company || ''} onChange={e => updateWork(work.id, 'company', e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Position / Role</label><input type="text" className="form-input" placeholder="e.g. School Counsellor" value={work.position || ''} onChange={e => updateWork(work.id, 'position', e.target.value)} /></div>
+                      
+                      <div className="form-group">
+                        <label className="form-label">From Date</label>
+                        <input type="date" className="form-input" value={work.from || ''} onChange={e => updateWork(work.id, 'from', e.target.value)} />
+                        
+                        {/* THE NEW CHECKBOX FOR CURRENT JOB */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                          <input 
+                            type="checkbox" 
+                            id={`curr-${work.id}`} 
+                            checked={work.current || false} 
+                            onChange={e => updateWork(work.id, 'current', e.target.checked)} 
+                            style={{cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--primary)'}}
+                          />
+                          <label htmlFor={`curr-${work.id}`} style={{color: 'var(--text-muted)', fontSize: '0.85rem', cursor: 'pointer', margin: 0}}>
+                            I currently work here
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* HIDES TO DATE IF CURRENTLY WORKING HERE */}
+                      {!work.current && (
+                        <div className="form-group">
+                          <label className="form-label">To Date</label>
+                          <input type="date" className="form-input" value={work.to || ''} onChange={e => updateWork(work.id, 'to', e.target.value)} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -418,8 +584,9 @@ export default function AdminDashboard({ user, onBackToApp }) {
   return (
     <div className="admin-root">
       <div className="admin-sidebar">
-        <div className="admin-brand">
-          <h2>Career Intel</h2>
+        {/* CLICKABLE BRAND LINK */}
+        <div className="admin-brand" onClick={() => setActiveTab('overview')} title="Return to Dashboard">
+          <h2>Admin Dashboard</h2>
         </div>
         
         {NAV_TABS.map(tab => (
@@ -442,7 +609,7 @@ export default function AdminDashboard({ user, onBackToApp }) {
           
           <div className="header-actions">
             <button onClick={onBackToApp} className="site-link" style={{border:'none', cursor:'pointer', fontFamily:'inherit'}}>🌐 Live Site</button>
-            <div className="profile-menu">
+            <div className="profile-menu" ref={menuRef}>
               <div className="avatar-btn" onClick={() => setDropdownOpen(!dropdownOpen)}>
                 {profile.photo ? <img src={profile.photo} alt="Avatar" style={{width:'100%', height:'100%', borderRadius:'50%', objectFit:'cover'}} /> : profile.name.charAt(0).toUpperCase()}
               </div>
