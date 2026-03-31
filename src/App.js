@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 import { auth, db } from './firebase';
@@ -296,54 +296,6 @@ const PILLARS = [
   { cls:'safe', icon:'🛡️', title:'Safe Corner', desc:"If things feel too heavy to carry, you don't have to carry them alone. Access trained counsellors, crisis support, and emergency helplines instantly.", features:['24/7 crisis helpline access','Connect with trained counsellors','Report unsafe situations privately'], cta: 'View Safety Protocols →', route: 'safe' },
 ];
 
-const WIDGET_CATEGORIES = [
-  { id: 'calm', label: '😰 Calm Anxiety', color: 'var(--sage)' },
-  { id: 'vent', label: '😡 Release Anger', color: 'var(--danger)' },
-  { id: 'mood', label: '😞 Lift Mood', color: 'var(--peach)' },
-  { id: 'focus', label: '😵 Focus Better', color: 'var(--sky)' },
-  { id: 'sleep', label: '😴 Relax / Sleep', color: 'var(--lavender)' },
-  { id: 'clear', label: '🧠 Clear Mind', color: 'var(--ink)' }
-];
-
-const WIDGET_TOOLS = {
-  calm: [
-    { id: 'c1', title: '4-7-8 Breathing', desc: 'A proven rhythm to instantly lower heart rate.', icon: '🫁', duration: '2 min', type: 'breathing' },
-    { id: 'c2', title: '5-4-3-2-1 Grounding', desc: 'Bring your mind back to the present room.', icon: '🖐️', duration: '1 min', type: 'checklist_grounding' },
-    { id: 'c3', title: 'Box Breathing', desc: 'Equal inhales, holds, and exhales for balance.', icon: '🔲', duration: '2 min', type: 'breathing' },
-    { id: 'c4', title: 'Heartbeat Sync', desc: 'Focus on a calming visual pulse.', icon: '💓', duration: '1 min', type: 'pulse' }
-  ],
-  vent: [
-    { id: 'v1', title: 'Pop the Thoughts', desc: 'Tap to visually destroy anxious thoughts.', icon: '🫧', duration: '1 min', type: 'game_pop' },
-    { id: 'v2', title: 'Brain Dump Timer', desc: 'Type everything out without stopping.', icon: '⌨️', duration: '2 min', type: 'timer' },
-    { id: 'v3', title: 'Write & Destroy', desc: 'Type what is bothering you, then watch it burn.', icon: '🔥', duration: '1 min', type: 'destroy' },
-    { id: 'v4', title: 'Stress Tap', desc: 'Release physical energy through rapid tapping.', icon: '⚡', duration: '1 min', type: 'tap' }
-  ],
-  mood: [
-    { id: 'm1', title: 'Gratitude Quick-Write', desc: 'Name 3 things that don\'t suck right now.', icon: '✨', duration: '1 min', type: 'text' },
-    { id: 'm2', title: 'Tiny Wins Tracker', desc: 'Check off small things you did today.', icon: '🏆', duration: '1 min', type: 'checklist_wins' },
-    { id: 'm3', title: 'Compliment Generator', desc: 'Receive a random, kind message.', icon: '💌', duration: '30 sec', type: 'compliment' },
-    { id: 'm4', title: 'Watch the Clouds', desc: 'A calming visual loop to reset your mind.', icon: '☁️', duration: '1 min', type: 'visual' }
-  ],
-  focus: [
-    { id: 'f1', title: 'One-Task Focus', desc: 'Hide everything else. Do one thing.', icon: '🎯', duration: 'Custom', type: 'text' },
-    { id: 'f2', title: 'Control Toggle', desc: 'Sort what you can and cannot control.', icon: '⚖️', duration: '2 min', type: 'sort' },
-    { id: 'f3', title: 'Focus Line Game', desc: 'Follow a moving line to center your attention.', icon: '〰️', duration: '1 min', type: 'game_line' },
-    { id: 'f4', title: 'Next 1 Step', desc: 'Break down a massive task into one tiny action.', icon: '🚶', duration: '1 min', type: 'text' }
-  ],
-  sleep: [
-    { id: 's1', title: 'Sleep Countdown', desc: 'Slow your brain with a guided visual fade.', icon: '🌙', duration: '3 min', type: 'countdown' },
-    { id: 's2', title: 'Body Scan', desc: 'Release tension from head to toe.', icon: '🧘', duration: '5 min', type: 'text' },
-    { id: 's3', title: 'White Noise', desc: 'Listen to calming rain sounds.', icon: '🌧️', duration: '10 min', type: 'audio' },
-    { id: 's4', title: 'Let It Go Viz', desc: 'Visualize your thoughts floating away.', icon: '🍃', duration: '2 min', type: 'visual' }
-  ],
-  clear: [
-    { id: 'cl1', title: 'Emotion Wheel', desc: 'Pinpoint exactly what you are feeling.', icon: '🎡', duration: '1 min', type: 'text' },
-    { id: 'cl2', title: 'Journal Prompt', desc: 'Get a random question to spark reflection.', icon: '📓', duration: '3 min', type: 'text' },
-    { id: 'cl3', title: 'Why Am I Feeling This?', desc: 'A guided flow to find the root cause.', icon: '🔍', duration: '2 min', type: 'text' },
-    { id: 'cl4', title: 'Future Self Advice', desc: 'What would older you say about this?', icon: '🕰️', duration: '2 min', type: 'text' }
-  ]
-};
-
 // --- MOCK DATA FOR SHARZ WALL ---
 const generateWallData = () => {
     const rawShorts = [
@@ -391,19 +343,6 @@ export default function App() {
   const [userData, setUserData]       = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [modal, setModal]             = useState(null); 
-  
-  const [activeWidgetCategory, setActiveWidgetCategory] = useState('calm');
-  const [activeWidgetFullscreen, setActiveWidgetFullscreen] = useState(null);
-  
-  const [breathePhase, setBreathePhase] = useState('Inhale');
-  const [breatheScale, setBreatheScale] = useState(1);
-  const [popCount, setPopCount] = useState(0);
-  const [bubbles, setBubbles] = useState([]);
-  const [focusTime, setFocusTime] = useState(120);
-
-  // Widget Checklist States
-  const [groundingChecks, setGroundingChecks] = useState([false, false, false, false, false]);
-  const [winsChecks, setWinsChecks] = useState([false, false, false, false, false]);
 
   const [wallNotes, setWallNotes] = useState([]);
   const [showAddNoteModal, setShowAddNoteModal] = useState(false);
@@ -533,77 +472,6 @@ export default function App() {
     } catch (err) { console.error("Error saving assessment: ", err); }
   };
 
-  // Widget Effects
-  useEffect(() => {
-      let interval;
-      if (activeWidgetFullscreen?.type === 'breathing') {
-          const cycle = () => {
-              setBreathePhase('Breathe In...');
-              setBreatheScale(1.5);
-              setTimeout(() => {
-                  if(activeWidgetFullscreen) setBreathePhase('Hold...');
-                  setTimeout(() => {
-                      if(activeWidgetFullscreen) {
-                          setBreathePhase('Breathe Out...');
-                          setBreatheScale(1);
-                      }
-                  }, 7000);
-              }, 4000);
-          };
-          cycle();
-          interval = setInterval(cycle, 19000);
-      }
-      return () => clearInterval(interval);
-  }, [activeWidgetFullscreen]);
-
-  useEffect(() => {
-      let interval;
-      if (activeWidgetFullscreen?.type === 'game_pop') {
-          setPopCount(0);
-          setBubbles([]);
-          interval = setInterval(() => {
-              setBubbles(prev => {
-                  if(prev.length > 15) return prev;
-                  const newBubble = {
-                      id: Date.now() + Math.random(),
-                      left: Math.random() * 80 + 10 + '%',
-                      text: ['Stress', 'Exams', 'Pressure', 'Fear', 'Doubt'][Math.floor(Math.random() * 5)]
-                  };
-                  return [...prev, newBubble];
-              });
-          }, 1200);
-      }
-      return () => clearInterval(interval);
-  }, [activeWidgetFullscreen]);
-
-  const handlePop = (id) => {
-      setBubbles(prev => prev.filter(b => b.id !== id));
-      setPopCount(c => c + 1);
-  };
-
-  useEffect(() => {
-      let interval;
-      if (activeWidgetFullscreen?.type === 'timer' && focusTime > 0) {
-          interval = setInterval(() => {
-              setFocusTime(t => t - 1);
-          }, 1000);
-      }
-      return () => clearInterval(interval);
-  }, [activeWidgetFullscreen, focusTime]);
-
-  const formatTime = (seconds) => {
-      const m = Math.floor(seconds / 60);
-      const s = seconds % 60;
-      return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
-  const closeFullscreenWidget = () => {
-      setActiveWidgetFullscreen(null);
-      setFocusTime(120);
-      setGroundingChecks([false,false,false,false,false]);
-      setWinsChecks([false,false,false,false,false]);
-  };
-
   const submitNewNote = () => {
       if(!newNoteText.trim()) return;
       const newNote = {
@@ -622,14 +490,6 @@ export default function App() {
   const reactToNote = (id) => {
       setWallNotes(wallNotes.map(n => n.id === id ? {...n, reactions: n.reactions + 1} : n));
   }
-
-  const toggleChecklist = (index, setter) => {
-      setter(prev => {
-          const newArr = [...prev];
-          newArr[index] = !newArr[index];
-          return newArr;
-      });
-  };
 
   // ── SECURE ADMIN ROUTE ──
   if (screen === 'admin') {
@@ -683,42 +543,6 @@ export default function App() {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Header />
         <main style={{ flex: 1, position: 'relative' }}>
-            
-            {/* 🚀 MOVED WIDGET SECTION HERE */}
-            <section className="widget-section" style={{ background: 'var(--warm-white)' }}>
-                <div className="section-eyebrow" style={{color: 'var(--moss)'}}>Emotional First Aid</div>
-                <h2 className="section-h2" style={{margin: 0}}>What do you need right now?</h2>
-                
-                <div className="widget-container">
-                    <div className="widget-tabs">
-                        {WIDGET_CATEGORIES.map(cat => (
-                            <div 
-                                key={cat.id} 
-                                className={`widget-tab ${activeWidgetCategory === cat.id ? 'active' : ''}`}
-                                onClick={() => setActiveWidgetCategory(cat.id)}
-                                style={{borderColor: activeWidgetCategory === cat.id ? cat.color : 'transparent'}}
-                            >
-                                {cat.label}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="widget-grid anim-up">
-                        {WIDGET_TOOLS[activeWidgetCategory].map(tool => (
-                            <div key={tool.id} className="tool-card" onClick={() => setActiveWidgetFullscreen(tool)}>
-                                <div className="tool-icon">{tool.icon}</div>
-                                <div className="tool-title">{tool.title}</div>
-                                <div className="tool-desc">{tool.desc}</div>
-                                <div className="tool-meta">
-                                    <span>⏱️ {tool.duration}</span>
-                                    <span style={{color: 'var(--primary)'}}>▶ Start</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
           <MindSpace 
             userData={userData} 
             onNavigate={(targetTab) => {
@@ -731,126 +555,6 @@ export default function App() {
               setScreen('dashboard');
             }} 
           />
-
-          {/* 🚀 MOVED FULLSCREEN WIDGET OVERLAY HERE */}
-          {activeWidgetFullscreen && (
-              <div className="fs-widget-overlay">
-                  <button className="fs-close-btn" onClick={closeFullscreenWidget}>✕</button>
-                  
-                  {activeWidgetFullscreen.type === 'breathing' && (
-                      <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
-                          <div className="breathe-circle" style={{transform: `scale(${breatheScale})`}}>
-                              {activeWidgetFullscreen.icon}
-                          </div>
-                          <div className="breathe-instruction">{breathePhase}</div>
-                      </div>
-                  )}
-
-                  {activeWidgetFullscreen.type === 'game_pop' && (
-                      <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
-                          <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '10px'}}>Pop the Thoughts</h2>
-                          <p style={{color: 'rgba(255,255,255,0.6)', marginBottom: '30px'}}>Thoughts popped: {popCount}</p>
-                          <div className="bubble-container">
-                              {bubbles.map(b => (
-                                  <div 
-                                    key={b.id} 
-                                    className="thought-bubble" 
-                                    style={{left: b.left}}
-                                    onClick={(e) => {
-                                        e.currentTarget.classList.add('popped');
-                                        setTimeout(() => handlePop(b.id), 200);
-                                    }}
-                                  >
-                                      {b.text}
-                                  </div>
-                              ))}
-                          </div>
-                      </div>
-                  )}
-
-                  {activeWidgetFullscreen.type === 'timer' && (
-                      <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
-                          <div className="focus-timer-display">{formatTime(focusTime)}</div>
-                          <textarea className="focus-textarea" placeholder="Type everything out. Don't stop. Don't edit. Just dump it all here..."></textarea>
-                          <button className="btn" style={{marginTop: '30px'}} onClick={closeFullscreenWidget}>Done</button>
-                      </div>
-                  )}
-
-                  {activeWidgetFullscreen.type === 'checklist_grounding' && (
-                      <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
-                          <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '30px'}}>5-4-3-2-1 Grounding</h2>
-                          <div className="checklist-container">
-                              {[
-                                  "Find 5 things you can see", 
-                                  "Find 4 things you can touch", 
-                                  "Find 3 things you can hear", 
-                                  "Find 2 things you can smell", 
-                                  "Find 1 thing you can taste"
-                              ].map((item, i) => (
-                                  <div key={i} className={`check-item ${groundingChecks[i] ? 'done' : ''}`} onClick={() => toggleChecklist(i, setGroundingChecks)}>
-                                      <div className="check-box">{groundingChecks[i] && '✓'}</div>
-                                      <span>{item}</span>
-                                  </div>
-                              ))}
-                          </div>
-                          {groundingChecks.every(c => c) && <button className="btn" style={{marginTop: '30px', background: 'white', color: 'var(--ink)'}} onClick={closeFullscreenWidget}>I feel grounded</button>}
-                      </div>
-                  )}
-
-                  {activeWidgetFullscreen.type === 'checklist_wins' && (
-                      <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
-                          <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '30px'}}>Tiny Wins Today</h2>
-                          <div className="checklist-container">
-                              {["Drank a glass of water", "Stepped outside for a minute", "Made my bed", "Ate something nourishing", "Took 3 deep breaths"].map((item, i) => (
-                                  <div key={i} className={`check-item ${winsChecks[i] ? 'done' : ''}`} onClick={() => toggleChecklist(i, setWinsChecks)}>
-                                      <div className="check-box">{winsChecks[i] && '✓'}</div>
-                                      <span>{item}</span>
-                                  </div>
-                              ))}
-                          </div>
-                          {winsChecks.some(c => c) && <button className="btn" style={{marginTop: '30px', background: 'white', color: 'var(--ink)'}} onClick={closeFullscreenWidget}>Celebrate Wins</button>}
-                      </div>
-                  )}
-
-                  {activeWidgetFullscreen.type === 'pulse' && (
-                      <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
-                          <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '40px'}}>Heartbeat Sync</h2>
-                          <div className="pulse-container">
-                              <span style={{fontSize: '64px'}}>🤍</span>
-                          </div>
-                          <p style={{marginTop: '60px', color: 'rgba(255,255,255,0.7)'}}>Sync your breathing with the pulse.</p>
-                      </div>
-                  )}
-
-                  {activeWidgetFullscreen.type === 'text' && (
-                      <div style={{textAlign:'center', maxWidth:'500px'}}>
-                          <div style={{fontSize:'64px', marginBottom:'20px'}}>{activeWidgetFullscreen.icon}</div>
-                          <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '20px'}}>{activeWidgetFullscreen.title}</h2>
-                          <p style={{fontSize: '18px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6}}>{activeWidgetFullscreen.desc}</p>
-                          
-                          {activeWidgetFullscreen.title === 'Gratitude Quick-Write' && (
-                              <div style={{marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                                  <input type="text" className="form-input" placeholder="1. I am grateful for..." />
-                                  <input type="text" className="form-input" placeholder="2. Something good that happened..." />
-                                  <input type="text" className="form-input" placeholder="3. Someone who helped me..." />
-                              </div>
-                          )}
-                          
-                          <button className="btn" style={{marginTop: '40px', background: 'white', color: 'var(--ink)'}} onClick={closeFullscreenWidget}>Complete</button>
-                      </div>
-                  )}
-
-                  {/* Fallback for other types */}
-                  {['destroy', 'tap', 'compliment', 'visual', 'sort', 'game_line', 'countdown', 'audio'].includes(activeWidgetFullscreen.type) && (
-                      <div style={{textAlign:'center', maxWidth:'500px'}}>
-                          <div style={{fontSize:'64px', marginBottom:'20px'}}>🚧</div>
-                          <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '20px'}}>Interactive Module Loading</h2>
-                          <p style={{fontSize: '18px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6}}>The highly interactive {activeWidgetFullscreen.title} module is currently being optimized for your device.</p>
-                          <button className="btn" style={{marginTop: '40px', background: 'var(--sage)'}} onClick={closeFullscreenWidget}>Back to Toolkit</button>
-                      </div>
-                  )}
-              </div>
-          )}
         </main>
         <Footer />
       </div>
