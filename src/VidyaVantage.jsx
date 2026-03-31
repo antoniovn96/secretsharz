@@ -1,117 +1,4 @@
-
-
-import React, { useState, useEffect } from 'react'; const WIDGET_CATEGORIES = [ { id: 'calm', label: '😰 Calm Anxiety', color: '#4A7C59' }, { id: 'vent', label: '😡 Release Anger', color: '#ef4444' }, { id: 'mood', label: '😞 Lift Mood', color: '#E8845A' }, { id: 'focus', label: '�
-
-Crafting comprehensive corrections and integrating missing features
-Crafting comprehensive corrections and integrating missing features
-Let me thoroughly analyze the code first before writing the fix.
-
-
-Identified twelve bugs and missing features to systematically correct
-Identified twelve bugs and missing features to systematically correct
-Now I have a complete picture of all the issues. Let me document them and write the corrected file:
-
-Bugs found:
-
-CSS camelCase in <style> tag — flexDirection, alignItems, justifyContent, borderRadius, fontSize are invalid in CSS (only valid as JSX inline styles)
-var(--ink) used but never defined → crashes button styling
-className="form-input focus-input" — form-input class doesn't exist
-Math.random() called inside .map() renders (equalizer bars + clouds/leaves) → new random values on every re-render, causes animation chaos
-anim-up class used but never defined in styles
-Missing useRef import (needed for audio)
-.fs-close-btn disappears when content overflows (needs position: fixed, not absolute)
-Missing items: 8. audio_rain — has a fake visualizer but produces no actual sound → need Web Audio API 9. s2 Body Scan (type: 'text') — falls into generic fallback, shows nothing useful → need step-through guided UI + change type to 'body_scan' 10. f4 "Next 1 Step" shares type: 'one_task' with f1 → identical UI, defeats the purpose → new 'next_step' type with task decomposition UI 11. cl3 "Why Am I Feeling This?" shares type: 'prompt' with cl2/cl4 → no guided flow → new 'why_feeling' type with 5-question flow 12. cl4 "Future Self Advice" shares type: 'prompt' → no distinct prompts → new 'future_self' type with curated prompts
-
-
-Created a file, read a file
-Created a file, read a file
-Here's everything that was fixed and added:
-
-7 bugs fixed:
-
-CSS camelCase crash — .fs-widget-overlay and .fs-close-btn used flexDirection, alignItems, borderRadius etc. inside a <style> tag. These are JSX-only syntax; CSS requires flex-direction, align-items, border-radius. This was breaking the entire overlay layout.
-var(--ink) undefined — Used on the Complete button in gratitude. --ink was never declared, making the button text invisible. Replaced with 
-#1E2820.
-form-input class — Applied to one of the gratitude inputs but never defined anywhere. Removed.
-Math.random() in renders — The equalizer bars and cloud/leaf visuals called Math.random() inside .map(), which fired on every re-render, causing animation durations to flicker and change constantly. Fixed with useMemo — values computed once.
-anim-up class undefined — Used in several places but the @keyframes and class rule were never written. Added.
-Close button scroll issue — Was position: absolute, so it would scroll away on long content. Changed to position: fixed.
-Missing useRef import — Required for the audio refs, wasn't in the original import.
-5 missing features added:
-
-White Noise (audio_rain) — Had a visualizer but produced zero sound. Added real brown noise generation via Web Audio API with a play/pause button and low-pass filter for a rain-like quality.
-Body Scan — Was type: 'text' falling into a generic fallback showing only the description. Changed to type: 'body_scan' with a full 6-step guided step-through UI, progress bar, and per-area instructions.
-Next 1 Step (f4) — Was using the same 'one_task' type as f1, showing identical UI. Changed to 'next_step' with a two-stage task decomposition flow: enter the big task → reveal the "next physical action" input → confirm and go.
-Why Am I Feeling This? (cl3) — Was sharing 'prompt' type with cl2 and cl4. Changed to 'why_feeling' with a 5-question guided root-cause analysis flow, step dots, and per-step answer persistence so you can go back.
-Future Self Advice (cl4) — Was sharing 'prompt' type with cl2 and cl3, using the same generic prompts. Changed to 'future_self' with its own curated prompts, distinct card layout, and a "Different Prompt" button cycling through future-self-specific questions.
-Mindspace
-Code · JSX 
-
-Identified bugs, planned fixes, and architected interactive career explorer feature
-Identified bugs, planned fixes, and architected interactive career explorer feature
-Let me analyze this file thoroughly before writing anything.
-
-
-Verified analysis and prepared comprehensive code revision with interactive feature
-Verified analysis and prepared comprehensive code revision with interactive feature
-Good — all confirmed. Here's the complete audit summary before I write the fix:
-
-13 missing CSS classes — results-name, career-subtitle, match-bar-wrap/label/text, match-pct, college-tags, next-steps-grid, next-step-num/desc, btn-restart, error-box, vv-two-col → all undefined, causing broken layout in results screen
-
-Wrong API endpoint — fetchAnalysis calls /api/chat (a non-existent route) instead of https://api.anthropic.com/v1/messages
-
-vv-section + vv-section-alt combo — vv-section has max-width:1200px which clips the parchment background to 1200px instead of full-width
-
-pros/cons UL double-bullets — default browser list-style bullets render alongside the ::before pseudo-element symbols
-
-No interactive feature — Career Explorer, Stream Picker wizard, and salary visualizer all missing
-
-
-Created a file, read a file
-Created a file, read a file
-Here's the complete breakdown of every change made:
-
-Bug Fixes (13 missing CSS classes):
-
-.results-name — was used in the results hero div but undefined; career report header had no styling
-.career-subtitle — used under every career card title but undefined; subtitles were completely unstyled
-.match-bar-wrap, .match-bar-label, .match-bar-text, .match-pct — all four used in the match bar but undefined; the entire match percentage row had no layout
-.college-tags — wrapper div used around college tags but undefined; tags had no flex-wrap layout
-.next-steps-grid — used for the 3-column next steps layout but undefined; items just stacked vertically
-.next-step-num, .next-step-desc — used inside each next-step card but undefined; numbers and text were completely unstyled
-.btn-restart — the "Take Again" button had no CSS; was invisible/browser-default
-.error-box — used to display API errors but undefined; error messages were unstyled plain text
-.vv-two-col — used in the info form for the 2-column input grid but undefined; all 4 inputs stacked in a single column
-Two structural bugs:
-
-vv-section + vv-section-alt background clip — vv-section carries max-width: 1200px, so combining both classes clipped the parchment background to 1200px instead of spanning full width. Fixed by changing all alternating background sections to use className="vv-section-alt" (full-width wrapper) with className="vv-section-inner" for content width
-pros/cons double bullets — .pros ul and .cons ul had no list-style: none, so default browser bullets showed alongside the ::before ✓/✗ symbols
-Critical API fix:
-
-Wrong endpoint — fetchAnalysis was calling '/api/chat' which doesn't exist and always 404s. Fixed to call https://api.anthropic.com/v1/messages directly with the correct model and payload format
-New interactive feature — Career Explorer (3 tabs):
-
-Browse Careers — 14 careers with live search, stream filter (Science/Commerce/Arts), RIASEC type filter (R/I/A/S/E/C), and category filter. Each card shows animated CSS salary bars (Entry/Mid/Senior in ₹ LPA), growth outlook badge, and an expandable detail section with Day in the Life, Key Skills, Pros/Cons, Top Colleges, and Entrance Exams. If a student has already completed the assessment, their RIASEC code is passed in and matching careers are flagged with a "Matches Your Profile" chip.
-
-Stream Picker Wizard — a 3-question guided flow (school subjects → free time → 10-year vision) that tallies scores for Science, Commerce, and Arts, then shows an animated percentage bar chart of all three streams with the top recommendation and direct links to relevant careers in the Browse tab.
-
-My Shortlist — students can bookmark careers from Browse and view them side-by-side with salary data for comparison.
-
-Vidyavantage
-Code · JSX 
-
-
-You are out of free messages until 9:30 PM
-Upgrade
-
-
-
-Claude is AI and can make mistakes. Please double-check responses.
-Vidyavantage · JSX
-Copy
-
-import React from 'react';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
  
 const GOOGLE_FONTS = `@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');`;
  
@@ -680,7 +567,7 @@ const STREAM_CAREER_MAP = {
   Arts: ['Psychologist / Counsellor','Lawyer / Advocate','Teacher / Professor','Graphic / Visual Designer','Journalist / Content Creator'],
 };
  
-// ─── ASSESSMENT DATA (unchanged) ─────────────────────────────────────────────
+// ─── ASSESSMENT DATA ─────────────────────────────────────────────
 const ACTIVITY_QUESTIONS = [
   {id:'a1',text:'How much do you enjoy building, fixing, or working with your hands (tools, machines, gadgets)?',type:'scale',riasec:'R'},
   {id:'a2',text:'How much do you enjoy solving complex puzzles, scientific experiments, or analysing data?',type:'scale',riasec:'I'},
@@ -1103,40 +990,23 @@ export default function VidyaVantage() {
     const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     return { scores, sorted, code: sorted.slice(0, 3).map(x => x[0]).join('') };
   };
-const computeRIASEC = () => {
-    const scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
-    ACTIVITY_QUESTIONS.forEach(q => { if (answers[q.id]) scores[q.riasec] += answers[q.id]; });
-    const choiceQ = [...ACADEMIC_QUESTIONS, ...VALUES_QUESTIONS.filter(q => q.riasec), ...SCENARIO_QUESTIONS];
-    choiceQ.forEach(q => {
-      if (answers[q.id] !== undefined && q.riasec && Array.isArray(q.riasec)) {
-        const idx = q.choices.indexOf(answers[q.id]);
-        if (idx >= 0 && q.riasec[idx]) scores[q.riasec[idx]] += 3;
-      } else if (answers[q.id] !== undefined && q.riasec && !Array.isArray(q.riasec)) {
-        scores[q.riasec] += 3;
-      }
-    });
-    const max = Math.max(...Object.values(scores));
-    if (max > 0) Object.keys(scores).forEach(k => { scores[k] = Math.round((scores[k] / max) * 10); });
-    const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-    return { scores, sorted, code: sorted.slice(0, 3).map(x => x[0]).join('') };
-  };
-
+ 
   const fetchAnalysis = async () => {
     // FIX: Save the section the user is on before navigating away
     const sectionBeforeSubmit = currentSection;
-
+ 
     setScreen('loading');
     setLoadingStep(0);
     setError(null);
     const riasec = computeRIASEC();
-
+ 
     for (let i = 0; i < 5; i++) {
       await new Promise(r => setTimeout(r, 900));
       setLoadingStep(i + 1);
     }
-
+ 
     const prompt = `You are VidyaVantage, an expert AI career counsellor specialising in Indian education and careers, using Holland's RIASEC theory.
-
+ 
 Student Profile:
 - Name: ${info.name}
 - Class/Level: ${info.class}
@@ -1148,7 +1018,7 @@ Student Profile:
 - Learning style: ${answers['b2'] || 'not specified'}
 - Career value: ${answers['c1'] || 'not specified'}
 - Work environment: ${answers['c2'] || 'not specified'}
-
+ 
 Respond ONLY with a valid JSON object (no markdown, no backticks) with this exact structure:
 {
   "riasecSummary": "2-3 sentence description of this student's RIASEC type in a warm, encouraging tone",
@@ -1181,11 +1051,11 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
   },
   "nextSteps": ["Specific next step 1 for this student", "Specific next step 2", "Specific next step 3"]
 }`;
-
+ 
     // FIX: Added AbortController so a hung request doesn't freeze the loading screen
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 55000);
-
+ 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -1194,13 +1064,13 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
-
+ 
       const data = await res.json();
-
+ 
       if (!res.ok) {
         throw new Error(data.details || data.error || `Server error ${res.status}`);
       }
-
+ 
       const text = data.content?.map(b => b.text || '').join('') || '';
       const clean = text.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(clean);
@@ -1215,201 +1085,6 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
       // FIX: Return user to the section they were on, not the last section
       setScreen('form');
       setCurrentSection(sectionBeforeSubmit);
-    }
-  };
-  for (let i = 0; i < 5; i++) {
-    await new Promise(r => setTimeout(r, 900));
-    setLoadingStep(i + 1);
-  }
-
-  const prompt = `You are VidyaVantage, an expert AI career counsellor specialising in Indian education and careers, using Holland's RIASEC theory.
-
-Student Profile:
-- Name: ${info.name}
-- Class/Level: ${info.class}
-- City: ${info.city}
-- Aspiration: ${info.aspiration || 'Not specified'}
-- RIASEC Code: ${riasec.code}
-- RIASEC Scores (out of 10): R=${riasec.scores.R}, I=${riasec.scores.I}, A=${riasec.scores.A}, S=${riasec.scores.S}, E=${riasec.scores.E}, C=${riasec.scores.C}
-- Subject preference: ${answers['b1'] || 'not specified'}
-- Learning style: ${answers['b2'] || 'not specified'}
-- Career value: ${answers['c1'] || 'not specified'}
-- Work environment: ${answers['c2'] || 'not specified'}
-
-Respond ONLY with a valid JSON object (no markdown, no backticks) with this exact structure:
-{
-  "riasecSummary": "2-3 sentence description of this student's RIASEC type in a warm, encouraging tone",
-  "bestCareer": {
-    "title": "Career Path Name",
-    "subtitle": "e.g. Doctor, Surgeon, Medical Researcher",
-    "matchPercent": 92,
-    "analysis": "3-4 sentences explaining exactly WHY this is the best match for this specific student",
-    "pros": ["Pro 1", "Pro 2", "Pro 3", "Pro 4"],
-    "cons": ["Challenge 1", "Challenge 2", "Challenge 3"],
-    "colleges": ["Top College 1 in India", "Top College 2", "Top College 3", "Top College 4"]
-  },
-  "recommendedCareer": {
-    "title": "Career Path Name",
-    "subtitle": "Specific roles within this path",
-    "matchPercent": 74,
-    "analysis": "3-4 sentences on why this is a solid secondary match",
-    "pros": ["Pro 1", "Pro 2", "Pro 3"],
-    "cons": ["Challenge 1", "Challenge 2"],
-    "colleges": ["College 1", "College 2", "College 3"]
-  },
-  "leastCareer": {
-    "title": "Career Path Name",
-    "subtitle": "Why this may be a poor fit",
-    "matchPercent": 22,
-    "analysis": "2-3 sentences explaining gently but honestly why this is a poor fit",
-    "pros": ["One redeeming aspect if any"],
-    "cons": ["Key mismatch 1", "Key mismatch 2", "Key mismatch 3"],
-    "colleges": []
-  },
-  "nextSteps": ["Specific next step 1 for this student", "Specific next step 2", "Specific next step 3"]
-}`;
-
-  // FIX: Added AbortController so a hung request doesn't freeze the loading screen
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 55000);
-
-  try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.details || data.error || `Server error ${res.status}`);
-    }
-
-    const text = data.content?.map(b => b.text || '').join('') || '';
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-    setResults({ ...parsed, riasec });
-    setScreen('results');
-  } catch (err) {
-    clearTimeout(timeoutId);
-    const message = err.name === 'AbortError'
-      ? 'The analysis timed out. Please check your connection and try again.'
-      : `We couldn't generate your analysis: ${err.message}`;
-    setError(message);
-    // FIX: Return user to the section they were on, not the last section
-    setScreen('form');
-    setCurrentSection(sectionBeforeSubmit);
-  }
-};
-```
-
----
-
-### Step 5 — Verify your Vercel environment variable
-
-Go to **Vercel Dashboard → Your Project → Settings → Environment Variables** and confirm:
-
-- Variable name is exactly `ANTHROPIC_API_KEY` (all caps, underscores — not `AnthropicApiKey` or `ANTHROPIC-API-KEY`)
-- It is set for **Production**, **Preview**, and **Development** environments
-- The value starts with `sk-ant-`
-
-After adding or editing an environment variable you must **redeploy** — existing deployments do not pick up env var changes automatically.
-
----
-
-### Step 6 — Verify your file structure
-
-Your repo must look exactly like this for the API route to work:
-```
-secretsharz/
-├── pages/
-│   ├── api/
-│   │   └── chat.js          ← your API handler (NOT chat.ts, NOT Chat.js)
-│   ├── _app.js
-│   └── index.js             ← or wherever VidyaVantage is imported
-├── components/
-│   └── VidyaVantage.jsx
-├── .nvmrc                   ← contains: 18
-├── package.json             ← engines: { "node": ">=18.0.0" }
-├── vercel.json              ← fixed version from Step 1
-└── next.config.js
- 
-    for (let i = 0; i < 5; i++) {
-      await new Promise(r => setTimeout(r, 900));
-      setLoadingStep(i + 1);
-    }
- 
-    const prompt = `You are VidyaVantage, an expert AI career counsellor specialising in Indian education and careers, using Holland's RIASEC theory.
- 
-Student Profile:
-- Name: ${info.name}
-- Class/Level: ${info.class}
-- City: ${info.city}
-- Aspiration: ${info.aspiration || 'Not specified'}
-- RIASEC Code: ${riasec.code}
-- RIASEC Scores (out of 10): R=${riasec.scores.R}, I=${riasec.scores.I}, A=${riasec.scores.A}, S=${riasec.scores.S}, E=${riasec.scores.E}, C=${riasec.scores.C}
-- Subject preference: ${answers['b1'] || 'not specified'}
-- Learning style: ${answers['b2'] || 'not specified'}
-- Career value: ${answers['c1'] || 'not specified'}
-- Work environment: ${answers['c2'] || 'not specified'}
- 
-Respond ONLY with a valid JSON object (no markdown, no backticks) with this exact structure:
-{
-  "riasecSummary": "2-3 sentence description of this student's RIASEC type in a warm, encouraging tone",
-  "bestCareer": {
-    "title": "Career Path Name",
-    "subtitle": "e.g. Doctor, Surgeon, Medical Researcher",
-    "matchPercent": 92,
-    "analysis": "3-4 sentences explaining exactly WHY this is the best match for this specific student",
-    "pros": ["Pro 1", "Pro 2", "Pro 3", "Pro 4"],
-    "cons": ["Challenge 1", "Challenge 2", "Challenge 3"],
-    "colleges": ["Top College 1 in India", "Top College 2", "Top College 3", "Top College 4"]
-  },
-  "recommendedCareer": {
-    "title": "Career Path Name",
-    "subtitle": "Specific roles within this path",
-    "matchPercent": 74,
-    "analysis": "3-4 sentences on why this is a solid secondary match",
-    "pros": ["Pro 1", "Pro 2", "Pro 3"],
-    "cons": ["Challenge 1", "Challenge 2"],
-    "colleges": ["College 1", "College 2", "College 3"]
-  },
-  "leastCareer": {
-    "title": "Career Path Name",
-    "subtitle": "Why this may be a poor fit",
-    "matchPercent": 22,
-    "analysis": "2-3 sentences explaining gently but honestly why this is a poor fit",
-    "pros": ["One redeeming aspect if any"],
-    "cons": ["Key mismatch 1", "Key mismatch 2", "Key mismatch 3"],
-    "colleges": []
-  },
-  "nextSteps": ["Specific next step 1 for this student", "Specific next step 2", "Specific next step 3"]
-}`;
- 
-    try {
-// ADD THIS
-const res = await fetch('/api/chat', { 
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    // We pass the messages to your Vercel function, 
-    // which then talks to Anthropic for you.
-    messages: [{ role: 'user', content: prompt }],
-  }),
-});
-      const data = await res.json();
-      const text = data.content?.map(b => b.text || '').join('') || '';
-      const clean = text.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(clean);
-      setResults({ ...parsed, riasec });
-      setScreen('results');
-    } catch (err) {
-      setError("We couldn't generate your analysis right now. Please check your connection and try again.");
-      setScreen('form');
-      setCurrentSection(ALL_SECTIONS.length - 1);
     }
   };
  
@@ -1498,7 +1173,7 @@ const res = await fetch('/api/chat', {
         </div>
       </div>
  
-      {/* WHO IS THIS FOR — FIX: was "vv-section vv-section-alt" which clipped background to 1200px */}
+      {/* WHO IS THIS FOR */}
       <div className="vv-section-alt">
         <div className="vv-section-inner">
           <h2 className="vv-sec-title">Who Is This Platform For?</h2>
@@ -1531,7 +1206,7 @@ const res = await fetch('/api/chat', {
         </div>
       </div>
  
-      {/* HOW IT WORKS — FIX: same vv-section + vv-section-alt bug */}
+      {/* HOW IT WORKS */}
       <div className="vv-section-alt">
         <div className="vv-section-inner">
           <h2 className="vv-sec-title">How Our Intelligence System Works</h2>
@@ -1589,7 +1264,7 @@ const res = await fetch('/api/chat', {
         </div>
       </div>
  
-      {/* FOUNDER — FIX: same background clip bug */}
+      {/* FOUNDER */}
       <div className="vv-section-alt">
         <div className="vv-section-inner">
           <div className="vv-founder">
@@ -1688,7 +1363,6 @@ const res = await fetch('/api/chat', {
         <Header badge="Your Results" showNav={false} />
         <div className="vv-results" ref={topRef}>
           <div className="results-hero">
-            {/* FIX: .results-name class was used but never defined — text was unstyled */}
             <div className="results-name">Career Report for {info.name} · {info.class}</div>
             <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '30px', color: 'white', margin: '0 0 12px' }}>Your RIASEC Code: <em style={{ color: 'var(--gold)' }}>{riasec.code}</em></h2>
             <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '15px', maxWidth: '560px', margin: '0 auto 20px', lineHeight: 1.7 }}>{riasecSummary}</div>
@@ -1706,10 +1380,8 @@ const res = await fetch('/api/chat', {
           ].filter(c => c.data).map(({ data, cls, badge, barColor }) => (
             <div key={cls} className={`career-card ${cls}`}>
               <div className="career-badge">{badge}</div>
-              {/* FIX: .career-title and .career-subtitle both used below; subtitle was undefined */}
               <div className="career-title">{data.title}</div>
               <div className="career-subtitle">{data.subtitle}</div>
-              {/* FIX: .match-bar-wrap, .match-bar-label, .match-bar-text, .match-pct were all undefined */}
               <div className="match-bar-wrap">
                 <div className="match-bar-label">
                   <span className="match-bar-text">Profile Match</span>
@@ -1721,14 +1393,12 @@ const res = await fetch('/api/chat', {
               </div>
               <div className="ai-analysis">{data.analysis}</div>
               {data.pros && data.cons && (
-                // FIX: .pros ul and .cons ul now have list-style:none to prevent double bullets
                 <div className="pros-cons">
                   <div className="pros"><h5>Strengths & Advantages</h5><ul>{data.pros.map((p, i) => <li key={i}>{p}</li>)}</ul></div>
                   <div className="cons"><h5>Challenges to Expect</h5><ul>{data.cons.map((c, i) => <li key={i}>{c}</li>)}</ul></div>
                 </div>
               )}
               {data.colleges && data.colleges.length > 0 && (
-                // FIX: .colleges-section h5 and .college-tags wrapper were unstyled
                 <div className="colleges-section">
                   <h5>Recommended Colleges in India</h5>
                   <div className="college-tags">{data.colleges.map((c, i) => <span key={i} className="college-tag">{c}</span>)}</div>
@@ -1737,7 +1407,6 @@ const res = await fetch('/api/chat', {
             </div>
           ))}
  
-          {/* FIX: .next-steps-grid, .next-step-num, .next-step-desc, .btn-restart all undefined */}
           <div className="next-steps">
             <h3>Your Next Steps</h3>
             <p>Based on your {riasec.code} profile, here's what {info.name.split(' ')[0]} should do next:</p>
@@ -1772,7 +1441,6 @@ const res = await fetch('/api/chat', {
         </div>
       )}
       <div className="vv-form-card" ref={topRef}>
-        {/* FIX: .error-box was used but never defined — error message had no styling */}
         {error && <div className="error-box">⚠️ {error}</div>}
  
         {section.id === 'info' ? (
@@ -1781,7 +1449,6 @@ const res = await fetch('/api/chat', {
               <h2>Tell us about yourself</h2>
               <p>This helps us personalise your career analysis for your stage of education and life in India.</p>
             </div>
-            {/* FIX: .vv-two-col was used but never defined — inputs stacked in single column */}
             <div className="vv-two-col">
               <div className="vv-field"><label>Your Full Name</label><input value={info.name} onChange={e => setInfo({ ...info, name: e.target.value })} placeholder="e.g. Priya Sharma" /></div>
               <div className="vv-field"><label>Your Current Class / Level</label><select value={info.class} onChange={e => setInfo({ ...info, class: e.target.value })}><option value="">Select your class</option>{CLASS_LEVELS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
@@ -1796,7 +1463,7 @@ const res = await fetch('/api/chat', {
             <div className="vv-section-header">
               <h2>{section.label}</h2>
               <p>
-                {section.id === 'activities' && 'Rate how much you enjoy each activity on a scale of 1 (not at all) to 5 (absolutely love it).'}
+                {section.id === 'activities' && 'Rate how much you enjoy activity on a scale of 1 (not at all) to 5 (absolutely love it).'}
                 {section.id === 'academics' && 'Tell us about your academic preferences and how you learn best.'}
                 {section.id === 'values' && 'What matters most to you in life and your future career?'}
                 {section.id === 'scenarios' && 'Choose the option that most naturally resonates with how you would react.'}
@@ -1831,4 +1498,3 @@ const res = await fetch('/api/chat', {
     </div>
   );
 }
- 
