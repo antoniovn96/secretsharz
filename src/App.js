@@ -36,9 +36,14 @@ const CSS = `
   .anim-up-3{animation:floatUp 0.7s 0.35s ease both;}
   .anim-up-4{animation:floatUp 0.7s 0.5s ease both;}
 
+  /* --- NEW: INSTANT ACTION BAR --- */
+  .instant-action-bar { background: var(--sage); color: white; text-align: center; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; position: sticky; top: 0; z-index: 1001;}
+  .instant-action-bar:hover { background: var(--moss); }
+  .instant-action-bar span { opacity: 0.8; font-weight: 400; margin-left: 8px;}
+
   /* --- Navigation Styles moved to Header.js --- */
 
-  .ss-hero{min-height:92vh;display:flex;align-items:center;padding:80px 48px;position:relative;overflow:hidden;}
+  .ss-hero{min-height:85vh;display:flex;align-items:center;padding:60px 48px;position:relative;overflow:hidden;}
   .hero-bg-blob{position:absolute;border-radius:60% 40% 70% 30%/50% 60% 40% 50%;animation:blob 8s ease-in-out infinite;pointer-events:none;z-index:0;}
   .blob-1{width:500px;height:500px;background:radial-gradient(circle,rgba(74,124,89,0.08),transparent 70%);top:-100px;right:-100px;}
   .blob-2{width:350px;height:350px;background:radial-gradient(circle,rgba(124,111,160,0.07),transparent 70%);bottom:-50px;left:200px;animation-delay:-4s;}
@@ -51,7 +56,6 @@ const CSS = `
   .hero-h1 em{font-style:italic;color:var(--sage);}
   .hero-h1 .underline-word{position:relative;display:inline-block;}
   .hero-h1 .underline-word::after{content:'';position:absolute;bottom:4px;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--peach),var(--lavender));border-radius:2px;}
-  .hero-p{font-size:18px;color:var(--muted);line-height:1.75;max-width:560px;margin-bottom:20px;font-weight:300;}
   
   .hero-checklist { list-style: none; padding: 0; margin-bottom: 40px; }
   .hero-checklist li { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--ink-soft); margin-bottom: 8px; font-weight: 500;}
@@ -74,11 +78,22 @@ const CSS = `
   .fc-bar{height:4px;background:var(--sage-pale);border-radius:4px;margin-top:12px;overflow:hidden;}
   .fc-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--sage),var(--sage-light));}
 
-  /* --- NEW: EMOTIONAL PUNCHLINE --- */
+  .trust-strip{display:flex;align-items:center;gap:28px;margin-top:48px;padding-top:28px;border-top:1px solid var(--border);flex-wrap:wrap;}
+  .trust-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500;}
+
+  /* --- NEW: WHAT HAPPENS NEXT --- */
+  .onboarding-steps-section { padding: 40px 48px; background: var(--warm-white); text-align: center;}
+  .steps-container { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; max-width: 1000px; margin: 40px auto 0;}
+  .step-card { flex: 1; min-width: 250px; text-align: left; padding: 24px; background: white; border-radius: var(--r-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);}
+  .step-num { width: 32px; height: 32px; background: var(--sage-pale); color: var(--sage); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 15px;}
+  .step-title { font-weight: bold; color: var(--ink); margin-bottom: 8px;}
+  .step-desc { font-size: 14px; color: var(--muted); line-height: 1.6;}
+
+  /* --- EMOTIONAL PUNCHLINE --- */
   .punchline-section { text-align: center; padding: 60px 20px 20px; }
   .punchline-text { font-family: 'Fraunces', serif; font-size: clamp(24px, 4vw, 36px); font-weight: 300; color: var(--ink-soft); font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.4;}
 
-  /* --- NEW: SOCIAL PROOF SLIDER --- */
+  /* --- SOCIAL PROOF SLIDER --- */
   .social-proof-section { padding: 40px 0 80px; overflow: hidden; background: linear-gradient(180deg, transparent, var(--sand)); }
   .sp-header { text-align: center; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px;}
   .sp-slider { display: flex; gap: 24px; padding: 0 48px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none;}
@@ -88,13 +103,13 @@ const CSS = `
   .sp-quote { font-size: 15px; color: var(--ink-soft); font-style: italic; margin-bottom: 16px; line-height: 1.6;}
   .sp-author { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase;}
 
-  /* --- NEW: FOUNDER STORY --- */
+  /* --- FOUNDER STORY --- */
   .story-section { padding: 100px 48px; background: white; display: flex; align-items: center; justify-content: center; gap: 60px; flex-wrap: wrap;}
   .story-content { max-width: 500px; }
   .story-img-box { width: 400px; height: 500px; background: var(--sage-pale); border-radius: var(--r-lg); position: relative; display:flex; align-items:center; justify-content:center; font-size: 80px; border: 1px solid var(--border);}
   .story-img-box::after { content: ''; position: absolute; inset: -15px; border: 2px dashed var(--sage-light); border-radius: calc(var(--r-lg) + 10px); z-index: 0; opacity: 0.5;}
 
-  /* --- NEW: FOR SCHOOLS & PARENTS --- */
+  /* --- FOR SCHOOLS & PARENTS --- */
   .b2b-section { background: var(--ink); color: white; padding: 100px 48px; display: flex; flex-direction: column; align-items: center; text-align: center; }
   .b2b-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1000px; width: 100%; margin-top: 50px; text-align: left;}
   .b2b-card { background: rgba(255,255,255,0.05); padding: 30px; border-radius: var(--r-md); border: 1px solid rgba(255,255,255,0.1); }
@@ -156,8 +171,13 @@ const CSS = `
   .safe-content{position:relative;z-index:1;max-width:680px;margin:0 auto;}
   .safe-section .section-h2{color:white;}
   .safe-section .section-p{color:rgba(255,255,255,0.55);margin:0 auto 48px;}
-  .safe-promises{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;}
-  .safe-promise{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:50px;padding:12px 22px;font-size:14px;font-weight:500;color:rgba(255,255,255,0.8);display:flex;align-items:center;gap:8px;}
+  
+  /* --- UPGRADED PRIVACY PROMISES --- */
+  .privacy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left; margin-bottom: 50px;}
+  .privacy-item { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; display: flex; align-items: flex-start; gap: 12px;}
+  .privacy-item span { font-size: 24px; }
+  .privacy-item h4 { color: white; margin: 0 0 5px 0; font-size: 15px;}
+  .privacy-item p { color: rgba(255,255,255,0.6); margin: 0; font-size: 13px; line-height: 1.5;}
   
   .crisis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 24px; text-align: left;}
   .crisis-box{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:var(--r-md);padding:24px;display:flex;align-items:flex-start;gap:15px; transition: 0.2s;}
@@ -185,6 +205,7 @@ const CSS = `
     .safe-section{padding:64px 24px;}
     .story-section{padding: 64px 24px; gap: 40px;}
     .story-img-box{display: none;}
+    .privacy-grid{grid-template-columns: 1fr;}
   }
 `;
 
@@ -443,6 +464,13 @@ export default function App() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       
+      {/* 🚀 INSTANT ACTION BAR */}
+      {!currentUser && screen === 'home' && (
+        <div className="instant-action-bar" onClick={() => setScreen('auth')}>
+            Feeling overwhelmed right now? Start your healing journey in 30 seconds. <span>→</span>
+        </div>
+      )}
+
       {/* Show header everywhere EXCEPT VidyaVantage */}
       {screen !== 'vidyavantage' && <Header />}
 
@@ -470,13 +498,12 @@ export default function App() {
             </div>
             
             <div className="trust-strip anim-up-4">
-              <div className="trust-item"><span>🇮🇳</span> Used by students across India</div>
+              <div className="trust-item"><span>🇮🇳</span> Join 12,000+ students across India</div>
               <div className="trust-item"><span>🧑‍⚕️</span> Designed by counsellors</div>
               <div className="trust-item"><span>🧠</span> Backed by psychology research</div>
             </div>
           </div>
           <div className="hero-right">
-            {/* 🚀 ADDED RETENTION HOOK */}
             <div className="floating-card"><div className="fc-icon">🔥</div><div className="fc-label">Your Healing Journey</div><div className="fc-value">7-Day Calm Streak!</div><div className="fc-sub">Your average anxiety score dropped by 12% this week. Keep it up!</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'85%', background:'var(--success)'}}/></div></div>
             <div className="floating-card"><div className="fc-icon">💬</div><div className="fc-label">Recent Anonymous Post</div><div className="fc-value">"I feel like I'm falling behind everyone else in my class..."</div><div className="fc-sub">12 students felt the same way today.</div></div>
             <div className="floating-card"><div className="fc-icon">🎓</div><div className="fc-label">VidyaVantage Match</div><div className="fc-value">Psychology — 94%</div><div className="fc-sub">Your RIASEC code: ISA · See your report</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'94%',background:'linear-gradient(90deg,#E8650A,#F0A500)'}}/></div></div>
@@ -488,7 +515,32 @@ export default function App() {
             <h2 className="punchline-text">"The things you can't tell anyone... <br/><span style={{color: 'var(--sage)', fontWeight: '600'}}>you can tell us.</span>"</h2>
         </section>
 
-        {/* 🚀 SOCIAL PROOF SLIDER (INTERACTIVE) */}
+        {/* 🚀 WHAT HAPPENS NEXT (First 5 Minutes) */}
+        <section className="onboarding-steps-section">
+            <div className="section-eyebrow">Your First 5 Minutes</div>
+            <h2 className="section-h2">You don’t have to have the right words. <em>Just start.</em></h2>
+            <p className="section-p" style={{margin: '0 auto'}}>Most students join us during exam stress, family pressure, or major life decisions. We make it easy to begin.</p>
+            
+            <div className="steps-container">
+                <div className="step-card">
+                    <div className="step-num">1</div>
+                    <div className="step-title">Quick Mood Check</div>
+                    <div className="step-desc">Tell us how you're feeling right now using a simple slider. No typing required.</div>
+                </div>
+                <div className="step-card">
+                    <div className="step-num">2</div>
+                    <div className="step-title">Get Matched Support</div>
+                    <div className="step-desc">Based on your mood, we instantly suggest a short breathing exercise or journal prompt.</div>
+                </div>
+                <div className="step-card">
+                    <div className="step-num">3</div>
+                    <div className="step-title">Explore Anonymously</div>
+                    <div className="step-desc">Read stories from other students who feel exactly like you do.</div>
+                </div>
+            </div>
+        </section>
+
+        {/* SOCIAL PROOF SLIDER (INTERACTIVE) */}
         <section className="social-proof-section">
             <div className="sp-header">Trusted by thousands of students across India</div>
             <div className="sp-slider" id="spSlider">
@@ -542,7 +594,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* 🚀 FOUNDER STORY */}
+        {/* FOUNDER STORY */}
         <section className="story-section">
             <div className="story-content">
                 <div className="section-eyebrow">Why SecretSharz Exists</div>
@@ -584,7 +636,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* 🚀 FOR SCHOOLS B2B SECTION */}
+        {/* FOR SCHOOLS B2B SECTION */}
         <section className="b2b-section">
             <div className="section-eyebrow" style={{color: 'var(--sage-light)'}}>Institutional Partnerships</div>
             <h2 className="section-h2" style={{color: 'white'}}>Empower your students with a <em>proactive</em> mental health layer.</h2>
@@ -619,11 +671,26 @@ export default function App() {
             <div className="section-eyebrow" style={{color:'var(--sage-light)'}}>Your Safety Comes First</div>
             <h2 className="section-h2">This is a <em>judgement-free</em> zone. Always.</h2>
             <p className="section-p">We built Secret Sharz on one promise: you will never be shamed, exposed, or ignored here. Ever.</p>
-            <div className="safe-promises">
-              {['🔒 Anonymous by default','🤖 AI-moderated content','👁️ Human review team','📞 Crisis escalation','🇮🇳 POCSO-aware'].map((p,i) => <div key={i} className="safe-promise">{p}</div>)}
-            </div>
             
-            <p style={{fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '-20px', marginBottom: '40px', cursor: 'pointer', textDecoration: 'underline'}} onClick={() => alert("Privacy Policy:\n1. Your real identity is never linked to your public posts.\n2. We use end-to-end encryption for all chat data.\n3. We comply strictly with POCSO guidelines to protect minors.")}>How we protect your data and privacy</p>
+            {/* 🚀 UPGRADED PRIVACY PROMISES */}
+            <div className="privacy-grid">
+                <div className="privacy-item">
+                    <span>🔒</span>
+                    <div><h4>100% Anonymous</h4><p>No real names. You interact using generated avatars and aliases.</p></div>
+                </div>
+                <div className="privacy-item">
+                    <span>🛡️</span>
+                    <div><h4>End-to-End Protection</h4><p>Your data is encrypted. Chat logs are never publicly linked to you.</p></div>
+                </div>
+                <div className="privacy-item">
+                    <span>🚫</span>
+                    <div><h4>No Data Selling</h4><p>Your mental health data is yours. We never sell information to third parties.</p></div>
+                </div>
+                <div className="privacy-item">
+                    <span>🇮🇳</span>
+                    <div><h4>POCSO Aligned</h4><p>Built under strict Indian child safety laws with human moderation.</p></div>
+                </div>
+            </div>
             
             <div style={{textAlign: 'left', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '40px'}}>
                 <h3 style={{color: 'white', fontFamily: 'Fraunces, serif', fontSize: '24px', marginBottom: '5px'}}>Need urgent help right now?</h3>
