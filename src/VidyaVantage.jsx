@@ -1117,12 +1117,136 @@ export default function VidyaVantage() {
     const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     return { scores, sorted, code: sorted.slice(0, 3).map(x => x[0]).join('') };
   };
- 
-  const fetchAnalysis = async () => {
-    setScreen('loading');
-    setLoadingStep(0);
-    setError(null);
-    const riasec = computeRIASEC();
+ const fetchAnalysis = async () => {
+  // FIX: Save the section the user is on before navigating away,
+  // so error recovery drops them back where they were instead of
+  // the last section.
+  const sectionBeforeSubmit = currentSection;
+
+  setScreen('loading');
+  setLoadingStep(0);
+  setError(null);
+  const riasec = computeRIASEC();
+
+  for (let i = 0; i < 5; i++) {
+    await new Promise(r => setTimeout(r, 900));
+    setLoadingStep(i + 1);
+  }
+
+  const prompt = `You are VidyaVantage, an expert AI career counsellor specialising in Indian education and careers, using Holland's RIASEC theory.
+
+Student Profile:
+- Name: ${info.name}
+- Class/Level: ${info.class}
+- City: ${info.city}
+- Aspiration: ${info.aspiration || 'Not specified'}
+- RIASEC Code: ${riasec.code}
+- RIASEC Scores (out of 10): R=${riasec.scores.R}, I=${riasec.scores.I}, A=${riasec.scores.A}, S=${riasec.scores.S}, E=${riasec.scores.E}, C=${riasec.scores.C}
+- Subject preference: ${answers['b1'] || 'not specified'}
+- Learning style: ${answers['b2'] || 'not specified'}
+- Career value: ${answers['c1'] || 'not specified'}
+- Work environment: ${answers['c2'] || 'not specified'}
+
+Respond ONLY with a valid JSON object (no markdown, no backticks) with this exact structure:
+{
+  "riasecSummary": "2-3 sentence description of this student's RIASEC type in a warm, encouraging tone",
+  "bestCareer": {
+    "title": "Career Path Name",
+    "subtitle": "e.g. Doctor, Surgeon, Medical Researcher",
+    "matchPercent": 92,
+    "analysis": "3-4 sentences explaining exactly WHY this is the best match for this specific student",
+    "pros": ["Pro 1", "Pro 2", "Pro 3", "Pro 4"],
+    "cons": ["Challenge 1", "Challenge 2", "Challenge 3"],
+    "colleges": ["Top College 1 in India", "Top College 2", "Top College 3", "Top College 4"]
+  },
+  "recommendedCareer": {
+    "title": "Career Path Name",
+    "subtitle": "Specific roles within this path",
+    "matchPercent": 74,
+    "analysis": "3-4 sentences on why this is a solid secondary match",
+    "pros": ["Pro 1", "Pro 2", "Pro 3"],
+    "cons": ["Challenge 1", "Challenge 2"],
+    "colleges": ["College 1", "College 2", "College 3"]
+  },
+  "leastCareer": {
+    "title": "Career Path Name",
+    "subtitle": "Why this may be a poor fit",
+    "matchPercent": 22,
+    "analysis": "2-3 sentences explaining gently but honestly why this is a poor fit",
+    "pros": ["One redeeming aspect if any"],
+    "cons": ["Key mismatch 1", "Key mismatch 2", "Key mismatch 3"],
+    "colleges": []
+  },
+  "nextSteps": ["Specific next step 1 for this student", "Specific next step 2", "Specific next step 3"]
+}`;
+
+  // FIX: Added AbortController so a hung request doesn't freeze the loading screen
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 55000);
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.details || data.error || `Server error ${res.status}`);
+    }
+
+    const text = data.content?.map(b => b.text || '').join('') || '';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    setResults({ ...parsed, riasec });
+    setScreen('results');
+  } catch (err) {
+    clearTimeout(timeoutId);
+    const message = err.name === 'AbortError'
+      ? 'The analysis timed out. Please check your connection and try again.'
+      : `We couldn't generate your analysis: ${err.message}`;
+    setError(message);
+    // FIX: Return user to the section they were on, not the last section
+    setScreen('form');
+    setCurrentSection(sectionBeforeSubmit);
+  }
+};
+```
+
+---
+
+### Step 5 — Verify your Vercel environment variable
+
+Go to **Vercel Dashboard → Your Project → Settings → Environment Variables** and confirm:
+
+- Variable name is exactly `ANTHROPIC_API_KEY` (all caps, underscores — not `AnthropicApiKey` or `ANTHROPIC-API-KEY`)
+- It is set for **Production**, **Preview**, and **Development** environments
+- The value starts with `sk-ant-`
+
+After adding or editing an environment variable you must **redeploy** — existing deployments do not pick up env var changes automatically.
+
+---
+
+### Step 6 — Verify your file structure
+
+Your repo must look exactly like this for the API route to work:
+```
+secretsharz/
+├── pages/
+│   ├── api/
+│   │   └── chat.js          ← your API handler (NOT chat.ts, NOT Chat.js)
+│   ├── _app.js
+│   └── index.js             ← or wherever VidyaVantage is imported
+├── components/
+│   └── VidyaVantage.jsx
+├── .nvmrc                   ← contains: 18
+├── package.json             ← engines: { "node": ">=18.0.0" }
+├── vercel.json              ← fixed version from Step 1
+└── next.config.js
  
     for (let i = 0; i < 5; i++) {
       await new Promise(r => setTimeout(r, 900));
