@@ -36,20 +36,7 @@ const CSS = `
   .anim-up-3{animation:floatUp 0.7s 0.35s ease both;}
   .anim-up-4{animation:floatUp 0.7s 0.5s ease both;}
 
-  .ss-nav{position:sticky;top:0;z-index:200;padding:0 48px;height:70px;display:flex;align-items:center;justify-content:space-between;background:rgba(253,252,250,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
-  .ss-nav-logo{font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--moss);letter-spacing:-0.5px;cursor:pointer;}
-  .ss-nav-logo span{color:var(--sage-light);font-style:italic;}
-  .ss-nav-links{display:flex;align-items:center;gap:32px;}
-  .nav-link{font-size:14px;font-weight:500;color:var(--ink-soft);text-decoration:none;cursor:pointer;transition:color 0.2s;background:none;border:none;font-family:inherit;}
-  .nav-link:hover{color:var(--sage);}
-  .nav-cta{background:var(--sage);color:white;padding:10px 22px;border-radius:50px;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all 0.2s;box-shadow:0 4px 14px rgba(74,124,89,0.3);}
-  .nav-cta:hover{background:var(--moss);transform:translateY(-1px);}
-  .nav-cta-outline{background:transparent;color:var(--sage);border:2px solid var(--sage);padding:8px 20px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;}
-  .nav-cta-outline:hover{background:var(--sage);color:white;}
-  .nav-vv-link{display:flex;align-items:center;gap:8px;background:var(--lav-pale);color:var(--lavender);padding:8px 16px;border-radius:50px;font-size:13px;font-weight:600;border:1.5px solid rgba(124,111,160,0.2);cursor:pointer;font-family:inherit;transition:all 0.2s;}
-  .nav-vv-link:hover{background:var(--lavender);color:white;}
-  .nav-user-chip{display:flex;align-items:center;gap:8px;background:var(--sage-pale);border:1.5px solid rgba(74,124,89,0.2);color:var(--moss);padding:7px 16px;border-radius:50px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;}
-  .nav-user-chip:hover{background:var(--sage);color:white;}
+  /* --- Navigation Styles moved to Header.js --- */
 
   .ss-hero{min-height:92vh;display:flex;align-items:center;padding:80px 48px;position:relative;overflow:hidden;}
   .hero-bg-blob{position:absolute;border-radius:60% 40% 70% 30%/50% 60% 40% 50%;animation:blob 8s ease-in-out infinite;pointer-events:none;z-index:0;}
@@ -60,11 +47,17 @@ const CSS = `
   .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--sage-pale);border:1.5px solid rgba(74,124,89,0.2);color:var(--sage);padding:8px 18px;border-radius:50px;font-size:13px;font-weight:600;letter-spacing:0.3px;margin-bottom:28px;}
   .hero-eyebrow-dot{width:7px;height:7px;background:var(--sage);border-radius:50%;position:relative;}
   .hero-eyebrow-dot::after{content:'';position:absolute;inset:-3px;border:1.5px solid var(--sage);border-radius:50%;animation:pulse-ring 2s ease-out infinite;}
-  .hero-h1{font-family:'Fraunces',serif;font-size:clamp(42px,6vw,72px);font-weight:700;line-height:1.08;color:var(--ink);letter-spacing:-1.5px;margin-bottom:24px;}
+  .hero-h1{font-family:'Fraunces',serif;font-size:clamp(42px,6vw,64px);font-weight:700;line-height:1.08;color:var(--ink);letter-spacing:-1.5px;margin-bottom:24px;}
   .hero-h1 em{font-style:italic;color:var(--sage);}
   .hero-h1 .underline-word{position:relative;display:inline-block;}
   .hero-h1 .underline-word::after{content:'';position:absolute;bottom:4px;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--peach),var(--lavender));border-radius:2px;}
-  .hero-p{font-size:18px;color:var(--muted);line-height:1.75;max-width:560px;margin-bottom:40px;font-weight:300;}
+  .hero-p{font-size:18px;color:var(--muted);line-height:1.75;max-width:560px;margin-bottom:20px;font-weight:300;}
+  
+  /* --- NEW HERO CHECKLIST --- */
+  .hero-checklist { list-style: none; padding: 0; margin-bottom: 40px; }
+  .hero-checklist li { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--ink-soft); margin-bottom: 8px; font-weight: 500;}
+  .hero-checklist li::before { content: '✓'; color: var(--success); font-weight: bold; }
+
   .hero-actions{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
   .btn-primary{background:var(--sage);color:white;padding:16px 36px;border-radius:50px;font-size:16px;font-weight:600;border:none;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(74,124,89,0.35);transition:all 0.25s;}
   .btn-primary:hover{background:var(--moss);transform:translateY(-2px);box-shadow:0 12px 32px rgba(74,124,89,0.4);}
@@ -85,6 +78,14 @@ const CSS = `
   .trust-strip{display:flex;align-items:center;gap:28px;margin-top:48px;padding-top:28px;border-top:1px solid var(--border);flex-wrap:wrap;}
   .trust-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500;}
 
+  /* --- ONBOARDING FLOW MODAL --- */
+  .onboard-options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;}
+  .onboard-card { background: var(--sand); border: 2px solid transparent; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s;}
+  .onboard-card:hover { border-color: var(--sage); transform: translateY(-3px);}
+  .onboard-emoji { font-size: 40px; margin-bottom: 10px;}
+  .onboard-title { font-weight: bold; color: var(--ink); margin-bottom: 5px;}
+  .onboard-desc { font-size: 13px; color: var(--muted);}
+
   .section{padding:100px 48px;}
   .section-eyebrow{font-size:12px;font-weight:700;color:var(--sage);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
   .section-h2{font-family:'Fraunces',serif;font-size:clamp(30px,4vw,46px);font-weight:700;color:var(--ink);line-height:1.15;letter-spacing:-0.5px;margin-bottom:16px;}
@@ -94,7 +95,7 @@ const CSS = `
   .section-header .section-p{margin:0 auto;}
 
   .pillars-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:1100px;margin:0 auto;}
-  .pillar-card{background:white;border-radius:var(--r-md);padding:36px 32px;border:1.5px solid var(--border);box-shadow:var(--shadow-sm);transition:all 0.3s;position:relative;overflow:hidden;}
+  .pillar-card{background:white;border-radius:var(--r-md);padding:36px 32px;border:1.5px solid var(--border);box-shadow:var(--shadow-sm);transition:all 0.3s;position:relative;overflow:hidden; display: flex; flex-direction: column;}
   .pillar-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
   .pillar-card.mind::before{background:linear-gradient(90deg,var(--lavender),#A89DD0);}
   .pillar-card.share::before{background:linear-gradient(90deg,var(--sage),var(--sage-light));}
@@ -107,16 +108,20 @@ const CSS = `
   .guide .pillar-icon{background:var(--peach-pale);}
   .safe .pillar-icon{background:var(--sky-pale);}
   .pillar-title{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--ink);margin-bottom:10px;}
-  .pillar-desc{font-size:14px;color:var(--muted);line-height:1.7;}
+  .pillar-desc{font-size:14px;color:var(--muted);line-height:1.7; flex: 1;}
   .pillar-features{margin-top:20px;display:flex;flex-direction:column;gap:6px;}
   .pillar-feat{font-size:13px;color:var(--ink-soft);font-weight:500;display:flex;align-items:center;gap:8px;}
   .pillar-feat::before{content:'→';color:var(--sage);font-weight:700;}
+  
+  /* --- NEW MICRO CTAs --- */
+  .pillar-cta { margin-top: 24px; padding-top: 15px; border-top: 1px solid var(--border); font-size: 14px; font-weight: bold; color: var(--sage); cursor: pointer; display: flex; align-items: center; gap: 5px;}
+  .pillar-cta:hover { color: var(--moss); }
 
   .vv-banner{background:linear-gradient(135deg,#1C1208 0%,#2D1A05 50%,#0A2A1C 100%);border-radius:var(--r-xl);padding:64px 72px;display:flex;align-items:center;justify-content:space-between;gap:40px;max-width:1100px;margin:0 auto;position:relative;overflow:hidden;}
   .vv-banner::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(232,101,10,0.15),transparent 70%);}
   .vv-banner-left{position:relative;z-index:1;flex:1;}
   .vv-banner-tag{display:inline-block;background:rgba(232,101,10,0.15);color:#F0A500;border:1px solid rgba(232,101,10,0.25);padding:6px 16px;border-radius:30px;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:20px;}
-  .vv-banner h3{font-family:'Fraunces',serif;font-size:clamp(26px,3.5vw,40px);font-weight:700;color:white;line-height:1.15;letter-spacing:-0.5px;margin-bottom:14px;}
+  .vv-banner h3{font-family:'Fraunces',serif;font-size:clamp(26px,3.5vw,36px);font-weight:700;color:white;line-height:1.15;letter-spacing:-0.5px;margin-bottom:14px;}
   .vv-banner h3 em{font-style:italic;color:#F0A500;}
   .vv-banner p{font-size:16px;color:rgba(255,255,255,0.55);line-height:1.7;max-width:440px;font-weight:300;}
   .vv-banner-right{position:relative;z-index:1;flex-shrink:0;}
@@ -134,21 +139,15 @@ const CSS = `
   .safe-section .section-p{color:rgba(255,255,255,0.55);margin:0 auto 48px;}
   .safe-promises{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;}
   .safe-promise{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:50px;padding:12px 22px;font-size:14px;font-weight:500;color:rgba(255,255,255,0.8);display:flex;align-items:center;gap:8px;}
-  .crisis-box{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:var(--r-md);padding:28px 32px;display:flex;align-items:center;gap:20px;text-align:left;margin-top:24px;}
-  .crisis-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:white;margin-bottom:4px;}
-  .crisis-desc{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.5;}
-  .crisis-number{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:#6FAA80;margin-left:auto;flex-shrink:0;}
+  
+  .crisis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 24px; text-align: left;}
+  .crisis-box{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:var(--r-md);padding:24px;display:flex;align-items:flex-start;gap:15px; transition: 0.2s;}
+  .crisis-box:hover { background:rgba(255,255,255,0.1); border-color: var(--sage-light); }
+  .crisis-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:white;margin-bottom:4px;}
+  .crisis-desc{font-size:12px;color:rgba(255,255,255,0.5);line-height:1.5; margin-bottom: 10px;}
+  .crisis-number{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:#6FAA80;}
 
-  .ss-footer{background:var(--ink);padding:64px 48px 40px;}
-  .footer-top{display:flex;gap:80px;padding-bottom:48px;border-bottom:1px solid rgba(255,255,255,0.07);flex-wrap:wrap;}
-  .footer-logo{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:white;margin-bottom:12px;}
-  .footer-logo span{color:var(--sage-light);font-style:italic;}
-  .footer-tagline{font-size:14px;color:rgba(255,255,255,0.35);line-height:1.6;max-width:260px;}
-  .footer-links-title{font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
-  .footer-link{display:block;font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:10px;cursor:pointer;transition:color 0.2s;text-decoration:none;}
-  .footer-link:hover{color:var(--sage-light);}
-  .footer-bottom{padding-top:28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
-  .footer-copy{font-size:13px;color:rgba(255,255,255,0.25);}
+  /* --- Footer Styles moved to Footer.js --- */
 
   .modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(30,40,32,0.5);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.2s ease;}
   .modal{background:white;border-radius:var(--r-lg);padding:48px;max-width:520px;width:100%;box-shadow:var(--shadow-lg);animation:floatUp 0.3s ease;position:relative;}
@@ -166,23 +165,19 @@ const CSS = `
   .vv-back-label span{color:#F0A500;font-weight:600;}
 
   @media(max-width:900px){
-    .ss-nav{padding:0 20px;}
-    .ss-nav-links{gap:12px;}
-    .nav-link{display:none;}
     .ss-hero{padding:60px 24px;min-height:auto;}
     .hero-right{display:none;}
     .section{padding:64px 24px;}
     .vv-banner{flex-direction:column;padding:40px 28px;}
     .safe-section{padding:64px 24px;}
-    .ss-footer{padding:48px 24px 28px;}
   }
 `;
 
 const PILLARS = [
-  { cls:'mind', icon:'🧠', title:'Mind Space', desc:'A private sanctuary for your thoughts. Track your mood, journal freely, and access science-backed tools for anxiety, stress, and emotional wellbeing.', features:['Daily mood check-in & tracking','Guided journaling with AI prompts','Breathing & grounding exercises','Mental health resource library'] },
-  { cls:'share', icon:'💬', title:'Sharz Wall', desc:"Share what's on your heart anonymously. Read stories from young people just like you. Know that you are never, ever alone in what you feel.", features:['100% anonymous sharing','Peer reactions & support','Moderated safe community','Themed support circles'] },
-  { cls:'guide', icon:'🧭', title:'Life Guide', desc:"Navigate life's toughest decisions — from family pressure and friendships to career choices and your future — with guidance designed for young Indians.", features:['Career path discovery (VidyaVantage)','Life skills & decision tools','Peer mentor connections','Expert article library'] },
-  { cls:'safe', icon:'🛡️', title:'Safe Corner', desc:"If things feel too heavy to carry, you don't have to carry them alone. Access trained counsellors, crisis support, and emergency helplines instantly.", features:['24/7 crisis helpline access','Connect with trained counsellors','Report unsafe situations privately','Parent & teacher guidance portal'] },
+  { cls:'mind', icon:'🧠', title:'Mind Space', desc:'A private sanctuary for your thoughts. Track your mood, journal freely, and access science-backed tools for anxiety, stress, and emotional wellbeing.', features:['Daily mood check-in & tracking','Guided journaling with AI prompts','Breathing & grounding exercises'], cta: 'Try Mood Tracker →', route: 'mindspace' },
+  { cls:'share', icon:'💬', title:'Sharz Wall', desc:"Share what's on your heart anonymously. Read stories from young people just like you. Know that you are never, ever alone in what you feel.", features:['100% anonymous sharing','Peer reactions & support','Moderated safe community'], cta: 'Read Anonymous Stories →', route: 'community' },
+  { cls:'guide', icon:'🧭', title:'Life Guide', desc:"Navigate life's toughest decisions — from family pressure and friendships to career choices and your future — with guidance designed for young Indians.", features:['Career path discovery','Life skills & decision tools','Expert article library'], cta: 'Explore Life Guidance →', route: 'guide' },
+  { cls:'safe', icon:'🛡️', title:'Safe Corner', desc:"If things feel too heavy to carry, you don't have to carry them alone. Access trained counsellors, crisis support, and emergency helplines instantly.", features:['24/7 crisis helpline access','Connect with trained counsellors','Report unsafe situations privately'], cta: 'View Safety Protocols →', route: 'safe' },
 ];
 
 export default function App() {
@@ -288,7 +283,12 @@ export default function App() {
     if (isDbAdmin || isMaster) {
       setScreen('admin');
     } else {
-      setScreen('dashboard');
+      // 🚀 NEW: Onboarding Flow for new users
+      if(isNew) {
+         setModal('onboarding');
+      } else {
+         setScreen('dashboard');
+      }
     }
   };
 
@@ -393,12 +393,6 @@ export default function App() {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Header />
         <main style={{ flex: 1, position: 'relative' }}>
-          <nav className="ss-nav">
-            <div className="ss-nav-logo" onClick={() => setScreen('home')} style={{ cursor: 'pointer' }}>
-              Secret<span>Sharz</span>
-            </div>
-            <button className="nav-cta-outline" onClick={() => setScreen('home')}>← Back Home</button>
-          </nav>
           <MindSpace 
             userData={userData} 
             onNavigate={(targetTab) => {
@@ -438,60 +432,42 @@ export default function App() {
       {/* Show header everywhere EXCEPT VidyaVantage */}
       {screen !== 'vidyavantage' && <Header />}
 
-      {/* Your main content area */}
       <main style={{ flex: 1, position: 'relative' }}>
-        <nav className="ss-nav">
-          <div className="ss-nav-logo" onClick={() => setScreen('home')} style={{cursor:'pointer'}}>Secret<span>Sharz</span></div>
-          <div className="ss-nav-links">
-            <button className="nav-link" onClick={() => setScreen('mindspace')}>Mind Space</button>
-            <button className="nav-link" onClick={() => setModal('talk')}>Community</button>
-            <button className="nav-link" onClick={() => setModal('talk')}>For Schools</button>
-            <button className="nav-vv-link" onClick={() => setScreen('vidyavantage')}>🎓 VidyaVantage</button>
-
-            {currentUser ? (
-              <>
-                {isAdmin && (
-                  <button className="nav-link" onClick={() => setScreen('admin')} style={{color: 'var(--saffron)', fontWeight: 'bold'}}>
-                    ⚙️ Admin Panel
-                  </button>
-                )}
-                <button className="nav-user-chip" onClick={() => {setDashboardTab('home'); setScreen('dashboard');}}>
-                  👤 {currentUser.displayName?.split(' ')[0] || 'My Dashboard'}
-                </button>
-                <button className="nav-cta-outline" onClick={handleLogout}>Logout</button>
-              </>
-            ) : (
-              <>
-                <button className="nav-link" onClick={() => setScreen('auth')}>Sign In</button>
-                <button className="nav-cta" onClick={() => setScreen('auth')}>Join Free</button>
-              </>
-            )}
-          </div>
-        </nav>
 
         {/* HERO */}
         <section className="ss-hero">
           <div className="hero-bg-blob blob-1" /><div className="hero-bg-blob blob-2" /><div className="hero-bg-blob blob-3" />
           <div className="hero-content">
             <div className="hero-eyebrow anim-up"><div className="hero-eyebrow-dot" />Safe · Anonymous · For Indian Youth</div>
-            <h1 className="hero-h1 anim-up-1">A place where<br/>your <em>feelings</em> are<br/><span className="underline-word">always valid</span></h1>
-            <p className="hero-p anim-up-2">Secret Sharz is a safe, anonymous digital space for children and young people across India — to share, heal, grow, and discover who they truly are.</p>
+            
+            {/* 🚀 UPGRADED HERO COPY */}
+            <h1 className="hero-h1 anim-up-1">Anonymous mental health <br/>support for students —<br/><span className="underline-word">anytime, anywhere</span></h1>
+            
+            <ul className="hero-checklist anim-up-2">
+                <li>Takes 30 seconds to start</li>
+                <li>No real name required</li>
+                <li>100% free for students</li>
+            </ul>
+
             <div className="hero-actions anim-up-3">
+              {/* 🚀 UPGRADED CTA STRATEGY */}
               <button className="btn-primary" onClick={() => setScreen(currentUser ? 'dashboard' : 'auth')}>
-                {currentUser ? '🏠 My Dashboard' : 'Create My Safe Space 🌱'}
+                {currentUser ? '🏠 My Dashboard' : 'Start Anonymously'}
               </button>
-              <button className="btn-ghost" onClick={() => setModal('talk')}>💬 Talk to Someone</button>
+              <button className="btn-ghost" onClick={() => setModal('talk')}>💬 Talk to Someone Now</button>
             </div>
+            
+            {/* 🚀 UPGRADED TRUST STRIP */}
             <div className="trust-strip anim-up-4">
-              <div className="trust-item"><span>🔒</span> Completely anonymous</div>
-              <div className="trust-item"><span>🛡️</span> POCSO-aware platform</div>
-              <div className="trust-item"><span>❤️</span> No judgement, ever</div>
-              <div className="trust-item"><span>🌍</span> Pan-India reach</div>
+              <div className="trust-item"><span>🇮🇳</span> Used by students across India</div>
+              <div className="trust-item"><span>🧑‍⚕️</span> Designed by counsellors</div>
+              <div className="trust-item"><span>🧠</span> Backed by psychology research</div>
             </div>
           </div>
           <div className="hero-right">
-            <div className="floating-card"><div className="fc-icon">🌱</div><div className="fc-label">Today's Mood Check-In</div><div className="fc-value">Feeling anxious?</div><div className="fc-sub">3 grounding exercises ready for you</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'65%'}}/></div></div>
-            <div className="floating-card"><div className="fc-icon">💬</div><div className="fc-label">Sharz Wall — Anonymous Post</div><div className="fc-value">"Boards are next week..."</div><div className="fc-sub">47 people responded with support 💚</div></div>
+            {/* 🚀 RELATABILITY PREVIEWS */}
+            <div className="floating-card"><div className="fc-icon">💬</div><div className="fc-label">Recent Anonymous Post</div><div className="fc-value">"I feel like I'm falling behind everyone else in my class..."</div><div className="fc-sub">12 students felt the same way today.</div></div>
+            <div className="floating-card"><div className="fc-icon">🌱</div><div className="fc-label">Your Healing Journey</div><div className="fc-value">Mood: Anxious</div><div className="fc-sub">Completed 3 breathing exercises today! 🔥</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'65%'}}/></div></div>
             <div className="floating-card"><div className="fc-icon">🎓</div><div className="fc-label">VidyaVantage Match</div><div className="fc-value">Psychology — 94%</div><div className="fc-sub">Your RIASEC code: ISA · See your report</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'94%',background:'linear-gradient(90deg,#E8650A,#F0A500)'}}/></div></div>
           </div>
         </section>
@@ -500,7 +476,8 @@ export default function App() {
         <section className="section" style={{background:'var(--sand)'}}>
           <div className="section-header">
             <div className="section-eyebrow">What We Offer</div>
-            <h2 className="section-h2">Everything a young person <em>actually needs</em></h2>
+            {/* 🚀 UPGRADED PILLAR COPY */}
+            <h2 className="section-h2">Everything you need to <em>feel better</em> — in one place</h2>
             <p className="section-p">Four pillars that work together to support your mind, your connections, your future, and your safety.</p>
           </div>
           <div className="pillars-grid">
@@ -510,6 +487,10 @@ export default function App() {
                 <div className="pillar-title">{p.title}</div>
                 <div className="pillar-desc">{p.desc}</div>
                 <div className="pillar-features">{p.features.map((f,i) => <div key={i} className="pillar-feat">{f}</div>)}</div>
+                {/* 🚀 ADDED MICRO-CTAS */}
+                <div className="pillar-cta" onClick={() => p.route === 'mindspace' ? setScreen('mindspace') : setModal('talk')}>
+                    {p.cta}
+                </div>
               </div>
             ))}
           </div>
@@ -520,7 +501,8 @@ export default function App() {
           <div className="vv-banner">
             <div className="vv-banner-left">
               <div className="vv-banner-tag">⚡ Powered by Secret Sharz</div>
-              <h3>Discover your <em>perfect career</em><br/>with VidyaVantage</h3>
+              {/* 🚀 UPGRADED VIDYAVANTAGE COPY */}
+              <h3>Once your mind is clear...<br/><em>discover your future</em></h3>
               <p>Our AI-powered career guidance subsidiary uses Holland's RIASEC theory to map your unique personality to the careers and colleges that truly fit you.</p>
               <button className="btn-vv" onClick={() => { setScreen(currentUser ? 'vidyavantage' : 'auth'); }}>
                 🎓 {currentUser ? 'Start Career Assessment' : 'Login to Start Assessment'} <span style={{fontSize:'18px'}}>→</span>
@@ -546,96 +528,94 @@ export default function App() {
             <div className="safe-promises">
               {['🔒 Anonymous by default','🤖 AI-moderated content','👁️ Human review team','📞 Crisis escalation','🇮🇳 POCSO-aware'].map((p,i) => <div key={i} className="safe-promise">{p}</div>)}
             </div>
-            <div className="crisis-box">
-              <div style={{fontSize:'36px',flexShrink:0}}>🆘</div>
-              <div><div className="crisis-title">Need urgent help right now?</div><div className="crisis-desc">Our crisis support connects you to iCall, Vandrevala Foundation, and Snehi helplines — trained professionals available 24/7.</div></div>
-              <div className="crisis-number">iCall<br/>9152987821</div>
+            
+            {/* 🚀 ADDED PRIVACY TRANSPARENCY */}
+            <p style={{fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '-20px', marginBottom: '40px', cursor: 'pointer', textDecoration: 'underline'}}>How we protect your data and privacy</p>
+            
+            {/* 🚀 EXPANDED CRISIS SUPPORT */}
+            <div style={{textAlign: 'left', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '40px'}}>
+                <h3 style={{color: 'white', fontFamily: 'Fraunces, serif', fontSize: '24px', marginBottom: '5px'}}>Need urgent help right now?</h3>
+                <p style={{color: 'rgba(255,255,255,0.6)', fontSize: '15px', marginBottom: '20px'}}>Don't wait. Free, confidential support is available 24/7 across India.</p>
+                
+                <div className="crisis-grid">
+                    <div className="crisis-box">
+                        <div style={{fontSize:'32px'}}>📞</div>
+                        <div><div className="crisis-title">iCall Helpline</div><div className="crisis-desc">Psychosocial helpline by TISS. Mon-Sat, 8AM to 10PM.</div><div className="crisis-number">9152987821</div></div>
+                    </div>
+                    <div className="crisis-box">
+                        <div style={{fontSize:'32px'}}>🏥</div>
+                        <div><div className="crisis-title">Kiran (Govt of India)</div><div className="crisis-desc">24/7 National Mental Health Helpline.</div><div className="crisis-number">1800-599-0019</div></div>
+                    </div>
+                    <div className="crisis-box">
+                        <div style={{fontSize:'32px'}}>🤝</div>
+                        <div><div className="crisis-title">Vandrevala Foundation</div><div className="crisis-desc">Free psychological counselling for anyone in distress.</div><div className="crisis-number">9999-666-555</div></div>
+                    </div>
+                </div>
             </div>
           </div>
         </section>
-
-        <footer className="ss-footer">
-          <div className="footer-top">
-            <div style={{flex:1,minWidth:'220px'}}>
-              <div className="footer-logo">Secret<span>Sharz</span></div>
-              <div className="footer-tagline">A safe space for every young person in India to share, heal, and grow — anonymously and without judgement.</div>
-            </div>
-            
-            <div style={{minWidth:'160px'}}>
-              <div className="footer-links-title">Platform</div>
-              <a className="footer-link" onClick={() => setScreen('mindspace')} style={{cursor: 'pointer'}}>Mind Space</a>
-              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Sharz Wall</a>
-              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Life Guide</a>
-              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Safe Corner</a>
-            </div>
-
-            <div style={{minWidth:'160px'}}>
-              <div className="footer-links-title">VidyaVantage</div>
-              <a className="footer-link" onClick={() => setScreen('vidyavantage')} style={{cursor: 'pointer'}}>Career Assessment</a>
-              <a className="footer-link" onClick={() => setScreen('vidyavantage')} style={{cursor: 'pointer'}}>College Database</a>
-              <a className="footer-link" onClick={() => {setDashboardTab('home'); currentUser ? setScreen('dashboard') : setScreen('auth')}} style={{cursor: 'pointer'}}>My Dashboard</a>
-            </div>
-
-            <div style={{minWidth:'160px'}}>
-              <div className="footer-links-title">Resources</div>
-              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Blog & Articles</a>
-              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Helpline Directory</a>
-              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>For Parents & Educators</a>
-              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>FAQ & Support</a>
-            </div>
-
-            <div style={{minWidth:'160px'}}>
-              <div className="footer-links-title">Account</div>
-              {currentUser ? (
-                <>
-                  <a className="footer-link" onClick={() => {setDashboardTab('home'); setScreen('dashboard');}} style={{cursor: 'pointer'}}>My Dashboard</a>
-                  <a className="footer-link" onClick={handleLogout} style={{cursor: 'pointer'}}>Sign Out</a>
-                </>
-              ) : (
-                <>
-                  <a className="footer-link" onClick={() => setScreen('auth')} style={{cursor: 'pointer'}}>Sign In</a>
-                  <a className="footer-link" onClick={() => setScreen('auth')} style={{cursor: 'pointer'}}>Create Account</a>
-                </>
-              )}
-              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Contact Us</a>
-            </div>
-          </div>
-          
-          <div className="footer-bottom">
-            <div className="footer-copy">© 2026 Secret Sharz. Made with ❤️ for India's youth.</div>
-            <div style={{fontFamily:'Fraunces,serif',fontSize:'14px',fontWeight:600,color:'rgba(255,255,255,0.25)'}}>
-              VidyaVantage is a subsidiary of Secret<span style={{color:'#F0A500'}}>Sharz</span>
-            </div>
-          </div>
-        </footer>
-
-        {modal === 'talk' && (
-          <div className="modal-overlay" onClick={() => setModal(null)}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setModal(null)}>✕</button>
-              <div style={{fontSize:'48px',marginBottom:'20px'}}>💬</div>
-              <h3>You don't have to carry this alone</h3>
-              <p>Whether it's a small worry or something really heavy — reaching out is the bravest thing you can do.</p>
-              {[
-                {icon:'🤖',title:'Chat with AI Support',desc:'Available right now. Gentle, non-judgemental guidance.',color:'var(--sage-pale)',textColor:'var(--sage)'},
-                {icon:'📞',title:'Talk to a Real Counsellor',desc:'Trained counsellors available. First session always free.',color:'var(--peach-pale)',textColor:'var(--peach)'},
-                {icon:'🆘',title:'Crisis Support Now',desc:'iCall: 9152987821 — Available 24/7',color:'#FFF0F0',textColor:'#C0392B'},
-              ].map((opt,i) => (
-                <div key={i} onClick={() => setModal(null)} style={{display:'flex',alignItems:'center',gap:'16px',background:opt.color,borderRadius:'var(--r-sm)',padding:'16px 18px',marginBottom:'10px',cursor:'pointer',border:'1.5px solid transparent',transition:'all 0.2s'}}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = opt.textColor}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-                  <span style={{fontSize:'24px'}}>{opt.icon}</span>
-                  <div><div style={{fontSize:'14px',fontWeight:'600',color:opt.textColor,marginBottom:'2px'}}>{opt.title}</div><div style={{fontSize:'12px',color:'var(--muted)'}}>{opt.desc}</div></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </main>
 
       {/* Show footer everywhere EXCEPT VidyaVantage */}
       {screen !== 'vidyavantage' && <Footer />}
 
+      {/* 🚀 ONBOARDING MODAL FOR NEW USERS */}
+      {modal === 'onboarding' && (
+        <div className="modal-overlay" onClick={() => {setModal(null); setScreen('dashboard');}}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => {setModal(null); setScreen('dashboard');}}>✕</button>
+            <h3>Welcome to your Safe Space.</h3>
+            <p>How are you feeling right now? We'll suggest a good place to start.</p>
+            
+            <div className="onboard-options">
+                <div className="onboard-card" onClick={() => {setDashboardTab('mindspace'); setModal(null); setScreen('dashboard');}}>
+                    <div className="onboard-emoji">🌪️</div>
+                    <div className="onboard-title">Anxious or Overwhelmed</div>
+                    <div className="onboard-desc">Try a quick breathing exercise</div>
+                </div>
+                <div className="onboard-card" onClick={() => {setDashboardTab('community'); setModal(null); setScreen('dashboard');}}>
+                    <div className="onboard-emoji">🗣️</div>
+                    <div className="onboard-title">I need to vent</div>
+                    <div className="onboard-desc">Write an anonymous post</div>
+                </div>
+                <div className="onboard-card" onClick={() => {setDashboardTab('home'); setModal(null); setScreen('dashboard');}}>
+                    <div className="onboard-emoji">🧭</div>
+                    <div className="onboard-title">Lost about my future</div>
+                    <div className="onboard-desc">Start your career profile</div>
+                </div>
+                <div className="onboard-card" onClick={() => {setDashboardTab('home'); setModal(null); setScreen('dashboard');}}>
+                    <div className="onboard-emoji">😌</div>
+                    <div className="onboard-title">I'm doing okay</div>
+                    <div className="onboard-desc">Just take me to my dashboard</div>
+                </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TALK TO SOMEONE MODAL */}
+      {modal === 'talk' && (
+        <div className="modal-overlay" onClick={() => setModal(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setModal(null)}>✕</button>
+            <div style={{fontSize:'48px',marginBottom:'20px'}}>💬</div>
+            <h3>You don't have to carry this alone</h3>
+            <p>Whether it's a small worry or something really heavy — reaching out is the bravest thing you can do.</p>
+            {[
+              {icon:'🤖',title:'Chat with AI Support',desc:'Available right now. Gentle, non-judgemental guidance.',color:'var(--sage-pale)',textColor:'var(--sage)'},
+              {icon:'📞',title:'Talk to a Real Counsellor',desc:'Trained counsellors available. First session always free.',color:'var(--peach-pale)',textColor:'var(--peach)'},
+              {icon:'🆘',title:'Crisis Support Now',desc:'iCall: 9152987821 — Available 24/7',color:'#FFF0F0',textColor:'#C0392B'},
+            ].map((opt,i) => (
+              <div key={i} onClick={() => setModal(null)} style={{display:'flex',alignItems:'center',gap:'16px',background:opt.color,borderRadius:'var(--r-sm)',padding:'16px 18px',marginBottom:'10px',cursor:'pointer',border:'1.5px solid transparent',transition:'all 0.2s'}}
+                onMouseEnter={e => e.currentTarget.style.borderColor = opt.textColor}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
+                <span style={{fontSize:'24px'}}>{opt.icon}</span>
+                <div><div style={{fontSize:'14px',fontWeight:'600',color:opt.textColor,marginBottom:'2px'}}>{opt.title}</div><div style={{fontSize:'12px',color:'var(--muted)'}}>{opt.desc}</div></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
