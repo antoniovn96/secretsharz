@@ -12,7 +12,11 @@
   ],
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/((?!api|_next/static|_next/image|favicon.ico).*)",
       "destination": "/"
     }
   ]
