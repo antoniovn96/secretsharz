@@ -53,7 +53,6 @@ const CSS = `
   .hero-h1 .underline-word::after{content:'';position:absolute;bottom:4px;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--peach),var(--lavender));border-radius:2px;}
   .hero-p{font-size:18px;color:var(--muted);line-height:1.75;max-width:560px;margin-bottom:20px;font-weight:300;}
   
-  /* --- NEW HERO CHECKLIST --- */
   .hero-checklist { list-style: none; padding: 0; margin-bottom: 40px; }
   .hero-checklist li { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--ink-soft); margin-bottom: 8px; font-weight: 500;}
   .hero-checklist li::before { content: '✓'; color: var(--success); font-weight: bold; }
@@ -75,10 +74,31 @@ const CSS = `
   .fc-bar{height:4px;background:var(--sage-pale);border-radius:4px;margin-top:12px;overflow:hidden;}
   .fc-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--sage),var(--sage-light));}
 
-  .trust-strip{display:flex;align-items:center;gap:28px;margin-top:48px;padding-top:28px;border-top:1px solid var(--border);flex-wrap:wrap;}
-  .trust-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500;}
+  /* --- NEW: EMOTIONAL PUNCHLINE --- */
+  .punchline-section { text-align: center; padding: 60px 20px 20px; }
+  .punchline-text { font-family: 'Fraunces', serif; font-size: clamp(24px, 4vw, 36px); font-weight: 300; color: var(--ink-soft); font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.4;}
 
-  /* --- ONBOARDING FLOW MODAL --- */
+  /* --- NEW: SOCIAL PROOF SLIDER --- */
+  .social-proof-section { padding: 40px 0 80px; overflow: hidden; background: linear-gradient(180deg, transparent, var(--sand)); }
+  .sp-header { text-align: center; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px;}
+  .sp-slider { display: flex; gap: 24px; padding: 0 48px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none;}
+  .sp-slider::-webkit-scrollbar { display: none; }
+  .sp-card { background: white; padding: 24px; border-radius: var(--r-md); box-shadow: var(--shadow-sm); min-width: 320px; max-width: 320px; scroll-snap-align: start; flex-shrink: 0; border: 1px solid var(--border);}
+  .sp-stars { color: #F59E0B; font-size: 14px; margin-bottom: 12px; letter-spacing: 2px;}
+  .sp-quote { font-size: 15px; color: var(--ink-soft); font-style: italic; margin-bottom: 16px; line-height: 1.6;}
+  .sp-author { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase;}
+
+  /* --- NEW: FOUNDER STORY --- */
+  .story-section { padding: 100px 48px; background: white; display: flex; align-items: center; justify-content: center; gap: 60px; flex-wrap: wrap;}
+  .story-content { max-width: 500px; }
+  .story-img-box { width: 400px; height: 500px; background: var(--sage-pale); border-radius: var(--r-lg); position: relative; display:flex; align-items:center; justify-content:center; font-size: 80px; border: 1px solid var(--border);}
+  .story-img-box::after { content: ''; position: absolute; inset: -15px; border: 2px dashed var(--sage-light); border-radius: calc(var(--r-lg) + 10px); z-index: 0; opacity: 0.5;}
+
+  /* --- NEW: FOR SCHOOLS & PARENTS --- */
+  .b2b-section { background: var(--ink); color: white; padding: 100px 48px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .b2b-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1000px; width: 100%; margin-top: 50px; text-align: left;}
+  .b2b-card { background: rgba(255,255,255,0.05); padding: 30px; border-radius: var(--r-md); border: 1px solid rgba(255,255,255,0.1); }
+
   .onboard-options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;}
   .onboard-card { background: var(--sand); border: 2px solid transparent; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s;}
   .onboard-card:hover { border-color: var(--sage); transform: translateY(-3px);}
@@ -113,7 +133,6 @@ const CSS = `
   .pillar-feat{font-size:13px;color:var(--ink-soft);font-weight:500;display:flex;align-items:center;gap:8px;}
   .pillar-feat::before{content:'→';color:var(--sage);font-weight:700;}
   
-  /* --- NEW MICRO CTAs --- */
   .pillar-cta { margin-top: 24px; padding-top: 15px; border-top: 1px solid var(--border); font-size: 14px; font-weight: bold; color: var(--sage); cursor: pointer; display: flex; align-items: center; gap: 5px;}
   .pillar-cta:hover { color: var(--moss); }
 
@@ -158,18 +177,14 @@ const CSS = `
   .btn-modal-primary{flex:1;padding:14px;background:var(--sage);color:white;border:none;border-radius:50px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;}
   .btn-modal-ghost{padding:14px 20px;background:transparent;color:var(--muted);border:2px solid var(--border);border-radius:50px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;}
 
-  .vv-back-bar{background:var(--ink);padding:14px 32px;display:flex;align-items:center;gap:16px;}
-  .vv-back-btn{background:rgba(255,255,255,0.1);color:white;border:none;padding:8px 20px;border-radius:30px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:all 0.2s;}
-  .vv-back-btn:hover{background:rgba(255,255,255,0.2);}
-  .vv-back-label{color:rgba(255,255,255,0.4);font-size:13px;}
-  .vv-back-label span{color:#F0A500;font-weight:600;}
-
   @media(max-width:900px){
     .ss-hero{padding:60px 24px;min-height:auto;}
     .hero-right{display:none;}
     .section{padding:64px 24px;}
     .vv-banner{flex-direction:column;padding:40px 28px;}
     .safe-section{padding:64px 24px;}
+    .story-section{padding: 64px 24px; gap: 40px;}
+    .story-img-box{display: none;}
   }
 `;
 
@@ -283,7 +298,6 @@ export default function App() {
     if (isDbAdmin || isMaster) {
       setScreen('admin');
     } else {
-      // 🚀 NEW: Onboarding Flow for new users
       if(isNew) {
          setModal('onboarding');
       } else {
@@ -440,7 +454,6 @@ export default function App() {
           <div className="hero-content">
             <div className="hero-eyebrow anim-up"><div className="hero-eyebrow-dot" />Safe · Anonymous · For Indian Youth</div>
             
-            {/* 🚀 UPGRADED HERO COPY */}
             <h1 className="hero-h1 anim-up-1">Anonymous mental health <br/>support for students —<br/><span className="underline-word">anytime, anywhere</span></h1>
             
             <ul className="hero-checklist anim-up-2">
@@ -450,14 +463,12 @@ export default function App() {
             </ul>
 
             <div className="hero-actions anim-up-3">
-              {/* 🚀 UPGRADED CTA STRATEGY */}
               <button className="btn-primary" onClick={() => setScreen(currentUser ? 'dashboard' : 'auth')}>
                 {currentUser ? '🏠 My Dashboard' : 'Start Anonymously'}
               </button>
               <button className="btn-ghost" onClick={() => setModal('talk')}>💬 Talk to Someone Now</button>
             </div>
             
-            {/* 🚀 UPGRADED TRUST STRIP */}
             <div className="trust-strip anim-up-4">
               <div className="trust-item"><span>🇮🇳</span> Used by students across India</div>
               <div className="trust-item"><span>🧑‍⚕️</span> Designed by counsellors</div>
@@ -465,18 +476,54 @@ export default function App() {
             </div>
           </div>
           <div className="hero-right">
-            {/* 🚀 RELATABILITY PREVIEWS */}
+            {/* 🚀 ADDED RETENTION HOOK */}
+            <div className="floating-card"><div className="fc-icon">🔥</div><div className="fc-label">Your Healing Journey</div><div className="fc-value">7-Day Calm Streak!</div><div className="fc-sub">Your average anxiety score dropped by 12% this week. Keep it up!</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'85%', background:'var(--success)'}}/></div></div>
             <div className="floating-card"><div className="fc-icon">💬</div><div className="fc-label">Recent Anonymous Post</div><div className="fc-value">"I feel like I'm falling behind everyone else in my class..."</div><div className="fc-sub">12 students felt the same way today.</div></div>
-            <div className="floating-card"><div className="fc-icon">🌱</div><div className="fc-label">Your Healing Journey</div><div className="fc-value">Mood: Anxious</div><div className="fc-sub">Completed 3 breathing exercises today! 🔥</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'65%'}}/></div></div>
             <div className="floating-card"><div className="fc-icon">🎓</div><div className="fc-label">VidyaVantage Match</div><div className="fc-value">Psychology — 94%</div><div className="fc-sub">Your RIASEC code: ISA · See your report</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'94%',background:'linear-gradient(90deg,#E8650A,#F0A500)'}}/></div></div>
           </div>
+        </section>
+
+        {/* 🚀 EMOTIONAL PUNCHLINE */}
+        <section className="punchline-section anim-up-4">
+            <h2 className="punchline-text">"The things you can't tell anyone... <br/><span style={{color: 'var(--sage)', fontWeight: '600'}}>you can tell us.</span>"</h2>
+        </section>
+
+        {/* 🚀 SOCIAL PROOF SLIDER (INTERACTIVE) */}
+        <section className="social-proof-section">
+            <div className="sp-header">Trusted by thousands of students across India</div>
+            <div className="sp-slider" id="spSlider">
+                <div className="sp-card">
+                    <div className="sp-stars">★★★★★</div>
+                    <div className="sp-quote">"This helped me during boards stress so much. I finally felt like I wasn't the only one panicking."</div>
+                    <div className="sp-author">Class 12 Student • CBSE</div>
+                </div>
+                <div className="sp-card">
+                    <div className="sp-stars">★★★★★</div>
+                    <div className="sp-quote">"I was too scared to tell my parents I wanted to change streams. The counsellor here gave me the courage to do it."</div>
+                    <div className="sp-author">Class 11 Student • ISC</div>
+                </div>
+                <div className="sp-card">
+                    <div className="sp-stars">★★★★★</div>
+                    <div className="sp-quote">"I finally felt heard. Just writing down my thoughts on the anonymous wall and seeing others react made my week."</div>
+                    <div className="sp-author">College Fresher • Mumbai</div>
+                </div>
+                <div className="sp-card">
+                    <div className="sp-stars">★★★★★</div>
+                    <div className="sp-quote">"The breathing exercises actually work. I open this app before every major exam now."</div>
+                    <div className="sp-author">Class 10 Student • ICSE</div>
+                </div>
+                <div className="sp-card">
+                    <div className="sp-stars">★★★★★</div>
+                    <div className="sp-quote">"No judgement. No lecturing. Just real help when I felt completely alone."</div>
+                    <div className="sp-author">Anonymous User • Bangalore</div>
+                </div>
+            </div>
         </section>
 
         {/* PILLARS */}
         <section className="section" style={{background:'var(--sand)'}}>
           <div className="section-header">
             <div className="section-eyebrow">What We Offer</div>
-            {/* 🚀 UPGRADED PILLAR COPY */}
             <h2 className="section-h2">Everything you need to <em>feel better</em> — in one place</h2>
             <p className="section-p">Four pillars that work together to support your mind, your connections, your future, and your safety.</p>
           </div>
@@ -487,7 +534,6 @@ export default function App() {
                 <div className="pillar-title">{p.title}</div>
                 <div className="pillar-desc">{p.desc}</div>
                 <div className="pillar-features">{p.features.map((f,i) => <div key={i} className="pillar-feat">{f}</div>)}</div>
-                {/* 🚀 ADDED MICRO-CTAS */}
                 <div className="pillar-cta" onClick={() => p.route === 'mindspace' ? setScreen('mindspace') : setModal('talk')}>
                     {p.cta}
                 </div>
@@ -496,12 +542,31 @@ export default function App() {
           </div>
         </section>
 
+        {/* 🚀 FOUNDER STORY */}
+        <section className="story-section">
+            <div className="story-content">
+                <div className="section-eyebrow">Why SecretSharz Exists</div>
+                <h2 className="section-h2" style={{marginBottom: '24px'}}>Built from real conversations behind <em>closed doors.</em></h2>
+                <p className="section-p" style={{color: 'var(--ink-soft)'}}>
+                    For years, sitting in a school counselling room, I saw the same pattern repeat itself. Brilliant, capable students were struggling silently under the weight of expectations, anxiety, and the fear of judgment. 
+                </p>
+                <p className="section-p" style={{color: 'var(--ink-soft)', marginTop: '16px'}}>
+                    They couldn't talk to their parents. They wouldn't talk to their teachers. 
+                </p>
+                <p className="section-p" style={{color: 'var(--ink-soft)', marginTop: '16px'}}>
+                    Secret Sharz was built to be the digital equivalent of that safe counselling room. A place where identity doesn't matter, but your feelings do. We combine professional psychological support with the anonymity the internet provides to reach students *before* they hit a breaking point.
+                </p>
+            </div>
+            <div className="story-img-box">
+                🧑‍🏫
+            </div>
+        </section>
+
         {/* VIDYAVANTAGE BANNER */}
         <section className="section">
           <div className="vv-banner">
             <div className="vv-banner-left">
               <div className="vv-banner-tag">⚡ Powered by Secret Sharz</div>
-              {/* 🚀 UPGRADED VIDYAVANTAGE COPY */}
               <h3>Once your mind is clear...<br/><em>discover your future</em></h3>
               <p>Our AI-powered career guidance subsidiary uses Holland's RIASEC theory to map your unique personality to the careers and colleges that truly fit you.</p>
               <button className="btn-vv" onClick={() => { setScreen(currentUser ? 'vidyavantage' : 'auth'); }}>
@@ -519,6 +584,35 @@ export default function App() {
           </div>
         </section>
 
+        {/* 🚀 FOR SCHOOLS B2B SECTION */}
+        <section className="b2b-section">
+            <div className="section-eyebrow" style={{color: 'var(--sage-light)'}}>Institutional Partnerships</div>
+            <h2 className="section-h2" style={{color: 'white'}}>Empower your students with a <em>proactive</em> mental health layer.</h2>
+            <p className="section-p" style={{color: 'rgba(255,255,255,0.6)'}}>Secret Sharz partners with forward-thinking schools across India to provide anonymous, POCSO-aligned emotional support.</p>
+            
+            <div className="b2b-grid">
+                <div className="b2b-card">
+                    <div style={{fontSize: '32px', marginBottom: '15px'}}>🛡️</div>
+                    <h3 style={{fontFamily: 'Fraunces, serif', fontSize: '20px', marginBottom: '10px'}}>Early Intervention</h3>
+                    <p style={{fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6}}>Our clinical panel detects high-stress markers early, allowing school counsellors to address issues before they escalate.</p>
+                </div>
+                <div className="b2b-card">
+                    <div style={{fontSize: '32px', marginBottom: '15px'}}>📊</div>
+                    <h3 style={{fontFamily: 'Fraunces, serif', fontSize: '20px', marginBottom: '10px'}}>Anonymized Analytics</h3>
+                    <p style={{fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6}}>Gain insights into the overall emotional health of your student body without ever compromising an individual's privacy.</p>
+                </div>
+                <div className="b2b-card">
+                    <div style={{fontSize: '32px', marginBottom: '15px'}}>🤝</div>
+                    <h3 style={{fontFamily: 'Fraunces, serif', fontSize: '20px', marginBottom: '10px'}}>Seamless Integration</h3>
+                    <p style={{fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6}}>Deploy our platform to thousands of students in under 48 hours. No complex IT setup required.</p>
+                </div>
+            </div>
+            
+            <button className="btn-primary" style={{marginTop: '40px', background: 'white', color: 'var(--ink)'}} onClick={() => setModal('talk')}>
+                Schedule a Demo for your School
+            </button>
+        </section>
+
         {/* SAFE SPACE */}
         <section className="safe-section">
           <div className="safe-content">
@@ -529,10 +623,8 @@ export default function App() {
               {['🔒 Anonymous by default','🤖 AI-moderated content','👁️ Human review team','📞 Crisis escalation','🇮🇳 POCSO-aware'].map((p,i) => <div key={i} className="safe-promise">{p}</div>)}
             </div>
             
-            {/* 🚀 ADDED PRIVACY TRANSPARENCY */}
-            <p style={{fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '-20px', marginBottom: '40px', cursor: 'pointer', textDecoration: 'underline'}}>How we protect your data and privacy</p>
+            <p style={{fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '-20px', marginBottom: '40px', cursor: 'pointer', textDecoration: 'underline'}} onClick={() => alert("Privacy Policy:\n1. Your real identity is never linked to your public posts.\n2. We use end-to-end encryption for all chat data.\n3. We comply strictly with POCSO guidelines to protect minors.")}>How we protect your data and privacy</p>
             
-            {/* 🚀 EXPANDED CRISIS SUPPORT */}
             <div style={{textAlign: 'left', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '40px'}}>
                 <h3 style={{color: 'white', fontFamily: 'Fraunces, serif', fontSize: '24px', marginBottom: '5px'}}>Need urgent help right now?</h3>
                 <p style={{color: 'rgba(255,255,255,0.6)', fontSize: '15px', marginBottom: '20px'}}>Don't wait. Free, confidential support is available 24/7 across India.</p>
@@ -559,7 +651,7 @@ export default function App() {
       {/* Show footer everywhere EXCEPT VidyaVantage */}
       {screen !== 'vidyavantage' && <Footer />}
 
-      {/* 🚀 ONBOARDING MODAL FOR NEW USERS */}
+      {/* ONBOARDING MODAL FOR NEW USERS */}
       {modal === 'onboarding' && (
         <div className="modal-overlay" onClick={() => {setModal(null); setScreen('dashboard');}}>
           <div className="modal" onClick={e => e.stopPropagation()}>
