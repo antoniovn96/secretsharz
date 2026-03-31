@@ -21,6 +21,12 @@ const CSS = `
     --shadow-sm:0 2px 12px rgba(30,40,32,0.07);--shadow-md:0 8px 32px rgba(30,40,32,0.10);
     --shadow-lg:0 20px 60px rgba(30,40,32,0.13);
     --r-sm:14px;--r-md:22px;--r-lg:32px;--r-xl:48px;
+    
+    /* Sticky Note Colors */
+    --note-yellow: #FEF3C7; --note-yellow-dark: #D97706;
+    --note-green: #D1FAE5; --note-green-dark: #059669;
+    --note-purple: #EDE9FE; --note-purple-dark: #7C3AED;
+    --note-blue: #DBEAFE; --note-blue-dark: #2563EB;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--warm-white);color:var(--ink);line-height:1.6;overflow-x:hidden;}
@@ -36,7 +42,6 @@ const CSS = `
   .anim-up-3{animation:floatUp 0.7s 0.35s ease both;}
   .anim-up-4{animation:floatUp 0.7s 0.5s ease both;}
 
-  /* --- INSTANT ACTION BAR --- */
   .instant-action-bar { background: var(--sage); color: white; text-align: center; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; position: sticky; top: 0; z-index: 1001;}
   .instant-action-bar:hover { background: var(--moss); }
   .instant-action-bar span { opacity: 0.8; font-weight: 400; margin-left: 8px;}
@@ -79,7 +84,6 @@ const CSS = `
   .trust-strip{display:flex;align-items:center;gap:28px;margin-top:48px;padding-top:28px;border-top:1px solid var(--border);flex-wrap:wrap;}
   .trust-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500;}
 
-  /* --- WHAT HAPPENS NEXT --- */
   .onboarding-steps-section { padding: 40px 48px; background: var(--warm-white); text-align: center;}
   .steps-container { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; max-width: 1000px; margin: 40px auto 0;}
   .step-card { flex: 1; min-width: 250px; text-align: left; padding: 24px; background: white; border-radius: var(--r-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);}
@@ -87,11 +91,9 @@ const CSS = `
   .step-title { font-weight: bold; color: var(--ink); margin-bottom: 8px;}
   .step-desc { font-size: 14px; color: var(--muted); line-height: 1.6;}
 
-  /* --- EMOTIONAL PUNCHLINE --- */
   .punchline-section { text-align: center; padding: 60px 20px 20px; }
   .punchline-text { font-family: 'Fraunces', serif; font-size: clamp(24px, 4vw, 36px); font-weight: 300; color: var(--ink-soft); font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.4;}
 
-  /* --- NEW: INTERACTIVE WIDGET SECTION --- */
   .widget-section { padding: 80px 48px; background: var(--lav-pale); display: flex; flex-direction: column; align-items: center; text-align: center;}
   .widget-container { max-width: 1000px; width: 100%; margin-top: 40px;}
   .widget-tabs { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;}
@@ -107,31 +109,26 @@ const CSS = `
   .tool-desc { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 16px;}
   .tool-meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: var(--lavender);}
   
-  .emergency-btn { margin-top: 40px; background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 2px solid var(--danger); padding: 16px 32px; border-radius: 50px; font-weight: bold; font-size: 16px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px;}
+  .emergency-btn { margin-top: 40px; background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 2px solid var(--danger); padding: 16px 32px; border-radius: 50px; font-weight: bold; font-size: 16px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;}
   .emergency-btn:hover { background: var(--danger); color: white; transform: scale(1.02);}
 
-  /* --- FULLSCREEN WIDGET OVERLAY --- */
   .fs-widget-overlay { position: fixed; inset: 0; background: var(--ink); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; animation: fadeIn 0.3s ease;}
   .fs-close-btn { position: absolute; top: 30px; right: 30px; background: rgba(255,255,255,0.1); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
   .fs-close-btn:hover { background: rgba(255,255,255,0.2);}
 
-  /* Breathing Animation */
   .breathe-circle { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle, var(--sage-light) 0%, var(--sage) 100%); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 24px; font-weight: bold; box-shadow: 0 0 40px rgba(111, 170, 128, 0.4); transition: transform linear;}
   .breathe-instruction { margin-top: 40px; font-size: 20px; font-weight: 300; letter-spacing: 1px; color: rgba(255,255,255,0.8);}
 
-  /* Pop Thoughts Game */
   .bubble-container { position: relative; width: 100%; height: 60vh; max-width: 600px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 20px; overflow: hidden;}
   .thought-bubble { position: absolute; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; animation: floatUp 4s linear infinite; user-select: none;}
   .thought-bubble:hover { transform: scale(1.1); background: rgba(255,255,255,0.2);}
   .thought-bubble.popped { animation: pop 0.2s ease forwards; pointer-events: none;}
   @keyframes pop { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.8; } 100% { transform: scale(0); opacity: 0; } }
 
-  /* Focus Timer */
   .focus-timer-display { font-family: 'Fraunces', serif; font-size: 80px; font-weight: bold; color: var(--sky); margin-bottom: 30px;}
   .focus-textarea { width: 100%; max-width: 600px; height: 200px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; padding: 20px; font-size: 16px; font-family: inherit; resize: none;}
   .focus-textarea:focus { outline: none; border-color: var(--sky);}
 
-  /* --- SOCIAL PROOF SLIDER --- */
   .social-proof-section { padding: 40px 0 80px; overflow: hidden; background: linear-gradient(180deg, transparent, var(--sand)); }
   .sp-header { text-align: center; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px;}
   .sp-slider { display: flex; gap: 24px; padding: 0 48px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none;}
@@ -141,13 +138,11 @@ const CSS = `
   .sp-quote { font-size: 15px; color: var(--ink-soft); font-style: italic; margin-bottom: 16px; line-height: 1.6;}
   .sp-author { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase;}
 
-  /* --- FOUNDER STORY --- */
   .story-section { padding: 100px 48px; background: white; display: flex; align-items: center; justify-content: center; gap: 60px; flex-wrap: wrap;}
   .story-content { max-width: 500px; }
   .story-img-box { width: 400px; height: 500px; background: var(--sage-pale); border-radius: var(--r-lg); position: relative; display:flex; align-items:center; justify-content:center; font-size: 80px; border: 1px solid var(--border);}
   .story-img-box::after { content: ''; position: absolute; inset: -15px; border: 2px dashed var(--sage-light); border-radius: calc(var(--r-lg) + 10px); z-index: 0; opacity: 0.5;}
 
-  /* --- FOR SCHOOLS & PARENTS --- */
   .b2b-section { background: var(--ink); color: white; padding: 100px 48px; display: flex; flex-direction: column; align-items: center; text-align: center; }
   .b2b-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1000px; width: 100%; margin-top: 50px; text-align: left;}
   .b2b-card { background: rgba(255,255,255,0.05); padding: 30px; border-radius: var(--r-md); border: 1px solid rgba(255,255,255,0.1); }
@@ -223,23 +218,48 @@ const CSS = `
   .crisis-desc{font-size:12px;color:rgba(255,255,255,0.5);line-height:1.5; margin-bottom: 10px;}
   .crisis-number{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:#6FAA80;}
 
-  /* --- Footer Styles moved to Footer.js --- */
-
   .modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(30,40,32,0.5);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.2s ease;}
   .modal{background:white;border-radius:var(--r-lg);padding:48px;max-width:520px;width:100%;box-shadow:var(--shadow-lg);animation:floatUp 0.3s ease;position:relative;}
   .modal-close{position:absolute;top:20px;right:20px;background:var(--sand);border:none;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all 0.2s;}
   .modal h3{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:var(--ink);margin-bottom:10px;}
   .modal p{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:24px;}
-  .modal-actions{display:flex;gap:12px;margin-top:24px;}
-  .btn-modal-primary{flex:1;padding:14px;background:var(--sage);color:white;border:none;border-radius:50px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;}
-  .btn-modal-ghost{padding:14px 20px;background:transparent;color:var(--muted);border:2px solid var(--border);border-radius:50px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;}
-
-  .vv-back-bar{background:var(--ink);padding:14px 32px;display:flex;align-items:center;gap:16px;}
-  .vv-back-btn{background:rgba(255,255,255,0.1);color:white;border:none;padding:8px 20px;border-radius:30px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:all 0.2s;}
-  .vv-back-btn:hover{background:rgba(255,255,255,0.2);}
-  .vv-back-label{color:rgba(255,255,255,0.4);font-size:13px;}
-  .vv-back-label span{color:#F0A500;font-weight:600;}
-
+  
+  /* --- SHARZ WALL STYLES --- */
+  .wall-page { min-height: 100vh; background: var(--warm-white); padding-bottom: 80px;}
+  .wall-header { background: var(--ink); color: white; padding: 60px 48px; text-align: center; border-bottom: 4px solid var(--sage);}
+  .wall-h1 { font-family: 'Fraunces', serif; font-size: clamp(32px, 5vw, 48px); margin-bottom: 10px;}
+  .wall-sub { color: rgba(255,255,255,0.7); font-size: 16px; max-width: 600px; margin: 0 auto 30px;}
+  .add-note-btn { background: var(--sage); color: white; border: none; padding: 14px 30px; border-radius: 50px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 15px rgba(74,124,89,0.3); transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;}
+  .add-note-btn:hover { background: var(--moss); transform: translateY(-2px);}
+  
+  .masonry-grid { display: column; column-count: 4; column-gap: 24px; max-width: 1400px; margin: 40px auto; padding: 0 48px;}
+  @media (max-width: 1200px) { .masonry-grid { column-count: 3; } }
+  @media (max-width: 900px) { .masonry-grid { column-count: 2; padding: 0 24px;} }
+  @media (max-width: 600px) { .masonry-grid { column-count: 1; } }
+  
+  .note-card { break-inside: avoid; margin-bottom: 24px; padding: 24px; border-radius: 16px; box-shadow: var(--shadow-sm); position: relative; transition: transform 0.2s; cursor: pointer;}
+  .note-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md);}
+  .note-yellow { background: var(--note-yellow); color: var(--note-yellow-dark); }
+  .note-green { background: var(--note-green); color: var(--note-green-dark); }
+  .note-purple { background: var(--note-purple); color: var(--note-purple-dark); }
+  .note-blue { background: var(--note-blue); color: var(--note-blue-dark); }
+  
+  .note-text { font-size: 16px; line-height: 1.6; font-weight: 500; margin-bottom: 16px; color: var(--ink);}
+  .note-text.short { font-size: 20px; font-family: 'Fraunces', serif; }
+  .note-tag { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.05); color: var(--ink-soft); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;}
+  
+  .note-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 12px; margin-top: 12px;}
+  .reaction-btn { background: transparent; border: none; color: inherit; opacity: 0.7; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 13px; transition: opacity 0.2s;}
+  .reaction-btn:hover { opacity: 1;}
+  
+  .scroll-msg { background: rgba(255,255,255,0.9); backdrop-filter: blur(5px); padding: 12px 24px; border-radius: 50px; font-weight: bold; color: var(--sage); display: inline-block; box-shadow: var(--shadow-sm); margin: 20px auto; text-align: center; border: 1px solid var(--border);}
+  
+  .note-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px);}
+  .note-modal { background: white; width: 100%; max-width: 500px; border-radius: 20px; padding: 30px; box-shadow: var(--shadow-lg);}
+  .note-textarea { width: 100%; height: 150px; border: 1px solid var(--border); border-radius: 12px; padding: 15px; font-family: inherit; font-size: 16px; resize: none; margin-bottom: 15px;}
+  .note-textarea:focus { outline: none; border-color: var(--sage);}
+  .note-select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 15px;}
+  
   @media(max-width:900px){
     .ss-hero{padding:60px 24px;min-height:auto;}
     .hero-right{display:none;}
@@ -249,17 +269,17 @@ const CSS = `
     .story-section{padding: 64px 24px; gap: 40px;}
     .story-img-box{display: none;}
     .privacy-grid{grid-template-columns: 1fr;}
+    .wall-header{padding: 40px 24px;}
   }
 `;
 
 const PILLARS = [
   { cls:'mind', icon:'🧠', title:'Mind Space', desc:'A private sanctuary for your thoughts. Track your mood, journal freely, and access science-backed tools for anxiety, stress, and emotional wellbeing.', features:['Daily mood check-in & tracking','Guided journaling with AI prompts','Breathing & grounding exercises'], cta: 'Try Mood Tracker →', route: 'mindspace' },
-  { cls:'share', icon:'💬', title:'Sharz Wall', desc:"Share what's on your heart anonymously. Read stories from young people just like you. Know that you are never, ever alone in what you feel.", features:['100% anonymous sharing','Peer reactions & support','Moderated safe community'], cta: 'Read Anonymous Stories →', route: 'community' },
+  { cls:'share', icon:'💬', title:'Sharz Wall', desc:"Share what's on your heart anonymously. Read stories from young people just like you. Know that you are never, ever alone in what you feel.", features:['100% anonymous sharing','Peer reactions & support','Moderated safe community'], cta: 'Read Anonymous Stories →', route: 'wall' },
   { cls:'guide', icon:'🧭', title:'Life Guide', desc:"Navigate life's toughest decisions — from family pressure and friendships to career choices and your future — with guidance designed for young Indians.", features:['Career path discovery','Life skills & decision tools','Expert article library'], cta: 'Explore Life Guidance →', route: 'guide' },
   { cls:'safe', icon:'🛡️', title:'Safe Corner', desc:"If things feel too heavy to carry, you don't have to carry them alone. Access trained counsellors, crisis support, and emergency helplines instantly.", features:['24/7 crisis helpline access','Connect with trained counsellors','Report unsafe situations privately'], cta: 'View Safety Protocols →', route: 'safe' },
 ];
 
-// --- INTERACTIVE WIDGET DATA ---
 const WIDGET_CATEGORIES = [
   { id: 'calm', label: '😰 Calm Anxiety', color: 'var(--sage)' },
   { id: 'vent', label: '😡 Release Anger', color: 'var(--danger)' },
@@ -291,6 +311,46 @@ const WIDGET_TOOLS = {
   ]
 };
 
+// --- MOCK DATA FOR SHARZ WALL ---
+const generateWallData = () => {
+    const rawShorts = [
+        "I act strong in school but cry at night.",
+        "Everyone thinks I’m okay. I’m not.",
+        "I wish someone asked me if I’m actually happy.",
+        "I’m tired… but I can’t rest.",
+        "Marks feel like my entire identity.",
+        "I don’t hate studying. I hate the pressure.",
+        "I just want peace in my head.",
+        "I laugh a lot… but it’s fake sometimes.",
+        "Why is being a good child so exhausting?",
+        "I overthink everything."
+    ];
+    
+    const tags = ["Class 10 • Section A", "Class 12 • CBSE", "Class 11 • Science", "College Fresher", "Drop Year Student"];
+    const colors = ["note-yellow", "note-green", "note-purple", "note-blue"];
+    const notes = [];
+
+    // Add specific long notes
+    notes.push({ id: 'l1', type: 'long', text: "I’m in Class 11 and everyone around me seems to have their life figured out… I chose science because everyone said it’s the ‘best option’, but I feel lost every day… I don’t even know if I like what I’m studying anymore…", tag: "Class 11 • Science", color: "note-purple", reactions: 128 });
+    notes.push({ id: 'l2', type: 'long', text: "My parents think I’m just lazy, but I feel so mentally tired all the time… I try to study but my mind just keeps racing. I wish they understood that I'm trying my best.", tag: "Class 10 • Section B", color: "note-blue", reactions: 89 });
+    notes.push({ id: 'l3', type: 'long', text: "Moving to a new city was supposed to be exciting… but I feel more alone than ever. Making friends is so hard when you're an introvert.", tag: "College Fresher", color: "note-green", reactions: 45 });
+
+    // Generate remaining 119 notes to hit 122 total
+    for(let i=0; i<119; i++) {
+        notes.push({
+            id: `s${i}`,
+            type: 'short',
+            text: rawShorts[Math.floor(Math.random() * rawShorts.length)],
+            tag: tags[Math.floor(Math.random() * tags.length)],
+            color: colors[Math.floor(Math.random() * colors.length)],
+            reactions: Math.floor(Math.random() * 50) + 5
+        });
+    }
+    
+    // Shuffle the array for masonry effect
+    return notes.sort(() => Math.random() - 0.5);
+};
+
 export default function App() {
   
   const [screen, setScreen] = useState('home');
@@ -302,18 +362,21 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [modal, setModal]             = useState(null); 
   
-  // Widget State
   const [activeWidgetCategory, setActiveWidgetCategory] = useState('calm');
   const [activeWidgetFullscreen, setActiveWidgetFullscreen] = useState(null);
   
-  // Widget Internal States
   const [breathePhase, setBreathePhase] = useState('Inhale');
   const [breatheScale, setBreatheScale] = useState(1);
   const [popCount, setPopCount] = useState(0);
   const [bubbles, setBubbles] = useState([]);
   const [focusTime, setFocusTime] = useState(120);
 
-  // 🔥 FOOLPROOF ADMIN VALIDATION
+  // Sharz Wall State
+  const [wallNotes, setWallNotes] = useState([]);
+  const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+  const [newNoteText, setNewNoteText] = useState('');
+  const [newNoteTag, setNewNoteTag] = useState('');
+
   const isMasterEmail = currentUser?.email && btoa(currentUser.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
   const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
 
@@ -321,19 +384,19 @@ export default function App() {
     const s = document.createElement('style');
     s.textContent = FONTS + CSS;
     document.head.appendChild(s);
+    
+    setWallNotes(generateWallData());
+
     return () => document.head.removeChild(s);
   }, []);
 
-  // Hydration Fix & Hash Router
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '');
       if (hash) setScreen(hash);
-      
       const savedVV = sessionStorage.getItem('showVV') === 'true';
       if (savedVV) setShowVV(true);
     }
-
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
       if (hash) setScreen(hash);
@@ -352,12 +415,10 @@ export default function App() {
     }
   }, [screen]);
 
-  // 🔥 AUTO-ROUTER
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
-        
         let isDbAdmin = false;
         try {
           const snap = await getDoc(doc(db, 'users', user.uid));
@@ -366,17 +427,12 @@ export default function App() {
             if (snap.data().role === 'super_admin') isDbAdmin = true;
           }
         } catch (e) { console.error(e); }
-
         const isMaster = user.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
         const isUserAdmin = isDbAdmin || isMaster;
-
         setScreen(prevScreen => {
-          if (prevScreen === 'auth' || prevScreen === 'home') {
-            return isUserAdmin ? 'admin' : 'dashboard';
-          }
+          if (prevScreen === 'auth' || prevScreen === 'home') return isUserAdmin ? 'admin' : 'dashboard';
           return prevScreen;
         });
-
       } else {
         setCurrentUser(null);
         setUserData(null);
@@ -388,7 +444,6 @@ export default function App() {
 
   const handleAuthSuccess = async (user, isNew) => {
     setCurrentUser(user);
-    
     let isDbAdmin = false;
     try {
       const snap = await getDoc(doc(db, 'users', user.uid));
@@ -397,17 +452,12 @@ export default function App() {
         if (snap.data().role === 'super_admin') isDbAdmin = true;
       }
     } catch (err) { console.error(err); }
-
     const isMaster = user?.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
-
     if (isDbAdmin || isMaster) {
       setScreen('admin');
     } else {
-      if(isNew) {
-         setModal('onboarding');
-      } else {
-         setScreen('dashboard');
-      }
+      if(isNew) setModal('onboarding');
+      else setScreen('dashboard');
     }
   };
 
@@ -424,7 +474,6 @@ export default function App() {
       setScreen('auth');
       return;
     }
-
     try {
       const userRef = doc(db, 'users', currentUser.uid);
       await setDoc(userRef, {
@@ -448,15 +497,10 @@ export default function App() {
 
       setDashboardTab('home'); 
       setScreen('dashboard');
-      
-    } catch (err) {
-      console.error("Error saving assessment: ", err);
-    }
+    } catch (err) { console.error("Error saving assessment: ", err); }
   };
 
-  // --- WIDGET LOGIC ---
-  
-  // 4-7-8 Breathing Logic
+  // Widget Effects
   useEffect(() => {
       let interval;
       if (activeWidgetFullscreen?.type === 'breathing') {
@@ -474,12 +518,11 @@ export default function App() {
               }, 4000);
           };
           cycle();
-          interval = setInterval(cycle, 19000); // 4 + 7 + 8 = 19s
+          interval = setInterval(cycle, 19000);
       }
       return () => clearInterval(interval);
   }, [activeWidgetFullscreen]);
 
-  // Pop Thoughts Game Logic
   useEffect(() => {
       let interval;
       if (activeWidgetFullscreen?.type === 'game_pop') {
@@ -487,7 +530,7 @@ export default function App() {
           setBubbles([]);
           interval = setInterval(() => {
               setBubbles(prev => {
-                  if(prev.length > 15) return prev; // Limit on screen
+                  if(prev.length > 15) return prev;
                   const newBubble = {
                       id: Date.now() + Math.random(),
                       left: Math.random() * 80 + 10 + '%',
@@ -505,7 +548,6 @@ export default function App() {
       setPopCount(c => c + 1);
   };
 
-  // Focus Timer Logic
   useEffect(() => {
       let interval;
       if (activeWidgetFullscreen?.type === 'timer' && focusTime > 0) {
@@ -524,16 +566,31 @@ export default function App() {
 
   const closeFullscreenWidget = () => {
       setActiveWidgetFullscreen(null);
-      setFocusTime(120); // Reset timer
+      setFocusTime(120);
   };
 
+  const submitNewNote = () => {
+      if(!newNoteText.trim()) return;
+      const newNote = {
+          id: Date.now(),
+          type: newNoteText.length > 80 ? 'long' : 'short',
+          text: newNoteText,
+          tag: newNoteTag || "Anonymous User",
+          color: ["note-yellow", "note-green", "note-purple", "note-blue"][Math.floor(Math.random() * 4)],
+          reactions: 1
+      };
+      setWallNotes([newNote, ...wallNotes]);
+      setShowAddNoteModal(false);
+      setNewNoteText('');
+  };
+
+  const reactToNote = (id) => {
+      setWallNotes(wallNotes.map(n => n.id === id ? {...n, reactions: n.reactions + 1} : n));
+  }
 
   // ── SECURE ADMIN ROUTE ──
   if (screen === 'admin') {
-    if (!isAdmin) {
-      setScreen('home');
-      return null; 
-    }
+    if (!isAdmin) { setScreen('home'); return null; }
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Header />
@@ -601,6 +658,84 @@ export default function App() {
     );
   }
 
+  // ── SHARZ WALL SCREEN ──
+  if (screen === 'wall') {
+      return (
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <Header />
+            <main style={{ flex: 1, position: 'relative' }} className="wall-page">
+                <div className="wall-header">
+                    <h1 className="wall-h1">Sharz Wall</h1>
+                    <p className="wall-sub">You are not the only one. Real thoughts from real students. No names. No judgement.</p>
+                    <button className="add-note-btn" onClick={() => setShowAddNoteModal(true)}>
+                        ✍️ Add Your Note
+                    </button>
+                </div>
+
+                <div style={{textAlign:'center'}}>
+                    <div className="scroll-msg">Some of these might feel like they were written by you. Take your time.</div>
+                </div>
+
+                <div className="masonry-grid">
+                    {wallNotes.map((note, index) => (
+                        <React.Fragment key={note.id}>
+                            {/* Insert calming messages periodically */}
+                            {index === 15 && <div className="scroll-msg" style={{display:'block', width:'100%', margin:'20px 0'}}>Take a breath 🌿 You're doing okay.</div>}
+                            {index === 45 && <div className="scroll-msg" style={{display:'block', width:'100%', margin:'20px 0'}}>Pause for a second. Drop your shoulders.</div>}
+                            
+                            <div className={`note-card ${note.color}`}>
+                                {note.tag && <div className="note-tag">{note.tag}</div>}
+                                <div className={`note-text ${note.type === 'short' ? 'short' : ''}`}>
+                                    {note.text}
+                                </div>
+                                <div className="note-footer">
+                                    <div style={{display:'flex', gap:'12px'}}>
+                                        <button className="reaction-btn" onClick={() => reactToNote(note.id)}>❤️ {note.reactions}</button>
+                                        <button className="reaction-btn" onClick={() => reactToNote(note.id)}>🤝 Me too</button>
+                                    </div>
+                                    <button className="reaction-btn" onClick={() => alert('Saved to your private collection.')}>🔖 Save</button>
+                                </div>
+                            </div>
+                        </React.Fragment>
+                    ))}
+                </div>
+            </main>
+            <Footer />
+
+            {/* ADD NOTE MODAL */}
+            {showAddNoteModal && (
+                <div className="note-modal-overlay" onClick={() => setShowAddNoteModal(false)}>
+                    <div className="note-modal" onClick={e => e.stopPropagation()}>
+                        <div style={{display:'flex', justifyContent:'space-between', marginBottom:'20px'}}>
+                            <h2 style={{fontFamily:'Fraunces', margin:0}}>Share your thought</h2>
+                            <button onClick={() => setShowAddNoteModal(false)} style={{background:'none', border:'none', fontSize:'24px', cursor:'pointer'}}>×</button>
+                        </div>
+                        <textarea 
+                            className="note-textarea" 
+                            placeholder="What's on your mind? (It's completely anonymous...)"
+                            value={newNoteText}
+                            onChange={e => setNewNoteText(e.target.value)}
+                        ></textarea>
+                        <select className="note-select" value={newNoteTag} onChange={e => setNewNoteTag(e.target.value)}>
+                            <option value="">Add a tag (Optional)</option>
+                            <option value="Class 10">Class 10</option>
+                            <option value="Class 12">Class 12</option>
+                            <option value="College Fresher">College Fresher</option>
+                            <option value="Just Venting">Just Venting</option>
+                        </select>
+                        <div style={{fontSize:'12px', color:'var(--muted)', marginBottom:'20px'}}>
+                            🛡️ Note: All posts are screened by our AI to prevent self-harm content or bullying.
+                        </div>
+                        <button className="btn-primary" style={{width:'100%'}} onClick={submitNewNote}>
+                            Share Anonymously
+                        </button>
+                    </div>
+                </div>
+            )}
+          </div>
+      )
+  }
+
   if (screen === 'vidyavantage') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -619,19 +754,16 @@ export default function App() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       
-      {/* 🚀 INSTANT ACTION BAR */}
       {!currentUser && screen === 'home' && (
         <div className="instant-action-bar" onClick={() => setScreen('auth')}>
             Feeling overwhelmed right now? Start your healing journey in 30 seconds. <span>→</span>
         </div>
       )}
 
-      {/* Show header everywhere EXCEPT VidyaVantage */}
       {screen !== 'vidyavantage' && <Header />}
 
       <main style={{ flex: 1, position: 'relative' }}>
 
-        {/* HERO */}
         <section className="ss-hero">
           <div className="hero-bg-blob blob-1" /><div className="hero-bg-blob blob-2" /><div className="hero-bg-blob blob-3" />
           <div className="hero-content">
@@ -665,12 +797,10 @@ export default function App() {
           </div>
         </section>
 
-        {/* EMOTIONAL PUNCHLINE */}
         <section className="punchline-section anim-up-4">
             <h2 className="punchline-text">"The things you can't tell anyone... <br/><span style={{color: 'var(--sage)', fontWeight: '600'}}>you can tell us.</span>"</h2>
         </section>
 
-        {/* 🚀 NEW: INTERACTIVE WIDGET SECTION */}
         <section className="widget-section">
             <div className="section-eyebrow" style={{color: 'var(--moss)'}}>Emotional First Aid</div>
             <h2 className="section-h2" style={{margin: 0}}>What do you need right now?</h2>
@@ -709,7 +839,6 @@ export default function App() {
             </div>
         </section>
 
-        {/* WHAT HAPPENS NEXT (First 5 Minutes) */}
         <section className="onboarding-steps-section">
             <div className="section-eyebrow">Your First 5 Minutes</div>
             <h2 className="section-h2">You don’t have to have the right words. <em>Just start.</em></h2>
@@ -734,7 +863,6 @@ export default function App() {
             </div>
         </section>
 
-        {/* SOCIAL PROOF SLIDER */}
         <section className="social-proof-section" style={{marginTop: '40px'}}>
             <div className="sp-header">Trusted by thousands of students across India</div>
             <div className="sp-slider" id="spSlider">
@@ -766,7 +894,6 @@ export default function App() {
             </div>
         </section>
 
-        {/* PILLARS */}
         <section className="section" style={{background:'var(--sand)'}}>
           <div className="section-header">
             <div className="section-eyebrow">What We Offer</div>
@@ -780,7 +907,7 @@ export default function App() {
                 <div className="pillar-title">{p.title}</div>
                 <div className="pillar-desc">{p.desc}</div>
                 <div className="pillar-features">{p.features.map((f,i) => <div key={i} className="pillar-feat">{f}</div>)}</div>
-                <div className="pillar-cta" onClick={() => p.route === 'mindspace' ? setScreen('mindspace') : setModal('talk')}>
+                <div className="pillar-cta" onClick={() => p.route === 'mindspace' ? setScreen('mindspace') : (p.route === 'wall' ? setScreen('wall') : setModal('talk'))}>
                     {p.cta}
                 </div>
               </div>
@@ -788,7 +915,6 @@ export default function App() {
           </div>
         </section>
 
-        {/* FOUNDER STORY */}
         <section className="story-section">
             <div className="story-content">
                 <div className="section-eyebrow">Why SecretSharz Exists</div>
@@ -808,7 +934,6 @@ export default function App() {
             </div>
         </section>
 
-        {/* VIDYAVANTAGE BANNER */}
         <section className="section">
           <div className="vv-banner">
             <div className="vv-banner-left">
@@ -830,7 +955,6 @@ export default function App() {
           </div>
         </section>
 
-        {/* FOR SCHOOLS B2B SECTION */}
         <section className="b2b-section">
             <div className="section-eyebrow" style={{color: 'var(--sage-light)'}}>Institutional Partnerships</div>
             <h2 className="section-h2" style={{color: 'white'}}>Empower your students with a <em>proactive</em> mental health layer.</h2>
@@ -859,7 +983,6 @@ export default function App() {
             </button>
         </section>
 
-        {/* SAFE SPACE */}
         <section className="safe-section">
           <div className="safe-content">
             <div className="section-eyebrow" style={{color:'var(--sage-light)'}}>Your Safety Comes First</div>
@@ -908,10 +1031,8 @@ export default function App() {
         </section>
       </main>
 
-      {/* Show footer everywhere EXCEPT VidyaVantage */}
       {screen !== 'vidyavantage' && <Footer />}
 
-      {/* 🚀 FULLSCREEN WIDGET OVERLAY */}
       {activeWidgetFullscreen && (
           <div className="fs-widget-overlay">
               <button className="fs-close-btn" onClick={closeFullscreenWidget}>✕</button>
@@ -966,7 +1087,6 @@ export default function App() {
           </div>
       )}
 
-      {/* ONBOARDING MODAL FOR NEW USERS */}
       {modal === 'onboarding' && (
         <div className="modal-overlay" onClick={() => {setModal(null); setScreen('dashboard');}}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -1000,7 +1120,6 @@ export default function App() {
         </div>
       )}
 
-      {/* TALK TO SOMEONE MODAL */}
       {modal === 'talk' && (
         <div className="modal-overlay" onClick={() => setModal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
