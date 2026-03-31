@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 import { auth, db } from './firebase';
@@ -36,12 +36,10 @@ const CSS = `
   .anim-up-3{animation:floatUp 0.7s 0.35s ease both;}
   .anim-up-4{animation:floatUp 0.7s 0.5s ease both;}
 
-  /* --- NEW: INSTANT ACTION BAR --- */
+  /* --- INSTANT ACTION BAR --- */
   .instant-action-bar { background: var(--sage); color: white; text-align: center; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; position: sticky; top: 0; z-index: 1001;}
   .instant-action-bar:hover { background: var(--moss); }
   .instant-action-bar span { opacity: 0.8; font-weight: 400; margin-left: 8px;}
-
-  /* --- Navigation Styles moved to Header.js --- */
 
   .ss-hero{min-height:85vh;display:flex;align-items:center;padding:60px 48px;position:relative;overflow:hidden;}
   .hero-bg-blob{position:absolute;border-radius:60% 40% 70% 30%/50% 60% 40% 50%;animation:blob 8s ease-in-out infinite;pointer-events:none;z-index:0;}
@@ -81,7 +79,7 @@ const CSS = `
   .trust-strip{display:flex;align-items:center;gap:28px;margin-top:48px;padding-top:28px;border-top:1px solid var(--border);flex-wrap:wrap;}
   .trust-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500;}
 
-  /* --- NEW: WHAT HAPPENS NEXT --- */
+  /* --- WHAT HAPPENS NEXT --- */
   .onboarding-steps-section { padding: 40px 48px; background: var(--warm-white); text-align: center;}
   .steps-container { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; max-width: 1000px; margin: 40px auto 0;}
   .step-card { flex: 1; min-width: 250px; text-align: left; padding: 24px; background: white; border-radius: var(--r-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);}
@@ -92,6 +90,46 @@ const CSS = `
   /* --- EMOTIONAL PUNCHLINE --- */
   .punchline-section { text-align: center; padding: 60px 20px 20px; }
   .punchline-text { font-family: 'Fraunces', serif; font-size: clamp(24px, 4vw, 36px); font-weight: 300; color: var(--ink-soft); font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.4;}
+
+  /* --- NEW: INTERACTIVE WIDGET SECTION --- */
+  .widget-section { padding: 80px 48px; background: var(--lav-pale); display: flex; flex-direction: column; align-items: center; text-align: center;}
+  .widget-container { max-width: 1000px; width: 100%; margin-top: 40px;}
+  .widget-tabs { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;}
+  .widget-tab { padding: 12px 24px; border-radius: 50px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; background: white; color: var(--muted); box-shadow: var(--shadow-sm);}
+  .widget-tab:hover { transform: translateY(-2px); border-color: var(--lavender);}
+  .widget-tab.active { background: var(--lavender); color: white; box-shadow: var(--shadow-md);}
+  
+  .widget-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; text-align: left;}
+  .tool-card { background: white; border-radius: var(--r-md); padding: 24px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.2s;}
+  .tool-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--lavender);}
+  .tool-icon { font-size: 32px; margin-bottom: 12px;}
+  .tool-title { font-family: 'Fraunces', serif; font-weight: 700; font-size: 20px; color: var(--ink); margin-bottom: 8px;}
+  .tool-desc { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 16px;}
+  .tool-meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: var(--lavender);}
+  
+  .emergency-btn { margin-top: 40px; background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 2px solid var(--danger); padding: 16px 32px; border-radius: 50px; font-weight: bold; font-size: 16px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px;}
+  .emergency-btn:hover { background: var(--danger); color: white; transform: scale(1.02);}
+
+  /* --- FULLSCREEN WIDGET OVERLAY --- */
+  .fs-widget-overlay { position: fixed; inset: 0; background: var(--ink); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; animation: fadeIn 0.3s ease;}
+  .fs-close-btn { position: absolute; top: 30px; right: 30px; background: rgba(255,255,255,0.1); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
+  .fs-close-btn:hover { background: rgba(255,255,255,0.2);}
+
+  /* Breathing Animation */
+  .breathe-circle { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle, var(--sage-light) 0%, var(--sage) 100%); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 24px; font-weight: bold; box-shadow: 0 0 40px rgba(111, 170, 128, 0.4); transition: transform linear;}
+  .breathe-instruction { margin-top: 40px; font-size: 20px; font-weight: 300; letter-spacing: 1px; color: rgba(255,255,255,0.8);}
+
+  /* Pop Thoughts Game */
+  .bubble-container { position: relative; width: 100%; height: 60vh; max-width: 600px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 20px; overflow: hidden;}
+  .thought-bubble { position: absolute; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; animation: floatUp 4s linear infinite; user-select: none;}
+  .thought-bubble:hover { transform: scale(1.1); background: rgba(255,255,255,0.2);}
+  .thought-bubble.popped { animation: pop 0.2s ease forwards; pointer-events: none;}
+  @keyframes pop { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.8; } 100% { transform: scale(0); opacity: 0; } }
+
+  /* Focus Timer */
+  .focus-timer-display { font-family: 'Fraunces', serif; font-size: 80px; font-weight: bold; color: var(--sky); margin-bottom: 30px;}
+  .focus-textarea { width: 100%; max-width: 600px; height: 200px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; padding: 20px; font-size: 16px; font-family: inherit; resize: none;}
+  .focus-textarea:focus { outline: none; border-color: var(--sky);}
 
   /* --- SOCIAL PROOF SLIDER --- */
   .social-proof-section { padding: 40px 0 80px; overflow: hidden; background: linear-gradient(180deg, transparent, var(--sand)); }
@@ -172,7 +210,6 @@ const CSS = `
   .safe-section .section-h2{color:white;}
   .safe-section .section-p{color:rgba(255,255,255,0.55);margin:0 auto 48px;}
   
-  /* --- UPGRADED PRIVACY PROMISES --- */
   .privacy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left; margin-bottom: 50px;}
   .privacy-item { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; display: flex; align-items: flex-start; gap: 12px;}
   .privacy-item span { font-size: 24px; }
@@ -197,6 +234,12 @@ const CSS = `
   .btn-modal-primary{flex:1;padding:14px;background:var(--sage);color:white;border:none;border-radius:50px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;}
   .btn-modal-ghost{padding:14px 20px;background:transparent;color:var(--muted);border:2px solid var(--border);border-radius:50px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;}
 
+  .vv-back-bar{background:var(--ink);padding:14px 32px;display:flex;align-items:center;gap:16px;}
+  .vv-back-btn{background:rgba(255,255,255,0.1);color:white;border:none;padding:8px 20px;border-radius:30px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:all 0.2s;}
+  .vv-back-btn:hover{background:rgba(255,255,255,0.2);}
+  .vv-back-label{color:rgba(255,255,255,0.4);font-size:13px;}
+  .vv-back-label span{color:#F0A500;font-weight:600;}
+
   @media(max-width:900px){
     .ss-hero{padding:60px 24px;min-height:auto;}
     .hero-right{display:none;}
@@ -216,6 +259,38 @@ const PILLARS = [
   { cls:'safe', icon:'🛡️', title:'Safe Corner', desc:"If things feel too heavy to carry, you don't have to carry them alone. Access trained counsellors, crisis support, and emergency helplines instantly.", features:['24/7 crisis helpline access','Connect with trained counsellors','Report unsafe situations privately'], cta: 'View Safety Protocols →', route: 'safe' },
 ];
 
+// --- INTERACTIVE WIDGET DATA ---
+const WIDGET_CATEGORIES = [
+  { id: 'calm', label: '😰 Calm Anxiety', color: 'var(--sage)' },
+  { id: 'vent', label: '😡 Release Anger', color: 'var(--danger)' },
+  { id: 'mood', label: '😞 Lift Mood', color: 'var(--peach)' },
+  { id: 'focus', label: '😵 Focus Better', color: 'var(--sky)' },
+  { id: 'sleep', label: '😴 Relax / Sleep', color: 'var(--lavender)' }
+];
+
+const WIDGET_TOOLS = {
+  calm: [
+    { id: 'w1', title: '4-7-8 Breathing', desc: 'A proven rhythm to instantly lower heart rate.', icon: '🫁', duration: '2 min', type: 'breathing' },
+    { id: 'w2', title: '5-4-3-2-1 Grounding', desc: 'Bring your mind back to the present room.', icon: '🖐️', duration: '1 min', type: 'text' }
+  ],
+  vent: [
+    { id: 'w3', title: 'Pop the Thoughts', desc: 'Tap to visually destroy anxious thoughts.', icon: '🫧', duration: '1 min', type: 'game_pop' },
+    { id: 'w4', title: 'Brain Dump Timer', desc: 'Type everything out without stopping.', icon: '⌨️', duration: '2 min', type: 'timer' }
+  ],
+  mood: [
+    { id: 'w5', title: 'Gratitude Quick-Write', desc: 'Name 3 things that don\'t suck right now.', icon: '✨', duration: '1 min', type: 'text' },
+    { id: 'w6', title: 'Tiny Wins Tracker', desc: 'Check off small things you did today.', icon: '🏆', duration: '1 min', type: 'text' }
+  ],
+  focus: [
+    { id: 'w7', title: 'One-Task Focus', desc: 'Hide everything else. Do one thing.', icon: '🎯', duration: 'Custom', type: 'text' },
+    { id: 'w8', title: 'Control Toggle', desc: 'Sort what you can and cannot control.', icon: '⚖️', duration: '2 min', type: 'text' }
+  ],
+  sleep: [
+    { id: 'w9', title: 'Sleep Countdown', desc: 'Slow your brain with a guided visual fade.', icon: '🌙', duration: '3 min', type: 'text' },
+    { id: 'w10', title: 'Body Scan', desc: 'Release tension from head to toe.', icon: '🧘', duration: '5 min', type: 'text' }
+  ]
+};
+
 export default function App() {
   
   const [screen, setScreen] = useState('home');
@@ -227,6 +302,17 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [modal, setModal]             = useState(null); 
   
+  // Widget State
+  const [activeWidgetCategory, setActiveWidgetCategory] = useState('calm');
+  const [activeWidgetFullscreen, setActiveWidgetFullscreen] = useState(null);
+  
+  // Widget Internal States
+  const [breathePhase, setBreathePhase] = useState('Inhale');
+  const [breatheScale, setBreatheScale] = useState(1);
+  const [popCount, setPopCount] = useState(0);
+  const [bubbles, setBubbles] = useState([]);
+  const [focusTime, setFocusTime] = useState(120);
+
   // 🔥 FOOLPROOF ADMIN VALIDATION
   const isMasterEmail = currentUser?.email && btoa(currentUser.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
   const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
@@ -266,7 +352,7 @@ export default function App() {
     }
   }, [screen]);
 
-  // 🔥 AUTO-ROUTER: Constantly watches your login status and moves you
+  // 🔥 AUTO-ROUTER
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -284,7 +370,6 @@ export default function App() {
         const isMaster = user.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
         const isUserAdmin = isDbAdmin || isMaster;
 
-        // Auto-route if you are sitting on the home or auth page
         setScreen(prevScreen => {
           if (prevScreen === 'auth' || prevScreen === 'home') {
             return isUserAdmin ? 'admin' : 'dashboard';
@@ -301,7 +386,6 @@ export default function App() {
     return () => unsub();
   }, []);
 
-  // For manual Email/Password & Popup logins
   const handleAuthSuccess = async (user, isNew) => {
     setCurrentUser(user);
     
@@ -370,6 +454,80 @@ export default function App() {
     }
   };
 
+  // --- WIDGET LOGIC ---
+  
+  // 4-7-8 Breathing Logic
+  useEffect(() => {
+      let interval;
+      if (activeWidgetFullscreen?.type === 'breathing') {
+          const cycle = () => {
+              setBreathePhase('Breathe In...');
+              setBreatheScale(1.5);
+              setTimeout(() => {
+                  if(activeWidgetFullscreen) setBreathePhase('Hold...');
+                  setTimeout(() => {
+                      if(activeWidgetFullscreen) {
+                          setBreathePhase('Breathe Out...');
+                          setBreatheScale(1);
+                      }
+                  }, 7000);
+              }, 4000);
+          };
+          cycle();
+          interval = setInterval(cycle, 19000); // 4 + 7 + 8 = 19s
+      }
+      return () => clearInterval(interval);
+  }, [activeWidgetFullscreen]);
+
+  // Pop Thoughts Game Logic
+  useEffect(() => {
+      let interval;
+      if (activeWidgetFullscreen?.type === 'game_pop') {
+          setPopCount(0);
+          setBubbles([]);
+          interval = setInterval(() => {
+              setBubbles(prev => {
+                  if(prev.length > 15) return prev; // Limit on screen
+                  const newBubble = {
+                      id: Date.now() + Math.random(),
+                      left: Math.random() * 80 + 10 + '%',
+                      text: ['Stress', 'Exams', 'Pressure', 'Fear', 'Doubt'][Math.floor(Math.random() * 5)]
+                  };
+                  return [...prev, newBubble];
+              });
+          }, 1200);
+      }
+      return () => clearInterval(interval);
+  }, [activeWidgetFullscreen]);
+
+  const handlePop = (id) => {
+      setBubbles(prev => prev.filter(b => b.id !== id));
+      setPopCount(c => c + 1);
+  };
+
+  // Focus Timer Logic
+  useEffect(() => {
+      let interval;
+      if (activeWidgetFullscreen?.type === 'timer' && focusTime > 0) {
+          interval = setInterval(() => {
+              setFocusTime(t => t - 1);
+          }, 1000);
+      }
+      return () => clearInterval(interval);
+  }, [activeWidgetFullscreen, focusTime]);
+
+  const formatTime = (seconds) => {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const closeFullscreenWidget = () => {
+      setActiveWidgetFullscreen(null);
+      setFocusTime(120); // Reset timer
+  };
+
+
   // ── SECURE ADMIN ROUTE ──
   if (screen === 'admin') {
     if (!isAdmin) {
@@ -380,10 +538,7 @@ export default function App() {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Header />
         <main style={{ flex: 1, position: 'relative' }}>
-          <AdminDashboard 
-            user={currentUser} 
-            onBackToApp={() => setScreen('home')} 
-          />
+          <AdminDashboard user={currentUser} onBackToApp={() => setScreen('home')} />
         </main>
         <Footer />
       </div>
@@ -510,12 +665,51 @@ export default function App() {
           </div>
         </section>
 
-        {/* 🚀 EMOTIONAL PUNCHLINE */}
+        {/* EMOTIONAL PUNCHLINE */}
         <section className="punchline-section anim-up-4">
             <h2 className="punchline-text">"The things you can't tell anyone... <br/><span style={{color: 'var(--sage)', fontWeight: '600'}}>you can tell us.</span>"</h2>
         </section>
 
-        {/* 🚀 WHAT HAPPENS NEXT (First 5 Minutes) */}
+        {/* 🚀 NEW: INTERACTIVE WIDGET SECTION */}
+        <section className="widget-section">
+            <div className="section-eyebrow" style={{color: 'var(--moss)'}}>Emotional First Aid</div>
+            <h2 className="section-h2" style={{margin: 0}}>What do you need right now?</h2>
+            
+            <div className="widget-container">
+                <div className="widget-tabs">
+                    {WIDGET_CATEGORIES.map(cat => (
+                        <div 
+                            key={cat.id} 
+                            className={`widget-tab ${activeWidgetCategory === cat.id ? 'active' : ''}`}
+                            onClick={() => setActiveWidgetCategory(cat.id)}
+                            style={{borderColor: activeWidgetCategory === cat.id ? cat.color : 'transparent'}}
+                        >
+                            {cat.label}
+                        </div>
+                    ))}
+                </div>
+
+                <div className="widget-grid anim-up">
+                    {WIDGET_TOOLS[activeWidgetCategory].map(tool => (
+                        <div key={tool.id} className="tool-card" onClick={() => setActiveWidgetFullscreen(tool)}>
+                            <div className="tool-icon">{tool.icon}</div>
+                            <div className="tool-title">{tool.title}</div>
+                            <div className="tool-desc">{tool.desc}</div>
+                            <div className="tool-meta">
+                                <span>⏱️ {tool.duration}</span>
+                                <span style={{color: 'var(--primary)'}}>▶ Start</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                
+                <button className="emergency-btn" onClick={() => setModal('talk')}>
+                    🔴 I need emergency help right now
+                </button>
+            </div>
+        </section>
+
+        {/* WHAT HAPPENS NEXT (First 5 Minutes) */}
         <section className="onboarding-steps-section">
             <div className="section-eyebrow">Your First 5 Minutes</div>
             <h2 className="section-h2">You don’t have to have the right words. <em>Just start.</em></h2>
@@ -540,8 +734,8 @@ export default function App() {
             </div>
         </section>
 
-        {/* SOCIAL PROOF SLIDER (INTERACTIVE) */}
-        <section className="social-proof-section">
+        {/* SOCIAL PROOF SLIDER */}
+        <section className="social-proof-section" style={{marginTop: '40px'}}>
             <div className="sp-header">Trusted by thousands of students across India</div>
             <div className="sp-slider" id="spSlider">
                 <div className="sp-card">
@@ -672,7 +866,6 @@ export default function App() {
             <h2 className="section-h2">This is a <em>judgement-free</em> zone. Always.</h2>
             <p className="section-p">We built Secret Sharz on one promise: you will never be shamed, exposed, or ignored here. Ever.</p>
             
-            {/* 🚀 UPGRADED PRIVACY PROMISES */}
             <div className="privacy-grid">
                 <div className="privacy-item">
                     <span>🔒</span>
@@ -717,6 +910,61 @@ export default function App() {
 
       {/* Show footer everywhere EXCEPT VidyaVantage */}
       {screen !== 'vidyavantage' && <Footer />}
+
+      {/* 🚀 FULLSCREEN WIDGET OVERLAY */}
+      {activeWidgetFullscreen && (
+          <div className="fs-widget-overlay">
+              <button className="fs-close-btn" onClick={closeFullscreenWidget}>✕</button>
+              
+              {activeWidgetFullscreen.type === 'breathing' && (
+                  <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+                      <div className="breathe-circle" style={{transform: `scale(${breatheScale})`}}>
+                          🫁
+                      </div>
+                      <div className="breathe-instruction">{breathePhase}</div>
+                  </div>
+              )}
+
+              {activeWidgetFullscreen.type === 'game_pop' && (
+                  <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
+                      <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '10px'}}>Pop the Thoughts</h2>
+                      <p style={{color: 'rgba(255,255,255,0.6)', marginBottom: '30px'}}>Thoughts popped: {popCount}</p>
+                      <div className="bubble-container">
+                          {bubbles.map(b => (
+                              <div 
+                                key={b.id} 
+                                className="thought-bubble" 
+                                style={{left: b.left}}
+                                onClick={(e) => {
+                                    e.currentTarget.classList.add('popped');
+                                    setTimeout(() => handlePop(b.id), 200);
+                                }}
+                              >
+                                  {b.text}
+                              </div>
+                          ))}
+                      </div>
+                  </div>
+              )}
+
+              {activeWidgetFullscreen.type === 'timer' && (
+                  <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
+                      <div className="focus-timer-display">{formatTime(focusTime)}</div>
+                      <textarea className="focus-textarea" placeholder="Type everything out. Don't stop. Don't edit. Just dump it all here..."></textarea>
+                      <button className="btn" style={{marginTop: '30px'}} onClick={closeFullscreenWidget}>Done</button>
+                  </div>
+              )}
+
+              {activeWidgetFullscreen.type === 'text' && (
+                  <div style={{textAlign:'center', maxWidth:'500px'}}>
+                      <div style={{fontSize:'64px', marginBottom:'20px'}}>{activeWidgetFullscreen.icon}</div>
+                      <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '20px'}}>{activeWidgetFullscreen.title}</h2>
+                      <p style={{fontSize: '18px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6}}>{activeWidgetFullscreen.desc}</p>
+                      <button className="btn" style={{marginTop: '40px', background: 'white', color: 'var(--ink)'}} onClick={closeFullscreenWidget}>Complete</button>
+                  </div>
+              )}
+          </div>
+      )}
 
       {/* ONBOARDING MODAL FOR NEW USERS */}
       {modal === 'onboarding' && (
