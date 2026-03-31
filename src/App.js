@@ -7,6 +7,8 @@ import AuthPage from './AuthPage';
 import StudentDashboard from './StudentDashboard';
 import MindSpace from './MindSpace'; 
 import AdminDashboard from './AdminDashboard'; 
+import Header from './Header';
+import Footer from './Footer';
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');`;
 
@@ -340,264 +342,300 @@ export default function App() {
       return null; 
     }
     return (
-      <AdminDashboard 
-        user={currentUser} 
-        onBackToApp={() => setScreen('home')} 
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Header />
+        <main style={{ flex: 1, position: 'relative' }}>
+          <AdminDashboard 
+            user={currentUser} 
+            onBackToApp={() => setScreen('home')} 
+          />
+        </main>
+        <Footer />
+      </div>
     );
   }
 
   if (screen === 'auth') {
-    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Header />
+        <main style={{ flex: 1, position: 'relative' }}>
+          <AuthPage onAuthSuccess={handleAuthSuccess} />
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   if (screen === 'dashboard' && currentUser) {
     return (
-      <StudentDashboard
-        user={currentUser}
-        userData={userData}
-        initialTab={dashboardTab} 
-        isAdmin={isAdmin}
-        onAdmin={() => setScreen('admin')}
-        onBack={() => setScreen('home')}
-        onLogout={handleLogout}
-        onStartAssessment={() => setScreen('vidyavantage')}
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Header />
+        <main style={{ flex: 1, position: 'relative' }}>
+          <StudentDashboard
+            user={currentUser}
+            userData={userData}
+            initialTab={dashboardTab} 
+            isAdmin={isAdmin}
+            onAdmin={() => setScreen('admin')}
+            onBack={() => setScreen('home')}
+            onLogout={handleLogout}
+            onStartAssessment={() => setScreen('vidyavantage')}
+          />
+        </main>
+        <Footer />
+      </div>
     );
   }
 
   if (screen === 'mindspace') {
     return (
-      <div>
-        <nav className="ss-nav">
-          <div className="ss-nav-logo" onClick={() => setScreen('home')} style={{ cursor: 'pointer' }}>
-            Secret<span>Sharz</span>
-          </div>
-          <button className="nav-cta-outline" onClick={() => setScreen('home')}>← Back Home</button>
-        </nav>
-        <MindSpace 
-          userData={userData} 
-          onNavigate={(targetTab) => {
-            if(!currentUser) {
-              alert("You must be logged in to view your career data.");
-              setScreen('auth');
-              return;
-            }
-            setDashboardTab(targetTab); 
-            setScreen('dashboard');
-          }} 
-        />
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Header />
+        <main style={{ flex: 1, position: 'relative' }}>
+          <nav className="ss-nav">
+            <div className="ss-nav-logo" onClick={() => setScreen('home')} style={{ cursor: 'pointer' }}>
+              Secret<span>Sharz</span>
+            </div>
+            <button className="nav-cta-outline" onClick={() => setScreen('home')}>← Back Home</button>
+          </nav>
+          <MindSpace 
+            userData={userData} 
+            onNavigate={(targetTab) => {
+              if(!currentUser) {
+                alert("You must be logged in to view your career data.");
+                setScreen('auth');
+                return;
+              }
+              setDashboardTab(targetTab); 
+              setScreen('dashboard');
+            }} 
+          />
+        </main>
+        <Footer />
       </div>
     );
   }
 
   if (screen === 'vidyavantage') {
     return (
-      <div>
-        <div className="vv-back-bar">
-          <button className="vv-back-btn" onClick={() => setScreen(currentUser ? 'dashboard' : 'home')}>← Back to Secret Sharz</button>
-          <div className="vv-back-label">VidyaVantage is a subsidiary of <span>SecretSharz</span></div>
-        </div>
-        <VidyaVantage onBack={() => setScreen(currentUser ? 'dashboard' : 'home')} onSave={handleSaveAssessment} />
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <main style={{ flex: 1, position: 'relative' }}>
+          <div className="vv-back-bar">
+            <button className="vv-back-btn" onClick={() => setScreen(currentUser ? 'dashboard' : 'home')}>← Back to Secret Sharz</button>
+            <div className="vv-back-label">VidyaVantage is a subsidiary of <span>SecretSharz</span></div>
+          </div>
+          <VidyaVantage onBack={() => setScreen(currentUser ? 'dashboard' : 'home')} onSave={handleSaveAssessment} />
+        </main>
       </div>
     );
   }
 
   // ── Homepage ──────────────────────────────────────────────────────────
   return (
-    <div>
-      <nav className="ss-nav">
-        <div className="ss-nav-logo" onClick={() => setScreen('home')} style={{cursor:'pointer'}}>Secret<span>Sharz</span></div>
-        <div className="ss-nav-links">
-          <button className="nav-link" onClick={() => setScreen('mindspace')}>Mind Space</button>
-          <button className="nav-link" onClick={() => setModal('talk')}>Community</button>
-          <button className="nav-link" onClick={() => setModal('talk')}>For Schools</button>
-          <button className="nav-vv-link" onClick={() => setScreen('vidyavantage')}>🎓 VidyaVantage</button>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      
+      {/* Show header everywhere EXCEPT VidyaVantage */}
+      {screen !== 'vidyavantage' && <Header />}
 
-          {currentUser ? (
-            <>
-              {isAdmin && (
-                <button className="nav-link" onClick={() => setScreen('admin')} style={{color: 'var(--saffron)', fontWeight: 'bold'}}>
-                  ⚙️ Admin Panel
-                </button>
-              )}
-              <button className="nav-user-chip" onClick={() => {setDashboardTab('home'); setScreen('dashboard');}}>
-                👤 {currentUser.displayName?.split(' ')[0] || 'My Dashboard'}
-              </button>
-              <button className="nav-cta-outline" onClick={handleLogout}>Logout</button>
-            </>
-          ) : (
-            <>
-              <button className="nav-link" onClick={() => setScreen('auth')}>Sign In</button>
-              <button className="nav-cta" onClick={() => setScreen('auth')}>Join Free</button>
-            </>
-          )}
-        </div>
-      </nav>
+      {/* Your main content area */}
+      <main style={{ flex: 1, position: 'relative' }}>
+        <nav className="ss-nav">
+          <div className="ss-nav-logo" onClick={() => setScreen('home')} style={{cursor:'pointer'}}>Secret<span>Sharz</span></div>
+          <div className="ss-nav-links">
+            <button className="nav-link" onClick={() => setScreen('mindspace')}>Mind Space</button>
+            <button className="nav-link" onClick={() => setModal('talk')}>Community</button>
+            <button className="nav-link" onClick={() => setModal('talk')}>For Schools</button>
+            <button className="nav-vv-link" onClick={() => setScreen('vidyavantage')}>🎓 VidyaVantage</button>
 
-      {/* HERO */}
-      <section className="ss-hero">
-        <div className="hero-bg-blob blob-1" /><div className="hero-bg-blob blob-2" /><div className="hero-bg-blob blob-3" />
-        <div className="hero-content">
-          <div className="hero-eyebrow anim-up"><div className="hero-eyebrow-dot" />Safe · Anonymous · For Indian Youth</div>
-          <h1 className="hero-h1 anim-up-1">A place where<br/>your <em>feelings</em> are<br/><span className="underline-word">always valid</span></h1>
-          <p className="hero-p anim-up-2">Secret Sharz is a safe, anonymous digital space for children and young people across India — to share, heal, grow, and discover who they truly are.</p>
-          <div className="hero-actions anim-up-3">
-            <button className="btn-primary" onClick={() => setScreen(currentUser ? 'dashboard' : 'auth')}>
-              {currentUser ? '🏠 My Dashboard' : 'Create My Safe Space 🌱'}
-            </button>
-            <button className="btn-ghost" onClick={() => setModal('talk')}>💬 Talk to Someone</button>
-          </div>
-          <div className="trust-strip anim-up-4">
-            <div className="trust-item"><span>🔒</span> Completely anonymous</div>
-            <div className="trust-item"><span>🛡️</span> POCSO-aware platform</div>
-            <div className="trust-item"><span>❤️</span> No judgement, ever</div>
-            <div className="trust-item"><span>🌍</span> Pan-India reach</div>
-          </div>
-        </div>
-        <div className="hero-right">
-          <div className="floating-card"><div className="fc-icon">🌱</div><div className="fc-label">Today's Mood Check-In</div><div className="fc-value">Feeling anxious?</div><div className="fc-sub">3 grounding exercises ready for you</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'65%'}}/></div></div>
-          <div className="floating-card"><div className="fc-icon">💬</div><div className="fc-label">Sharz Wall — Anonymous Post</div><div className="fc-value">"Boards are next week..."</div><div className="fc-sub">47 people responded with support 💚</div></div>
-          <div className="floating-card"><div className="fc-icon">🎓</div><div className="fc-label">VidyaVantage Match</div><div className="fc-value">Psychology — 94%</div><div className="fc-sub">Your RIASEC code: ISA · See your report</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'94%',background:'linear-gradient(90deg,#E8650A,#F0A500)'}}/></div></div>
-        </div>
-      </section>
-
-      {/* PILLARS */}
-      <section className="section" style={{background:'var(--sand)'}}>
-        <div className="section-header">
-          <div className="section-eyebrow">What We Offer</div>
-          <h2 className="section-h2">Everything a young person <em>actually needs</em></h2>
-          <p className="section-p">Four pillars that work together to support your mind, your connections, your future, and your safety.</p>
-        </div>
-        <div className="pillars-grid">
-          {PILLARS.map(p => (
-            <div key={p.cls} className={`pillar-card ${p.cls}`}>
-              <div className="pillar-icon">{p.icon}</div>
-              <div className="pillar-title">{p.title}</div>
-              <div className="pillar-desc">{p.desc}</div>
-              <div className="pillar-features">{p.features.map((f,i) => <div key={i} className="pillar-feat">{f}</div>)}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* VIDYAVANTAGE BANNER */}
-      <section className="section">
-        <div className="vv-banner">
-          <div className="vv-banner-left">
-            <div className="vv-banner-tag">⚡ Powered by Secret Sharz</div>
-            <h3>Discover your <em>perfect career</em><br/>with VidyaVantage</h3>
-            <p>Our AI-powered career guidance subsidiary uses Holland's RIASEC theory to map your unique personality to the careers and colleges that truly fit you.</p>
-            <button className="btn-vv" onClick={() => { setScreen(currentUser ? 'vidyavantage' : 'auth'); }}>
-              🎓 {currentUser ? 'Start Career Assessment' : 'Login to Start Assessment'} <span style={{fontSize:'18px'}}>→</span>
-            </button>
-          </div>
-          <div className="vv-banner-right">
-            <div className="vv-banner-card">
-              <div className="vv-stat"><div className="vv-stat-num">6</div><div className="vv-stat-label">RIASEC Dimensions</div></div>
-              <div className="vv-stat"><div className="vv-stat-num">500+</div><div className="vv-stat-label">Indian Colleges</div></div>
-              <div className="vv-stat"><div className="vv-stat-num">3</div><div className="vv-stat-label">Career Paths per Student</div></div>
-              <div className="vv-stat"><div className="vv-stat-num">Free</div><div className="vv-stat-label">Always free for students</div></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SAFE SPACE */}
-      <section className="safe-section">
-        <div className="safe-content">
-          <div className="section-eyebrow" style={{color:'var(--sage-light)'}}>Your Safety Comes First</div>
-          <h2 className="section-h2">This is a <em>judgement-free</em> zone. Always.</h2>
-          <p className="section-p">We built Secret Sharz on one promise: you will never be shamed, exposed, or ignored here. Ever.</p>
-          <div className="safe-promises">
-            {['🔒 Anonymous by default','🤖 AI-moderated content','👁️ Human review team','📞 Crisis escalation','🇮🇳 POCSO-aware'].map((p,i) => <div key={i} className="safe-promise">{p}</div>)}
-          </div>
-          <div className="crisis-box">
-            <div style={{fontSize:'36px',flexShrink:0}}>🆘</div>
-            <div><div className="crisis-title">Need urgent help right now?</div><div className="crisis-desc">Our crisis support connects you to iCall, Vandrevala Foundation, and Snehi helplines — trained professionals available 24/7.</div></div>
-            <div className="crisis-number">iCall<br/>9152987821</div>
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="ss-footer">
-        <div className="footer-top">
-          <div style={{flex:1,minWidth:'220px'}}>
-            <div className="footer-logo">Secret<span>Sharz</span></div>
-            <div className="footer-tagline">A safe space for every young person in India to share, heal, and grow — anonymously and without judgement.</div>
-          </div>
-          
-          <div style={{minWidth:'160px'}}>
-            <div className="footer-links-title">Platform</div>
-            <a className="footer-link" onClick={() => setScreen('mindspace')} style={{cursor: 'pointer'}}>Mind Space</a>
-            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Sharz Wall</a>
-            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Life Guide</a>
-            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Safe Corner</a>
-          </div>
-
-          <div style={{minWidth:'160px'}}>
-            <div className="footer-links-title">VidyaVantage</div>
-            <a className="footer-link" onClick={() => setScreen('vidyavantage')} style={{cursor: 'pointer'}}>Career Assessment</a>
-            <a className="footer-link" onClick={() => setScreen('vidyavantage')} style={{cursor: 'pointer'}}>College Database</a>
-            <a className="footer-link" onClick={() => {setDashboardTab('home'); currentUser ? setScreen('dashboard') : setScreen('auth')}} style={{cursor: 'pointer'}}>My Dashboard</a>
-          </div>
-
-          <div style={{minWidth:'160px'}}>
-            <div className="footer-links-title">Resources</div>
-            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Blog & Articles</a>
-            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Helpline Directory</a>
-            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>For Parents & Educators</a>
-            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>FAQ & Support</a>
-          </div>
-
-          <div style={{minWidth:'160px'}}>
-            <div className="footer-links-title">Account</div>
             {currentUser ? (
               <>
-                <a className="footer-link" onClick={() => {setDashboardTab('home'); setScreen('dashboard');}} style={{cursor: 'pointer'}}>My Dashboard</a>
-                <a className="footer-link" onClick={handleLogout} style={{cursor: 'pointer'}}>Sign Out</a>
+                {isAdmin && (
+                  <button className="nav-link" onClick={() => setScreen('admin')} style={{color: 'var(--saffron)', fontWeight: 'bold'}}>
+                    ⚙️ Admin Panel
+                  </button>
+                )}
+                <button className="nav-user-chip" onClick={() => {setDashboardTab('home'); setScreen('dashboard');}}>
+                  👤 {currentUser.displayName?.split(' ')[0] || 'My Dashboard'}
+                </button>
+                <button className="nav-cta-outline" onClick={handleLogout}>Logout</button>
               </>
             ) : (
               <>
-                <a className="footer-link" onClick={() => setScreen('auth')} style={{cursor: 'pointer'}}>Sign In</a>
-                <a className="footer-link" onClick={() => setScreen('auth')} style={{cursor: 'pointer'}}>Create Account</a>
+                <button className="nav-link" onClick={() => setScreen('auth')}>Sign In</button>
+                <button className="nav-cta" onClick={() => setScreen('auth')}>Join Free</button>
               </>
             )}
-            <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Contact Us</a>
           </div>
-        </div>
-        
-        <div className="footer-bottom">
-          <div className="footer-copy">© 2026 Secret Sharz. Made with ❤️ for India's youth.</div>
-          <div style={{fontFamily:'Fraunces,serif',fontSize:'14px',fontWeight:600,color:'rgba(255,255,255,0.25)'}}>
-            VidyaVantage is a subsidiary of Secret<span style={{color:'#F0A500'}}>Sharz</span>
-          </div>
-        </div>
-      </footer>
+        </nav>
 
-      {modal === 'talk' && (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setModal(null)}>✕</button>
-            <div style={{fontSize:'48px',marginBottom:'20px'}}>💬</div>
-            <h3>You don't have to carry this alone</h3>
-            <p>Whether it's a small worry or something really heavy — reaching out is the bravest thing you can do.</p>
-            {[
-              {icon:'🤖',title:'Chat with AI Support',desc:'Available right now. Gentle, non-judgemental guidance.',color:'var(--sage-pale)',textColor:'var(--sage)'},
-              {icon:'📞',title:'Talk to a Real Counsellor',desc:'Trained counsellors available. First session always free.',color:'var(--peach-pale)',textColor:'var(--peach)'},
-              {icon:'🆘',title:'Crisis Support Now',desc:'iCall: 9152987821 — Available 24/7',color:'#FFF0F0',textColor:'#C0392B'},
-            ].map((opt,i) => (
-              <div key={i} onClick={() => setModal(null)} style={{display:'flex',alignItems:'center',gap:'16px',background:opt.color,borderRadius:'var(--r-sm)',padding:'16px 18px',marginBottom:'10px',cursor:'pointer',border:'1.5px solid transparent',transition:'all 0.2s'}}
-                onMouseEnter={e => e.currentTarget.style.borderColor = opt.textColor}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-                <span style={{fontSize:'24px'}}>{opt.icon}</span>
-                <div><div style={{fontSize:'14px',fontWeight:'600',color:opt.textColor,marginBottom:'2px'}}>{opt.title}</div><div style={{fontSize:'12px',color:'var(--muted)'}}>{opt.desc}</div></div>
+        {/* HERO */}
+        <section className="ss-hero">
+          <div className="hero-bg-blob blob-1" /><div className="hero-bg-blob blob-2" /><div className="hero-bg-blob blob-3" />
+          <div className="hero-content">
+            <div className="hero-eyebrow anim-up"><div className="hero-eyebrow-dot" />Safe · Anonymous · For Indian Youth</div>
+            <h1 className="hero-h1 anim-up-1">A place where<br/>your <em>feelings</em> are<br/><span className="underline-word">always valid</span></h1>
+            <p className="hero-p anim-up-2">Secret Sharz is a safe, anonymous digital space for children and young people across India — to share, heal, grow, and discover who they truly are.</p>
+            <div className="hero-actions anim-up-3">
+              <button className="btn-primary" onClick={() => setScreen(currentUser ? 'dashboard' : 'auth')}>
+                {currentUser ? '🏠 My Dashboard' : 'Create My Safe Space 🌱'}
+              </button>
+              <button className="btn-ghost" onClick={() => setModal('talk')}>💬 Talk to Someone</button>
+            </div>
+            <div className="trust-strip anim-up-4">
+              <div className="trust-item"><span>🔒</span> Completely anonymous</div>
+              <div className="trust-item"><span>🛡️</span> POCSO-aware platform</div>
+              <div className="trust-item"><span>❤️</span> No judgement, ever</div>
+              <div className="trust-item"><span>🌍</span> Pan-India reach</div>
+            </div>
+          </div>
+          <div className="hero-right">
+            <div className="floating-card"><div className="fc-icon">🌱</div><div className="fc-label">Today's Mood Check-In</div><div className="fc-value">Feeling anxious?</div><div className="fc-sub">3 grounding exercises ready for you</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'65%'}}/></div></div>
+            <div className="floating-card"><div className="fc-icon">💬</div><div className="fc-label">Sharz Wall — Anonymous Post</div><div className="fc-value">"Boards are next week..."</div><div className="fc-sub">47 people responded with support 💚</div></div>
+            <div className="floating-card"><div className="fc-icon">🎓</div><div className="fc-label">VidyaVantage Match</div><div className="fc-value">Psychology — 94%</div><div className="fc-sub">Your RIASEC code: ISA · See your report</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'94%',background:'linear-gradient(90deg,#E8650A,#F0A500)'}}/></div></div>
+          </div>
+        </section>
+
+        {/* PILLARS */}
+        <section className="section" style={{background:'var(--sand)'}}>
+          <div className="section-header">
+            <div className="section-eyebrow">What We Offer</div>
+            <h2 className="section-h2">Everything a young person <em>actually needs</em></h2>
+            <p className="section-p">Four pillars that work together to support your mind, your connections, your future, and your safety.</p>
+          </div>
+          <div className="pillars-grid">
+            {PILLARS.map(p => (
+              <div key={p.cls} className={`pillar-card ${p.cls}`}>
+                <div className="pillar-icon">{p.icon}</div>
+                <div className="pillar-title">{p.title}</div>
+                <div className="pillar-desc">{p.desc}</div>
+                <div className="pillar-features">{p.features.map((f,i) => <div key={i} className="pillar-feat">{f}</div>)}</div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        </section>
+
+        {/* VIDYAVANTAGE BANNER */}
+        <section className="section">
+          <div className="vv-banner">
+            <div className="vv-banner-left">
+              <div className="vv-banner-tag">⚡ Powered by Secret Sharz</div>
+              <h3>Discover your <em>perfect career</em><br/>with VidyaVantage</h3>
+              <p>Our AI-powered career guidance subsidiary uses Holland's RIASEC theory to map your unique personality to the careers and colleges that truly fit you.</p>
+              <button className="btn-vv" onClick={() => { setScreen(currentUser ? 'vidyavantage' : 'auth'); }}>
+                🎓 {currentUser ? 'Start Career Assessment' : 'Login to Start Assessment'} <span style={{fontSize:'18px'}}>→</span>
+              </button>
+            </div>
+            <div className="vv-banner-right">
+              <div className="vv-banner-card">
+                <div className="vv-stat"><div className="vv-stat-num">6</div><div className="vv-stat-label">RIASEC Dimensions</div></div>
+                <div className="vv-stat"><div className="vv-stat-num">500+</div><div className="vv-stat-label">Indian Colleges</div></div>
+                <div className="vv-stat"><div className="vv-stat-num">3</div><div className="vv-stat-label">Career Paths per Student</div></div>
+                <div className="vv-stat"><div className="vv-stat-num">Free</div><div className="vv-stat-label">Always free for students</div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SAFE SPACE */}
+        <section className="safe-section">
+          <div className="safe-content">
+            <div className="section-eyebrow" style={{color:'var(--sage-light)'}}>Your Safety Comes First</div>
+            <h2 className="section-h2">This is a <em>judgement-free</em> zone. Always.</h2>
+            <p className="section-p">We built Secret Sharz on one promise: you will never be shamed, exposed, or ignored here. Ever.</p>
+            <div className="safe-promises">
+              {['🔒 Anonymous by default','🤖 AI-moderated content','👁️ Human review team','📞 Crisis escalation','🇮🇳 POCSO-aware'].map((p,i) => <div key={i} className="safe-promise">{p}</div>)}
+            </div>
+            <div className="crisis-box">
+              <div style={{fontSize:'36px',flexShrink:0}}>🆘</div>
+              <div><div className="crisis-title">Need urgent help right now?</div><div className="crisis-desc">Our crisis support connects you to iCall, Vandrevala Foundation, and Snehi helplines — trained professionals available 24/7.</div></div>
+              <div className="crisis-number">iCall<br/>9152987821</div>
+            </div>
+          </div>
+        </section>
+
+        <footer className="ss-footer">
+          <div className="footer-top">
+            <div style={{flex:1,minWidth:'220px'}}>
+              <div className="footer-logo">Secret<span>Sharz</span></div>
+              <div className="footer-tagline">A safe space for every young person in India to share, heal, and grow — anonymously and without judgement.</div>
+            </div>
+            
+            <div style={{minWidth:'160px'}}>
+              <div className="footer-links-title">Platform</div>
+              <a className="footer-link" onClick={() => setScreen('mindspace')} style={{cursor: 'pointer'}}>Mind Space</a>
+              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Sharz Wall</a>
+              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Life Guide</a>
+              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Safe Corner</a>
+            </div>
+
+            <div style={{minWidth:'160px'}}>
+              <div className="footer-links-title">VidyaVantage</div>
+              <a className="footer-link" onClick={() => setScreen('vidyavantage')} style={{cursor: 'pointer'}}>Career Assessment</a>
+              <a className="footer-link" onClick={() => setScreen('vidyavantage')} style={{cursor: 'pointer'}}>College Database</a>
+              <a className="footer-link" onClick={() => {setDashboardTab('home'); currentUser ? setScreen('dashboard') : setScreen('auth')}} style={{cursor: 'pointer'}}>My Dashboard</a>
+            </div>
+
+            <div style={{minWidth:'160px'}}>
+              <div className="footer-links-title">Resources</div>
+              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Blog & Articles</a>
+              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Helpline Directory</a>
+              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>For Parents & Educators</a>
+              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>FAQ & Support</a>
+            </div>
+
+            <div style={{minWidth:'160px'}}>
+              <div className="footer-links-title">Account</div>
+              {currentUser ? (
+                <>
+                  <a className="footer-link" onClick={() => {setDashboardTab('home'); setScreen('dashboard');}} style={{cursor: 'pointer'}}>My Dashboard</a>
+                  <a className="footer-link" onClick={handleLogout} style={{cursor: 'pointer'}}>Sign Out</a>
+                </>
+              ) : (
+                <>
+                  <a className="footer-link" onClick={() => setScreen('auth')} style={{cursor: 'pointer'}}>Sign In</a>
+                  <a className="footer-link" onClick={() => setScreen('auth')} style={{cursor: 'pointer'}}>Create Account</a>
+                </>
+              )}
+              <a className="footer-link" onClick={() => setModal('talk')} style={{cursor: 'pointer'}}>Contact Us</a>
+            </div>
+          </div>
+          
+          <div className="footer-bottom">
+            <div className="footer-copy">© 2026 Secret Sharz. Made with ❤️ for India's youth.</div>
+            <div style={{fontFamily:'Fraunces,serif',fontSize:'14px',fontWeight:600,color:'rgba(255,255,255,0.25)'}}>
+              VidyaVantage is a subsidiary of Secret<span style={{color:'#F0A500'}}>Sharz</span>
+            </div>
+          </div>
+        </footer>
+
+        {modal === 'talk' && (
+          <div className="modal-overlay" onClick={() => setModal(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setModal(null)}>✕</button>
+              <div style={{fontSize:'48px',marginBottom:'20px'}}>💬</div>
+              <h3>You don't have to carry this alone</h3>
+              <p>Whether it's a small worry or something really heavy — reaching out is the bravest thing you can do.</p>
+              {[
+                {icon:'🤖',title:'Chat with AI Support',desc:'Available right now. Gentle, non-judgemental guidance.',color:'var(--sage-pale)',textColor:'var(--sage)'},
+                {icon:'📞',title:'Talk to a Real Counsellor',desc:'Trained counsellors available. First session always free.',color:'var(--peach-pale)',textColor:'var(--peach)'},
+                {icon:'🆘',title:'Crisis Support Now',desc:'iCall: 9152987821 — Available 24/7',color:'#FFF0F0',textColor:'#C0392B'},
+              ].map((opt,i) => (
+                <div key={i} onClick={() => setModal(null)} style={{display:'flex',alignItems:'center',gap:'16px',background:opt.color,borderRadius:'var(--r-sm)',padding:'16px 18px',marginBottom:'10px',cursor:'pointer',border:'1.5px solid transparent',transition:'all 0.2s'}}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = opt.textColor}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
+                  <span style={{fontSize:'24px'}}>{opt.icon}</span>
+                  <div><div style={{fontSize:'14px',fontWeight:'600',color:opt.textColor,marginBottom:'2px'}}>{opt.title}</div><div style={{fontSize:'12px',color:'var(--muted)'}}>{opt.desc}</div></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Show footer everywhere EXCEPT VidyaVantage */}
+      {screen !== 'vidyavantage' && <Footer />}
+
     </div>
   );
 }
