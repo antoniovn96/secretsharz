@@ -72,6 +72,25 @@ const EMOTIONS = {
   "Joy 😊": ["Grateful", "Optimistic", "Proud", "Relieved"]
 };
 
+// Expanded list of negative thoughts/stressors for the bubble game
+const NEGATIVE_THOUGHTS = [
+  "Stress", "Exams", "Pressure", "Fear", "Doubt", "Failure", "Overthinking",
+  "Expectations", "Loneliness", "Rejection", "Judgement", "Anxiety", "Panic",
+  "Sadness", "Regret", "Guilt", "Comparison", "FOMO", "Exhaustion", "Burnout",
+  "Not enough", "Too much", "Deadlines", "Future", "Past", "Mistakes", "Ugly",
+  "Stupid", "Unloved", "Unworthy", "Weak", "Tired", "Broken", "Lost", "Confused",
+  "Trapped", "Stuck", "Hopeless", "Helpless", "Worthless", "Annoying", "Boring",
+  "Weird", "Different", "Awkward", "Shame", "Embarrassment", "Nervous", "Worried",
+  "Scared", "Tense", "Edgy", "Jittery", "Uneasy", "Restless", "Agitated", "Fidgety",
+  "Frustrated", "Angry", "Mad", "Furious", "Resentful", "Bitter", "Jealous", "Envious",
+  "Insecure", "Inferior", "Inadequate", "Defective", "Flawed", "Imperfect", "Unattractive",
+  "Unappealing", "Undesirable", "Unwanted", "Ignored", "Forgotten", "Overlooked",
+  "Neglected", "Abandoned", "Isolated", "Excluded", "Alienated", "Ostracized",
+  "Misunderstood", "Misjudged", "Misinterpreted", "Invalidated", "Dismissed", "Silenced",
+  "Muted", "Suppressed", "Repressed", "Oppressed", "Crushed", "Smothered", "Suffocated",
+  "Choked", "Strangled", "Drowning", "Sinking", "Falling", "Plummeting", "Crashing"
+];
+
 export default function MindSpace({ userData, onNavigate }) {
     const [activeWidgetCategory, setActiveWidgetCategory] = useState('calm');
     const [activeWidgetFullscreen, setActiveWidgetFullscreen] = useState(null);
@@ -81,7 +100,7 @@ export default function MindSpace({ userData, onNavigate }) {
     const [breatheScale, setBreatheScale] = useState(1);
     const [popCount, setPopCount] = useState(0);
     const [bubbles, setBubbles] = useState([]);
-    const [focusTime, setFocusTime] = useState(120);
+    const [focusTime, setFocusTime] = useState(120); // 2 minutes in seconds
     const [groundingChecks, setGroundingChecks] = useState([false, false, false, false, false]);
     const [winsChecks, setWinsChecks] = useState([false, false, false, false, false]);
     
@@ -153,10 +172,14 @@ export default function MindSpace({ userData, onNavigate }) {
             interval = setInterval(() => {
                 setBubbles(prev => {
                     if(prev.length > 15) return prev;
+                    
+                    // Pick a random word from the expanded list
+                    const randomWord = NEGATIVE_THOUGHTS[Math.floor(Math.random() * NEGATIVE_THOUGHTS.length)];
+                    
                     return [...prev, {
                         id: Date.now() + Math.random(),
                         left: Math.random() * 80 + 10 + '%',
-                        text: ['Stress', 'Exams', 'Pressure', 'Fear', 'Doubt'][Math.floor(Math.random() * 5)]
+                        text: randomWord
                     }];
                 });
             }, 1200);
@@ -169,14 +192,22 @@ export default function MindSpace({ userData, onNavigate }) {
         setPopCount(c => c + 1);
     };
 
-    // Timer Logic
+    // Timer Logic (Fixed!)
     useEffect(() => {
         let interval;
-        if (activeWidgetFullscreen?.type === 'timer' && focusTime > 0) {
-            interval = setInterval(() => setFocusTime(t => t - 1), 1000);
+        if (activeWidgetFullscreen?.type === 'timer') {
+            interval = setInterval(() => {
+                setFocusTime(prevTime => {
+                    if (prevTime <= 1) {
+                        clearInterval(interval);
+                        return 0; // Stop at 0
+                    }
+                    return prevTime - 1;
+                });
+            }, 1000);
         }
         return () => clearInterval(interval);
-    }, [activeWidgetFullscreen, focusTime]);
+    }, [activeWidgetFullscreen]); // Removed focusTime from dependency array to prevent rapid re-triggering
 
     // Stress Tap Drain Logic
     useEffect(() => {
@@ -374,7 +405,7 @@ export default function MindSpace({ userData, onNavigate }) {
                                 {bubbles.map(b => (
                                     <div 
                                         key={b.id} 
-                                        style={{ position: 'absolute', width: '90px', height: '90px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', left: b.left, animation: 'floatUp 4s linear forwards', userSelect: 'none', fontWeight:'bold', fontSize:'14px', color:'white', textAlign: 'center' }}
+                                        style={{ position: 'absolute', width: '90px', height: '90px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', left: b.left, animation: 'floatUp 4s linear forwards', userSelect: 'none', fontWeight:'bold', fontSize:'14px', color:'white', textAlign: 'center', padding: '5px', wordWrap: 'break-word' }}
                                         onClick={(e) => {
                                             e.currentTarget.style.transform = 'scale(1.5)';
                                             e.currentTarget.style.opacity = '0';
@@ -388,7 +419,7 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 4. BRAIN DUMP TIMER */}
+                    {/* 4. BRAIN DUMP TIMER (FIXED) */}
                     {activeWidgetFullscreen.type === 'timer' && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%', padding: '0 20px'}}>
                             <div style={{fontFamily: 'Fraunces', fontSize: '80px', fontWeight: 'bold', color: '#5B9EBF', marginBottom: '20px'}}>{formatTime(focusTime)}</div>
@@ -484,7 +515,7 @@ export default function MindSpace({ userData, onNavigate }) {
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center', width: '100%', maxWidth: '900px'}}>
                             <h2 style={{fontFamily: 'Fraunces', fontSize: '36px', marginBottom: '20px'}}>What is actually in your control?</h2>
                             <div style={{display: 'flex', gap: '10px', width: '100%', marginBottom: '40px'}}>
-                                <input type="text" className="focus-input" placeholder="Type a worry or task here..." value={sortInput} onChange={e => setSortInput(e.target.value)} />
+                                <input type="text" className="focus-input" placeholder="Type a worry or task here..." value={sortInput} onChange={e => setSortInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSortAdd('in')} />
                                 <button className="btn" style={{background: '#10b981'}} onClick={() => handleSortAdd('in')}>In My Control</button>
                                 <button className="btn" style={{background: '#ef4444'}} onClick={() => handleSortAdd('out')}>Out of Control</button>
                             </div>
