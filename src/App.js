@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+// 🚀 NEW: Import React Router components
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 import { auth, db } from './firebase';
+
 import VidyaVantage from './VidyaVantage';
 import AuthPage from './AuthPage';
 import StudentDashboard from './StudentDashboard';
@@ -10,6 +13,7 @@ import AdminDashboard from './AdminDashboard';
 import Header from './Header';
 import Footer from './Footer';
 
+// ... (Keep your FONTS, CSS, PILLARS, and generateWallData exactly the same as before) ...
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');`;
 
 const CSS = `
@@ -42,6 +46,7 @@ const CSS = `
   .anim-up-3{animation:floatUp 0.7s 0.35s ease both;}
   .anim-up-4{animation:floatUp 0.7s 0.5s ease both;}
 
+  /* --- INSTANT ACTION BAR --- */
   .instant-action-bar { background: var(--sage); color: white; text-align: center; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; position: sticky; top: 0; z-index: 1001;}
   .instant-action-bar:hover { background: var(--moss); }
   .instant-action-bar span { opacity: 0.8; font-weight: 400; margin-left: 8px;}
@@ -84,6 +89,7 @@ const CSS = `
   .trust-strip{display:flex;align-items:center;gap:28px;margin-top:48px;padding-top:28px;border-top:1px solid var(--border);flex-wrap:wrap;}
   .trust-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500;}
 
+  /* --- WHAT HAPPENS NEXT --- */
   .onboarding-steps-section { padding: 40px 48px; background: var(--warm-white); text-align: center;}
   .steps-container { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; max-width: 1000px; margin: 40px auto 0;}
   .step-card { flex: 1; min-width: 250px; text-align: left; padding: 24px; background: white; border-radius: var(--r-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);}
@@ -91,57 +97,11 @@ const CSS = `
   .step-title { font-weight: bold; color: var(--ink); margin-bottom: 8px;}
   .step-desc { font-size: 14px; color: var(--muted); line-height: 1.6;}
 
+  /* --- EMOTIONAL PUNCHLINE --- */
   .punchline-section { text-align: center; padding: 60px 20px 20px; }
   .punchline-text { font-family: 'Fraunces', serif; font-size: clamp(24px, 4vw, 36px); font-weight: 300; color: var(--ink-soft); font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.4;}
 
-  .widget-section { padding: 80px 48px; background: var(--lav-pale); display: flex; flex-direction: column; align-items: center; text-align: center;}
-  .widget-container { max-width: 1000px; width: 100%; margin-top: 40px;}
-  .widget-tabs { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;}
-  .widget-tab { padding: 12px 24px; border-radius: 50px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; background: white; color: var(--muted); box-shadow: var(--shadow-sm);}
-  .widget-tab:hover { transform: translateY(-2px); border-color: var(--lavender);}
-  .widget-tab.active { background: var(--lavender); color: white; box-shadow: var(--shadow-md);}
-  
-  .widget-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; text-align: left;}
-  .tool-card { background: white; border-radius: var(--r-md); padding: 24px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.2s;}
-  .tool-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--lavender);}
-  .tool-icon { font-size: 32px; margin-bottom: 12px;}
-  .tool-title { font-family: 'Fraunces', serif; font-weight: 700; font-size: 20px; color: var(--ink); margin-bottom: 8px;}
-  .tool-desc { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 16px;}
-  .tool-meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: var(--lavender);}
-  
-  .emergency-btn { margin-top: 40px; background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 2px solid var(--danger); padding: 16px 32px; border-radius: 50px; font-weight: bold; font-size: 16px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;}
-  .emergency-btn:hover { background: var(--danger); color: white; transform: scale(1.02);}
-
-  .fs-widget-overlay { position: fixed; inset: 0; background: var(--ink); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; animation: fadeIn 0.3s ease;}
-  .fs-close-btn { position: absolute; top: 30px; right: 30px; background: rgba(255,255,255,0.1); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
-  .fs-close-btn:hover { background: rgba(255,255,255,0.2);}
-
-  .breathe-circle { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle, var(--sage-light) 0%, var(--sage) 100%); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 24px; font-weight: bold; box-shadow: 0 0 40px rgba(111, 170, 128, 0.4); transition: transform linear;}
-  .breathe-instruction { margin-top: 40px; font-size: 20px; font-weight: 300; letter-spacing: 1px; color: rgba(255,255,255,0.8);}
-
-  .bubble-container { position: relative; width: 100%; height: 60vh; max-width: 600px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 20px; overflow: hidden;}
-  .thought-bubble { position: absolute; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; animation: floatUp 4s linear infinite; user-select: none;}
-  .thought-bubble:hover { transform: scale(1.1); background: rgba(255,255,255,0.2);}
-  .thought-bubble.popped { animation: pop 0.2s ease forwards; pointer-events: none;}
-  @keyframes pop { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.8; } 100% { transform: scale(0); opacity: 0; } }
-
-  .focus-timer-display { font-family: 'Fraunces', serif; font-size: 80px; font-weight: bold; color: var(--sky); margin-bottom: 30px;}
-  .focus-textarea { width: 100%; max-width: 600px; height: 200px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; padding: 20px; font-size: 16px; font-family: inherit; resize: none;}
-  .focus-textarea:focus { outline: none; border-color: var(--sky);}
-
-  /* Checklist UI */
-  .checklist-container { text-align: left; width: 100%; max-width: 400px; }
-  .check-item { display: flex; align-items: center; gap: 15px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; border: 1px solid transparent;}
-  .check-item:hover { background: rgba(255,255,255,0.1); }
-  .check-item.done { border-color: var(--sage); opacity: 0.5; text-decoration: line-through;}
-  .check-box { width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center;}
-  .check-item.done .check-box { background: var(--sage); border-color: var(--sage);}
-
-  /* Pulse Animation */
-  .pulse-container { width: 200px; height: 200px; border-radius: 50%; background: rgba(239, 68, 68, 0.2); display: flex; align-items: center; justify-content: center; position: relative; animation: heartbeat 1s infinite;}
-  .pulse-container::after { content: ''; position: absolute; inset: -20px; border: 2px solid var(--danger); border-radius: 50%; animation: pulse-ring 1s infinite;}
-  @keyframes heartbeat { 0% { transform: scale(1); } 15% { transform: scale(1.1); } 30% { transform: scale(1); } 45% { transform: scale(1.15); } 100% { transform: scale(1); } }
-
+  /* --- SOCIAL PROOF SLIDER --- */
   .social-proof-section { padding: 40px 0 80px; overflow: hidden; background: linear-gradient(180deg, transparent, var(--sand)); }
   .sp-header { text-align: center; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px;}
   .sp-slider { display: flex; gap: 24px; padding: 0 48px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none;}
@@ -151,11 +111,13 @@ const CSS = `
   .sp-quote { font-size: 15px; color: var(--ink-soft); font-style: italic; margin-bottom: 16px; line-height: 1.6;}
   .sp-author { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase;}
 
+  /* --- FOUNDER STORY --- */
   .story-section { padding: 100px 48px; background: white; display: flex; align-items: center; justify-content: center; gap: 60px; flex-wrap: wrap;}
   .story-content { max-width: 500px; }
   .story-img-box { width: 400px; height: 500px; background: var(--sage-pale); border-radius: var(--r-lg); position: relative; display:flex; align-items:center; justify-content:center; font-size: 80px; border: 1px solid var(--border);}
   .story-img-box::after { content: ''; position: absolute; inset: -15px; border: 2px dashed var(--sage-light); border-radius: calc(var(--r-lg) + 10px); z-index: 0; opacity: 0.5;}
 
+  /* --- FOR SCHOOLS & PARENTS --- */
   .b2b-section { background: var(--ink); color: white; padding: 100px 48px; display: flex; flex-direction: column; align-items: center; text-align: center; }
   .b2b-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1000px; width: 100%; margin-top: 50px; text-align: left;}
   .b2b-card { background: rgba(255,255,255,0.05); padding: 30px; border-radius: var(--r-md); border: 1px solid rgba(255,255,255,0.1); }
@@ -290,13 +252,12 @@ const CSS = `
 `;
 
 const PILLARS = [
-  { cls:'mind', icon:'🧠', title:'Mind Space', desc:'A private sanctuary for your thoughts. Track your mood, journal freely, and access science-backed tools for anxiety, stress, and emotional wellbeing.', features:['Daily mood check-in & tracking','Guided journaling with AI prompts','Breathing & grounding exercises'], cta: 'Try Mood Tracker →', route: 'mindspace' },
-  { cls:'share', icon:'💬', title:'Sharz Wall', desc:"Share what's on your heart anonymously. Read stories from young people just like you. Know that you are never, ever alone in what you feel.", features:['100% anonymous sharing','Peer reactions & support','Moderated safe community'], cta: 'Read Anonymous Stories →', route: 'wall' },
-  { cls:'guide', icon:'🧭', title:'Life Guide', desc:"Navigate life's toughest decisions — from family pressure and friendships to career choices and your future — with guidance designed for young Indians.", features:['Career path discovery','Life skills & decision tools','Expert article library'], cta: 'Explore Life Guidance →', route: 'guide' },
-  { cls:'safe', icon:'🛡️', title:'Safe Corner', desc:"If things feel too heavy to carry, you don't have to carry them alone. Access trained counsellors, crisis support, and emergency helplines instantly.", features:['24/7 crisis helpline access','Connect with trained counsellors','Report unsafe situations privately'], cta: 'View Safety Protocols →', route: 'safe' },
+  { cls:'mind', icon:'🧠', title:'Mind Space', desc:'A private sanctuary for your thoughts. Track your mood, journal freely, and access science-backed tools for anxiety, stress, and emotional wellbeing.', features:['Daily mood check-in & tracking','Guided journaling with AI prompts','Breathing & grounding exercises'], cta: 'Try Mood Tracker →', route: '/mindspace' },
+  { cls:'share', icon:'💬', title:'Sharz Wall', desc:"Share what's on your heart anonymously. Read stories from young people just like you. Know that you are never, ever alone in what you feel.", features:['100% anonymous sharing','Peer reactions & support','Moderated safe community'], cta: 'Read Anonymous Stories →', route: '/wall' },
+  { cls:'guide', icon:'🧭', title:'Life Guide', desc:"Navigate life's toughest decisions — from family pressure and friendships to career choices and your future — with guidance designed for young Indians.", features:['Career path discovery','Life skills & decision tools','Expert article library'], cta: 'Explore Life Guidance →', route: '/guide' },
+  { cls:'safe', icon:'🛡️', title:'Safe Corner', desc:"If things feel too heavy to carry, you don't have to carry them alone. Access trained counsellors, crisis support, and emergency helplines instantly.", features:['24/7 crisis helpline access','Connect with trained counsellors','Report unsafe situations privately'], cta: 'View Safety Protocols →', route: '/safe' },
 ];
 
-// --- MOCK DATA FOR SHARZ WALL ---
 const generateWallData = () => {
     const rawShorts = [
         "I act strong in school but cry at night.",
@@ -333,277 +294,339 @@ const generateWallData = () => {
     return notes.sort(() => Math.random() - 0.5);
 };
 
-export default function App() {
-  
-  const [screen, setScreen] = useState('home');
-  const [showVV, setShowVV] = useState(false);
-  
-  const [dashboardTab, setDashboardTab] = useState('home'); 
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userData, setUserData]       = useState(null);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [modal, setModal]             = useState(null); 
+function LayoutWrapper({ children, hideNavs = false }) {
+    const location = useLocation();
+    const isVidyaVantage = location.pathname === '/vidyavantage';
 
-  const [wallNotes, setWallNotes] = useState([]);
-  const [showAddNoteModal, setShowAddNoteModal] = useState(false);
-  const [newNoteText, setNewNoteText] = useState('');
-  const [newNoteTag, setNewNoteTag] = useState('');
-
-  const isMasterEmail = currentUser?.email && btoa(currentUser.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
-  const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
-
-  useEffect(() => {
-    const s = document.createElement('style');
-    s.textContent = FONTS + CSS;
-    document.head.appendChild(s);
-    
-    setWallNotes(generateWallData());
-
-    return () => document.head.removeChild(s);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const hash = window.location.hash.replace('#', '');
-      if (hash) setScreen(hash);
-      const savedVV = sessionStorage.getItem('showVV') === 'true';
-      if (savedVV) setShowVV(true);
-    }
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
-      if (hash) setScreen(hash);
-      else setScreen('home');
-    };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const currentHash = window.location.hash.replace('#', '');
-      if (currentHash !== screen) {
-        window.history.pushState(null, '', `#${screen}`);
-      }
-    }
-  }, [screen]);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
-        let isDbAdmin = false;
-        try {
-          const snap = await getDoc(doc(db, 'users', user.uid));
-          if (snap.exists()) {
-            setUserData(snap.data());
-            if (snap.data().role === 'super_admin') isDbAdmin = true;
-          }
-        } catch (e) { console.error(e); }
-        const isMaster = user.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
-        const isUserAdmin = isDbAdmin || isMaster;
-        setScreen(prevScreen => {
-          if (prevScreen === 'auth' || prevScreen === 'home') return isUserAdmin ? 'admin' : 'dashboard';
-          return prevScreen;
-        });
-      } else {
-        setCurrentUser(null);
-        setUserData(null);
-      }
-      setAuthChecked(true);
-    });
-    return () => unsub();
-  }, []);
-
-  const handleAuthSuccess = async (user, isNew) => {
-    setCurrentUser(user);
-    let isDbAdmin = false;
-    try {
-      const snap = await getDoc(doc(db, 'users', user.uid));
-      if (snap.exists()) {
-        setUserData(snap.data());
-        if (snap.data().role === 'super_admin') isDbAdmin = true;
-      }
-    } catch (err) { console.error(err); }
-    const isMaster = user?.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
-    if (isDbAdmin || isMaster) {
-      setScreen('admin');
-    } else {
-      if(isNew) setModal('onboarding');
-      else setScreen('dashboard');
-    }
-  };
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    setCurrentUser(null);
-    setUserData(null);
-    setScreen('home');
-  };
-
-  const handleSaveAssessment = async (results) => {
-    if (!currentUser) {
-      alert("Please sign in to save your results!");
-      setScreen('auth');
-      return;
-    }
-    try {
-      const userRef = doc(db, 'users', currentUser.uid);
-      await setDoc(userRef, {
-        riasecCode: results.riasec.code,
-        riasecSummary: results.riasecSummary,
-        bestCareer: results.bestCareer,
-        recommendedCareer: results.recommendedCareer,
-        leastCareer: results.leastCareer,
-        nextSteps: results.nextSteps
-      }, { merge: true });
-
-      setUserData(prev => ({
-        ...prev,
-        riasecCode: results.riasec.code,
-        riasecSummary: results.riasecSummary,
-        bestCareer: results.bestCareer,
-        recommendedCareer: results.recommendedCareer,
-        leastCareer: results.leastCareer,
-        nextSteps: results.nextSteps
-      }));
-
-      setDashboardTab('home'); 
-      setScreen('dashboard');
-    } catch (err) { console.error("Error saving assessment: ", err); }
-  };
-
-  const submitNewNote = () => {
-      if(!newNoteText.trim()) return;
-      const newNote = {
-          id: Date.now(),
-          type: newNoteText.length > 80 ? 'long' : 'short',
-          text: newNoteText,
-          tag: newNoteTag || "Anonymous User",
-          color: ["note-yellow", "note-green", "note-purple", "note-blue"][Math.floor(Math.random() * 4)],
-          reactions: 1
-      };
-      setWallNotes([newNote, ...wallNotes]);
-      setShowAddNoteModal(false);
-      setNewNoteText('');
-  };
-
-  const reactToNote = (id) => {
-      setWallNotes(wallNotes.map(n => n.id === id ? {...n, reactions: n.reactions + 1} : n));
-  }
-
-  // ── SECURE ADMIN ROUTE ──
-  if (screen === 'admin') {
-    if (!isAdmin) { setScreen('home'); return null; }
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Header />
-        <main style={{ flex: 1, position: 'relative' }}>
-          <AdminDashboard user={currentUser} onBackToApp={() => setScreen('home')} />
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (screen === 'auth') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Header />
-        <main style={{ flex: 1, position: 'relative' }}>
-          <AuthPage onAuthSuccess={handleAuthSuccess} />
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (screen === 'dashboard' && currentUser) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Header />
-        <main style={{ flex: 1, position: 'relative' }}>
-          <StudentDashboard
-            user={currentUser}
-            userData={userData}
-            initialTab={dashboardTab} 
-            isAdmin={isAdmin}
-            onAdmin={() => setScreen('admin')}
-            onBack={() => setScreen('home')}
-            onLogout={handleLogout}
-            onStartAssessment={() => setScreen('vidyavantage')}
-          />
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (screen === 'mindspace') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Header />
-        <main style={{ flex: 1, position: 'relative' }}>
-          <MindSpace 
-            userData={userData} 
-            onNavigate={(targetTab) => {
-              if(!currentUser) {
-                alert("You must be logged in to view your career data.");
-                setScreen('auth');
-                return;
-              }
-              setDashboardTab(targetTab); 
-              setScreen('dashboard');
-            }} 
-          />
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  // ── SHARZ WALL SCREEN ──
-  if (screen === 'wall') {
-      return (
-          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            <Header />
-            <main style={{ flex: 1, position: 'relative' }} className="wall-page">
-                <div className="wall-header">
-                    <h1 className="wall-h1">Sharz Wall</h1>
-                    <p className="wall-sub">You are not the only one. Real thoughts from real students. No names. No judgement.</p>
-                    <button className="add-note-btn" onClick={() => setShowAddNoteModal(true)}>
-                        ✍️ Add Your Note
-                    </button>
-                </div>
-
-                <div style={{textAlign:'center'}}>
-                    <div className="scroll-msg">Some of these might feel like they were written by you. Take your time.</div>
-                </div>
-
-                <div className="masonry-grid">
-                    {wallNotes.map((note, index) => (
-                        <React.Fragment key={note.id}>
-                            {/* Insert calming messages periodically */}
-                            {index === 15 && <div className="scroll-msg" style={{display:'block', width:'100%', margin:'20px 0'}}>Take a breath 🌿 You're doing okay.</div>}
-                            {index === 45 && <div className="scroll-msg" style={{display:'block', width:'100%', margin:'20px 0'}}>Pause for a second. Drop your shoulders.</div>}
-                            
-                            <div className={`note-card ${note.color}`}>
-                                {note.tag && <div className="note-tag">{note.tag}</div>}
-                                <div className={`note-text ${note.type === 'short' ? 'short' : ''}`}>
-                                    {note.text}
-                                </div>
-                                <div className="note-footer">
-                                    <div style={{display:'flex', gap:'12px'}}>
-                                        <button className="reaction-btn" onClick={() => reactToNote(note.id)}>❤️ {note.reactions}</button>
-                                        <button className="reaction-btn" onClick={() => reactToNote(note.id)}>🤝 Me too</button>
-                                    </div>
-                                    <button className="reaction-btn" onClick={() => alert('Saved to your private collection.')}>🔖 Save</button>
-                                </div>
-                            </div>
-                        </React.Fragment>
-                    ))}
-                </div>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            {!isVidyaVantage && !hideNavs && <Header />}
+            <main style={{ flex: 1, position: 'relative' }}>
+                {children}
             </main>
-            <Footer />
+            {!isVidyaVantage && !hideNavs && <Footer />}
+        </div>
+    );
+}
+
+function HomePage({ currentUser, isAdmin, setModal, handleLogout }) {
+    const navigate = useNavigate();
+
+    return (
+        <>
+            {/* INSTANT ACTION BAR */}
+            {!currentUser && (
+                <div className="instant-action-bar" onClick={() => navigate('/auth')}>
+                    Feeling overwhelmed right now? Start your healing journey in 30 seconds. <span>→</span>
+                </div>
+            )}
+
+            {/* HERO */}
+            <section className="ss-hero">
+              <div className="hero-bg-blob blob-1" /><div className="hero-bg-blob blob-2" /><div className="hero-bg-blob blob-3" />
+              <div className="hero-content">
+                <div className="hero-eyebrow anim-up"><div className="hero-eyebrow-dot" />Safe · Anonymous · For Indian Youth</div>
+                
+                <h1 className="hero-h1 anim-up-1">Anonymous mental health <br/>support for students —<br/><span className="underline-word">anytime, anywhere</span></h1>
+                
+                <ul className="hero-checklist anim-up-2">
+                    <li>Takes 30 seconds to start</li>
+                    <li>No real name required</li>
+                    <li>100% free for students</li>
+                </ul>
+
+                <div className="hero-actions anim-up-3">
+                  <button className="btn-primary" onClick={() => navigate(currentUser ? '/dashboard' : '/auth')}>
+                    {currentUser ? '🏠 My Dashboard' : 'Start Anonymously'}
+                  </button>
+                  <button className="btn-ghost" onClick={() => setModal('talk')}>💬 Talk to Someone Now</button>
+                </div>
+                
+                <div className="trust-strip anim-up-4">
+                  <div className="trust-item"><span>🇮🇳</span> Join 12,000+ students across India</div>
+                  <div className="trust-item"><span>🧑‍⚕️</span> Designed by counsellors</div>
+                  <div className="trust-item"><span>🧠</span> Backed by psychology research</div>
+                </div>
+              </div>
+              <div className="hero-right">
+                <div className="floating-card"><div className="fc-icon">🔥</div><div className="fc-label">Your Healing Journey</div><div className="fc-value">7-Day Calm Streak!</div><div className="fc-sub">Your average anxiety score dropped by 12% this week. Keep it up!</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'85%', background:'var(--success)'}}/></div></div>
+                <div className="floating-card"><div className="fc-icon">💬</div><div className="fc-label">Recent Anonymous Post</div><div className="fc-value">"I feel like I'm falling behind everyone else in my class..."</div><div className="fc-sub">12 students felt the same way today.</div></div>
+                <div className="floating-card"><div className="fc-icon">🎓</div><div className="fc-label">VidyaVantage Match</div><div className="fc-value">Psychology — 94%</div><div className="fc-sub">Your RIASEC code: ISA · See your report</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'94%',background:'linear-gradient(90deg,#E8650A,#F0A500)'}}/></div></div>
+              </div>
+            </section>
+
+            {/* EMOTIONAL PUNCHLINE */}
+            <section className="punchline-section anim-up-4">
+                <h2 className="punchline-text">"The things you can't tell anyone... <br/><span style={{color: 'var(--sage)', fontWeight: '600'}}>you can tell us.</span>"</h2>
+            </section>
+
+            {/* WHAT HAPPENS NEXT (First 5 Minutes) */}
+            <section className="onboarding-steps-section">
+                <div className="section-eyebrow">Your First 5 Minutes</div>
+                <h2 className="section-h2">You don’t have to have the right words. <em>Just start.</em></h2>
+                <p className="section-p" style={{margin: '0 auto'}}>Most students join us during exam stress, family pressure, or major life decisions. We make it easy to begin.</p>
+                
+                <div className="steps-container">
+                    <div className="step-card">
+                        <div className="step-num">1</div>
+                        <div className="step-title">Quick Mood Check</div>
+                        <div className="step-desc">Tell us how you're feeling right now using a simple slider. No typing required.</div>
+                    </div>
+                    <div className="step-card">
+                        <div className="step-num">2</div>
+                        <div className="step-title">Get Matched Support</div>
+                        <div className="step-desc">Based on your mood, we instantly suggest a short breathing exercise or journal prompt.</div>
+                    </div>
+                    <div className="step-card">
+                        <div className="step-num">3</div>
+                        <div className="step-title">Explore Anonymously</div>
+                        <div className="step-desc">Read stories from other students who feel exactly like you do.</div>
+                    </div>
+                </div>
+            </section>
+
+            {/* SOCIAL PROOF SLIDER (INTERACTIVE) */}
+            <section className="social-proof-section" style={{marginTop: '40px'}}>
+                <div className="sp-header">Trusted by thousands of students across India</div>
+                <div className="sp-slider" id="spSlider">
+                    <div className="sp-card">
+                        <div className="sp-stars">★★★★★</div>
+                        <div className="sp-quote">"This helped me during boards stress so much. I finally felt like I wasn't the only one panicking."</div>
+                        <div className="sp-author">Class 12 Student • CBSE</div>
+                    </div>
+                    <div className="sp-card">
+                        <div className="sp-stars">★★★★★</div>
+                        <div className="sp-quote">"I was too scared to tell my parents I wanted to change streams. The counsellor here gave me the courage to do it."</div>
+                        <div className="sp-author">Class 11 Student • ISC</div>
+                    </div>
+                    <div className="sp-card">
+                        <div className="sp-stars">★★★★★</div>
+                        <div className="sp-quote">"I finally felt heard. Just writing down my thoughts on the anonymous wall and seeing others react made my week."</div>
+                        <div className="sp-author">College Fresher • Mumbai</div>
+                    </div>
+                    <div className="sp-card">
+                        <div className="sp-stars">★★★★★</div>
+                        <div className="sp-quote">"The breathing exercises actually work. I open this app before every major exam now."</div>
+                        <div className="sp-author">Class 10 Student • ICSE</div>
+                    </div>
+                    <div className="sp-card">
+                        <div className="sp-stars">★★★★★</div>
+                        <div className="sp-quote">"No judgement. No lecturing. Just real help when I felt completely alone."</div>
+                        <div className="sp-author">Anonymous User • Bangalore</div>
+                    </div>
+                </div>
+            </section>
+
+            {/* PILLARS */}
+            <section className="section" style={{background:'var(--sand)'}}>
+              <div className="section-header">
+                <div className="section-eyebrow">What We Offer</div>
+                <h2 className="section-h2">Everything you need to <em>feel better</em> — in one place</h2>
+                <p className="section-p">Four pillars that work together to support your mind, your connections, your future, and your safety.</p>
+              </div>
+              <div className="pillars-grid">
+                {PILLARS.map(p => (
+                  <div key={p.cls} className={`pillar-card ${p.cls}`}>
+                    <div className="pillar-icon">{p.icon}</div>
+                    <div className="pillar-title">{p.title}</div>
+                    <div className="pillar-desc">{p.desc}</div>
+                    <div className="pillar-features">{p.features.map((f,i) => <div key={i} className="pillar-feat">{f}</div>)}</div>
+                    <div className="pillar-cta" onClick={() => navigate(p.route)}>
+                        {p.cta}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* FOUNDER STORY */}
+            <section className="story-section">
+                <div className="story-content">
+                    <div className="section-eyebrow">Why SecretSharz Exists</div>
+                    <h2 className="section-h2" style={{marginBottom: '24px'}}>Built from real conversations behind <em>closed doors.</em></h2>
+                    <p className="section-p" style={{color: 'var(--ink-soft)'}}>
+                        For years, sitting in a school counselling room, I saw the same pattern repeat itself. Brilliant, capable students were struggling silently under the weight of expectations, anxiety, and the fear of judgment. 
+                    </p>
+                    <p className="section-p" style={{color: 'var(--ink-soft)', marginTop: '16px'}}>
+                        They couldn't talk to their parents. They wouldn't talk to their teachers. 
+                    </p>
+                    <p className="section-p" style={{color: 'var(--ink-soft)', marginTop: '16px'}}>
+                        Secret Sharz was built to be the digital equivalent of that safe counselling room. A place where identity doesn't matter, but your feelings do. We combine professional psychological support with the anonymity the internet provides to reach students *before* they hit a breaking point.
+                    </p>
+                </div>
+                <div className="story-img-box">
+                    🧑‍🏫
+                </div>
+            </section>
+
+            {/* VIDYAVANTAGE BANNER */}
+            <section className="section">
+              <div className="vv-banner">
+                <div className="vv-banner-left">
+                  <div className="vv-banner-tag">⚡ Powered by Secret Sharz</div>
+                  <h3>Once your mind is clear...<br/><em>discover your future</em></h3>
+                  <p>Our AI-powered career guidance subsidiary uses Holland's RIASEC theory to map your unique personality to the careers and colleges that truly fit you.</p>
+                  <button className="btn-vv" onClick={() => navigate(currentUser ? '/vidyavantage' : '/auth')}>
+                    🎓 {currentUser ? 'Start Career Assessment' : 'Login to Start Assessment'} <span style={{fontSize:'18px'}}>→</span>
+                  </button>
+                </div>
+                <div className="vv-banner-right">
+                  <div className="vv-banner-card">
+                    <div className="vv-stat"><div className="vv-stat-num">6</div><div className="vv-stat-label">RIASEC Dimensions</div></div>
+                    <div className="vv-stat"><div className="vv-stat-num">500+</div><div className="vv-stat-label">Indian Colleges</div></div>
+                    <div className="vv-stat"><div className="vv-stat-num">3</div><div className="vv-stat-label">Career Paths per Student</div></div>
+                    <div className="vv-stat"><div className="vv-stat-num">Free</div><div className="vv-stat-label">Always free for students</div></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* FOR SCHOOLS B2B SECTION */}
+            <section className="b2b-section">
+                <div className="section-eyebrow" style={{color: 'var(--sage-light)'}}>Institutional Partnerships</div>
+                <h2 className="section-h2" style={{color: 'white'}}>Empower your students with a <em>proactive</em> mental health layer.</h2>
+                <p className="section-p" style={{color: 'rgba(255,255,255,0.6)'}}>Secret Sharz partners with forward-thinking schools across India to provide anonymous, POCSO-aligned emotional support.</p>
+                
+                <div className="b2b-grid">
+                    <div className="b2b-card">
+                        <div style={{fontSize: '32px', marginBottom: '15px'}}>🛡️</div>
+                        <h3 style={{fontFamily: 'Fraunces, serif', fontSize: '20px', marginBottom: '10px'}}>Early Intervention</h3>
+                        <p style={{fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6}}>Our clinical panel detects high-stress markers early, allowing school counsellors to address issues before they escalate.</p>
+                    </div>
+                    <div className="b2b-card">
+                        <div style={{fontSize: '32px', marginBottom: '15px'}}>📊</div>
+                        <h3 style={{fontFamily: 'Fraunces, serif', fontSize: '20px', marginBottom: '10px'}}>Anonymized Analytics</h3>
+                        <p style={{fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6}}>Gain insights into the overall emotional health of your student body without ever compromising an individual's privacy.</p>
+                    </div>
+                    <div className="b2b-card">
+                        <div style={{fontSize: '32px', marginBottom: '15px'}}>🤝</div>
+                        <h3 style={{fontFamily: 'Fraunces, serif', fontSize: '20px', marginBottom: '10px'}}>Seamless Integration</h3>
+                        <p style={{fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6}}>Deploy our platform to thousands of students in under 48 hours. No complex IT setup required.</p>
+                    </div>
+                </div>
+                
+                <button className="btn-primary" style={{marginTop: '40px', background: 'white', color: 'var(--ink)'}} onClick={() => setModal('talk')}>
+                    Schedule a Demo for your School
+                </button>
+            </section>
+
+            {/* SAFE SPACE */}
+            <section className="safe-section">
+              <div className="safe-content">
+                <div className="section-eyebrow" style={{color:'var(--sage-light)'}}>Your Safety Comes First</div>
+                <h2 className="section-h2">This is a <em>judgement-free</em> zone. Always.</h2>
+                <p className="section-p">We built Secret Sharz on one promise: you will never be shamed, exposed, or ignored here. Ever.</p>
+                
+                <div className="privacy-grid">
+                    <div className="privacy-item">
+                        <span>🔒</span>
+                        <div><h4>100% Anonymous</h4><p>No real names. You interact using generated avatars and aliases.</p></div>
+                    </div>
+                    <div className="privacy-item">
+                        <span>🛡️</span>
+                        <div><h4>End-to-End Protection</h4><p>Your data is encrypted. Chat logs are never publicly linked to you.</p></div>
+                    </div>
+                    <div className="privacy-item">
+                        <span>🚫</span>
+                        <div><h4>No Data Selling</h4><p>Your mental health data is yours. We never sell information to third parties.</p></div>
+                    </div>
+                    <div className="privacy-item">
+                        <span>🇮🇳</span>
+                        <div><h4>POCSO Aligned</h4><p>Built under strict Indian child safety laws with human moderation.</p></div>
+                    </div>
+                </div>
+                
+                <div style={{textAlign: 'left', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '40px'}}>
+                    <h3 style={{color: 'white', fontFamily: 'Fraunces, serif', fontSize: '24px', marginBottom: '5px'}}>Need urgent help right now?</h3>
+                    <p style={{color: 'rgba(255,255,255,0.6)', fontSize: '15px', marginBottom: '20px'}}>Don't wait. Free, confidential support is available 24/7 across India.</p>
+                    
+                    <div className="crisis-grid">
+                        <div className="crisis-box">
+                            <div style={{fontSize:'32px'}}>📞</div>
+                            <div><div className="crisis-title">iCall Helpline</div><div className="crisis-desc">Psychosocial helpline by TISS. Mon-Sat, 8AM to 10PM.</div><div className="crisis-number">9152987821</div></div>
+                        </div>
+                        <div className="crisis-box">
+                            <div style={{fontSize:'32px'}}>🏥</div>
+                            <div><div className="crisis-title">Kiran (Govt of India)</div><div className="crisis-desc">24/7 National Mental Health Helpline.</div><div className="crisis-number">1800-599-0019</div></div>
+                        </div>
+                        <div className="crisis-box">
+                            <div style={{fontSize:'32px'}}>🤝</div>
+                            <div><div className="crisis-title">Vandrevala Foundation</div><div className="crisis-desc">Free psychological counselling for anyone in distress.</div><div className="crisis-number">9999-666-555</div></div>
+                        </div>
+                    </div>
+                </div>
+              </div>
+            </section>
+        </>
+    );
+}
+
+function WallPage() {
+    const [wallNotes, setWallNotes] = useState([]);
+    const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+    const [newNoteText, setNewNoteText] = useState('');
+    const [newNoteTag, setNewNoteTag] = useState('');
+
+    useEffect(() => {
+        setWallNotes(generateWallData());
+    }, []);
+
+    const submitNewNote = () => {
+        if(!newNoteText.trim()) return;
+        const newNote = {
+            id: Date.now(),
+            type: newNoteText.length > 80 ? 'long' : 'short',
+            text: newNoteText,
+            tag: newNoteTag || "Anonymous User",
+            color: ["note-yellow", "note-green", "note-purple", "note-blue"][Math.floor(Math.random() * 4)],
+            reactions: 1
+        };
+        setWallNotes([newNote, ...wallNotes]);
+        setShowAddNoteModal(false);
+        setNewNoteText('');
+    };
+  
+    const reactToNote = (id) => {
+        setWallNotes(wallNotes.map(n => n.id === id ? {...n, reactions: n.reactions + 1} : n));
+    }
+
+    return (
+        <div className="wall-page">
+            <div className="wall-header">
+                <h1 className="wall-h1">Sharz Wall</h1>
+                <p className="wall-sub">You are not the only one. Real thoughts from real students. No names. No judgement.</p>
+                <button className="add-note-btn" onClick={() => setShowAddNoteModal(true)}>
+                    ✍️ Add Your Note
+                </button>
+            </div>
+
+            <div style={{textAlign:'center'}}>
+                <div className="scroll-msg">Some of these might feel like they were written by you. Take your time.</div>
+            </div>
+
+            <div className="masonry-grid">
+                {wallNotes.map((note, index) => (
+                    <React.Fragment key={note.id}>
+                        {/* Insert calming messages periodically */}
+                        {index === 15 && <div className="scroll-msg" style={{display:'block', width:'100%', margin:'20px 0'}}>Take a breath 🌿 You're doing okay.</div>}
+                        {index === 45 && <div className="scroll-msg" style={{display:'block', width:'100%', margin:'20px 0'}}>Pause for a second. Drop your shoulders.</div>}
+                        
+                        <div className={`note-card ${note.color}`}>
+                            {note.tag && <div className="note-tag">{note.tag}</div>}
+                            <div className={`note-text ${note.type === 'short' ? 'short' : ''}`}>
+                                {note.text}
+                            </div>
+                            <div className="note-footer">
+                                <div style={{display:'flex', gap:'12px'}}>
+                                    <button className="reaction-btn" onClick={() => reactToNote(note.id)}>❤️ {note.reactions}</button>
+                                    <button className="reaction-btn" onClick={() => reactToNote(note.id)}>🤝 Me too</button>
+                                </div>
+                                <button className="reaction-btn" onClick={() => alert('Saved to your private collection.')}>🔖 Save</button>
+                            </div>
+                        </div>
+                    </React.Fragment>
+                ))}
+            </div>
 
             {/* ADD NOTE MODAL */}
             {showAddNoteModal && (
@@ -635,324 +658,190 @@ export default function App() {
                     </div>
                 </div>
             )}
-          </div>
-      )
-  }
-
-  if (screen === 'vidyavantage') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <main style={{ flex: 1, position: 'relative' }}>
-          <div className="vv-back-bar">
-            <button className="vv-back-btn" onClick={() => setScreen(currentUser ? 'dashboard' : 'home')}>← Back to Secret Sharz</button>
-            <div className="vv-back-label">VidyaVantage is a subsidiary of <span>SecretSharz</span></div>
-          </div>
-          <VidyaVantage onBack={() => setScreen(currentUser ? 'dashboard' : 'home')} onSave={handleSaveAssessment} />
-        </main>
-      </div>
+        </div>
     );
-  }
+}
 
-  // ── Homepage ──────────────────────────────────────────────────────────
+export default function App() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userData, setUserData]       = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [modal, setModal]             = useState(null); 
+  const [dashboardTab, setDashboardTab] = useState('home'); 
+
+  // Remove the old 'screen' state
+
+  useEffect(() => {
+    const s = document.createElement('style');
+    s.textContent = FONTS + CSS;
+    document.head.appendChild(s);
+    return () => document.head.removeChild(s);
+  }, []);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUser(user);
+        let isDbAdmin = false;
+        try {
+          const snap = await getDoc(doc(db, 'users', user.uid));
+          if (snap.exists()) {
+            setUserData(snap.data());
+            if (snap.data().role === 'super_admin') isDbAdmin = true;
+          }
+        } catch (e) { console.error(e); }
+      } else {
+        setCurrentUser(null);
+        setUserData(null);
+      }
+      setAuthChecked(true);
+    });
+    return () => unsub();
+  }, []);
+
+  const handleAuthSuccess = async (user, isNew) => {
+    setCurrentUser(user);
+    let isDbAdmin = false;
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) {
+        setUserData(snap.data());
+        if (snap.data().role === 'super_admin') isDbAdmin = true;
+      }
+    } catch (err) { console.error(err); }
+    
+    // We let React Router handle the redirection now in the component or via Navigate
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    setCurrentUser(null);
+    setUserData(null);
+    // Redirect handled by specific routes or navigation
+  };
+
+  const handleSaveAssessment = async (results) => {
+    if (!currentUser) {
+      alert("Please sign in to save your results!");
+      // Redirect handled below
+      return;
+    }
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      await setDoc(userRef, {
+        riasecCode: results.riasec.code,
+        riasecSummary: results.riasecSummary,
+        bestCareer: results.bestCareer,
+        recommendedCareer: results.recommendedCareer,
+        leastCareer: results.leastCareer,
+        nextSteps: results.nextSteps
+      }, { merge: true });
+
+      setUserData(prev => ({
+        ...prev,
+        riasecCode: results.riasec.code,
+        riasecSummary: results.riasecSummary,
+        bestCareer: results.bestCareer,
+        recommendedCareer: results.recommendedCareer,
+        leastCareer: results.leastCareer,
+        nextSteps: results.nextSteps
+      }));
+
+      setDashboardTab('home'); 
+    } catch (err) { console.error("Error saving assessment: ", err); }
+  };
+
+  const isMasterEmail = currentUser?.email && btoa(currentUser.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
+  const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
+
+  if (!authChecked) return null;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      
-      {!currentUser && screen === 'home' && (
-        <div className="instant-action-bar" onClick={() => setScreen('auth')}>
-            Feeling overwhelmed right now? Start your healing journey in 30 seconds. <span>→</span>
-        </div>
-      )}
-
-      {screen !== 'vidyavantage' && <Header />}
-
-      <main style={{ flex: 1, position: 'relative' }}>
-
-        <section className="ss-hero">
-          <div className="hero-bg-blob blob-1" /><div className="hero-bg-blob blob-2" /><div className="hero-bg-blob blob-3" />
-          <div className="hero-content">
-            <div className="hero-eyebrow anim-up"><div className="hero-eyebrow-dot" />Safe · Anonymous · For Indian Youth</div>
-            
-            <h1 className="hero-h1 anim-up-1">Anonymous mental health <br/>support for students —<br/><span className="underline-word">anytime, anywhere</span></h1>
-            
-            <ul className="hero-checklist anim-up-2">
-                <li>Takes 30 seconds to start</li>
-                <li>No real name required</li>
-                <li>100% free for students</li>
-            </ul>
-
-            <div className="hero-actions anim-up-3">
-              <button className="btn-primary" onClick={() => setScreen(currentUser ? 'dashboard' : 'auth')}>
-                {currentUser ? '🏠 My Dashboard' : 'Start Anonymously'}
-              </button>
-              <button className="btn-ghost" onClick={() => setModal('talk')}>💬 Talk to Someone Now</button>
-            </div>
-            
-            <div className="trust-strip anim-up-4">
-              <div className="trust-item"><span>🇮🇳</span> Join 12,000+ students across India</div>
-              <div className="trust-item"><span>🧑‍⚕️</span> Designed by counsellors</div>
-              <div className="trust-item"><span>🧠</span> Backed by psychology research</div>
-            </div>
-          </div>
-          <div className="hero-right">
-            <div className="floating-card"><div className="fc-icon">🔥</div><div className="fc-label">Your Healing Journey</div><div className="fc-value">7-Day Calm Streak!</div><div className="fc-sub">Your average anxiety score dropped by 12% this week. Keep it up!</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'85%', background:'var(--success)'}}/></div></div>
-            <div className="floating-card"><div className="fc-icon">💬</div><div className="fc-label">Recent Anonymous Post</div><div className="fc-value">"I feel like I'm falling behind everyone else in my class..."</div><div className="fc-sub">12 students felt the same way today.</div></div>
-            <div className="floating-card"><div className="fc-icon">🎓</div><div className="fc-label">VidyaVantage Match</div><div className="fc-value">Psychology — 94%</div><div className="fc-sub">Your RIASEC code: ISA · See your report</div><div className="fc-bar"><div className="fc-bar-fill" style={{width:'94%',background:'linear-gradient(90deg,#E8650A,#F0A500)'}}/></div></div>
-          </div>
-        </section>
-
-        <section className="punchline-section anim-up-4">
-            <h2 className="punchline-text">"The things you can't tell anyone... <br/><span style={{color: 'var(--sage)', fontWeight: '600'}}>you can tell us.</span>"</h2>
-        </section>
-
-        <section className="onboarding-steps-section">
-            <div className="section-eyebrow">Your First 5 Minutes</div>
-            <h2 className="section-h2">You don’t have to have the right words. <em>Just start.</em></h2>
-            <p className="section-p" style={{margin: '0 auto'}}>Most students join us during exam stress, family pressure, or major life decisions. We make it easy to begin.</p>
-            
-            <div className="steps-container">
-                <div className="step-card">
-                    <div className="step-num">1</div>
-                    <div className="step-title">Quick Mood Check</div>
-                    <div className="step-desc">Tell us how you're feeling right now using a simple slider. No typing required.</div>
-                </div>
-                <div className="step-card">
-                    <div className="step-num">2</div>
-                    <div className="step-title">Get Matched Support</div>
-                    <div className="step-desc">Based on your mood, we instantly suggest a short breathing exercise or journal prompt.</div>
-                </div>
-                <div className="step-card">
-                    <div className="step-num">3</div>
-                    <div className="step-title">Explore Anonymously</div>
-                    <div className="step-desc">Read stories from other students who feel exactly like you do.</div>
-                </div>
-            </div>
-        </section>
-
-        <section className="social-proof-section" style={{marginTop: '40px'}}>
-            <div className="sp-header">Trusted by thousands of students across India</div>
-            <div className="sp-slider" id="spSlider">
-                <div className="sp-card">
-                    <div className="sp-stars">★★★★★</div>
-                    <div className="sp-quote">"This helped me during boards stress so much. I finally felt like I wasn't the only one panicking."</div>
-                    <div className="sp-author">Class 12 Student • CBSE</div>
-                </div>
-                <div className="sp-card">
-                    <div className="sp-stars">★★★★★</div>
-                    <div className="sp-quote">"I was too scared to tell my parents I wanted to change streams. The counsellor here gave me the courage to do it."</div>
-                    <div className="sp-author">Class 11 Student • ISC</div>
-                </div>
-                <div className="sp-card">
-                    <div className="sp-stars">★★★★★</div>
-                    <div className="sp-quote">"I finally felt heard. Just writing down my thoughts on the anonymous wall and seeing others react made my week."</div>
-                    <div className="sp-author">College Fresher • Mumbai</div>
-                </div>
-                <div className="sp-card">
-                    <div className="sp-stars">★★★★★</div>
-                    <div className="sp-quote">"The breathing exercises actually work. I open this app before every major exam now."</div>
-                    <div className="sp-author">Class 10 Student • ICSE</div>
-                </div>
-                <div className="sp-card">
-                    <div className="sp-stars">★★★★★</div>
-                    <div className="sp-quote">"No judgement. No lecturing. Just real help when I felt completely alone."</div>
-                    <div className="sp-author">Anonymous User • Bangalore</div>
-                </div>
-            </div>
-        </section>
-
-        <section className="section" style={{background:'var(--sand)'}}>
-          <div className="section-header">
-            <div className="section-eyebrow">What We Offer</div>
-            <h2 className="section-h2">Everything you need to <em>feel better</em> — in one place</h2>
-            <p className="section-p">Four pillars that work together to support your mind, your connections, your future, and your safety.</p>
-          </div>
-          <div className="pillars-grid">
-            {PILLARS.map(p => (
-              <div key={p.cls} className={`pillar-card ${p.cls}`}>
-                <div className="pillar-icon">{p.icon}</div>
-                <div className="pillar-title">{p.title}</div>
-                <div className="pillar-desc">{p.desc}</div>
-                <div className="pillar-features">{p.features.map((f,i) => <div key={i} className="pillar-feat">{f}</div>)}</div>
-                <div className="pillar-cta" onClick={() => p.route === 'mindspace' ? setScreen('mindspace') : (p.route === 'wall' ? setScreen('wall') : setModal('talk'))}>
-                    {p.cta}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="story-section">
-            <div className="story-content">
-                <div className="section-eyebrow">Why SecretSharz Exists</div>
-                <h2 className="section-h2" style={{marginBottom: '24px'}}>Built from real conversations behind <em>closed doors.</em></h2>
-                <p className="section-p" style={{color: 'var(--ink-soft)'}}>
-                    For years, sitting in a school counselling room, I saw the same pattern repeat itself. Brilliant, capable students were struggling silently under the weight of expectations, anxiety, and the fear of judgment. 
-                </p>
-                <p className="section-p" style={{color: 'var(--ink-soft)', marginTop: '16px'}}>
-                    They couldn't talk to their parents. They wouldn't talk to their teachers. 
-                </p>
-                <p className="section-p" style={{color: 'var(--ink-soft)', marginTop: '16px'}}>
-                    Secret Sharz was built to be the digital equivalent of that safe counselling room. A place where identity doesn't matter, but your feelings do. We combine professional psychological support with the anonymity the internet provides to reach students *before* they hit a breaking point.
-                </p>
-            </div>
-            <div className="story-img-box">
-                🧑‍🏫
-            </div>
-        </section>
-
-        <section className="section">
-          <div className="vv-banner">
-            <div className="vv-banner-left">
-              <div className="vv-banner-tag">⚡ Powered by Secret Sharz</div>
-              <h3>Once your mind is clear...<br/><em>discover your future</em></h3>
-              <p>Our AI-powered career guidance subsidiary uses Holland's RIASEC theory to map your unique personality to the careers and colleges that truly fit you.</p>
-              <button className="btn-vv" onClick={() => { setScreen(currentUser ? 'vidyavantage' : 'auth'); }}>
-                🎓 {currentUser ? 'Start Career Assessment' : 'Login to Start Assessment'} <span style={{fontSize:'18px'}}>→</span>
-              </button>
-            </div>
-            <div className="vv-banner-right">
-              <div className="vv-banner-card">
-                <div className="vv-stat"><div className="vv-stat-num">6</div><div className="vv-stat-label">RIASEC Dimensions</div></div>
-                <div className="vv-stat"><div className="vv-stat-num">500+</div><div className="vv-stat-label">Indian Colleges</div></div>
-                <div className="vv-stat"><div className="vv-stat-num">3</div><div className="vv-stat-label">Career Paths per Student</div></div>
-                <div className="vv-stat"><div className="vv-stat-num">Free</div><div className="vv-stat-label">Always free for students</div></div>
+    <Router>
+        {/* We place the Modals here so they can be triggered from anywhere */}
+        {modal === 'onboarding' && (
+          <div className="modal-overlay" onClick={() => setModal(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setModal(null)}>✕</button>
+              <h3>Welcome to your Safe Space.</h3>
+              <p>How are you feeling right now? We'll suggest a good place to start.</p>
+              
+              <div className="onboard-options">
+                  <div className="onboard-card" onClick={() => {setDashboardTab('mindspace'); setModal(null); }}>
+                      <div className="onboard-emoji">🌪️</div>
+                      <div className="onboard-title">Anxious or Overwhelmed</div>
+                      <div className="onboard-desc">Try a quick breathing exercise</div>
+                  </div>
+                  <div className="onboard-card" onClick={() => {setDashboardTab('community'); setModal(null); }}>
+                      <div className="onboard-emoji">🗣️</div>
+                      <div className="onboard-title">I need to vent</div>
+                      <div className="onboard-desc">Write an anonymous post</div>
+                  </div>
+                  <div className="onboard-card" onClick={() => {setDashboardTab('home'); setModal(null); }}>
+                      <div className="onboard-emoji">🧭</div>
+                      <div className="onboard-title">Lost about my future</div>
+                      <div className="onboard-desc">Start your career profile</div>
+                  </div>
+                  <div className="onboard-card" onClick={() => {setDashboardTab('home'); setModal(null); }}>
+                      <div className="onboard-emoji">😌</div>
+                      <div className="onboard-title">I'm doing okay</div>
+                      <div className="onboard-desc">Just take me to my dashboard</div>
+                  </div>
               </div>
             </div>
           </div>
-        </section>
+        )}
 
-        <section className="b2b-section">
-            <div className="section-eyebrow" style={{color: 'var(--sage-light)'}}>Institutional Partnerships</div>
-            <h2 className="section-h2" style={{color: 'white'}}>Empower your students with a <em>proactive</em> mental health layer.</h2>
-            <p className="section-p" style={{color: 'rgba(255,255,255,0.6)'}}>Secret Sharz partners with forward-thinking schools across India to provide anonymous, POCSO-aligned emotional support.</p>
-            
-            <div className="b2b-grid">
-                <div className="b2b-card">
-                    <div style={{fontSize: '32px', marginBottom: '15px'}}>🛡️</div>
-                    <h3 style={{fontFamily: 'Fraunces, serif', fontSize: '20px', marginBottom: '10px'}}>Early Intervention</h3>
-                    <p style={{fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6}}>Our clinical panel detects high-stress markers early, allowing school counsellors to address issues before they escalate.</p>
+        {modal === 'talk' && (
+          <div className="modal-overlay" onClick={() => setModal(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setModal(null)}>✕</button>
+              <div style={{fontSize:'48px',marginBottom:'20px'}}>💬</div>
+              <h3>You don't have to carry this alone</h3>
+              <p>Whether it's a small worry or something really heavy — reaching out is the bravest thing you can do.</p>
+              {[
+                {icon:'🤖',title:'Chat with AI Support',desc:'Available right now. Gentle, non-judgemental guidance.',color:'var(--sage-pale)',textColor:'var(--sage)'},
+                {icon:'📞',title:'Talk to a Real Counsellor',desc:'Trained counsellors available. First session always free.',color:'var(--peach-pale)',textColor:'var(--peach)'},
+                {icon:'🆘',title:'Crisis Support Now',desc:'iCall: 9152987821 — Available 24/7',color:'#FFF0F0',textColor:'#C0392B'},
+              ].map((opt,i) => (
+                <div key={i} onClick={() => setModal(null)} style={{display:'flex',alignItems:'center',gap:'16px',background:opt.color,borderRadius:'var(--r-sm)',padding:'16px 18px',marginBottom:'10px',cursor:'pointer',border:'1.5px solid transparent',transition:'all 0.2s'}}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = opt.textColor}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
+                  <span style={{fontSize:'24px'}}>{opt.icon}</span>
+                  <div><div style={{fontSize:'14px',fontWeight:'600',color:opt.textColor,marginBottom:'2px'}}>{opt.title}</div><div style={{fontSize:'12px',color:'var(--muted)'}}>{opt.desc}</div></div>
                 </div>
-                <div className="b2b-card">
-                    <div style={{fontSize: '32px', marginBottom: '15px'}}>📊</div>
-                    <h3 style={{fontFamily: 'Fraunces, serif', fontSize: '20px', marginBottom: '10px'}}>Anonymized Analytics</h3>
-                    <p style={{fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6}}>Gain insights into the overall emotional health of your student body without ever compromising an individual's privacy.</p>
-                </div>
-                <div className="b2b-card">
-                    <div style={{fontSize: '32px', marginBottom: '15px'}}>🤝</div>
-                    <h3 style={{fontFamily: 'Fraunces, serif', fontSize: '20px', marginBottom: '10px'}}>Seamless Integration</h3>
-                    <p style={{fontSize: '14px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6}}>Deploy our platform to thousands of students in under 48 hours. No complex IT setup required.</p>
-                </div>
-            </div>
-            
-            <button className="btn-primary" style={{marginTop: '40px', background: 'white', color: 'var(--ink)'}} onClick={() => setModal('talk')}>
-                Schedule a Demo for your School
-            </button>
-        </section>
-
-        <section className="safe-section">
-          <div className="safe-content">
-            <div className="section-eyebrow" style={{color:'var(--sage-light)'}}>Your Safety Comes First</div>
-            <h2 className="section-h2">This is a <em>judgement-free</em> zone. Always.</h2>
-            <p className="section-p">We built Secret Sharz on one promise: you will never be shamed, exposed, or ignored here. Ever.</p>
-            
-            <div className="privacy-grid">
-                <div className="privacy-item">
-                    <span>🔒</span>
-                    <div><h4>100% Anonymous</h4><p>No real names. You interact using generated avatars and aliases.</p></div>
-                </div>
-                <div className="privacy-item">
-                    <span>🛡️</span>
-                    <div><h4>End-to-End Protection</h4><p>Your data is encrypted. Chat logs are never publicly linked to you.</p></div>
-                </div>
-                <div className="privacy-item">
-                    <span>🚫</span>
-                    <div><h4>No Data Selling</h4><p>Your mental health data is yours. We never sell information to third parties.</p></div>
-                </div>
-                <div className="privacy-item">
-                    <span>🇮🇳</span>
-                    <div><h4>POCSO Aligned</h4><p>Built under strict Indian child safety laws with human moderation.</p></div>
-                </div>
-            </div>
-            
-            <div style={{textAlign: 'left', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '40px'}}>
-                <h3 style={{color: 'white', fontFamily: 'Fraunces, serif', fontSize: '24px', marginBottom: '5px'}}>Need urgent help right now?</h3>
-                <p style={{color: 'rgba(255,255,255,0.6)', fontSize: '15px', marginBottom: '20px'}}>Don't wait. Free, confidential support is available 24/7 across India.</p>
-                
-                <div className="crisis-grid">
-                    <div className="crisis-box">
-                        <div style={{fontSize:'32px'}}>📞</div>
-                        <div><div className="crisis-title">iCall Helpline</div><div className="crisis-desc">Psychosocial helpline by TISS. Mon-Sat, 8AM to 10PM.</div><div className="crisis-number">9152987821</div></div>
-                    </div>
-                    <div className="crisis-box">
-                        <div style={{fontSize:'32px'}}>🏥</div>
-                        <div><div className="crisis-title">Kiran (Govt of India)</div><div className="crisis-desc">24/7 National Mental Health Helpline.</div><div className="crisis-number">1800-599-0019</div></div>
-                    </div>
-                    <div className="crisis-box">
-                        <div style={{fontSize:'32px'}}>🤝</div>
-                        <div><div className="crisis-title">Vandrevala Foundation</div><div className="crisis-desc">Free psychological counselling for anyone in distress.</div><div className="crisis-number">9999-666-555</div></div>
-                    </div>
-                </div>
+              ))}
             </div>
           </div>
-        </section>
-      </main>
+        )}
 
-      {screen !== 'vidyavantage' && <Footer />}
-
-      {modal === 'onboarding' && (
-        <div className="modal-overlay" onClick={() => {setModal(null); setScreen('dashboard');}}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => {setModal(null); setScreen('dashboard');}}>✕</button>
-            <h3>Welcome to your Safe Space.</h3>
-            <p>How are you feeling right now? We'll suggest a good place to start.</p>
+        <Routes>
+            <Route path="/" element={<LayoutWrapper><HomePage currentUser={currentUser} isAdmin={isAdmin} setModal={setModal} handleLogout={handleLogout} /></LayoutWrapper>} />
+            <Route path="/auth" element={<LayoutWrapper><AuthPage onAuthSuccess={(user, isNew) => handleAuthSuccess(user, isNew)} /></LayoutWrapper>} />
+            <Route path="/mindspace" element={<LayoutWrapper><MindSpace userData={userData} /></LayoutWrapper>} />
+            <Route path="/wall" element={<LayoutWrapper><WallPage /></LayoutWrapper>} />
             
-            <div className="onboard-options">
-                <div className="onboard-card" onClick={() => {setDashboardTab('mindspace'); setModal(null); setScreen('dashboard');}}>
-                    <div className="onboard-emoji">🌪️</div>
-                    <div className="onboard-title">Anxious or Overwhelmed</div>
-                    <div className="onboard-desc">Try a quick breathing exercise</div>
-                </div>
-                <div className="onboard-card" onClick={() => {setDashboardTab('community'); setModal(null); setScreen('dashboard');}}>
-                    <div className="onboard-emoji">🗣️</div>
-                    <div className="onboard-title">I need to vent</div>
-                    <div className="onboard-desc">Write an anonymous post</div>
-                </div>
-                <div className="onboard-card" onClick={() => {setDashboardTab('home'); setModal(null); setScreen('dashboard');}}>
-                    <div className="onboard-emoji">🧭</div>
-                    <div className="onboard-title">Lost about my future</div>
-                    <div className="onboard-desc">Start your career profile</div>
-                </div>
-                <div className="onboard-card" onClick={() => {setDashboardTab('home'); setModal(null); setScreen('dashboard');}}>
-                    <div className="onboard-emoji">😌</div>
-                    <div className="onboard-title">I'm doing okay</div>
-                    <div className="onboard-desc">Just take me to my dashboard</div>
-                </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {modal === 'talk' && (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setModal(null)}>✕</button>
-            <div style={{fontSize:'48px',marginBottom:'20px'}}>💬</div>
-            <h3>You don't have to carry this alone</h3>
-            <p>Whether it's a small worry or something really heavy — reaching out is the bravest thing you can do.</p>
-            {[
-              {icon:'🤖',title:'Chat with AI Support',desc:'Available right now. Gentle, non-judgemental guidance.',color:'var(--sage-pale)',textColor:'var(--sage)'},
-              {icon:'📞',title:'Talk to a Real Counsellor',desc:'Trained counsellors available. First session always free.',color:'var(--peach-pale)',textColor:'var(--peach)'},
-              {icon:'🆘',title:'Crisis Support Now',desc:'iCall: 9152987821 — Available 24/7',color:'#FFF0F0',textColor:'#C0392B'},
-            ].map((opt,i) => (
-              <div key={i} onClick={() => setModal(null)} style={{display:'flex',alignItems:'center',gap:'16px',background:opt.color,borderRadius:'var(--r-sm)',padding:'16px 18px',marginBottom:'10px',cursor:'pointer',border:'1.5px solid transparent',transition:'all 0.2s'}}
-                onMouseEnter={e => e.currentTarget.style.borderColor = opt.textColor}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-                <span style={{fontSize:'24px'}}>{opt.icon}</span>
-                <div><div style={{fontSize:'14px',fontWeight:'600',color:opt.textColor,marginBottom:'2px'}}>{opt.title}</div><div style={{fontSize:'12px',color:'var(--muted)'}}>{opt.desc}</div></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+            <Route path="/dashboard" element={
+                currentUser ? 
+                <LayoutWrapper>
+                    <StudentDashboard user={currentUser} userData={userData} initialTab={dashboardTab} isAdmin={isAdmin} onLogout={handleLogout} />
+                </LayoutWrapper> : 
+                <Navigate to="/auth" />
+            } />
+            
+            <Route path="/admin" element={
+                isAdmin ? 
+                <LayoutWrapper>
+                    <AdminDashboard user={currentUser} />
+                </LayoutWrapper> : 
+                <Navigate to="/" />
+            } />
+            
+            <Route path="/vidyavantage" element={<LayoutWrapper hideNavs={true}><VidyaVantage onSave={handleSaveAssessment} /></LayoutWrapper>} />
+            
+            {/* Catch-all redirects to home */}
+            <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+    </Router>
   );
 }
