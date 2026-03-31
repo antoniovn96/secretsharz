@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const WIDGET_CATEGORIES = [
   { id: 'calm', label: '😰 Calm Anxiety', color: '#4A7C59' }, 
@@ -12,8 +12,8 @@ const WIDGET_CATEGORIES = [
 const WIDGET_TOOLS = {
   calm: [
     { id: 'c1', title: '4-7-8 Breathing', desc: 'A proven rhythm to instantly lower heart rate.', icon: '🫁', duration: '2 min', type: 'breathing' },
+    { id: 'c3', title: 'Box Breathing', desc: 'Equal inhales, holds, and exhales for balance.', icon: '🔲', duration: '2 min', type: 'box_breathing' },
     { id: 'c2', title: '5-4-3-2-1 Grounding', desc: 'Bring your mind back to the present room.', icon: '🖐️', duration: '1 min', type: 'checklist_grounding' },
-    { id: 'c3', title: 'Box Breathing', desc: 'Equal inhales, holds, and exhales for balance.', icon: '🔲', duration: '2 min', type: 'breathing' },
     { id: 'c4', title: 'Heartbeat Sync', desc: 'Focus on a calming visual pulse.', icon: '💓', duration: '1 min', type: 'pulse' }
   ],
   vent: [
@@ -36,7 +36,7 @@ const WIDGET_TOOLS = {
   ],
   sleep: [
     { id: 's1', title: 'Sleep Countdown', desc: 'Slow your brain with a guided visual fade.', icon: '🌙', duration: '3 min', type: 'countdown' },
-    { id: 's2', title: 'Body Scan', desc: 'Release tension from head to toe.', icon: '🧘', duration: '5 min', type: 'body_scan' },
+    { id: 's2', title: 'Body Scan', desc: 'Release tension from head to toe.', icon: '🧘', duration: '5 min', type: 'text' },
     { id: 's3', title: 'White Noise', desc: 'Listen to calming rain sounds.', icon: '🌧️', duration: '10 min', type: 'audio_rain' },
     { id: 's4', title: 'Let It Go Viz', desc: 'Visualize your thoughts floating away.', icon: '🍃', duration: '2 min', type: 'visual_leaves' }
   ],
@@ -98,9 +98,12 @@ export default function MindSpace({ userData, onNavigate }) {
     const [selectedEmotion, setSelectedEmotion] = useState(null);
     const [hoverProgress, setHoverProgress] = useState(0);
 
+    // Box Breathing State
+    const [boxPhase, setBoxPhase] = useState('Inhale (4s)');
+
     // --- EFFECTS ---
 
-    // Breathing Logic
+    // 4-7-8 Breathing Logic
     useEffect(() => {
         let interval;
         if (activeWidgetFullscreen?.type === 'breathing') {
@@ -119,6 +122,24 @@ export default function MindSpace({ userData, onNavigate }) {
             };
             cycle();
             interval = setInterval(cycle, 19000);
+        }
+        return () => clearInterval(interval);
+    }, [activeWidgetFullscreen]);
+
+    // Box Breathing Logic (4-4-4-4)
+    useEffect(() => {
+        let interval;
+        if (activeWidgetFullscreen?.type === 'box_breathing') {
+            const phases = ['Inhale (4s)', 'Hold (4s)', 'Exhale (4s)', 'Hold (4s)'];
+            let currentPhase = 0;
+            
+            const cycle = () => {
+                setBoxPhase(phases[currentPhase]);
+                currentPhase = (currentPhase + 1) % 4;
+            };
+            
+            cycle(); // Start immediately
+            interval = setInterval(cycle, 4000); // Switch every 4 seconds
         }
         return () => clearInterval(interval);
     }, [activeWidgetFullscreen]);
@@ -195,6 +216,7 @@ export default function MindSpace({ userData, onNavigate }) {
         setSleepCount(100);
         setSelectedEmotion(null);
         setHoverProgress(0);
+        setBoxPhase('Inhale (4s)');
     };
 
     const toggleChecklist = (index, setter) => {
@@ -246,10 +268,32 @@ export default function MindSpace({ userData, onNavigate }) {
                 .check-item.done { border-color: #6FAA80; opacity: 0.6; }
                 .check-box { width: 28px; height: 28px; border: 2px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;}
                 .check-item.done .check-box { background: #6FAA80; border-color: #6FAA80;}
+                .check-item.done span { text-decoration: line-through; }
 
                 /* Hover Line Game */
                 .hover-track { width: 300px; height: 300px; border-radius: 50%; border: 30px solid rgba(255,255,255,0.1); position: relative; display: flex; align-items: center; justify-content: center; cursor: crosshair;}
                 .hover-track:hover { border-color: rgba(91, 158, 191, 0.5); box-shadow: 0 0 30px rgba(91, 158, 191, 0.3); }
+
+                /* Box Breathing Animation */
+                @keyframes boxTrace {
+                    0% { top: 0; left: 0; }
+                    25% { top: 0; left: 100%; }
+                    50% { top: 100%; left: 100%; }
+                    75% { top: 100%; left: 0; }
+                    100% { top: 0; left: 0; }
+                }
+                .box-container { width: 250px; height: 250px; border: 4px solid rgba(255,255,255,0.2); border-radius: 20px; position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 40px; }
+                .box-tracer { position: absolute; width: 20px; height: 20px; background: #6FAA80; border-radius: 50%; box-shadow: 0 0 20px #6FAA80; top: 0; left: 0; transform: translate(-50%, -50%); animation: boxTrace 16s linear infinite; }
+
+                /* Realistic Heartbeat */
+                @keyframes realHeartbeat {
+                    0% { transform: scale(1); }
+                    15% { transform: scale(1.15); }
+                    30% { transform: scale(1); }
+                    45% { transform: scale(1.15); }
+                    100% { transform: scale(1); }
+                }
+                .pulse-heart { font-size: 120px; animation: realHeartbeat 1s infinite; filter: drop-shadow(0 0 30px rgba(239, 68, 68, 0.5)); }
 
             `}</style>
 
@@ -296,7 +340,7 @@ export default function MindSpace({ userData, onNavigate }) {
                 <div className="fs-widget-overlay">
                     <button className="fs-close-btn" onClick={closeFullscreenWidget}>✕</button>
                     
-                    {/* 1. BREATHING VISUALIZERS (4-7-8, Box Breathing) */}
+                    {/* 1. 4-7-8 BREATHING */}
                     {activeWidgetFullscreen.type === 'breathing' && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <div style={{ width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(circle, #6FAA80 0%, #4A7C59 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '64px', transform: `scale(${breatheScale})`, transition: 'transform 4s linear', boxShadow: '0 0 60px rgba(111, 170, 128, 0.3)' }}>
@@ -306,7 +350,22 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 2. POP THE THOUGHTS GAME */}
+                    {/* 2. BOX BREATHING (CREATIVE SQUARE) */}
+                    {activeWidgetFullscreen.type === 'box_breathing' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div className="box-container">
+                                <div className="box-tracer"></div>
+                                <div style={{fontFamily: 'Fraunces, serif', fontSize: '28px', color: 'white', textAlign: 'center'}}>
+                                    {boxPhase}
+                                </div>
+                            </div>
+                            <p style={{color: 'rgba(255,255,255,0.7)', fontSize: '18px', maxWidth: '400px', textAlign: 'center', lineHeight: 1.6}}>
+                                Follow the glowing dot. Inhale across the top, hold down the right, exhale across the bottom, hold up the left.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* 3. POP THE THOUGHTS GAME */}
                     {activeWidgetFullscreen.type === 'game_pop' && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
                             <h2 style={{fontFamily: 'Fraunces', fontSize: '42px', marginBottom: '10px'}}>Pop the Thoughts</h2>
@@ -315,7 +374,7 @@ export default function MindSpace({ userData, onNavigate }) {
                                 {bubbles.map(b => (
                                     <div 
                                         key={b.id} 
-                                        style={{ position: 'absolute', width: '90px', height: '90px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', left: b.left, animation: 'floatUp 4s linear forwards', userSelect: 'none', fontWeight:'bold', fontSize:'14px', color:'white' }}
+                                        style={{ position: 'absolute', width: '90px', height: '90px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', left: b.left, animation: 'floatUp 4s linear forwards', userSelect: 'none', fontWeight:'bold', fontSize:'14px', color:'white', textAlign: 'center' }}
                                         onClick={(e) => {
                                             e.currentTarget.style.transform = 'scale(1.5)';
                                             e.currentTarget.style.opacity = '0';
@@ -329,7 +388,7 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 3. BRAIN DUMP TIMER */}
+                    {/* 4. BRAIN DUMP TIMER */}
                     {activeWidgetFullscreen.type === 'timer' && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%', padding: '0 20px'}}>
                             <div style={{fontFamily: 'Fraunces', fontSize: '80px', fontWeight: 'bold', color: '#5B9EBF', marginBottom: '20px'}}>{formatTime(focusTime)}</div>
@@ -342,14 +401,14 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 4. GROUNDING / WINS CHECKLISTS */}
+                    {/* 5. GROUNDING / WINS CHECKLISTS (PROPER UI) */}
                     {(activeWidgetFullscreen.type === 'checklist_grounding' || activeWidgetFullscreen.type === 'checklist_wins') && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
-                            <h2 style={{fontFamily: 'Fraunces', fontSize: '42px', marginBottom: '40px'}}>{activeWidgetFullscreen.title}</h2>
-                            <div style={{display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', alignItems: 'center'}}>
+                            <h2 style={{fontFamily: 'Fraunces', fontSize: '42px', marginBottom: '40px', color: 'white', textAlign: 'center'}}>{activeWidgetFullscreen.title}</h2>
+                            <div style={{display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center'}}>
                                 {(activeWidgetFullscreen.type === 'checklist_grounding' ? 
-                                    ["Find 5 things you can see", "Find 4 things you can touch", "Find 3 things you can hear", "Find 2 things you can smell", "Find 1 thing you can taste"] : 
-                                    ["Drank a glass of water", "Stepped outside for a minute", "Made my bed", "Ate something nourishing", "Took 3 deep breaths"]
+                                    ["👀 Find 5 things you can see", "🖐️ Find 4 things you can touch", "👂 Find 3 things you can hear", "👃 Find 2 things you can smell", "👅 Find 1 thing you can taste"] : 
+                                    ["💧 Drank a glass of water", "🚶‍♂️ Stepped outside for a minute", "🛏️ Made my bed", "🍎 Ate something nourishing", "🌬️ Took 3 deep breaths"]
                                 ).map((item, i) => {
                                     const stateObj = activeWidgetFullscreen.type === 'checklist_grounding' ? groundingChecks : winsChecks;
                                     const setter = activeWidgetFullscreen.type === 'checklist_grounding' ? setGroundingChecks : setWinsChecks;
@@ -361,13 +420,13 @@ export default function MindSpace({ userData, onNavigate }) {
                                     )
                                 })}
                             </div>
-                            {(activeWidgetFullscreen.type === 'checklist_grounding' ? groundingChecks : winsChecks).some(c => c) && (
+                            {(activeWidgetFullscreen.type === 'checklist_grounding' ? groundingChecks : winsChecks).every(c => c) && (
                                 <button className="btn" style={{marginTop: '40px', background: 'white', color: '#1E2820'}} onClick={closeFullscreenWidget}>Complete Exercise</button>
                             )}
                         </div>
                     )}
 
-                    {/* 5. WRITE & DESTROY */}
+                    {/* 6. WRITE & DESTROY */}
                     {activeWidgetFullscreen.type === 'destroy' && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%', padding: '0 20px'}}>
                             <div style={{fontSize: '64px', marginBottom: '20px'}}>🔥</div>
@@ -389,7 +448,7 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 6. STRESS TAP */}
+                    {/* 7. STRESS TAP */}
                     {activeWidgetFullscreen.type === 'tap' && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
                             <h2 style={{fontFamily: 'Fraunces', fontSize: '36px', marginBottom: '10px'}}>Release Physical Energy</h2>
@@ -411,16 +470,16 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 7. COMPLIMENT GENERATOR */}
+                    {/* 8. COMPLIMENT GENERATOR */}
                     {activeWidgetFullscreen.type === 'compliment' && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center', textAlign: 'center', padding: '0 20px'}}>
                             <div style={{fontSize: '80px', marginBottom: '20px', animation: 'floatUp 2s ease infinite alternate'}}>💌</div>
-                            <h2 style={{fontFamily: 'Fraunces', fontSize: '42px', color: '#E8845A', marginBottom: '40px', maxWidth: '800px'}}>{currentCompliment}</h2>
+                            <h2 style={{fontFamily: 'Fraunces', fontSize: '42px', color: '#E8845A', marginBottom: '40px', maxWidth: '800px', lineHeight: 1.4}}>{currentCompliment}</h2>
                             <button className="btn" style={{background: '#E8845A'}} onClick={() => setCurrentCompliment(COMPLIMENTS[Math.floor(Math.random() * COMPLIMENTS.length)])}>Open another letter</button>
                         </div>
                     )}
 
-                    {/* 8. SORT (CONTROL TOGGLE) */}
+                    {/* 9. SORT (CONTROL TOGGLE) */}
                     {activeWidgetFullscreen.type === 'sort' && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center', width: '100%', maxWidth: '900px'}}>
                             <h2 style={{fontFamily: 'Fraunces', fontSize: '36px', marginBottom: '20px'}}>What is actually in your control?</h2>
@@ -442,7 +501,7 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 9. SLEEP COUNTDOWN */}
+                    {/* 10. SLEEP COUNTDOWN */}
                     {activeWidgetFullscreen.type === 'countdown' && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center', width: '100%', height: '100%', justifyContent: 'center', background: `rgba(0,0,0, ${1 - (sleepCount/100)})`, transition: 'background 3s linear'}}>
                             <div style={{fontFamily: 'Fraunces', fontSize: '120px', color: `rgba(255,255,255,${sleepCount/100})`, transition: 'color 3s linear'}}>{sleepCount}</div>
@@ -451,7 +510,7 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 10. EMOTION WHEEL */}
+                    {/* 11. EMOTION WHEEL */}
                     {activeWidgetFullscreen.type === 'emotion_wheel' && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center', textAlign: 'center'}}>
                             <h2 style={{fontFamily: 'Fraunces', fontSize: '36px', marginBottom: '10px'}}>Pinpoint Your Feeling</h2>
@@ -480,7 +539,7 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 11. JOURNAL PROMPT */}
+                    {/* 12. JOURNAL PROMPT */}
                     {activeWidgetFullscreen.type === 'prompt' && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center', textAlign: 'center', padding: '0 20px', width: '100%', maxWidth: '800px'}}>
                             <div style={{fontSize: '64px', marginBottom: '20px'}}>{activeWidgetFullscreen.icon}</div>
@@ -493,7 +552,7 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 12. HOVER LINE GAME */}
+                    {/* 13. HOVER LINE GAME */}
                     {activeWidgetFullscreen.type === 'game_line' && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
                             <h2 style={{fontFamily: 'Fraunces', fontSize: '36px', marginBottom: '10px'}}>Follow the Path</h2>
@@ -508,7 +567,7 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 13. AUDIO RAIN VISUALIZER */}
+                    {/* 14. AUDIO RAIN VISUALIZER */}
                     {activeWidgetFullscreen.type === 'audio_rain' && (
                         <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
                             <h2 style={{fontFamily: 'Fraunces', fontSize: '36px', marginBottom: '10px', color: '#5B9EBF'}}>White Noise</h2>
@@ -522,7 +581,18 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 14. TEXT/GRATITUDE/ONE-TASK FALLBACK */}
+                    {/* 15. HEARTBEAT SYNC (UPGRADED UI) */}
+                    {activeWidgetFullscreen.type === 'pulse' && (
+                        <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+                            <h2 style={{fontFamily: 'Fraunces', fontSize: '36px', marginBottom: '40px'}}>Heartbeat Sync</h2>
+                            <div className="pulse-heart">
+                                🫀
+                            </div>
+                            <p style={{marginTop: '60px', color: 'rgba(255,255,255,0.7)', fontSize: '20px'}}>Sync your breathing with the rhythm.</p>
+                        </div>
+                    )}
+
+                    {/* 16. TEXT/GRATITUDE/ONE-TASK FALLBACK */}
                     {['text', 'gratitude', 'one_task', 'body_scan'].includes(activeWidgetFullscreen.type) && (
                         <div style={{textAlign:'center', maxWidth:'600px'}}>
                             <div style={{fontSize:'64px', marginBottom:'20px'}}>{activeWidgetFullscreen.icon}</div>
@@ -547,7 +617,7 @@ export default function MindSpace({ userData, onNavigate }) {
                         </div>
                     )}
 
-                    {/* 15. VISUAL CLOUDS / LEAVES */}
+                    {/* 17. VISUAL CLOUDS / LEAVES */}
                     {(activeWidgetFullscreen.type === 'visual_clouds' || activeWidgetFullscreen.type === 'visual_leaves') && (
                         <div style={{width: '100%', height: '100%', overflow: 'hidden', position: 'absolute', top: 0, left: 0, zIndex: -1}}>
                             {[1,2,3,4,5].map(i => (
