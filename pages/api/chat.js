@@ -1,40 +1,39 @@
+// pages/api/chat.js
+
 export default async function handler(req, res) {
-  // 1. CORS Headers
+  // ── CORS ──────────────────────────────────────────────────────────
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight request
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Ensure we only accept POST
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  console.log("STEP 1: Vercel hit the /api/chat route successfully!");
-
-  // 2. Check API Key
+  // ── API KEY CHECK ─────────────────────────────────────────────────
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    console.error("STEP 2 ERROR: API key is missing from Vercel Environment Variables");
-    return res.status(500).json({ error: 'No API key found in server environment' });
+    console.error('[VidyaVantage] ANTHROPIC_API_KEY is not set in Vercel environment variables.');
+    return res.status(500).json({ error: 'Server configuration error: API key missing.' });
   }
 
-  // 3. Robust Body Parsing
-  // Vercel sometimes passes the body as a string; we ensure it's an object.
+  // ── PARSE BODY ────────────────────────────────────────────────────
   let body;
   try {
     body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  } catch (e) {
-    return res.status(400).json({ error: 'Invalid JSON in request body' });
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON in request body.' });
   }
 
-  console.log("STEP 2: API Key found, formatting request to Anthropic...");
+  if (!body?.messages || !Array.isArray(body.messages)) {
+    return res.status(400).json({ error: 'Request body must contain a messages array.' });
+  }
 
-  // 4. Make request to Claude
+  // ── CALL ANTHROPIC WITH TIMEOUT ───────────────────────────────────
+  // FIX: Added AbortController so the function doesn't hang past Vercel's
+  // serverless timeout limit (10s Hobby / 60s Pro).
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 50000); // 50 second hard limit
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -43,30 +42,41 @@ export default async function handler(req, res) {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
+      // FIX: Pinned model string instead of rolling alias 'claude-3-5-haiku-latest'.
+      // FIX: Increased max_tokens from 3000 → 4096 to prevent mid-JSON truncation
+      // which caused JSON.parse to crash in the frontend.
       body: JSON.stringify({
-        // Updated to the most stable production model ID for 2026
-        model: 'claude-3-5-haiku-latest', 
-        max_tokens: 3000,
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 4096,
         messages: body.messages,
       }),
+      signal: controller.signal,
     });
 
+    clearTimeout(timeoutId);
+
     const data = await response.json();
-    console.log("STEP 3: Anthropic returned status code:", response.status);
 
     if (!response.ok) {
-      console.error("STEP 4 ERROR: Anthropic rejected the request. Details:", data);
-      return res.status(response.status).json({ 
-        error: "Anthropic API Error", 
-        details: data.error?.message || data 
+      console.error('[VidyaVantage] Anthropic API error:', response.status, data);
+      return res.status(response.status).json({
+        error: 'Anthropic API returned an error.',
+        details: data?.error?.message || 'Unknown error from Anthropic.',
       });
     }
 
-    console.log("STEP 4 SUCCESS: Sending Claude's response to frontend.");
+    console.log('[VidyaVantage] Successfully returned response from Anthropic.');
     return res.status(200).json(data);
 
   } catch (err) {
-    console.error("CATCH BLOCK ERROR:", err.message);
-    return res.status(500).json({ error: "Internal Server Error", message: err.message });
+    clearTimeout(timeoutId);
+
+    if (err.name === 'AbortError') {
+      console.error('[VidyaVantage] Anthropic request timed out after 50s.');
+      return res.status(504).json({ error: 'The AI analysis timed out. Please try again.' });
+    }
+
+    console.error('[VidyaVantage] Unexpected server error:', err.message);
+    return res.status(500).json({ error: 'Internal server error.', message: err.message });
   }
 }
