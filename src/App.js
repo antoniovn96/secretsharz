@@ -231,8 +231,6 @@ const CSS = `
   .crisis-desc{font-size:12px;color:rgba(255,255,255,0.5);line-height:1.5; margin-bottom: 10px;}
   .crisis-number{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:#6FAA80;}
 
-  /* --- Footer Styles moved to Footer.js --- */
-
   .modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(30,40,32,0.5);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.2s ease;}
   .modal{background:white;border-radius:var(--r-lg);padding:48px;max-width:520px;width:100%;box-shadow:var(--shadow-lg);animation:floatUp 0.3s ease;position:relative;}
   .modal-close{position:absolute;top:20px;right:20px;background:var(--sand);border:none;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all 0.2s;}
@@ -298,7 +296,6 @@ const PILLARS = [
   { cls:'safe', icon:'🛡️', title:'Safe Corner', desc:"If things feel too heavy to carry, you don't have to carry them alone. Access trained counsellors, crisis support, and emergency helplines instantly.", features:['24/7 crisis helpline access','Connect with trained counsellors','Report unsafe situations privately'], cta: 'View Safety Protocols →', route: 'safe' },
 ];
 
-// --- 🚀 25 INTERACTIVE WIDGET TOOLS ---
 const WIDGET_CATEGORIES = [
   { id: 'calm', label: '😰 Calm Anxiety', color: 'var(--sage)' },
   { id: 'vent', label: '😡 Release Anger', color: 'var(--danger)' },
@@ -686,6 +683,42 @@ export default function App() {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Header />
         <main style={{ flex: 1, position: 'relative' }}>
+            
+            {/* 🚀 MOVED WIDGET SECTION HERE */}
+            <section className="widget-section" style={{ background: 'var(--warm-white)' }}>
+                <div className="section-eyebrow" style={{color: 'var(--moss)'}}>Emotional First Aid</div>
+                <h2 className="section-h2" style={{margin: 0}}>What do you need right now?</h2>
+                
+                <div className="widget-container">
+                    <div className="widget-tabs">
+                        {WIDGET_CATEGORIES.map(cat => (
+                            <div 
+                                key={cat.id} 
+                                className={`widget-tab ${activeWidgetCategory === cat.id ? 'active' : ''}`}
+                                onClick={() => setActiveWidgetCategory(cat.id)}
+                                style={{borderColor: activeWidgetCategory === cat.id ? cat.color : 'transparent'}}
+                            >
+                                {cat.label}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="widget-grid anim-up">
+                        {WIDGET_TOOLS[activeWidgetCategory].map(tool => (
+                            <div key={tool.id} className="tool-card" onClick={() => setActiveWidgetFullscreen(tool)}>
+                                <div className="tool-icon">{tool.icon}</div>
+                                <div className="tool-title">{tool.title}</div>
+                                <div className="tool-desc">{tool.desc}</div>
+                                <div className="tool-meta">
+                                    <span>⏱️ {tool.duration}</span>
+                                    <span style={{color: 'var(--primary)'}}>▶ Start</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
           <MindSpace 
             userData={userData} 
             onNavigate={(targetTab) => {
@@ -698,6 +731,126 @@ export default function App() {
               setScreen('dashboard');
             }} 
           />
+
+          {/* 🚀 MOVED FULLSCREEN WIDGET OVERLAY HERE */}
+          {activeWidgetFullscreen && (
+              <div className="fs-widget-overlay">
+                  <button className="fs-close-btn" onClick={closeFullscreenWidget}>✕</button>
+                  
+                  {activeWidgetFullscreen.type === 'breathing' && (
+                      <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+                          <div className="breathe-circle" style={{transform: `scale(${breatheScale})`}}>
+                              {activeWidgetFullscreen.icon}
+                          </div>
+                          <div className="breathe-instruction">{breathePhase}</div>
+                      </div>
+                  )}
+
+                  {activeWidgetFullscreen.type === 'game_pop' && (
+                      <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
+                          <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '10px'}}>Pop the Thoughts</h2>
+                          <p style={{color: 'rgba(255,255,255,0.6)', marginBottom: '30px'}}>Thoughts popped: {popCount}</p>
+                          <div className="bubble-container">
+                              {bubbles.map(b => (
+                                  <div 
+                                    key={b.id} 
+                                    className="thought-bubble" 
+                                    style={{left: b.left}}
+                                    onClick={(e) => {
+                                        e.currentTarget.classList.add('popped');
+                                        setTimeout(() => handlePop(b.id), 200);
+                                    }}
+                                  >
+                                      {b.text}
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                  )}
+
+                  {activeWidgetFullscreen.type === 'timer' && (
+                      <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
+                          <div className="focus-timer-display">{formatTime(focusTime)}</div>
+                          <textarea className="focus-textarea" placeholder="Type everything out. Don't stop. Don't edit. Just dump it all here..."></textarea>
+                          <button className="btn" style={{marginTop: '30px'}} onClick={closeFullscreenWidget}>Done</button>
+                      </div>
+                  )}
+
+                  {activeWidgetFullscreen.type === 'checklist_grounding' && (
+                      <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
+                          <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '30px'}}>5-4-3-2-1 Grounding</h2>
+                          <div className="checklist-container">
+                              {[
+                                  "Find 5 things you can see", 
+                                  "Find 4 things you can touch", 
+                                  "Find 3 things you can hear", 
+                                  "Find 2 things you can smell", 
+                                  "Find 1 thing you can taste"
+                              ].map((item, i) => (
+                                  <div key={i} className={`check-item ${groundingChecks[i] ? 'done' : ''}`} onClick={() => toggleChecklist(i, setGroundingChecks)}>
+                                      <div className="check-box">{groundingChecks[i] && '✓'}</div>
+                                      <span>{item}</span>
+                                  </div>
+                              ))}
+                          </div>
+                          {groundingChecks.every(c => c) && <button className="btn" style={{marginTop: '30px', background: 'white', color: 'var(--ink)'}} onClick={closeFullscreenWidget}>I feel grounded</button>}
+                      </div>
+                  )}
+
+                  {activeWidgetFullscreen.type === 'checklist_wins' && (
+                      <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
+                          <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '30px'}}>Tiny Wins Today</h2>
+                          <div className="checklist-container">
+                              {["Drank a glass of water", "Stepped outside for a minute", "Made my bed", "Ate something nourishing", "Took 3 deep breaths"].map((item, i) => (
+                                  <div key={i} className={`check-item ${winsChecks[i] ? 'done' : ''}`} onClick={() => toggleChecklist(i, setWinsChecks)}>
+                                      <div className="check-box">{winsChecks[i] && '✓'}</div>
+                                      <span>{item}</span>
+                                  </div>
+                              ))}
+                          </div>
+                          {winsChecks.some(c => c) && <button className="btn" style={{marginTop: '30px', background: 'white', color: 'var(--ink)'}} onClick={closeFullscreenWidget}>Celebrate Wins</button>}
+                      </div>
+                  )}
+
+                  {activeWidgetFullscreen.type === 'pulse' && (
+                      <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+                          <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '40px'}}>Heartbeat Sync</h2>
+                          <div className="pulse-container">
+                              <span style={{fontSize: '64px'}}>🤍</span>
+                          </div>
+                          <p style={{marginTop: '60px', color: 'rgba(255,255,255,0.7)'}}>Sync your breathing with the pulse.</p>
+                      </div>
+                  )}
+
+                  {activeWidgetFullscreen.type === 'text' && (
+                      <div style={{textAlign:'center', maxWidth:'500px'}}>
+                          <div style={{fontSize:'64px', marginBottom:'20px'}}>{activeWidgetFullscreen.icon}</div>
+                          <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '20px'}}>{activeWidgetFullscreen.title}</h2>
+                          <p style={{fontSize: '18px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6}}>{activeWidgetFullscreen.desc}</p>
+                          
+                          {activeWidgetFullscreen.title === 'Gratitude Quick-Write' && (
+                              <div style={{marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                                  <input type="text" className="form-input" placeholder="1. I am grateful for..." />
+                                  <input type="text" className="form-input" placeholder="2. Something good that happened..." />
+                                  <input type="text" className="form-input" placeholder="3. Someone who helped me..." />
+                              </div>
+                          )}
+                          
+                          <button className="btn" style={{marginTop: '40px', background: 'white', color: 'var(--ink)'}} onClick={closeFullscreenWidget}>Complete</button>
+                      </div>
+                  )}
+
+                  {/* Fallback for other types */}
+                  {['destroy', 'tap', 'compliment', 'visual', 'sort', 'game_line', 'countdown', 'audio'].includes(activeWidgetFullscreen.type) && (
+                      <div style={{textAlign:'center', maxWidth:'500px'}}>
+                          <div style={{fontSize:'64px', marginBottom:'20px'}}>🚧</div>
+                          <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '20px'}}>Interactive Module Loading</h2>
+                          <p style={{fontSize: '18px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6}}>The highly interactive {activeWidgetFullscreen.title} module is currently being optimized for your device.</p>
+                          <button className="btn" style={{marginTop: '40px', background: 'var(--sage)'}} onClick={closeFullscreenWidget}>Back to Toolkit</button>
+                      </div>
+                  )}
+              </div>
+          )}
         </main>
         <Footer />
       </div>
@@ -725,6 +878,7 @@ export default function App() {
                 <div className="masonry-grid">
                     {wallNotes.map((note, index) => (
                         <React.Fragment key={note.id}>
+                            {/* Insert calming messages periodically */}
                             {index === 15 && <div className="scroll-msg" style={{display:'block', width:'100%', margin:'20px 0'}}>Take a breath 🌿 You're doing okay.</div>}
                             {index === 45 && <div className="scroll-msg" style={{display:'block', width:'100%', margin:'20px 0'}}>Pause for a second. Drop your shoulders.</div>}
                             
@@ -844,44 +998,6 @@ export default function App() {
 
         <section className="punchline-section anim-up-4">
             <h2 className="punchline-text">"The things you can't tell anyone... <br/><span style={{color: 'var(--sage)', fontWeight: '600'}}>you can tell us.</span>"</h2>
-        </section>
-
-        <section className="widget-section">
-            <div className="section-eyebrow" style={{color: 'var(--moss)'}}>Emotional First Aid</div>
-            <h2 className="section-h2" style={{margin: 0}}>What do you need right now?</h2>
-            
-            <div className="widget-container">
-                <div className="widget-tabs">
-                    {WIDGET_CATEGORIES.map(cat => (
-                        <div 
-                            key={cat.id} 
-                            className={`widget-tab ${activeWidgetCategory === cat.id ? 'active' : ''}`}
-                            onClick={() => setActiveWidgetCategory(cat.id)}
-                            style={{borderColor: activeWidgetCategory === cat.id ? cat.color : 'transparent'}}
-                        >
-                            {cat.label}
-                        </div>
-                    ))}
-                </div>
-
-                <div className="widget-grid anim-up">
-                    {WIDGET_TOOLS[activeWidgetCategory].map(tool => (
-                        <div key={tool.id} className="tool-card" onClick={() => setActiveWidgetFullscreen(tool)}>
-                            <div className="tool-icon">{tool.icon}</div>
-                            <div className="tool-title">{tool.title}</div>
-                            <div className="tool-desc">{tool.desc}</div>
-                            <div className="tool-meta">
-                                <span>⏱️ {tool.duration}</span>
-                                <span style={{color: 'var(--primary)'}}>▶ Start</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                
-                <button className="emergency-btn" onClick={() => setModal('talk')}>
-                    🔴 I need emergency help right now
-                </button>
-            </div>
         </section>
 
         <section className="onboarding-steps-section">
@@ -1077,126 +1193,6 @@ export default function App() {
       </main>
 
       {screen !== 'vidyavantage' && <Footer />}
-
-      {/* 🚀 FULLSCREEN WIDGET OVERLAY WITH 25 TOOLS */}
-      {activeWidgetFullscreen && (
-          <div className="fs-widget-overlay">
-              <button className="fs-close-btn" onClick={closeFullscreenWidget}>✕</button>
-              
-              {activeWidgetFullscreen.type === 'breathing' && (
-                  <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
-                      <div className="breathe-circle" style={{transform: `scale(${breatheScale})`}}>
-                          {activeWidgetFullscreen.icon}
-                      </div>
-                      <div className="breathe-instruction">{breathePhase}</div>
-                  </div>
-              )}
-
-              {activeWidgetFullscreen.type === 'game_pop' && (
-                  <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
-                      <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '10px'}}>Pop the Thoughts</h2>
-                      <p style={{color: 'rgba(255,255,255,0.6)', marginBottom: '30px'}}>Thoughts popped: {popCount}</p>
-                      <div className="bubble-container">
-                          {bubbles.map(b => (
-                              <div 
-                                key={b.id} 
-                                className="thought-bubble" 
-                                style={{left: b.left}}
-                                onClick={(e) => {
-                                    e.currentTarget.classList.add('popped');
-                                    setTimeout(() => handlePop(b.id), 200);
-                                }}
-                              >
-                                  {b.text}
-                              </div>
-                          ))}
-                      </div>
-                  </div>
-              )}
-
-              {activeWidgetFullscreen.type === 'timer' && (
-                  <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
-                      <div className="focus-timer-display">{formatTime(focusTime)}</div>
-                      <textarea className="focus-textarea" placeholder="Type everything out. Don't stop. Don't edit. Just dump it all here..."></textarea>
-                      <button className="btn" style={{marginTop: '30px'}} onClick={closeFullscreenWidget}>Done</button>
-                  </div>
-              )}
-
-              {activeWidgetFullscreen.type === 'checklist_grounding' && (
-                  <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
-                      <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '30px'}}>5-4-3-2-1 Grounding</h2>
-                      <div className="checklist-container">
-                          {[
-                              "Find 5 things you can see", 
-                              "Find 4 things you can touch", 
-                              "Find 3 things you can hear", 
-                              "Find 2 things you can smell", 
-                              "Find 1 thing you can taste"
-                          ].map((item, i) => (
-                              <div key={i} className={`check-item ${groundingChecks[i] ? 'done' : ''}`} onClick={() => toggleChecklist(i, setGroundingChecks)}>
-                                  <div className="check-box">{groundingChecks[i] && '✓'}</div>
-                                  <span>{item}</span>
-                              </div>
-                          ))}
-                      </div>
-                      {groundingChecks.every(c => c) && <button className="btn" style={{marginTop: '30px', background: 'white', color: 'var(--ink)'}} onClick={closeFullscreenWidget}>I feel grounded</button>}
-                  </div>
-              )}
-
-              {activeWidgetFullscreen.type === 'checklist_wins' && (
-                  <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
-                      <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '30px'}}>Tiny Wins Today</h2>
-                      <div className="checklist-container">
-                          {["Drank a glass of water", "Stepped outside for a minute", "Made my bed", "Ate something nourishing", "Took 3 deep breaths"].map((item, i) => (
-                              <div key={i} className={`check-item ${winsChecks[i] ? 'done' : ''}`} onClick={() => toggleChecklist(i, setWinsChecks)}>
-                                  <div className="check-box">{winsChecks[i] && '✓'}</div>
-                                  <span>{item}</span>
-                              </div>
-                          ))}
-                      </div>
-                      {winsChecks.some(c => c) && <button className="btn" style={{marginTop: '30px', background: 'white', color: 'var(--ink)'}} onClick={closeFullscreenWidget}>Celebrate Wins</button>}
-                  </div>
-              )}
-
-              {activeWidgetFullscreen.type === 'pulse' && (
-                  <div style={{display:'flex', flexDirection:'column', alignItems:'center'}}>
-                      <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '40px'}}>Heartbeat Sync</h2>
-                      <div className="pulse-container">
-                          <span style={{fontSize: '64px'}}>🤍</span>
-                      </div>
-                      <p style={{marginTop: '60px', color: 'rgba(255,255,255,0.7)'}}>Sync your breathing with the pulse.</p>
-                  </div>
-              )}
-
-              {activeWidgetFullscreen.type === 'text' && (
-                  <div style={{textAlign:'center', maxWidth:'500px'}}>
-                      <div style={{fontSize:'64px', marginBottom:'20px'}}>{activeWidgetFullscreen.icon}</div>
-                      <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '20px'}}>{activeWidgetFullscreen.title}</h2>
-                      <p style={{fontSize: '18px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6}}>{activeWidgetFullscreen.desc}</p>
-                      
-                      {activeWidgetFullscreen.title === 'Gratitude Quick-Write' && (
-                          <div style={{marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                              <input type="text" className="form-input" placeholder="1. I am grateful for..." />
-                              <input type="text" className="form-input" placeholder="2. Something good that happened..." />
-                              <input type="text" className="form-input" placeholder="3. Someone who helped me..." />
-                          </div>
-                      )}
-                      
-                      <button className="btn" style={{marginTop: '40px', background: 'white', color: 'var(--ink)'}} onClick={closeFullscreenWidget}>Complete</button>
-                  </div>
-              )}
-
-              {/* Fallback for other types */}
-              {['destroy', 'tap', 'compliment', 'visual', 'sort', 'game_line', 'countdown', 'audio'].includes(activeWidgetFullscreen.type) && (
-                  <div style={{textAlign:'center', maxWidth:'500px'}}>
-                      <div style={{fontSize:'64px', marginBottom:'20px'}}>🚧</div>
-                      <h2 style={{fontFamily: 'Fraunces', fontSize: '32px', marginBottom: '20px'}}>Interactive Module Loading</h2>
-                      <p style={{fontSize: '18px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6}}>The highly interactive {activeWidgetFullscreen.title} module is currently being optimized for your device.</p>
-                      <button className="btn" style={{marginTop: '40px', background: 'var(--sage)'}} onClick={closeFullscreenWidget}>Back to Toolkit</button>
-                  </div>
-              )}
-          </div>
-      )}
 
       {modal === 'onboarding' && (
         <div className="modal-overlay" onClick={() => {setModal(null); setScreen('dashboard');}}>
