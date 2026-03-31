@@ -1,10 +1,7 @@
-import React, { useState, useEffect } from 'react';
-// 🚀 NEW: Import React Router components
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 import { auth, db } from './firebase';
-
 import VidyaVantage from './VidyaVantage';
 import AuthPage from './AuthPage';
 import StudentDashboard from './StudentDashboard';
@@ -13,10 +10,10 @@ import AdminDashboard from './AdminDashboard';
 import Header from './Header';
 import Footer from './Footer';
 
-// ... (Keep your FONTS, CSS, PILLARS, and generateWallData exactly the same as before) ...
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');`;
 
 const CSS = `
+  /* ... (Keep ALL your CSS exactly the same as before here) ... */
   :root {
     --sage:#4A7C59;--sage-light:#6FAA80;--sage-pale:#EBF4EE;--moss:#2D5240;
     --lavender:#7C6FA0;--lav-pale:#F0EDF8;--peach:#E8845A;--peach-pale:#FDF0EA;
@@ -46,7 +43,6 @@ const CSS = `
   .anim-up-3{animation:floatUp 0.7s 0.35s ease both;}
   .anim-up-4{animation:floatUp 0.7s 0.5s ease both;}
 
-  /* --- INSTANT ACTION BAR --- */
   .instant-action-bar { background: var(--sage); color: white; text-align: center; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; position: sticky; top: 0; z-index: 1001;}
   .instant-action-bar:hover { background: var(--moss); }
   .instant-action-bar span { opacity: 0.8; font-weight: 400; margin-left: 8px;}
@@ -89,7 +85,6 @@ const CSS = `
   .trust-strip{display:flex;align-items:center;gap:28px;margin-top:48px;padding-top:28px;border-top:1px solid var(--border);flex-wrap:wrap;}
   .trust-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500;}
 
-  /* --- WHAT HAPPENS NEXT --- */
   .onboarding-steps-section { padding: 40px 48px; background: var(--warm-white); text-align: center;}
   .steps-container { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; max-width: 1000px; margin: 40px auto 0;}
   .step-card { flex: 1; min-width: 250px; text-align: left; padding: 24px; background: white; border-radius: var(--r-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);}
@@ -97,11 +92,9 @@ const CSS = `
   .step-title { font-weight: bold; color: var(--ink); margin-bottom: 8px;}
   .step-desc { font-size: 14px; color: var(--muted); line-height: 1.6;}
 
-  /* --- EMOTIONAL PUNCHLINE --- */
   .punchline-section { text-align: center; padding: 60px 20px 20px; }
   .punchline-text { font-family: 'Fraunces', serif; font-size: clamp(24px, 4vw, 36px); font-weight: 300; color: var(--ink-soft); font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.4;}
 
-  /* --- SOCIAL PROOF SLIDER --- */
   .social-proof-section { padding: 40px 0 80px; overflow: hidden; background: linear-gradient(180deg, transparent, var(--sand)); }
   .sp-header { text-align: center; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px;}
   .sp-slider { display: flex; gap: 24px; padding: 0 48px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none;}
@@ -111,13 +104,11 @@ const CSS = `
   .sp-quote { font-size: 15px; color: var(--ink-soft); font-style: italic; margin-bottom: 16px; line-height: 1.6;}
   .sp-author { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase;}
 
-  /* --- FOUNDER STORY --- */
   .story-section { padding: 100px 48px; background: white; display: flex; align-items: center; justify-content: center; gap: 60px; flex-wrap: wrap;}
   .story-content { max-width: 500px; }
   .story-img-box { width: 400px; height: 500px; background: var(--sage-pale); border-radius: var(--r-lg); position: relative; display:flex; align-items:center; justify-content:center; font-size: 80px; border: 1px solid var(--border);}
   .story-img-box::after { content: ''; position: absolute; inset: -15px; border: 2px dashed var(--sage-light); border-radius: calc(var(--r-lg) + 10px); z-index: 0; opacity: 0.5;}
 
-  /* --- FOR SCHOOLS & PARENTS --- */
   .b2b-section { background: var(--ink); color: white; padding: 100px 48px; display: flex; flex-direction: column; align-items: center; text-align: center; }
   .b2b-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1000px; width: 100%; margin-top: 50px; text-align: left;}
   .b2b-card { background: rgba(255,255,255,0.05); padding: 30px; border-radius: var(--r-md); border: 1px solid rgba(255,255,255,0.1); }
@@ -294,34 +285,282 @@ const generateWallData = () => {
     return notes.sort(() => Math.random() - 0.5);
 };
 
-function LayoutWrapper({ children, hideNavs = false }) {
-    const location = useLocation();
-    const isVidyaVantage = location.pathname === '/vidyavantage';
+// 🚀 CUSTOM LIGHTWEIGHT ROUTER
+export default function App() {
+  const [currentPath, setCurrentPath] = useState('/');
+  
+  const [dashboardTab, setDashboardTab] = useState('home'); 
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userData, setUserData]       = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [modal, setModal]             = useState(null); 
 
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            {!isVidyaVantage && !hideNavs && <Header />}
-            <main style={{ flex: 1, position: 'relative' }}>
-                {children}
-            </main>
-            {!isVidyaVantage && !hideNavs && <Footer />}
-        </div>
-    );
+  // Watch for URL changes manually
+  useEffect(() => {
+      const handleLocationChange = () => {
+          setCurrentPath(window.location.pathname);
+      };
+
+      // Set initial path
+      handleLocationChange();
+
+      window.addEventListener('popstate', handleLocationChange);
+      return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
+
+  // Custom navigation function
+  const navigate = (path) => {
+      window.history.pushState({}, '', path);
+      setCurrentPath(path);
+  };
+
+  const isMasterEmail = currentUser?.email && btoa(currentUser.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
+  const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
+
+  useEffect(() => {
+    const s = document.createElement('style');
+    s.textContent = FONTS + CSS;
+    document.head.appendChild(s);
+    return () => document.head.removeChild(s);
+  }, []);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUser(user);
+        let isDbAdmin = false;
+        try {
+          const snap = await getDoc(doc(db, 'users', user.uid));
+          if (snap.exists()) {
+            setUserData(snap.data());
+            if (snap.data().role === 'super_admin') isDbAdmin = true;
+          }
+        } catch (e) { console.error(e); }
+        
+        const isMaster = user.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
+        const isUserAdmin = isDbAdmin || isMaster;
+        
+        // Auto-route if on home or auth
+        if (window.location.pathname === '/auth' || window.location.pathname === '/') {
+            navigate(isUserAdmin ? '/admin' : '/dashboard');
+        }
+
+      } else {
+        setCurrentUser(null);
+        setUserData(null);
+      }
+      setAuthChecked(true);
+    });
+    return () => unsub();
+  }, []);
+
+  const handleAuthSuccess = async (user, isNew) => {
+    setCurrentUser(user);
+    let isDbAdmin = false;
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) {
+        setUserData(snap.data());
+        if (snap.data().role === 'super_admin') isDbAdmin = true;
+      }
+    } catch (err) { console.error(err); }
+    
+    const isMaster = user?.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
+    if (isDbAdmin || isMaster) {
+      navigate('/admin');
+    } else {
+      if(isNew) setModal('onboarding');
+      else navigate('/dashboard');
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    setCurrentUser(null);
+    setUserData(null);
+    navigate('/');
+  };
+
+  const handleSaveAssessment = async (results) => {
+    if (!currentUser) {
+      alert("Please sign in to save your results!");
+      navigate('/auth');
+      return;
+    }
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      await setDoc(userRef, {
+        riasecCode: results.riasec.code,
+        riasecSummary: results.riasecSummary,
+        bestCareer: results.bestCareer,
+        recommendedCareer: results.recommendedCareer,
+        leastCareer: results.leastCareer,
+        nextSteps: results.nextSteps
+      }, { merge: true });
+
+      setUserData(prev => ({
+        ...prev,
+        riasecCode: results.riasec.code,
+        riasecSummary: results.riasecSummary,
+        bestCareer: results.bestCareer,
+        recommendedCareer: results.recommendedCareer,
+        leastCareer: results.leastCareer,
+        nextSteps: results.nextSteps
+      }));
+
+      setDashboardTab('home'); 
+      navigate('/dashboard');
+    } catch (err) { console.error("Error saving assessment: ", err); }
+  };
+
+  if (!authChecked) return null;
+
+  // --- ROUTE RENDERING LOGIC ---
+  const renderRoute = () => {
+      if (currentPath === '/admin') {
+          if (!isAdmin) { navigate('/'); return null; }
+          return <AdminDashboard user={currentUser} onBackToApp={() => navigate('/')} />;
+      }
+      
+      if (currentPath === '/auth') {
+          return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+      }
+      
+      if (currentPath === '/dashboard') {
+          if (!currentUser) { navigate('/auth'); return null; }
+          return (
+              <StudentDashboard
+                user={currentUser}
+                userData={userData}
+                initialTab={dashboardTab} 
+                isAdmin={isAdmin}
+                onAdmin={() => navigate('/admin')}
+                onBack={() => navigate('/')}
+                onLogout={handleLogout}
+                onStartAssessment={() => navigate('/vidyavantage')}
+              />
+          );
+      }
+      
+      if (currentPath === '/mindspace') {
+          return (
+              <MindSpace 
+                userData={userData} 
+                onNavigate={(targetTab) => {
+                  if(!currentUser) {
+                    alert("You must be logged in to view your career data.");
+                    navigate('/auth');
+                    return;
+                  }
+                  setDashboardTab(targetTab); 
+                  navigate('/dashboard');
+                }} 
+              />
+          );
+      }
+
+      if (currentPath === '/wall') {
+          return <WallPage />;
+      }
+
+      if (currentPath === '/vidyavantage') {
+          return (
+              <>
+                  <div className="vv-back-bar">
+                    <button className="vv-back-btn" onClick={() => navigate(currentUser ? '/dashboard' : '/')}>← Back to Secret Sharz</button>
+                    <div className="vv-back-label">VidyaVantage is a subsidiary of <span>SecretSharz</span></div>
+                  </div>
+                  <VidyaVantage onBack={() => navigate(currentUser ? '/dashboard' : '/')} onSave={handleSaveAssessment} />
+              </>
+          );
+      }
+
+      // Default Route is Home
+      return <HomePage currentUser={currentUser} isAdmin={isAdmin} setModal={setModal} navigate={navigate} />;
+  };
+
+  const isVidyaVantage = currentPath === '/vidyavantage';
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        
+        {/* Modals are kept at the root so they can overlay anything */}
+        {modal === 'onboarding' && (
+          <div className="modal-overlay" onClick={() => {setModal(null); navigate('/dashboard');}}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => {setModal(null); navigate('/dashboard');}}>✕</button>
+              <h3>Welcome to your Safe Space.</h3>
+              <p>How are you feeling right now? We'll suggest a good place to start.</p>
+              
+              <div className="onboard-options">
+                  <div className="onboard-card" onClick={() => {setDashboardTab('mindspace'); setModal(null); navigate('/dashboard');}}>
+                      <div className="onboard-emoji">🌪️</div>
+                      <div className="onboard-title">Anxious or Overwhelmed</div>
+                      <div className="onboard-desc">Try a quick breathing exercise</div>
+                  </div>
+                  <div className="onboard-card" onClick={() => {setDashboardTab('community'); setModal(null); navigate('/dashboard');}}>
+                      <div className="onboard-emoji">🗣️</div>
+                      <div className="onboard-title">I need to vent</div>
+                      <div className="onboard-desc">Write an anonymous post</div>
+                  </div>
+                  <div className="onboard-card" onClick={() => {setDashboardTab('home'); setModal(null); navigate('/dashboard');}}>
+                      <div className="onboard-emoji">🧭</div>
+                      <div className="onboard-title">Lost about my future</div>
+                      <div className="onboard-desc">Start your career profile</div>
+                  </div>
+                  <div className="onboard-card" onClick={() => {setDashboardTab('home'); setModal(null); navigate('/dashboard');}}>
+                      <div className="onboard-emoji">😌</div>
+                      <div className="onboard-title">I'm doing okay</div>
+                      <div className="onboard-desc">Just take me to my dashboard</div>
+                  </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {modal === 'talk' && (
+          <div className="modal-overlay" onClick={() => setModal(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setModal(null)}>✕</button>
+              <div style={{fontSize:'48px',marginBottom:'20px'}}>💬</div>
+              <h3>You don't have to carry this alone</h3>
+              <p>Whether it's a small worry or something really heavy — reaching out is the bravest thing you can do.</p>
+              {[
+                {icon:'🤖',title:'Chat with AI Support',desc:'Available right now. Gentle, non-judgemental guidance.',color:'var(--sage-pale)',textColor:'var(--sage)'},
+                {icon:'📞',title:'Talk to a Real Counsellor',desc:'Trained counsellors available. First session always free.',color:'var(--peach-pale)',textColor:'var(--peach)'},
+                {icon:'🆘',title:'Crisis Support Now',desc:'iCall: 9152987821 — Available 24/7',color:'#FFF0F0',textColor:'#C0392B'},
+              ].map((opt,i) => (
+                <div key={i} onClick={() => setModal(null)} style={{display:'flex',alignItems:'center',gap:'16px',background:opt.color,borderRadius:'var(--r-sm)',padding:'16px 18px',marginBottom:'10px',cursor:'pointer',border:'1.5px solid transparent',transition:'all 0.2s'}}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = opt.textColor}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
+                  <span style={{fontSize:'24px'}}>{opt.icon}</span>
+                  <div><div style={{fontSize:'14px',fontWeight:'600',color:opt.textColor,marginBottom:'2px'}}>{opt.title}</div><div style={{fontSize:'12px',color:'var(--muted)'}}>{opt.desc}</div></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!isVidyaVantage && <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />}
+        
+        <main style={{ flex: 1, position: 'relative' }}>
+            {renderRoute()}
+        </main>
+        
+        {!isVidyaVantage && <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={setModal} />}
+    </div>
+  );
 }
 
-function HomePage({ currentUser, isAdmin, setModal, handleLogout }) {
-    const navigate = useNavigate();
-
+function HomePage({ currentUser, isAdmin, setModal, navigate }) {
     return (
         <>
-            {/* INSTANT ACTION BAR */}
             {!currentUser && (
                 <div className="instant-action-bar" onClick={() => navigate('/auth')}>
                     Feeling overwhelmed right now? Start your healing journey in 30 seconds. <span>→</span>
                 </div>
             )}
 
-            {/* HERO */}
             <section className="ss-hero">
               <div className="hero-bg-blob blob-1" /><div className="hero-bg-blob blob-2" /><div className="hero-bg-blob blob-3" />
               <div className="hero-content">
@@ -355,12 +594,10 @@ function HomePage({ currentUser, isAdmin, setModal, handleLogout }) {
               </div>
             </section>
 
-            {/* EMOTIONAL PUNCHLINE */}
             <section className="punchline-section anim-up-4">
                 <h2 className="punchline-text">"The things you can't tell anyone... <br/><span style={{color: 'var(--sage)', fontWeight: '600'}}>you can tell us.</span>"</h2>
             </section>
 
-            {/* WHAT HAPPENS NEXT (First 5 Minutes) */}
             <section className="onboarding-steps-section">
                 <div className="section-eyebrow">Your First 5 Minutes</div>
                 <h2 className="section-h2">You don’t have to have the right words. <em>Just start.</em></h2>
@@ -385,7 +622,6 @@ function HomePage({ currentUser, isAdmin, setModal, handleLogout }) {
                 </div>
             </section>
 
-            {/* SOCIAL PROOF SLIDER (INTERACTIVE) */}
             <section className="social-proof-section" style={{marginTop: '40px'}}>
                 <div className="sp-header">Trusted by thousands of students across India</div>
                 <div className="sp-slider" id="spSlider">
@@ -417,7 +653,6 @@ function HomePage({ currentUser, isAdmin, setModal, handleLogout }) {
                 </div>
             </section>
 
-            {/* PILLARS */}
             <section className="section" style={{background:'var(--sand)'}}>
               <div className="section-header">
                 <div className="section-eyebrow">What We Offer</div>
@@ -439,7 +674,6 @@ function HomePage({ currentUser, isAdmin, setModal, handleLogout }) {
               </div>
             </section>
 
-            {/* FOUNDER STORY */}
             <section className="story-section">
                 <div className="story-content">
                     <div className="section-eyebrow">Why SecretSharz Exists</div>
@@ -459,7 +693,6 @@ function HomePage({ currentUser, isAdmin, setModal, handleLogout }) {
                 </div>
             </section>
 
-            {/* VIDYAVANTAGE BANNER */}
             <section className="section">
               <div className="vv-banner">
                 <div className="vv-banner-left">
@@ -481,7 +714,6 @@ function HomePage({ currentUser, isAdmin, setModal, handleLogout }) {
               </div>
             </section>
 
-            {/* FOR SCHOOLS B2B SECTION */}
             <section className="b2b-section">
                 <div className="section-eyebrow" style={{color: 'var(--sage-light)'}}>Institutional Partnerships</div>
                 <h2 className="section-h2" style={{color: 'white'}}>Empower your students with a <em>proactive</em> mental health layer.</h2>
@@ -510,7 +742,6 @@ function HomePage({ currentUser, isAdmin, setModal, handleLogout }) {
                 </button>
             </section>
 
-            {/* SAFE SPACE */}
             <section className="safe-section">
               <div className="safe-content">
                 <div className="section-eyebrow" style={{color:'var(--sage-light)'}}>Your Safety Comes First</div>
@@ -607,7 +838,6 @@ function WallPage() {
             <div className="masonry-grid">
                 {wallNotes.map((note, index) => (
                     <React.Fragment key={note.id}>
-                        {/* Insert calming messages periodically */}
                         {index === 15 && <div className="scroll-msg" style={{display:'block', width:'100%', margin:'20px 0'}}>Take a breath 🌿 You're doing okay.</div>}
                         {index === 45 && <div className="scroll-msg" style={{display:'block', width:'100%', margin:'20px 0'}}>Pause for a second. Drop your shoulders.</div>}
                         
@@ -660,188 +890,4 @@ function WallPage() {
             )}
         </div>
     );
-}
-
-export default function App() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userData, setUserData]       = useState(null);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [modal, setModal]             = useState(null); 
-  const [dashboardTab, setDashboardTab] = useState('home'); 
-
-  // Remove the old 'screen' state
-
-  useEffect(() => {
-    const s = document.createElement('style');
-    s.textContent = FONTS + CSS;
-    document.head.appendChild(s);
-    return () => document.head.removeChild(s);
-  }, []);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
-        let isDbAdmin = false;
-        try {
-          const snap = await getDoc(doc(db, 'users', user.uid));
-          if (snap.exists()) {
-            setUserData(snap.data());
-            if (snap.data().role === 'super_admin') isDbAdmin = true;
-          }
-        } catch (e) { console.error(e); }
-      } else {
-        setCurrentUser(null);
-        setUserData(null);
-      }
-      setAuthChecked(true);
-    });
-    return () => unsub();
-  }, []);
-
-  const handleAuthSuccess = async (user, isNew) => {
-    setCurrentUser(user);
-    let isDbAdmin = false;
-    try {
-      const snap = await getDoc(doc(db, 'users', user.uid));
-      if (snap.exists()) {
-        setUserData(snap.data());
-        if (snap.data().role === 'super_admin') isDbAdmin = true;
-      }
-    } catch (err) { console.error(err); }
-    
-    // We let React Router handle the redirection now in the component or via Navigate
-  };
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    setCurrentUser(null);
-    setUserData(null);
-    // Redirect handled by specific routes or navigation
-  };
-
-  const handleSaveAssessment = async (results) => {
-    if (!currentUser) {
-      alert("Please sign in to save your results!");
-      // Redirect handled below
-      return;
-    }
-    try {
-      const userRef = doc(db, 'users', currentUser.uid);
-      await setDoc(userRef, {
-        riasecCode: results.riasec.code,
-        riasecSummary: results.riasecSummary,
-        bestCareer: results.bestCareer,
-        recommendedCareer: results.recommendedCareer,
-        leastCareer: results.leastCareer,
-        nextSteps: results.nextSteps
-      }, { merge: true });
-
-      setUserData(prev => ({
-        ...prev,
-        riasecCode: results.riasec.code,
-        riasecSummary: results.riasecSummary,
-        bestCareer: results.bestCareer,
-        recommendedCareer: results.recommendedCareer,
-        leastCareer: results.leastCareer,
-        nextSteps: results.nextSteps
-      }));
-
-      setDashboardTab('home'); 
-    } catch (err) { console.error("Error saving assessment: ", err); }
-  };
-
-  const isMasterEmail = currentUser?.email && btoa(currentUser.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
-  const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
-
-  if (!authChecked) return null;
-
-  return (
-    <Router>
-        {/* We place the Modals here so they can be triggered from anywhere */}
-        {modal === 'onboarding' && (
-          <div className="modal-overlay" onClick={() => setModal(null)}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setModal(null)}>✕</button>
-              <h3>Welcome to your Safe Space.</h3>
-              <p>How are you feeling right now? We'll suggest a good place to start.</p>
-              
-              <div className="onboard-options">
-                  <div className="onboard-card" onClick={() => {setDashboardTab('mindspace'); setModal(null); }}>
-                      <div className="onboard-emoji">🌪️</div>
-                      <div className="onboard-title">Anxious or Overwhelmed</div>
-                      <div className="onboard-desc">Try a quick breathing exercise</div>
-                  </div>
-                  <div className="onboard-card" onClick={() => {setDashboardTab('community'); setModal(null); }}>
-                      <div className="onboard-emoji">🗣️</div>
-                      <div className="onboard-title">I need to vent</div>
-                      <div className="onboard-desc">Write an anonymous post</div>
-                  </div>
-                  <div className="onboard-card" onClick={() => {setDashboardTab('home'); setModal(null); }}>
-                      <div className="onboard-emoji">🧭</div>
-                      <div className="onboard-title">Lost about my future</div>
-                      <div className="onboard-desc">Start your career profile</div>
-                  </div>
-                  <div className="onboard-card" onClick={() => {setDashboardTab('home'); setModal(null); }}>
-                      <div className="onboard-emoji">😌</div>
-                      <div className="onboard-title">I'm doing okay</div>
-                      <div className="onboard-desc">Just take me to my dashboard</div>
-                  </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {modal === 'talk' && (
-          <div className="modal-overlay" onClick={() => setModal(null)}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setModal(null)}>✕</button>
-              <div style={{fontSize:'48px',marginBottom:'20px'}}>💬</div>
-              <h3>You don't have to carry this alone</h3>
-              <p>Whether it's a small worry or something really heavy — reaching out is the bravest thing you can do.</p>
-              {[
-                {icon:'🤖',title:'Chat with AI Support',desc:'Available right now. Gentle, non-judgemental guidance.',color:'var(--sage-pale)',textColor:'var(--sage)'},
-                {icon:'📞',title:'Talk to a Real Counsellor',desc:'Trained counsellors available. First session always free.',color:'var(--peach-pale)',textColor:'var(--peach)'},
-                {icon:'🆘',title:'Crisis Support Now',desc:'iCall: 9152987821 — Available 24/7',color:'#FFF0F0',textColor:'#C0392B'},
-              ].map((opt,i) => (
-                <div key={i} onClick={() => setModal(null)} style={{display:'flex',alignItems:'center',gap:'16px',background:opt.color,borderRadius:'var(--r-sm)',padding:'16px 18px',marginBottom:'10px',cursor:'pointer',border:'1.5px solid transparent',transition:'all 0.2s'}}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = opt.textColor}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-                  <span style={{fontSize:'24px'}}>{opt.icon}</span>
-                  <div><div style={{fontSize:'14px',fontWeight:'600',color:opt.textColor,marginBottom:'2px'}}>{opt.title}</div><div style={{fontSize:'12px',color:'var(--muted)'}}>{opt.desc}</div></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <Routes>
-            <Route path="/" element={<LayoutWrapper><HomePage currentUser={currentUser} isAdmin={isAdmin} setModal={setModal} handleLogout={handleLogout} /></LayoutWrapper>} />
-            <Route path="/auth" element={<LayoutWrapper><AuthPage onAuthSuccess={(user, isNew) => handleAuthSuccess(user, isNew)} /></LayoutWrapper>} />
-            <Route path="/mindspace" element={<LayoutWrapper><MindSpace userData={userData} /></LayoutWrapper>} />
-            <Route path="/wall" element={<LayoutWrapper><WallPage /></LayoutWrapper>} />
-            
-            <Route path="/dashboard" element={
-                currentUser ? 
-                <LayoutWrapper>
-                    <StudentDashboard user={currentUser} userData={userData} initialTab={dashboardTab} isAdmin={isAdmin} onLogout={handleLogout} />
-                </LayoutWrapper> : 
-                <Navigate to="/auth" />
-            } />
-            
-            <Route path="/admin" element={
-                isAdmin ? 
-                <LayoutWrapper>
-                    <AdminDashboard user={currentUser} />
-                </LayoutWrapper> : 
-                <Navigate to="/" />
-            } />
-            
-            <Route path="/vidyavantage" element={<LayoutWrapper hideNavs={true}><VidyaVantage onSave={handleSaveAssessment} /></LayoutWrapper>} />
-            
-            {/* Catch-all redirects to home */}
-            <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-    </Router>
-  );
 }
