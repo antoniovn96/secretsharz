@@ -1177,17 +1177,16 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
 }`;
  
     try {
-      // FIX: Was calling '/api/chat' — a non-existent route that would always 404.
-      // Must call the Anthropic API directly. API key injection is handled by the platform.
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: prompt }],
-        }),
-      });
+// ADD THIS
+const res = await fetch('/api/chat', { 
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    // We pass the messages to your Vercel function, 
+    // which then talks to Anthropic for you.
+    messages: [{ role: 'user', content: prompt }],
+  }),
+});
       const data = await res.json();
       const text = data.content?.map(b => b.text || '').join('') || '';
       const clean = text.replace(/```json|```/g, '').trim();
