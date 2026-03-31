@@ -53,8 +53,6 @@ Future Self Advice (cl4) — Was sharing 'prompt' type with cl2 and cl3, using t
 Mindspace
 Code · JSX 
 
-import React from 'react'; import { useState, useEffect, useRef } from 'react'; const GOOGLE_FONTS = `@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&di
-
 pasted
 
 That is my entire page for VidyaVantage.jsx. This is my entire career guidance platform inside Secret Sharz. I want you to check it thoroughly and see if there is any error in the code and correct it and give me the corrected entire code back. i also want you to add the missing items that are there in it. I want you to also create something that is interactive for the students to play around and get information.
