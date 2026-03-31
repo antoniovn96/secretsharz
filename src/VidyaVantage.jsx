@@ -53,10 +53,6 @@ Future Self Advice (cl4) — Was sharing 'prompt' type with cl2 and cl3, using t
 Mindspace
 Code · JSX 
 
-pasted
-
-That is my entire page for VidyaVantage.jsx. This is my entire career guidance platform inside Secret Sharz. I want you to check it thoroughly and see if there is any error in the code and correct it and give me the corrected entire code back. i also want you to add the missing items that are there in it. I want you to also create something that is interactive for the students to play around and get information.
-
 4:32 PM
 
 Identified bugs, planned fixes, and architected interactive career explorer feature
