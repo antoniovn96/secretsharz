@@ -76,7 +76,8 @@ export default function NewYearReset({ navigate, relatedPosts }) {
         {/* OG Tags for precise sharing previews on WhatsApp, Twitter, iMessage */}
         <meta property="og:title" content={meta.title} />
         <meta property="og:description" content={meta.excerpt} />
-        <meta property="og:image" content={meta.imgUrl} />
+        {/* Using the Secret Sharz Logo as the specific sharing thumbnail as requested */}
+        <meta property="og:image" content="/secret-sharz-logo.png" />
         <meta property="og:type" content="article" />
         <meta property="twitter:card" content="summary_large_image" />
         
@@ -107,7 +108,7 @@ export default function NewYearReset({ navigate, relatedPosts }) {
 
       <h3 id="quick-reset">2. 1-Minute Mental Reset for Students</h3>
       <p>If you are feeling a panic attack coming on, try this featured 1 minute stress relief for students:</p>
-      <ol style={{ background: 'var(--sage-pale)', padding: '20px 20px 20px 40px', borderRadius: '12px' }}>
+      <ol style={{ background: 'var(--sage-pale)', padding: '20px 20px 20px 30px', borderRadius: '12px' }}>
         <li><strong>Close your eyes</strong> and drop your shoulders.</li>
         <li><strong>Take 5 deep breaths</strong> (Inhale for 4 seconds, exhale for 6).</li>
         <li><strong>Say out loud:</strong> <em>&quot;I don&apos;t need to figure everything out today. I am allowed to rest.&quot;</em></li>
@@ -117,7 +118,7 @@ export default function NewYearReset({ navigate, relatedPosts }) {
       <div style={{ textAlign: 'center', margin: '30px 0' }}>
         <button 
           onClick={() => setShowRoutine(!showRoutine)}
-          style={{ background: 'var(--sage)', color: 'white', border: 'none', padding: '14px 32px', borderRadius: '50px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'var(--shadow-sm)' }}
+          style={{ width: '100%', maxWidth: '350px', background: 'var(--sage)', color: 'white', border: 'none', padding: '14px 20px', borderRadius: '50px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'var(--shadow-sm)' }}
         >
           {showRoutine ? 'Hide Reset Routine ↑' : 'Tap to reveal your reset routine ↓'}
         </button>
@@ -126,9 +127,9 @@ export default function NewYearReset({ navigate, relatedPosts }) {
       {showRoutine && (
         <div style={{ background: 'var(--sand)', padding: '24px', borderRadius: '12px', animation: 'fadeIn 0.3s ease', marginBottom: '30px', borderLeft: '4px solid var(--sage)' }}>
           <h4>The 3-Step Process:</h4>
-          <ul>
-            <li><strong>The Brain Dump:</strong> Write down every single worry or to-do list item bouncing around your head.</li>
-            <li><strong>Digital Detox:</strong> Put your phone in another room for exactly 30 minutes.</li>
+          <ul style={{ paddingLeft: '20px' }}>
+            <li style={{ marginBottom: '10px' }}><strong>The Brain Dump:</strong> Write down every single worry or to-do list item bouncing around your head.</li>
+            <li style={{ marginBottom: '10px' }}><strong>Digital Detox:</strong> Put your phone in another room for exactly 30 minutes.</li>
             <li><strong>Forgive Last Year:</strong> Write down three mistakes you made in 2025, and literally cross them out with a pen. You are leaving them behind.</li>
           </ul>
         </div>
@@ -137,16 +138,16 @@ export default function NewYearReset({ navigate, relatedPosts }) {
       <h3 id="quiz">4. Quick Mental Reset Check</h3>
       <p>Not sure if you are burning out? Take this quick interactive self-check:</p>
       <div style={{ border: '2px solid var(--border)', padding: '24px', borderRadius: '14px', marginBottom: '30px' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={quizAnswers.q1} onChange={() => handleQuizToggle('q1')} style={{ width: '20px', height: '20px' }} /> 
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '16px', cursor: 'pointer', lineHeight: '1.4' }}>
+          <input type="checkbox" checked={quizAnswers.q1} onChange={() => handleQuizToggle('q1')} style={{ width: '20px', height: '20px', flexShrink: 0, marginTop: '2px' }} /> 
           Do you feel tired even after sleeping 8 hours?
         </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={quizAnswers.q2} onChange={() => handleQuizToggle('q2')} style={{ width: '20px', height: '20px' }} /> 
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '16px', cursor: 'pointer', lineHeight: '1.4' }}>
+          <input type="checkbox" checked={quizAnswers.q2} onChange={() => handleQuizToggle('q2')} style={{ width: '20px', height: '20px', flexShrink: 0, marginTop: '2px' }} /> 
           Do you feel immense pressure to &quot;fix everything&quot; this year?
         </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={quizAnswers.q3} onChange={() => handleQuizToggle('q3')} style={{ width: '20px', height: '20px' }} /> 
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '24px', cursor: 'pointer', lineHeight: '1.4' }}>
+          <input type="checkbox" checked={quizAnswers.q3} onChange={() => handleQuizToggle('q3')} style={{ width: '20px', height: '20px', flexShrink: 0, marginTop: '2px' }} /> 
           Do you compare yourself to your friends&apos; social media highlights?
         </label>
         
@@ -155,9 +156,9 @@ export default function NewYearReset({ navigate, relatedPosts }) {
         </div>
         
         {yesCount >= 2 ? (
-          <p style={{ color: 'var(--danger)', fontWeight: 'bold', margin: 0 }}>⚠️ You checked {yesCount} boxes. You definitely need a mental reset before opening your textbooks.</p>
+          <p style={{ color: 'var(--danger)', fontWeight: 'bold', margin: 0, fontSize: '15px' }}>⚠️ You checked {yesCount} boxes. You definitely need a mental reset before opening your textbooks.</p>
         ) : (
-          <p style={{ color: 'var(--sage)', fontWeight: 'bold', margin: 0 }}>🌱 You checked {yesCount} boxes. You&apos;re doing okay, but keep prioritizing your peace!</p>
+          <p style={{ color: 'var(--sage)', fontWeight: 'bold', margin: 0, fontSize: '15px' }}>🌱 You checked {yesCount} boxes. You&apos;re doing okay, but keep prioritizing your peace!</p>
         )}
       </div>
 
@@ -190,7 +191,7 @@ export default function NewYearReset({ navigate, relatedPosts }) {
         <p style={{ marginBottom: '24px' }}>You don&apos;t need to become a completely new person this year. You just need to become a calmer, kinder version of yourself.</p>
         <button 
           onClick={() => navigate('/mindspace')}
-          style={{ background: 'var(--ink)', color: 'white', border: 'none', padding: '16px 36px', borderRadius: '50px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'var(--shadow-md)' }}
+          style={{ width: '100%', maxWidth: '350px', background: 'var(--ink)', color: 'white', border: 'none', padding: '16px 20px', borderRadius: '50px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'var(--shadow-md)' }}
         >
           Take a Free Mental Health Check →
         </button>
@@ -200,9 +201,9 @@ export default function NewYearReset({ navigate, relatedPosts }) {
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: '30px', marginTop: '40px' }}>
         <p style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', color: 'var(--muted)' }}>Read More from Secret Sharz:</p>
         <ul style={{ listStyle: 'none', padding: 0 }}>
-          <li style={{ marginBottom: '10px' }}><button onClick={() => navigate('/blog')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0 }}>→ How to manage board exam stress</button></li>
-          <li style={{ marginBottom: '10px' }}><button onClick={() => navigate('/vidyavantage')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0 }}>→ Finding a career that actually fits your personality</button></li>
-          <li style={{ marginBottom: '10px' }}><button onClick={() => navigate('/wall')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0 }}>→ See what other students are secretly feeling today</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ How to manage board exam stress</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/vidyavantage')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Finding a career that actually fits your personality</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/wall')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ See what other students are secretly feeling today</button></li>
         </ul>
       </div>
 
