@@ -116,39 +116,24 @@ const BLOG_CSS = `
   }
 `;
 
-// ── AUTO-DETECT BLOG POSTS FROM FOLDER ─────────────────────────────────────
-let BLOG_POSTS = [];
-try {
-  // Webpack magic: reads all .js files inside the /blogss/ folder automatically
-  const req = require.context('./blogss', false, /\.js$/);
-  
-  BLOG_POSTS = req.keys().map((fileName, index) => {
-    const module = req(fileName);
-    // Grabs the exported 'meta' object from the file
-    const meta = module.meta || {}; 
-    
-    return {
-      id: index + 1,
-      slug: meta.slug || fileName.replace('./', '').replace('.js', '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      title: meta.title || fileName.replace('./', '').replace('.js', ''),
-      excerpt: meta.excerpt || "Click to read more...",
-      category: meta.category || "Mental Health",
-      date: meta.date || "",
-      dateTs: meta.dateTs || 0,
-      readTime: meta.readTime || "",
-      wordCount: meta.wordCount || 0,
-      imgUrl: meta.imgUrl || "",
-      featured: meta.featured || false,
-      content: meta.content || "",
-      component: module.default // Grabs the actual React component exported from the file
-    };
-  });
-} catch (error) {
-  console.warn("Could not auto-load from ./blogss folder.", error);
-}
-
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 const POSTS_PER_PAGE = 6;
+
+// A reliable date parser to convert "DD-MM-YYYY" or standard dates into a timestamp for sorting
+function parseDateToTs(dateStr) {
+  if (!dateStr) return 0;
+  // Handle DD-MM-YYYY
+  if (dateStr.includes('-')) {
+    const parts = dateStr.split('-');
+    if (parts.length === 3 && parts[0].length <= 2) {
+      const [day, month, year] = parts;
+      return new Date(`${year}-${month}-${day}T00:00:00Z`).getTime();
+    }
+  }
+  // Fallback for other formats
+  const parsed = new Date(dateStr).getTime();
+  return isNaN(parsed) ? 0 : parsed;
+}
 
 function estimateReadTime(wordCount) {
   const mins = Math.max(1, Math.round(wordCount / 250));
@@ -164,6 +149,40 @@ function highlightText(text, query) {
       ? <mark key={i} className="search-hl">{part}</mark>
       : part
   );
+}
+
+// ── AUTO-DETECT BLOG POSTS FROM FOLDER ─────────────────────────────────────
+let BLOG_POSTS = [];
+try {
+  // Webpack magic: reads all .js files inside the /blogss/ folder automatically
+  const req = require.context('./blogss', false, /\.js$/);
+  
+  BLOG_POSTS = req.keys().map((fileName, index) => {
+    const module = req(fileName);
+    // Grabs the exported 'meta' object from the file
+    const meta = module.meta || {}; 
+    
+    // Calculates a reliable timestamp from your "DD-MM-YYYY" date strings
+    const calculatedDateTs = meta.dateTs || parseDateToTs(meta.date);
+
+    return {
+      id: index + 1,
+      slug: meta.slug || fileName.replace('./', '').replace('.js', '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      title: meta.title || fileName.replace('./', '').replace('.js', ''),
+      excerpt: meta.excerpt || "Click to read more...",
+      category: meta.category || "Mental Health",
+      date: meta.date || "",
+      dateTs: calculatedDateTs,
+      readTime: meta.readTime || "",
+      wordCount: meta.wordCount || 0,
+      imgUrl: meta.imgUrl || "",
+      featured: meta.featured || false,
+      content: meta.content || "",
+      component: module.default // Grabs the actual React component exported from the file
+    };
+  });
+} catch (error) {
+  console.warn("Could not auto-load from ./blogss folder.", error);
 }
 
 // ── BLOG CARD COMPONENT ──────────────────────────────────────────────────────
@@ -232,7 +251,7 @@ export default function Blog({ navigate }) {
   // Scroll to top when opening/closing a post
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [activePost]);
 
-  // URL-aware post detection. 
+  // URL-aware post detection
   useEffect(() => {
     const checkUrl = () => {
       const parts = window.location.pathname.split('/').filter(Boolean);
@@ -275,8 +294,15 @@ export default function Blog({ navigate }) {
   }, []);
   const categories = useMemo(() => Object.keys(categoryMeta), [categoryMeta]);
 
-  // Featured post = first post marked featured, or first post overall
-  const featuredPost = useMemo(() => BLOG_POSTS.find(p => p.featured) || BLOG_POSTS[0], []);
+  // Sort Featured post (Safeguard in case it's not explicitly flagged, grab newest)
+  const featuredPost = useMemo(() => {
+    const explicitFeatured = BLOG_POSTS.find(p => p.featured);
+    if (explicitFeatured) return explicitFeatured;
+    
+    // Fallback to the absolute newest post
+    const sorted = [...BLOG_POSTS].sort((a, b) => (b.dateTs || 0) - (a.dateTs || 0));
+    return sorted[0];
+  }, []);
 
   // Filter + sort
   const filteredPosts = useMemo(() => {
@@ -286,9 +312,12 @@ export default function Blog({ navigate }) {
       const matchSearch = !q || p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q);
       return matchCat && matchSearch;
     });
+    
+    // Reliable timestamp sorting
     if (sortOrder === 'newest') posts = [...posts].sort((a, b) => (b.dateTs || 0) - (a.dateTs || 0));
     else if (sortOrder === 'oldest') posts = [...posts].sort((a, b) => (a.dateTs || 0) - (b.dateTs || 0));
     else if (sortOrder === 'longest') posts = [...posts].sort((a, b) => (b.wordCount || 0) - (a.wordCount || 0));
+    
     return posts;
   }, [activeCategory, searchQuery, sortOrder]);
 
