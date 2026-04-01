@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Head from 'next/head'; // Added for SEO & OG Tags
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
@@ -6,7 +7,6 @@ import VidyaVantage from './VidyaVantage';
 import AuthPage from './AuthPage';
 import StudentDashboard from './StudentDashboard';
 import MindSpace from './MindSpace';
-import Blog from './Blog';
 import AdminDashboard from './AdminDashboard';
 import Header from './Header';
 import Footer from './Footer';
@@ -56,7 +56,7 @@ const CSS = `
   .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--sage-pale);border:1.5px solid rgba(74,124,89,0.2);color:var(--sage);padding:8px 18px;border-radius:50px;font-size:13px;font-weight:600;letter-spacing:0.3px;margin-bottom:28px;}
   .hero-eyebrow-dot{width:7px;height:7px;background:var(--sage);border-radius:50%;position:relative;}
   .hero-eyebrow-dot::after{content:'';position:absolute;inset:-3px;border:1.5px solid var(--sage);border-radius:50%;animation:pulse-ring 2s ease-out infinite;}
-  .hero-h1{font-family:'Fraunces',serif;font-size:clamp(42px,6vw,64px);font-weight:700;line-height:1.08;color:var(--ink);letter-spacing:-1.5px;margin-bottom:24px;}
+  .hero-h1{font-family:'Fraunces',serif;font-size:clamp(36px,6vw,64px);font-weight:700;line-height:1.08;color:var(--ink);letter-spacing:-1.5px;margin-bottom:24px;}
   .hero-h1 em{font-style:italic;color:var(--sage);}
   .hero-h1 .underline-word{position:relative;display:inline-block;}
   .hero-h1 .underline-word::after{content:'';position:absolute;bottom:4px;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--peach),var(--lavender));border-radius:2px;}
@@ -195,11 +195,7 @@ const CSS = `
   .add-note-btn{background:var(--sage);color:white;border:none;padding:14px 30px;border-radius:50px;font-weight:bold;font-size:16px;cursor:pointer;box-shadow:0 4px 15px rgba(74,124,89,0.3);transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;}
   .add-note-btn:hover{background:var(--moss);transform:translateY(-2px);}
   
-  /* FIX: Cleanly closed the string interpolation without backticks */
   .masonry-grid{display:block;column-count:4;column-gap:24px;max-width:1400px;margin:40px auto;padding:0 48px;}
-  @media(max-width:1200px){.masonry-grid{column-count:3;}}
-  @media(max-width:900px){.masonry-grid{column-count:2;padding:0 24px;}}
-  @media(max-width:600px){.masonry-grid{column-count:1;}}
   .note-card{break-inside:avoid;margin-bottom:24px;padding:24px;border-radius:16px;box-shadow:var(--shadow-sm);position:relative;transition:transform 0.2s;cursor:pointer;}
   .note-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
   .note-yellow{background:var(--note-yellow);color:var(--note-yellow-dark);}
@@ -283,21 +279,35 @@ const CSS = `
   .notfound-page h2{font-family:'Fraunces',serif;font-size:28px;color:var(--ink);margin:12px 0 16px;}
   .notfound-page p{font-size:16px;color:var(--muted);margin-bottom:28px;}
 
+  /* Mobile specific enhancements */
   @media(max-width:900px){
-    .ss-hero{padding:60px 24px;min-height:auto;}
+    .ss-hero{padding:60px 24px;min-height:auto;text-align:center;}
+    .hero-eyebrow{margin:0 auto 28px;}
+    .hero-h1{font-size:clamp(32px,8vw,64px);}
     .hero-right{display:none;}
+    .hero-actions{justify-content:center;width:100%;}
+    .btn-primary, .btn-ghost{width:100%;justify-content:center;}
+    
     .section{padding:64px 24px;}
     .vv-banner{flex-direction:column;padding:40px 28px;}
     .safe-section{padding:64px 24px;}
     .story-section{padding:64px 24px;gap:40px;}
     .story-img-box{display:none;}
     .privacy-grid{grid-template-columns:1fr;}
+    .crisis-box{flex-direction:column;align-items:center;text-align:center;}
+    
     .wall-header{padding:40px 24px;}
+    .masonry-grid{column-count:2;padding:0 24px;}
+    
     .quiz-modal{max-height:95vh;}
     .quiz-results-breakdown{grid-template-columns:1fr;}
     .quiz-entry-strip{flex-direction:column;text-align:center;}
     .quiz-entry-left{flex-direction:column;}
+    
     .vv-back-bar{padding:12px 20px;}
+  }
+  @media(max-width:600px){
+    .masonry-grid{column-count:1;}
   }
 `;
 
@@ -621,11 +631,10 @@ function MythFactQuiz({ onClose }) {
 // ── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [currentPath, setCurrentPath] = useState(() => {
-    // Check if we are running in the browser (client-side) or the server
     if (typeof window !== 'undefined') {
       return window.location.pathname.replace(/\/+$/, '') || '/';
     }
-    return '/'; // Fallback for server-side rendering (Vercel build phase)
+    return '/'; 
   });
   const [dashboardTab, setDashboardTab] = useState('home');
   const [currentUser, setCurrentUser] = useState(null);
@@ -706,7 +715,7 @@ export default function App() {
       setAuthChecked(true);
     });
     return () => unsub();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); 
 
   const handleAuthSuccess = async (user, isNew) => {
     setCurrentUser(user);
@@ -913,6 +922,17 @@ export default function App() {
 function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
   return (
     <>
+      {/* 🚀 SEO METADATA FOR HOMEPAGE 🚀 */}
+      <Head>
+        <title>Secret Sharz | Anonymous Mental Health Support for Youth</title>
+        <meta name="description" content="A safe, anonymous space for students to track moods, share thoughts, and access professional crisis support and career guidance." />
+        <meta property="og:title" content="Secret Sharz | Anonymous Mental Health Support" />
+        <meta property="og:description" content="A safe, anonymous space for students to track moods, share thoughts, and access professional crisis support and career guidance." />
+        <meta property="og:image" content="/secret-sharz-logo.png" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Head>
+
       {!currentUser && (
         <div className="instant-action-bar" onClick={() => navigate('/auth')}>
           Feeling overwhelmed right now? Start your healing journey in 30 seconds. <span>→</span>
@@ -1129,6 +1149,16 @@ function WallPage() {
 
   return (
     <div className="wall-page">
+      
+      {/* 🚀 SEO METADATA FOR WALL PAGE 🚀 */}
+      <Head>
+        <title>Sharz Wall | Anonymous Student Community</title>
+        <meta name="description" content="Read real, anonymous thoughts from students across India. Share your burden, realize you are not alone, and find community support." />
+        <meta property="og:title" content="Sharz Wall | Anonymous Student Community" />
+        <meta property="og:description" content="Read real, anonymous thoughts from students across India. Share your burden, realize you are not alone, and find community support." />
+        <meta property="og:image" content="/secret-sharz-logo.png" />
+      </Head>
+
       <div className="wall-header">
         <h1 className="wall-h1">Sharz Wall</h1>
         <p className="wall-sub">You are not the only one. Real thoughts from real students. No names. No judgement.</p>
