@@ -43,6 +43,7 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           <button onClick={() => handleNav('/')} className="nav-link">Home</button>
           <button onClick={() => handleNav('/mindspace')} className="nav-link">Mind Space</button>
           <button onClick={() => handleNav('/wall')} className="nav-link">Sharz Wall</button>
+          <button onClick={() => handleNav('/blog')} className="nav-link">Blog</button>
           <button onClick={() => handleNav('/vidyavantage')} className="nav-link highlight-link">VidyaVantage</button>
 
           <div className="nav-divider"></div>
@@ -98,6 +99,9 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           </button>
           <button onClick={() => handleNav('/wall')} className="drawer-link">
             <span>💬</span> Sharz Wall
+          </button>
+          <button onClick={() => handleNav('/blog')} className="drawer-link">
+            <span>📰</span> Blog
           </button>
           <button onClick={() => handleNav('/vidyavantage')} className="drawer-link highlight-link-mobile">
             <span>🎓</span> VidyaVantage
