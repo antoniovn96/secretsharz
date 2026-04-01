@@ -1,6 +1,15 @@
 import React, { useEffect } from 'react';
 import Head from 'next/head';
 
+export const meta = {
+  title: "New Year Mental Reset: How to Start 2026 with a Clear Mind",
+  excerpt: "Feeling overwhelmed by the pressure of the new year? Learn how to let go of 2025's emotional baggage, set realistic intentions, and start fresh.",
+  category: "Self-Care",
+  date: "01-01-2026",
+  readTime: "5 min read",
+  imgUrl: "/blogss/mental-reset-new-year-2026.jpg"
+};
+
 export default function NewYearReset({ navigate }) {
   
   // Scrolls to the top of the page when the component loads
@@ -19,7 +28,7 @@ export default function NewYearReset({ navigate }) {
         <meta property="og:title" content="New Year Mental Reset: How to Start 2026 with a Clear Mind" />
         <meta property="og:description" content="Feeling overwhelmed by the pressure of the new year? Learn how to let go of 2025's emotional baggage and start fresh." />
         {/* Your specific image path is added here for social media previews */}
-        <meta property="og:image" content="/blogss/01012026mental-reset-new-year-2026.jpg" />
+        <meta property="og:image" content="/blogss/mental-reset-new-year-2026.jpg" />
         <meta property="og:type" content="article" />
       </Head>
 
@@ -33,13 +42,13 @@ export default function NewYearReset({ navigate }) {
           <h1 style={{ letterSpacing: '-1.5px' }}>New Year Mental Reset: How to Start 2026 with a Clear Mind</h1>
           
           <div className="post-full-meta">
-            <span>📅 Day 1</span>
+            <span>📅 01-01-2026</span>
             <span>⏱️ 5 min read</span>
           </div>
           
           {/* Your specific image path is used here */}
           <img 
-            src="/blogss/01012026mental-reset-new-year-2026.jpg" 
+            src="/blogss/mental-reset-new-year-2026.jpg" 
             alt="Student writing in a journal for a mental reset" 
             className="post-hero-img" 
           />
@@ -60,15 +69,15 @@ export default function NewYearReset({ navigate }) {
             </ul>
 
             <h3>3. Setting Realistic Intentions</h3>
-            <p>Resolutions fail because they are rigid. If your resolution is "I will study 6 hours every single day," failing on January 3rd makes you want to quit entirely. Instead, set <strong>Intentions</strong>.</p>
-            <p>Intentions are flexible directions. Instead of strict rules, try: <em>"My intention for 2026 is to be kinder to myself when I make a mistake,"</em> or <em>"My intention is to ask for help when I feel overwhelmed."</em> Intentions allow for human error; resolutions do not.</p>
+            <p>Resolutions fail because they are rigid. If your resolution is &quot;I will study 6 hours every single day,&quot; failing on January 3rd makes you want to quit entirely. Instead, set <strong>Intentions</strong>.</p>
+            <p>Intentions are flexible directions. Instead of strict rules, try: <em>&quot;My intention for 2026 is to be kinder to myself when I make a mistake,&quot;</em> or <em>&quot;My intention is to ask for help when I feel overwhelmed.&quot;</em> Intentions allow for human error; resolutions do not.</p>
 
             <h3>4. Your Simple Reset Routine</h3>
             <p>If you have 15 minutes today, try this simple routine to officially hit the reset button:</p>
             <ul>
               <li><strong>The Brain Dump (5 mins):</strong> Write down every single thought, worry, or to-do list item bouncing around your head. Get it out of your brain and onto paper.</li>
-              <li><strong>Digital Detox (5 mins):</strong> Put your phone in another room. Sit in silence. Don't look at how other people are celebrating the new year.</li>
-              <li><strong>Hydrate & Breathe (3 mins):</strong> Drink a full glass of water. Take 5 deep breaths (inhale for 4 seconds, exhale for 6).</li>
+              <li><strong>Digital Detox (5 mins):</strong> Put your phone in another room. Sit in silence. Don&apos;t look at how other people are celebrating the new year.</li>
+              <li><strong>Hydrate &amp; Breathe (3 mins):</strong> Drink a full glass of water. Take 5 deep breaths (inhale for 4 seconds, exhale for 6).</li>
               <li><strong>One Positive Anchor (2 mins):</strong> Write down one thing you are genuinely looking forward to this year.</li>
             </ul>
 
