@@ -6,7 +6,7 @@ export const meta = {
   title: "How to Let Go of Negative Thoughts and Start Fresh in 2026",
   excerpt: "Struggling with overthinking and self-doubt? Learn what negative thought patterns are, why your brain holds onto them, and practical techniques to finally let them go.",
   category: "Mental Health",
-  date: "15-01-2026",
+  date: "02-01-2026",
   readTime: "7 min read",
   wordCount: 950, 
   imgUrl: "/blogss/let-go-negative-thoughts.jpg",
