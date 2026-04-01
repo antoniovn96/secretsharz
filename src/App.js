@@ -318,10 +318,22 @@ export default function App() {
   const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
 
   useEffect(() => {
+    // Inject Styles
     const s = document.createElement('style');
     s.textContent = FONTS + CSS;
     document.head.appendChild(s);
-    return () => document.head.removeChild(s);
+
+    // Inject Favicon dynamically
+    const favicon = document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.type = 'image/png';
+    favicon.href = '/android-chrome-192x192.png';
+    document.head.appendChild(favicon);
+
+    return () => {
+      document.head.removeChild(s);
+      document.head.removeChild(favicon);
+    };
   }, []);
 
   useEffect(() => {
