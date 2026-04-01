@@ -1005,15 +1005,36 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
         </div>
       </section>
 
-      <section className="story-section">
+<section className="story-section">
         <div className="story-content">
           <div className="section-eyebrow">Why SecretSharz Exists</div>
-          <h2 className="section-h2" style={{ marginBottom:'24px' }}>Built from real conversations behind <em>closed doors.</em></h2>
-          <p className="section-p" style={{ color:'var(--ink-soft)' }}>For years, sitting in a school counselling room, I saw the same pattern repeat itself. Brilliant, capable students were struggling silently under the weight of expectations, anxiety, and the fear of judgment.</p>
-          <p className="section-p" style={{ color:'var(--ink-soft)', marginTop:'16px' }}>They couldn't talk to their parents. They wouldn't talk to their teachers.</p>
-          <p className="section-p" style={{ color:'var(--ink-soft)', marginTop:'16px' }}>Secret Sharz was built to be the digital equivalent of that safe counselling room. A place where identity doesn't matter, but your feelings do. We combine professional psychological support with the anonymity the internet provides to reach students before they hit a breaking point.</p>
+          <h2 className="section-h2" style={{ marginBottom:'24px' }}>
+            Built from real conversations behind <em>closed doors.</em>
+          </h2>
+          <p className="section-p" style={{ color:'var(--ink-soft)' }}>
+            For years, sitting in a school counselling room, I saw the same pattern repeat itself. Brilliant, capable students were struggling silently under the weight of expectations, anxiety, and the fear of judgment.
+          </p>
+          <p className="section-p" style={{ color:'var(--ink-soft)', marginTop:'16px' }}>
+            They couldn't talk to their parents. They wouldn't talk to their teachers.
+          </p>
+          <p className="section-p" style={{ color:'var(--ink-soft)', marginTop:'16px' }}>
+            Secret Sharz was built to be the digital equivalent of that safe counselling room. A place where identity doesn't matter, but your feelings do. We combine professional psychological support with the anonymity the internet provides to reach students before they hit a breaking point.
+          </p>
         </div>
-        <div className="story-img-box">🧑‍🏫</div>
+        
+        {/* Updated Image Box */}
+        <div className="story-img-box" style={{ overflow: 'hidden', padding: 0 }}>
+          <img 
+            src="/20250508_103355.jpg" 
+            alt="School Counselling" 
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: 'cover', 
+              borderRadius: 'inherit' 
+            }} 
+          />
+        </div>
       </section>
 
       <section className="section">
