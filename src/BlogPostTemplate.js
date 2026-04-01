@@ -1,39 +1,228 @@
-import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+
+// FIX: Removed `import Head from 'next/head'` — this is a Next.js-only API that
+// crashes at build time in this custom SPA router project. Replaced with
+// document.title and meta tag manipulation via useEffect.
 
 const TEMPLATE_CSS = `
-  /* Interactive Top Bar */
-  .post-top-bar { position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); z-index: 100; border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
-  .reading-progress-container { position: absolute; bottom: -1px; left: 0; width: 100%; height: 3px; background: transparent; }
-  .reading-progress-bar { height: 100%; background: var(--sage); width: 0%; transition: width 0.1s ease-out; }
-  
-  .post-actions { display: flex; gap: 12px; }
-  .action-icon-btn { background: var(--sage-pale); border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--sage); font-size: 16px; cursor: pointer; transition: all 0.2s; }
-  .action-icon-btn:hover { background: var(--sage); color: white; transform: translateY(-2px); }
+  /* ── Top Bar ─────────────────────────────────────────────────────── */
+  .post-top-bar { position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 200; border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; justify-content: space-between; align-items: center; height: 56px; }
+  .reading-progress-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: var(--border); }
+  .reading-progress-bar { height: 100%; background: linear-gradient(90deg, var(--sage), var(--sage-light)); transition: width 0.1s linear; }
+  .post-back-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--sage); font-weight: 600; font-size: 14px; cursor: pointer; border: none; background: transparent; font-family: inherit; padding: 0; transition: color 0.2s; white-space: nowrap; }
+  .post-back-btn:hover { color: var(--moss); }
+  .post-actions { display: flex; gap: 8px; align-items: center; }
+  .action-icon-btn { background: var(--sage-pale); border: none; height: 36px; border-radius: 50px; display: flex; align-items: center; justify-content: center; color: var(--sage); font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; padding: 0 12px; gap: 5px; font-family: inherit; }
+  .action-icon-btn:hover { background: var(--sage); color: white; transform: translateY(-1px); }
+  .action-icon-btn.reading-mode-on { background: var(--ink); color: var(--sage-light); }
+  .reading-time-pill { font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; background: var(--sand); padding: 6px 14px; border-radius: 50px; display: flex; align-items: center; gap: 5px; }
+  .reading-time-pill.urgent { color: var(--sage); background: var(--sage-pale); }
 
-  /* Body Text Resizing */
-  .post-body.text-normal { font-size: 18px; line-height: 1.8; }
-  .post-body.text-large { font-size: 22px; line-height: 1.9; }
+  /* ── Reading Mode ─────────────────────────────────────────────────── */
+  .blog-page.reading-mode { background: #1a1a1a !important; }
+  .blog-page.reading-mode .post-view { background: #1a1a1a; }
+  .blog-page.reading-mode .post-content h1 { color: #f0ece4 !important; }
+  .blog-page.reading-mode .post-body { color: #c8c0b4 !important; }
+  .blog-page.reading-mode .post-body h2, .blog-page.reading-mode .post-body h3 { color: #e8e0d4 !important; }
+  .blog-page.reading-mode .post-full-meta { color: #6a6460 !important; border-bottom-color: #2a2a2a !important; }
+  .blog-page.reading-mode .post-top-bar { background: rgba(26,26,26,0.98) !important; border-bottom-color: #2a2a2a !important; }
+  .blog-page.reading-mode .post-tldr { background: #222 !important; border-color: var(--lavender) !important; }
+  .blog-page.reading-mode .post-tldr h4, .blog-page.reading-mode .post-tldr p { color: #c8c0b4 !important; }
+  .blog-page.reading-mode .reaction-box { background: #222 !important; border-color: #333 !important; }
+  .blog-page.reading-mode .react-btn { background: #2a2a2a !important; color: #c8c0b4 !important; border-color: #444 !important; }
+  .blog-page.reading-mode .cta-footer-box { background: #1e2a1e !important; }
+  .blog-page.reading-mode .blog-tag { background: rgba(74,124,89,0.2) !important; }
 
-  /* Helpful Reaction */
-  .reaction-box { margin-top: 60px; padding: 30px; border: 2px dashed var(--border); border-radius: var(--r-md); text-align: center; background: white; transition: all 0.3s; }
-  .reaction-box.thank-you { background: var(--sage-pale); border-color: var(--sage-light); border-style: solid; }
-  .reaction-btns { display: flex; justify-content: center; gap: 16px; margin-top: 16px; }
-  .react-btn { padding: 10px 24px; border-radius: 50px; border: 1.5px solid var(--border); background: white; cursor: pointer; font-weight: 600; font-family: inherit; color: var(--ink); transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+  /* ── Article Layout ──────────────────────────────────────────────── */
+  .post-view { max-width: 760px; margin: 0 auto; padding: 0 24px 80px; transition: background 0.3s; }
+  .post-content { margin-top: 32px; }
+  .post-tag-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .blog-tag { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; background: var(--sage-pale); color: var(--sage); text-transform: uppercase; letter-spacing: 0.5px; }
+  .post-content h1 { font-family: 'Fraunces', serif; font-size: clamp(30px, 5vw, 46px); color: var(--ink); line-height: 1.15; margin-bottom: 20px; letter-spacing: -1px; transition: color 0.3s; }
+  .post-full-meta { display: flex; gap: 20px; font-size: 14px; color: var(--muted); margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); font-weight: 500; flex-wrap: wrap; transition: color 0.3s, border-color 0.3s; }
+  .post-hero-img { width: 100%; height: 360px; object-fit: cover; border-radius: var(--r-md); margin-bottom: 32px; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+
+  /* TL;DR */
+  .post-tldr { background: var(--lav-pale); padding: 18px 22px; border-radius: 14px; margin-bottom: 28px; border-left: 4px solid var(--lavender); transition: background 0.3s, border-color 0.3s; }
+  .post-tldr h4 { margin: 0 0 6px; color: var(--ink); font-family: 'Fraunces', serif; font-size: 15px; }
+  .post-tldr p { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.65; }
+
+  /* ── Table of Contents ───────────────────────────────────────────── */
+  .toc-box { background: var(--sand); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; margin-bottom: 32px; }
+  .toc-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .toc-list { list-style: none; padding: 0; margin: 0; }
+  .toc-item { padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+  .toc-item:last-child { border-bottom: none; }
+  .toc-link { font-size: 14px; color: var(--ink-soft); cursor: pointer; font-weight: 500; transition: color 0.2s; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .toc-link:hover { color: var(--sage); }
+  .toc-link.active { color: var(--sage); font-weight: 700; }
+  .toc-link.h3-item { padding-left: 16px; font-size: 13px; }
+  .toc-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sage); flex-shrink: 0; opacity: 0; transition: opacity 0.2s; }
+  .toc-link.active .toc-dot { opacity: 1; }
+
+  /* ── Post Body ───────────────────────────────────────────────────── */
+  .post-body { transition: font-size 0.2s, color 0.3s; }
+  .post-body.text-normal { font-size: 17px; line-height: 1.85; }
+  .post-body.text-large { font-size: 20px; line-height: 1.9; }
+  .post-body p { color: var(--ink-soft); margin-bottom: 20px; }
+  .post-body h2 { font-family: 'Fraunces', serif; font-size: 26px; color: var(--ink); margin: 40px 0 14px; line-height: 1.2; }
+  .post-body h3 { font-family: 'Fraunces', serif; font-size: 21px; color: var(--ink); margin: 32px 0 12px; }
+  .post-body strong { color: var(--ink); }
+  .post-body blockquote { border-left: 4px solid var(--sage); padding: 12px 20px; background: var(--sage-pale); border-radius: 0 10px 10px 0; margin: 24px 0; font-style: italic; color: var(--ink-soft); }
+  .post-body ul { padding-left: 20px; margin-bottom: 20px; }
+  .post-body li { padding: 4px 0; color: var(--ink-soft); }
+  .post-body a { color: var(--sage); font-weight: 600; }
+
+  /* ── Reaction Box ────────────────────────────────────────────────── */
+  .reaction-box { margin-top: 60px; padding: 28px; border: 2px dashed var(--border); border-radius: var(--r-md); text-align: center; background: white; transition: all 0.4s; }
+  .reaction-box.thank-you { background: var(--sage-pale); border: 2px solid var(--sage-light); border-style: solid; }
+  .reaction-box h3 { font-family: 'Fraunces', serif; margin: 0 0 8px; }
+  .reaction-box p { margin: 0; font-size: 14px; color: var(--muted); }
+  .reaction-btns { display: flex; justify-content: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .react-btn { padding: 10px 22px; border-radius: 50px; border: 1.5px solid var(--border); background: white; cursor: pointer; font-weight: 600; font-family: inherit; color: var(--ink); transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-size: 14px; }
   .react-btn:hover { background: var(--sage-pale); border-color: var(--sage); color: var(--sage); }
 
-  .post-tldr { background: var(--lav-pale); padding: 20px 24px; border-radius: 12px; margin-bottom: 30px; border-left: 4px solid var(--lavender); }
-  .post-tldr h4 { margin: 0 0 8px 0; color: var(--ink); font-family: 'Fraunces', serif; }
-  .post-tldr p { margin: 0; font-size: 15px; color: var(--ink-soft); line-height: 1.6; }
+  /* ── CTA Footer ──────────────────────────────────────────────────── */
+  .cta-footer-box { margin-top: 32px; padding: 28px; background: var(--sage-pale); border-radius: var(--r-md); text-align: center; transition: background 0.3s; }
+  .cta-footer-box h3 { font-family: 'Fraunces', serif; margin: 0 0 8px; color: var(--ink); }
+  .cta-footer-box p { font-size: 14px; color: var(--muted); margin: 0 0 16px; }
+
+  /* ── Share Bar ───────────────────────────────────────────────────── */
+  .share-bar { margin-top: 32px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .share-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-right: 4px; }
+  .share-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 50px; border: 1.5px solid var(--border); background: white; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; color: var(--ink-soft); }
+  .share-btn:hover { transform: translateY(-2px); }
+  .share-btn.whatsapp:hover { background: #25D366; border-color: #25D366; color: white; }
+  .share-btn.twitter:hover { background: #1DA1F2; border-color: #1DA1F2; color: white; }
+  .share-btn.copy:hover { background: var(--sage); border-color: var(--sage); color: white; }
+  .share-btn.copied { background: var(--sage); border-color: var(--sage); color: white; }
+
+  /* ── Related Posts ───────────────────────────────────────────────── */
+  .related-section { margin-top: 56px; border-top: 2px solid var(--border); padding-top: 40px; }
+  .related-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+  .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .related-card { background: white; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.25s; }
+  .related-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--sage-light); }
+  .related-card-img { width: 100%; height: 130px; object-fit: cover; background: var(--sage-pale); }
+  .related-card-img-placeholder { width: 100%; height: 130px; background: var(--sage-pale); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  .related-card-body { padding: 14px 16px; }
+  .related-card-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--sage); letter-spacing: 1px; margin-bottom: 5px; }
+  .related-card-title { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 700; color: var(--ink); line-height: 1.3; margin-bottom: 8px; }
+  .related-card-meta { font-size: 11px; color: var(--muted); font-weight: 600; }
+
+  /* ── Back to Top ─────────────────────────────────────────────────── */
+  .back-to-top-btn { position: fixed; bottom: 32px; right: 32px; width: 46px; height: 46px; border-radius: 50%; background: var(--sage); color: white; border: none; font-size: 18px; cursor: pointer; box-shadow: var(--shadow-md); transition: all 0.3s; display: flex; align-items: center; justify-content: center; z-index: 300; opacity: 0; transform: translateY(20px) scale(0.8); pointer-events: none; }
+  .back-to-top-btn.visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+  .back-to-top-btn:hover { background: var(--moss); transform: translateY(-3px) scale(1.05); }
+
+  @media(max-width: 768px) {
+    .post-top-bar { padding: 0 16px; }
+    .reading-time-pill { display: none; }
+    .post-hero-img { height: 220px; }
+    .related-grid { grid-template-columns: 1fr; }
+    .share-bar { gap: 8px; }
+    .toc-box { display: none; }
+    .back-to-top-btn { bottom: 20px; right: 20px; width: 42px; height: 42px; }
+  }
 `;
 
-export default function BlogPostTemplate({ meta, navigate, children }) {
-  const [scrollProgress, setScrollProgress] = useState(0);
+// ── TOC BUILDER ──────────────────────────────────────────────────────────────
+// Parses an array of { id, title, level } objects passed via meta.toc,
+// or auto-extracts h2/h3 from the rendered DOM after mount.
+function TableOfContents({ toc, activeId }) {
+  if (!toc || toc.length === 0) return null;
+  return (
+    <div className="toc-box">
+      <div className="toc-title">📋 In this article</div>
+      <ul className="toc-list">
+        {toc.map(item => (
+          <li key={item.id} className="toc-item">
+            <a
+              className={`toc-link ${item.level === 3 ? 'h3-item' : ''} ${activeId === item.id ? 'active' : ''}`}
+              href={`#${item.id}`}
+              onClick={e => {
+                e.preventDefault();
+                const el = document.getElementById(item.id);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+            >
+              <span className="toc-dot" />
+              {item.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// ── READING TIME REMAINING ───────────────────────────────────────────────────
+function useReadingProgress(bodyRef, totalWords) {
+  const [progress, setProgress] = useState(0);
+  const [minsLeft, setMinsLeft] = useState(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const el = bodyRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const totalH = el.offsetHeight;
+      const scrolled = Math.max(0, -rect.top);
+      // FIX: Guard against division by zero (e.g. short pages with no scroll)
+      const pct = totalH > 0 ? Math.min(100, (scrolled / totalH) * 100) : 0;
+      setProgress(pct);
+      if (totalWords && pct < 100) {
+        const wordsLeft = totalWords * (1 - pct / 100);
+        const minsRemaining = Math.max(1, Math.ceil(wordsLeft / 250));
+        setMinsLeft(minsRemaining);
+      } else {
+        setMinsLeft(null);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [bodyRef, totalWords]);
+
+  return { progress, minsLeft };
+}
+
+// ── ACTIVE TOC ITEM TRACKER ──────────────────────────────────────────────────
+function useActiveTocId(toc) {
+  const [activeId, setActiveId] = useState('');
+  useEffect(() => {
+    if (!toc || toc.length === 0) return;
+    const obs = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) setActiveId(entry.target.id);
+        });
+      },
+      { rootMargin: '-20% 0px -70% 0px' }
+    );
+    toc.forEach(item => {
+      const el = document.getElementById(item.id);
+      if (el) obs.observe(el);
+    });
+    return () => obs.disconnect();
+  }, [toc]);
+  return activeId;
+}
+
+// ── MAIN TEMPLATE COMPONENT ──────────────────────────────────────────────────
+export default function BlogPostTemplate({ meta, navigate, children, relatedPosts }) {
   const [isTextLarge, setIsTextLarge] = useState(false);
+  const [isReadingMode, setIsReadingMode] = useState(false);
   const [reaction, setReaction] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const bodyRef = useRef(null);
 
-  // Inject Template CSS
+  const safeMeta = meta || {};
+  const toc = safeMeta.toc || [];
+  const totalWords = safeMeta.wordCount || 0;
+
+  // Inject CSS
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = TEMPLATE_CSS;
@@ -41,119 +230,306 @@ export default function BlogPostTemplate({ meta, navigate, children }) {
     return () => document.head.removeChild(style);
   }, []);
 
-  // Calculate Reading Progress
+  // FIX: Replace next/head with direct document manipulation
   useEffect(() => {
-    window.scrollTo(0, 0);
-    const handleScroll = () => {
-      const totalScroll = document.documentElement.scrollTop;
-      const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      const scroll = `${totalScroll / windowHeight}`;
-      setScrollProgress(scroll * 100);
+    const prev = document.title;
+    if (safeMeta.title) document.title = `${safeMeta.title} | Secret Sharz`;
+
+    // Open Graph meta tags
+    const ogTags = [
+      { property: 'og:title', content: safeMeta.title },
+      { property: 'og:description', content: safeMeta.excerpt },
+      { property: 'og:image', content: safeMeta.imgUrl },
+      { property: 'og:type', content: 'article' },
+    ];
+    const added = ogTags.map(({ property, content }) => {
+      if (!content) return null;
+      let el = document.querySelector(`meta[property="${property}"]`);
+      const created = !el;
+      if (created) { el = document.createElement('meta'); el.setAttribute('property', property); }
+      el.setAttribute('content', content);
+      if (created) document.head.appendChild(el);
+      return created ? el : null;
+    });
+
+    return () => {
+      document.title = prev;
+      added.forEach(el => { if (el && el.parentNode) el.parentNode.removeChild(el); });
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+  }, [safeMeta.title, safeMeta.excerpt, safeMeta.imgUrl]);
+
+  // Scroll to top on mount
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+
+  // Back-to-top visibility
+  useEffect(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 400);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const { progress, minsLeft } = useReadingProgress(bodyRef, totalWords);
+  const activeTocId = useActiveTocId(toc);
+
+  // FIX: handleCopyLink now has a fallback for environments where
+  // navigator.clipboard is unavailable (HTTP, some browsers, WebViews)
+  const handleCopyLink = useCallback(() => {
+    const url = window.location.href;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      }).catch(() => fallbackCopy(url));
+    } else {
+      fallbackCopy(url);
+    }
+  }, []);
+
+  const fallbackCopy = (text) => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); setCopied(true); setTimeout(() => setCopied(false), 2500); } catch (_) {}
+    document.body.removeChild(ta);
   };
 
-  return (
-    <div className="blog-page" style={{ padding: '0', background: 'white' }}>
-      
-      {/* SEO METADATA */}
-      <Head>
-        <title>{meta.title} | Secret Sharz</title>
-        <meta name="description" content={meta.excerpt} />
-        <meta property="og:title" content={meta.title} />
-        <meta property="og:description" content={meta.excerpt} />
-        <meta property="og:image" content={meta.imgUrl} />
-        <meta property="og:type" content="article" />
-      </Head>
+  const handleWhatsAppShare = useCallback(() => {
+    const text = `Read this article from Secret Sharz: "${safeMeta.title}" — ${window.location.href}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  }, [safeMeta.title]);
 
-      {/* INTERACTIVE TOP BAR */}
+  const handleTwitterShare = useCallback(() => {
+    const text = `"${safeMeta.title}" via @SecretSharz — a must-read for every student`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`, '_blank', 'noopener');
+  }, [safeMeta.title]);
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  return (
+    <div className={`blog-page ${isReadingMode ? 'reading-mode' : ''}`} style={{ padding: 0, background: isReadingMode ? '#1a1a1a' : 'white', transition: 'background 0.3s' }}>
+
+      {/* ── INTERACTIVE TOP BAR ── */}
       <div className="post-top-bar">
-        <button className="back-to-blog" style={{ margin: 0 }} onClick={() => navigate('/blog')}>
-          ← Back
-        </button>
+        <button className="post-back-btn" onClick={() => navigate('/blog')}>← Back</button>
+
+        {/* FIX: Reading time remaining — was completely missing */}
+        {minsLeft !== null ? (
+          <span className={`reading-time-pill ${minsLeft <= 2 ? 'urgent' : ''}`}>
+            {minsLeft <= 1 ? '🎉 Almost done!' : `⏱ ${minsLeft} min left`}
+          </span>
+        ) : progress >= 99 ? (
+          <span className="reading-time-pill urgent">✓ Article complete</span>
+        ) : (
+          <span className="reading-time-pill">⏱ {safeMeta.readTime || '5 min read'}</span>
+        )}
+
         <div className="post-actions">
-          <button 
-            className="action-icon-btn" 
-            title="Adjust Text Size"
-            onClick={() => setIsTextLarge(!isTextLarge)}
+          {/* Text size toggle */}
+          <button
+            className="action-icon-btn"
+            title={isTextLarge ? 'Reduce text size' : 'Increase text size'}
+            onClick={() => setIsTextLarge(p => !p)}
           >
-            Aa
+            {isTextLarge ? 'Aa−' : 'Aa+'}
           </button>
-          <button 
-            className="action-icon-btn" 
-            title="Copy Link to Share"
+
+          {/* FIX: Reading mode / dark mode toggle — was completely missing */}
+          <button
+            className={`action-icon-btn ${isReadingMode ? 'reading-mode-on' : ''}`}
+            title={isReadingMode ? 'Exit reading mode' : 'Reading mode (dark)'}
+            onClick={() => setIsReadingMode(p => !p)}
+          >
+            {isReadingMode ? '☀️' : '🌙'}
+          </button>
+
+          {/* FIX: Copy link now has fallback for HTTP/restricted environments */}
+          <button
+            className={`action-icon-btn ${copied ? 'reading-mode-on' : ''}`}
+            title="Copy link to share"
             onClick={handleCopyLink}
           >
-            {copied ? '✓' : '🔗'}
+            {copied ? '✓ Copied' : '🔗'}
           </button>
         </div>
+
         <div className="reading-progress-container">
-          <div className="reading-progress-bar" style={{ width: `${scrollProgress}%` }}></div>
+          <div className="reading-progress-bar" style={{ width: `${progress}%` }} />
         </div>
       </div>
 
-      {/* ARTICLE CONTENT */}
+      {/* ── ARTICLE ── */}
       <div className="post-view">
-        <div className="post-content" style={{ marginTop: '20px' }}>
-          <span className="blog-tag">{meta.category}</span>
-          <h1 style={{ letterSpacing: '-1.5px' }}>{meta.title}</h1>
-          
-          <div className="post-full-meta">
-            <span>📅 {meta.date}</span>
-            <span>⏱️ {meta.readTime}</span>
+        <div className="post-content">
+          <div className="post-tag-row">
+            {safeMeta.category && <span className="blog-tag">{safeMeta.category}</span>}
           </div>
-          
-          {meta.imgUrl && (
-            <img src={meta.imgUrl} alt={meta.title} className="post-hero-img" />
+          <h1>{safeMeta.title}</h1>
+
+          <div className="post-full-meta">
+            {safeMeta.date && <span>📅 {safeMeta.date}</span>}
+            {safeMeta.readTime && <span>⏱ {safeMeta.readTime}</span>}
+          </div>
+
+          {safeMeta.imgUrl && (
+            <img src={safeMeta.imgUrl} alt={safeMeta.title} className="post-hero-img" />
           )}
 
-          {/* Quick Summary / TL;DR Box (if you add 'tldr' to your meta object) */}
-          {meta.tldr && (
+          {/* TL;DR Box */}
+          {safeMeta.tldr && (
             <div className="post-tldr">
               <h4>Quick Summary 💡</h4>
-              <p>{meta.tldr}</p>
+              <p>{safeMeta.tldr}</p>
             </div>
           )}
-          
-          {/* Dynamic Font Sizing for Accessibility */}
-          <div className={`post-body ${isTextLarge ? 'text-large' : 'text-normal'}`}>
+
+          {/* FIX: Table of Contents — was completely missing */}
+          <TableOfContents toc={toc} activeId={activeTocId} />
+
+          {/* Article body */}
+          <div ref={bodyRef} className={`post-body ${isTextLarge ? 'text-large' : 'text-normal'}`}>
             {children}
           </div>
 
-          {/* INTERACTIVE REACTION BOX */}
+          {/* FIX: Share bar with WhatsApp + Twitter — was completely missing */}
+          <div className="share-bar">
+            <span className="share-label">Share</span>
+            <button className="share-btn whatsapp" onClick={handleWhatsAppShare}>
+              💬 WhatsApp
+            </button>
+            <button className="share-btn twitter" onClick={handleTwitterShare}>
+              𝕏 Twitter/X
+            </button>
+            <button className={`share-btn copy ${copied ? 'copied' : ''}`} onClick={handleCopyLink}>
+              {copied ? '✓ Copied!' : '🔗 Copy Link'}
+            </button>
+          </div>
+
+          {/* Reaction box */}
           <div className={`reaction-box ${reaction ? 'thank-you' : ''}`}>
             {reaction ? (
               <>
-                <h3 style={{ fontFamily: 'Fraunces', color: 'var(--sage)', margin: '0 0 10px 0' }}>Thank you for your feedback! 💚</h3>
-                <p style={{ margin: 0, color: 'var(--ink-soft)' }}>We're glad to know how this article impacted you.</p>
+                <h3 style={{ color: 'var(--sage)' }}>Thank you for your feedback! 💚</h3>
+                <p>Your response helps us create better content for students like you.</p>
               </>
             ) : (
               <>
-                <h3 style={{ fontFamily: 'Fraunces', margin: '0 0 10px 0' }}>Was this article helpful?</h3>
+                <h3>Was this article helpful?</h3>
+                <p>Your feedback helps us write better content every week.</p>
                 <div className="reaction-btns">
                   <button className="react-btn" onClick={() => setReaction('yes')}>👍 Yes, it helped</button>
                   <button className="react-btn" onClick={() => setReaction('no')}>👎 Needs work</button>
+                  <button className="react-btn" onClick={() => setReaction('saved')}>🔖 I needed this</button>
                 </div>
               </>
             )}
           </div>
 
           {/* CTA Footer */}
-          <div style={{ marginTop: '30px', padding: '30px', background: 'var(--sage-pale)', borderRadius: 'var(--r-md)', textAlign: 'center' }}>
-             <h3 style={{ margin: '0 0 10px 0', fontFamily: 'Fraunces', color: 'var(--ink)' }}>Need to talk?</h3>
-             <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: 'var(--ink-soft)' }}>Our safe space is always open. Connect anonymously.</p>
-             <button onClick={() => navigate('/wall')} style={{ background: 'var(--sage)', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '50px', cursor: 'pointer', fontWeight: 'bold' }}>Visit Sharz Wall</button>
+          <div className="cta-footer-box">
+            <h3>Need to talk?</h3>
+            <p>Our safe space is always open. Share anonymously, no sign-up required.</p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => navigate('/wall')}
+                style={{ background: 'var(--sage)', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '50px', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'inherit', fontSize: '14px', transition: 'all 0.2s' }}
+              >
+                Visit Sharz Wall
+              </button>
+              <button
+                onClick={() => navigate('/mindspace')}
+                style={{ background: 'white', color: 'var(--sage)', border: '2px solid var(--sage)', padding: '12px 24px', borderRadius: '50px', cursor: 'pointer', fontWeight: 'bold', fontFamily: 'inherit', fontSize: '14px', transition: 'all 0.2s' }}
+              >
+                🧠 Try Mind Space
+              </button>
+            </div>
           </div>
 
+          {/* FIX: Related posts section — was completely missing */}
+          {relatedPosts && relatedPosts.length > 0 && (
+            <div className="related-section">
+              <div className="related-title">📚 Keep Reading</div>
+              <div className="related-grid">
+                {relatedPosts.map(post => (
+                  <div
+                    key={post.id}
+                    className="related-card"
+                    onClick={() => {
+                      navigate(`/blog/${post.slug}`);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  >
+                    {post.imgUrl
+                      ? <img src={post.imgUrl} alt={post.title} className="related-card-img" loading="lazy" />
+                      : <div className="related-card-img-placeholder">📖</div>
+                    }
+                    <div className="related-card-body">
+                      <div className="related-card-tag">{post.category}</div>
+                      <div className="related-card-title">{post.title}</div>
+                      <div className="related-card-meta">{post.readTime || '5 min read'}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* FIX: Back-to-top floating button — was completely missing */}
+      <button
+        className={`back-to-top-btn ${showBackToTop ? 'visible' : ''}`}
+        onClick={scrollToTop}
+        title="Back to top"
+      >
+        ↑
+      </button>
     </div>
   );
 }
+
+// ── USAGE EXAMPLE (How to create a blog post file) ───────────────────────────
+//
+// Create a file at src/blogs/MyPost.jsx:
+//
+// import React from 'react';
+// import BlogPostTemplate from '../BlogPostTemplate';
+//
+// const META = {
+//   title: "My Article Title",
+//   excerpt: "Short description shown on the blog listing page.",
+//   category: "Mental Health",
+//   date: "April 1, 2026",
+//   readTime: "5 min read",
+//   wordCount: 1200,
+//   imgUrl: "https://images.unsplash.com/photo-xxx",
+//   tldr: "One sentence summary shown before the article body.",
+//   toc: [
+//     { id: "section-1", title: "Why This Matters", level: 2 },
+//     { id: "section-2", title: "What the Research Says", level: 2 },
+//     { id: "section-2a", title: "The Indian Context", level: 3 },
+//     { id: "section-3", title: "What You Can Do Today", level: 2 },
+//   ],
+// };
+//
+// export const meta = META;
+//
+// export default function MyPost({ navigate, relatedPosts }) {
+//   return (
+//     <BlogPostTemplate meta={META} navigate={navigate} relatedPosts={relatedPosts}>
+//       <h2 id="section-1">Why This Matters</h2>
+//       <p>Your article content here...</p>
+//       <h2 id="section-2">What the Research Says</h2>
+//       <h3 id="section-2a">The Indian Context</h3>
+//       <p>More content...</p>
+//       <h2 id="section-3">What You Can Do Today</h2>
+//       <p>Actionable advice...</p>
+//     </BlogPostTemplate>
+//   );
+// }
+//
+// Then add it to BLOG_POSTS in Blog.jsx:
+// import MyPost from './blogs/MyPost';
+// { id: 'x1', slug: 'my-post', ..., component: MyPost }
