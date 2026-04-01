@@ -193,6 +193,8 @@ const CSS = `
   .wall-sub{color:rgba(255,255,255,0.7);font-size:16px;max-width:600px;margin:0 auto 30px;}
   .add-note-btn{background:var(--sage);color:white;border:none;padding:14px 30px;border-radius:50px;font-weight:bold;font-size:16px;cursor:pointer;box-shadow:0 4px 15px rgba(74,124,89,0.3);transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;}
   .add-note-btn:hover{background:var(--moss);transform:translateY(-2px);}
+  
+  /* FIX: Cleanly closed the string interpolation without backticks */
   .masonry-grid{display:block;column-count:4;column-gap:24px;max-width:1400px;margin:40px auto;padding:0 48px;}
   @media(max-width:1200px){.masonry-grid{column-count:3;}}
   @media(max-width:900px){.masonry-grid{column-count:2;padding:0 24px;}}
@@ -618,8 +620,11 @@ function MythFactQuiz({ onClose }) {
 // ── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [currentPath, setCurrentPath] = useState(() => {
-    const p = window.location.pathname.replace(/\/+$/, '') || '/';
-    return p;
+    // Check if we are running in the browser (client-side) or the server
+    if (typeof window !== 'undefined') {
+      return window.location.pathname.replace(/\/+$/, '') || '/';
+    }
+    return '/'; // Fallback for server-side rendering (Vercel build phase)
   });
   const [dashboardTab, setDashboardTab] = useState('home');
   const [currentUser, setCurrentUser] = useState(null);
@@ -630,37 +635,45 @@ export default function App() {
 
   useEffect(() => {
     const handleLocationChange = () => {
-      const p = window.location.pathname.replace(/\/+$/, '') || '/';
-      setCurrentPath(p);
+      if (typeof window !== 'undefined') {
+        const p = window.location.pathname.replace(/\/+$/, '') || '/';
+        setCurrentPath(p);
+      }
     };
     handleLocationChange();
-    window.addEventListener('popstate', handleLocationChange);
-    return () => window.removeEventListener('popstate', handleLocationChange);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('popstate', handleLocationChange);
+      return () => window.removeEventListener('popstate', handleLocationChange);
+    }
   }, []);
 
   const navigate = (path) => {
-    const p = path.replace(/\/+$/, '') || '/';
-    window.history.pushState({}, '', p);
-    setCurrentPath(p);
-    window.scrollTo(0, 0);
+    if (typeof window !== 'undefined') {
+      const p = path.replace(/\/+$/, '') || '/';
+      window.history.pushState({}, '', p);
+      setCurrentPath(p);
+      window.scrollTo(0, 0);
+    }
   };
 
   const isMasterEmail = currentUser?.email && btoa(currentUser.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
   const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
 
   useEffect(() => {
-    const s = document.createElement('style');
-    s.textContent = FONTS + CSS;
-    document.head.appendChild(s);
-    const favicon = document.createElement('link');
-    favicon.rel = 'icon';
-    favicon.type = 'image/png';
-    favicon.href = '/android-chrome-192x192.png';
-    document.head.appendChild(favicon);
-    return () => {
-      document.head.removeChild(s);
-      document.head.removeChild(favicon);
-    };
+    if (typeof document !== 'undefined') {
+      const s = document.createElement('style');
+      s.textContent = FONTS + CSS;
+      document.head.appendChild(s);
+      const favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      favicon.type = 'image/png';
+      favicon.href = '/android-chrome-192x192.png';
+      document.head.appendChild(favicon);
+      return () => {
+        document.head.removeChild(s);
+        document.head.removeChild(favicon);
+      };
+    }
   }, []);
 
   useEffect(() => {
@@ -679,9 +692,11 @@ export default function App() {
         const isMaster = user.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
         const isUserAdmin = isDbAdmin || isMaster;
 
-        const path = window.location.pathname.replace(/\/+$/, '') || '/';
-        if (path === '/auth' || path === '/') {
-          navigate(isUserAdmin ? '/admin' : '/dashboard');
+        if (typeof window !== 'undefined') {
+          const path = window.location.pathname.replace(/\/+$/, '') || '/';
+          if (path === '/auth' || path === '/') {
+            navigate(isUserAdmin ? '/admin' : '/dashboard');
+          }
         }
       } else {
         setCurrentUser(null);
