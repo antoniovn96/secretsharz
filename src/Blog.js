@@ -116,97 +116,36 @@ const BLOG_CSS = `
   }
 `;
 
-// ── STATIC BLOG POSTS (Add new posts here — no webpack magic needed) ─────────
-// To add a new post:
-// 1. Create your component in ./blogs/MyPostName.jsx
-// 2. import MyPost from './blogs/MyPostName';
-// 3. Add an entry to this array following the same shape
-//
-// FIX: The original code used require.context('./blogss', ...) which is
-// Webpack-only and the folder name had a typo ('blogss'). Replaced with
-// a static array that works in any bundler (CRA, Vite, etc.)
-
-const BLOG_POSTS = [
-  {
-    id: 'f1',
-    slug: 'board-exam-anxiety',
-    title: "Navigating Board Exam Anxiety: A Student's Survival Guide",
-    excerpt: "Practical, science-backed strategies for managing stress when the pressure of 10th and 12th board exams feels like too much to handle.",
-    category: "Exam Stress",
-    date: "April 1, 2026",
-    dateTs: 1743465600,
-    readTime: "5 min read",
-    wordCount: 1250,
-    imgUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80",
-    featured: true,
-    content: `<h2>Why Exam Stress Feels Different This Year</h2><p>Board exams bring an immense amount of pressure — not just from parents and teachers, but from yourself. The feeling that the next few weeks will define your entire future is overwhelming. But here's the truth: they won't. Board marks open doors, but they don't close them permanently.</p><h2>The Science Behind Exam Anxiety</h2><p>When you're stressed, your brain releases cortisol. In small doses, this actually helps you focus. But chronic stress before exams floods your system, making it harder to recall what you've studied, sleep properly, or think clearly.</p><h2>5 Strategies That Actually Work</h2><p><strong>1. The 5-4-3-2-1 Method</strong> — When panic hits, ground yourself: name 5 things you see, 4 you can touch, 3 you hear, 2 you smell, 1 you taste. This interrupts the anxiety spiral immediately.</p><p><strong>2. Study in sprints, not marathons</strong> — 45 minutes of focused study + 10 minutes of rest beats 3 hours of distracted reading every time.</p><p><strong>3. Write your worry down</strong> — Research shows that writing about your anxiety for 10 minutes before an exam frees up cognitive bandwidth, improving performance.</p><p><strong>4. Sleep is revision time</strong> — Your brain consolidates memory during sleep. Staying up until 3am the night before an exam actively harms your performance.</p><p><strong>5. Reframe the narrative</strong> — Instead of "I have to perform perfectly", try "I get to show what I've learned." Small language shifts change your relationship with pressure.</p>`
-  },
-  {
-    id: 'f2',
-    slug: 'high-functioning-anxiety',
-    title: "Why You Can't 'Just Be Happy': Understanding High-Functioning Anxiety",
-    excerpt: "You get good grades, you smile for photos, and you never miss a deadline. But inside, your mind is racing constantly. You are not alone.",
-    category: "Mental Health",
-    date: "March 28, 2026",
-    dateTs: 1743116400,
-    readTime: "7 min read",
-    wordCount: 1750,
-    imgUrl: "https://images.unsplash.com/photo-1516585427167-9f4af9627e6c?auto=format&fit=crop&w=800&q=80",
-    content: `<h2>The Paradox of Appearing Fine</h2><p>High-functioning anxiety is tricky because it hides behind success. You're the student who submits assignments early, replies to messages instantly, and never seems rattled. But under the surface, you're running at 110% capacity all the time — and the engine is burning out.</p><h2>What It Actually Feels Like</h2><p>People with high-functioning anxiety often describe it as a constant low hum of dread that never quite goes away. You prepare excessively for things that might go wrong. You apologise before you've made a mistake. You rehearse conversations in your head for hours.</p><h2>Why Indian Students Are Particularly Vulnerable</h2><p>In a culture where academic excellence is tied to family honour, there's enormous pressure to keep performing while never showing weakness. The result is an entire generation of students who are brilliant on paper and quietly suffering inside.</p><h2>What You Can Do Today</h2><p><strong>Name it</strong> — Simply calling it "anxiety" rather than "just being stressed" changes how you relate to it. You're not broken; you're human.</p><p><strong>The 'good enough' experiment</strong> — Deliberately do one small thing imperfectly this week and watch how the world continues to function.</p><p><strong>Talk to someone</strong> — Not to fix it in one conversation, but because carrying it alone is what makes it heavier.</p>`
-  },
-  {
-    id: 'f3',
-    slug: 'social-media-mental-health',
-    title: "Your Feed is Lying to You: Social Media and Self-Worth",
-    excerpt: "Every comparison you make on Instagram is a comparison between your full life — the messy, complicated real version — and someone else's highlight reel.",
-    category: "Digital Wellbeing",
-    date: "March 20, 2026",
-    dateTs: 1742425200,
-    readTime: "6 min read",
-    wordCount: 1500,
-    imgUrl: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80",
-    content: `<h2>The Comparison Trap</h2><p>When you scroll through Instagram at midnight and see someone your age who seems to have it all together, what happens in your brain? A tiny alarm goes off: "You're falling behind." The truth is, you're comparing your behind-the-scenes to their highlight reel.</p><h2>The Numbers Are Alarming</h2><p>Teens who spend 5+ hours daily on social media are 66% more likely to have at least one suicide risk factor (Twenge, 2017). This isn't a coincidence. Social media platforms are engineered to keep you scrolling — and the content that gets the most engagement is often the most emotionally activating.</p><h2>Practical Detox Strategies</h2><p><strong>The 1-hour rule</strong> — No phone for the first hour after waking up. This single habit, practiced consistently, changes how you start your day.</p><p><strong>Audit your following list</strong> — If an account consistently makes you feel worse about yourself, unfollow it. You are not obligated to consume content that harms you.</p><p><strong>Post without checking</strong> — Try posting something and then putting your phone down for two hours before looking at the response. Practice detaching your worth from external validation.</p>`
-  },
-  {
-    id: 'f4',
-    slug: 'talking-to-parents',
-    title: "How to Talk to Your Parents About Mental Health (When It Feels Impossible)",
-    excerpt: "For many Indian students, telling their parents 'I'm struggling' feels scarier than the struggle itself. Here's a practical guide for that conversation.",
-    category: "Family & Relationships",
-    date: "March 12, 2026",
-    dateTs: 1741734000,
-    readTime: "8 min read",
-    wordCount: 2000,
-    imgUrl: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80",
-    content: `<h2>Why This Conversation Is So Hard</h2><p>Many Indian parents grew up in environments where mental health was never discussed. For them, 'depression' might sound like an excuse, and 'anxiety' might be something you 'get over'. This generational gap in understanding is not their fault — but it does make the conversation harder for you.</p><h2>Before You Speak</h2><p>Write down what you want to say. Not because you'll read from it, but because the act of writing clarifies what you actually feel versus the fear of how they'll react.</p><h2>What Has a Better Chance of Working</h2><p>Instead of: "I have anxiety" (which can feel like a label) try: "I've been feeling overwhelmed and scared a lot lately, and I need some help."</p><p>Instead of: "I need to see a therapist" try: "I want to talk to someone professional to help me manage my stress better."</p><p>Frame it around your performance: "I think getting some support will actually help me study better."</p><h2>If They Don't React Well</h2><p>Sometimes the first conversation doesn't go as hoped. That doesn't mean the door is permanently closed. Give it a few days, then try again — or reach out to a school counsellor who can help mediate.`
-  },
-  {
-    id: 'f5',
-    slug: 'sleep-science-students',
-    title: "The Sleep Science Every Student Needs to Know",
-    excerpt: "Why staying up to study is the worst decision you can make for your grades, your mood, and your health — explained by neuroscience.",
-    category: "Wellness",
-    date: "March 5, 2026",
-    dateTs: 1741129200,
-    readTime: "5 min read",
-    wordCount: 1300,
-    imgUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
-    content: `<h2>What Actually Happens When You Sleep</h2><p>Sleep is not passive downtime. During deep sleep, your brain runs a cellular maintenance programme — clearing toxic proteins, consolidating memories from the day, and regulating the hormones that control mood and appetite.</p><h2>The Myth of the All-Nighter</h2><p>Students who pull all-nighters perform significantly worse on memory and reasoning tests than students who slept 7 hours — even if the sleeping students studied less. You simply cannot recall information effectively when your prefrontal cortex is sleep-deprived.</p><h2>How Much Sleep You Actually Need</h2><p>The American Academy of Pediatrics recommends 8-10 hours for teenagers. Most Indian students get 5-6 hours during exam season — a deficit that compounds over weeks and causes the "brain fog" that makes study feel impossible.</p><h2>The One Habit That Changes Everything</h2><p>A consistent wake-up time — even on weekends — is the single most powerful sleep hygiene intervention. Your circadian rhythm stabilises, you fall asleep faster, and you wake up more rested within two weeks.`
-  },
-  {
-    id: 'f6',
-    slug: 'friendship-loneliness',
-    title: "Feeling Lonely in a Crowd: When You're Surrounded by People But Still Alone",
-    excerpt: "Social loneliness and emotional loneliness are different things. You can have 300 Instagram followers and feel completely unseen.",
-    category: "Mental Health",
-    date: "February 26, 2026",
-    dateTs: 1740524400,
-    readTime: "6 min read",
-    wordCount: 1500,
-    imgUrl: "https://images.unsplash.com/photo-1509909756405-be0199881695?auto=format&fit=crop&w=800&q=80",
-    content: `<h2>Two Types of Loneliness</h2><p>Social loneliness is the absence of a social network. Emotional loneliness is the absence of a deep, meaningful connection — and you can experience it even in a room full of people, even in a 5-year friendship.</p><h2>Why It's Increasing Among Indian Students</h2><p>Competitive academic environments and the pressure to appear confident and capable make it hard to be genuinely vulnerable with peers. Everyone is performing their best self, and real connection requires showing the parts that aren't performing.</p><h2>What Actually Helps</h2><p>Vulnerability breeds connection. In Brené Brown's research, the people who reported the strongest sense of belonging had one thing in common: they were willing to be seen imperfectly. Start small — share one honest thing about how you're feeling with someone you trust.</p>`
-  },
-];
+// ── AUTO-DETECT BLOG POSTS FROM FOLDER ─────────────────────────────────────
+let BLOG_POSTS = [];
+try {
+  // Webpack magic: reads all .js files inside the /blogss/ folder automatically
+  const req = require.context('./blogss', false, /\.js$/);
+  
+  BLOG_POSTS = req.keys().map((fileName, index) => {
+    const module = req(fileName);
+    // Grabs the exported 'meta' object from the file
+    const meta = module.meta || {}; 
+    
+    return {
+      id: index + 1,
+      slug: meta.slug || fileName.replace('./', '').replace('.js', '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      title: meta.title || fileName.replace('./', '').replace('.js', ''),
+      excerpt: meta.excerpt || "Click to read more...",
+      category: meta.category || "Mental Health",
+      date: meta.date || "",
+      dateTs: meta.dateTs || 0,
+      readTime: meta.readTime || "",
+      wordCount: meta.wordCount || 0,
+      imgUrl: meta.imgUrl || "",
+      featured: meta.featured || false,
+      content: meta.content || "",
+      component: module.default // Grabs the actual React component exported from the file
+    };
+  });
+} catch (error) {
+  console.warn("Could not auto-load from ./blogss folder.", error);
+}
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 const POSTS_PER_PAGE = 6;
@@ -232,8 +171,6 @@ function BlogCard({ post, onClick, searchQuery, animDelay }) {
   const cardRef = useRef(null);
 
   useEffect(() => {
-    // FIX: Added IntersectionObserver-based entrance animation so cards
-    // animate in as they scroll into view, instead of all appearing at once
     const el = cardRef.current;
     if (!el) return;
     const timer = setTimeout(() => {
@@ -295,9 +232,7 @@ export default function Blog({ navigate }) {
   // Scroll to top when opening/closing a post
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [activePost]);
 
-  // FIX: URL-aware post detection. Now also handles /blog/:slug within the
-  // custom SPA router by checking currentPath at mount. This prevents the
-  // previous bug where refreshing /blog/my-slug would always show a 404.
+  // URL-aware post detection. 
   useEffect(() => {
     const checkUrl = () => {
       const parts = window.location.pathname.split('/').filter(Boolean);
@@ -312,10 +247,7 @@ export default function Blog({ navigate }) {
     return () => window.removeEventListener('popstate', checkUrl);
   }, []);
 
-  // FIX: smartNavigate no longer calls the parent navigate() when going to
-  // /blog (which would push a redundant history entry and could unmount
-  // the component). Instead, it manages post state internally and only
-  // calls the parent navigate for external routes.
+  // Custom navigation to handle internal SPA routing vs external
   const smartNavigate = useCallback((path) => {
     if (path === '/blog') {
       window.history.pushState({}, '', '/blog');
@@ -375,7 +307,7 @@ export default function Blog({ navigate }) {
         .slice(0, 3);
       return <PostComponent navigate={smartNavigate} allPosts={BLOG_POSTS} relatedPosts={relatedPosts} />;
     }
-    // Fallback inline post view
+    // Fallback inline post view (If someone didn't use the template)
     return (
       <div className="blog-page" style={{ background: 'white', padding: 0 }}>
         <div className="post-view">
@@ -410,7 +342,7 @@ export default function Blog({ navigate }) {
         </div>
       </div>
 
-      {/* FEATURED POST */}
+      {/* FEATURED POST (Only renders if there are any posts available) */}
       {featuredPost && (
         <div className="blog-featured-wrap">
           <div className={`blog-featured ${!featuredPost.imgUrl ? 'blog-featured-no-img' : ''}`} onClick={() => handleOpenPost(featuredPost)}>
@@ -452,7 +384,6 @@ export default function Blog({ navigate }) {
             )}
           </div>
 
-          {/* FIX: Added sort control — was previously missing entirely */}
           <select className="blog-sort-select" value={sortOrder} onChange={e => setSortOrder(e.target.value)}>
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
@@ -464,7 +395,6 @@ export default function Blog({ navigate }) {
           </span>
         </div>
 
-        {/* FIX: Category chips now show post counts */}
         <div className="blog-filters">
           <span className="filter-label">Filter:</span>
           <button
@@ -509,7 +439,7 @@ export default function Blog({ navigate }) {
         )}
       </div>
 
-      {/* FIX: Load More button — previously all posts rendered at once with no pagination */}
+      {/* LOAD MORE */}
       {hasMore && (
         <div className="blog-load-more-wrap">
           <button className="blog-load-more-btn" onClick={() => setVisibleCount(c => c + POSTS_PER_PAGE)}>
