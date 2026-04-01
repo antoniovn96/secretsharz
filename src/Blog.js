@@ -6,7 +6,7 @@ const BLOG_CSS = `
   .blog-h1 { font-family: 'Fraunces', serif; font-size: clamp(36px, 6vw, 56px); margin-bottom: 12px; letter-spacing: -1px; }
   .blog-sub { color: rgba(255,255,255,0.7); font-size: 17px; max-width: 600px; margin: 0 auto; line-height: 1.6; }
   
-  /* Interactive Search & Filter Bar */
+  /* Filter Bar */
   .blog-controls { max-width: 900px; margin: 0 auto 50px; padding: 0 24px; display: flex; flex-direction: column; gap: 24px; align-items: center; }
   .blog-search-wrapper { position: relative; width: 100%; max-width: 500px; }
   .blog-search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 18px; }
@@ -36,6 +36,16 @@ const BLOG_CSS = `
   .blog-empty { text-align: center; padding: 80px 20px; color: var(--muted); width: 100%; grid-column: 1 / -1; background: white; border-radius: var(--r-md); border: 2px dashed var(--border); }
   .blog-empty-icon { font-size: 48px; margin-bottom: 16px; animation: floatUp 1s ease infinite alternate; display: inline-block; }
   
+  /* Fallback Post View (Only used if template fails) */
+  .post-view { max-width: 800px; margin: 40px auto; padding: 0 24px; animation: fadeIn 0.4s ease; }
+  .back-to-blog { display: inline-flex; align-items: center; gap: 8px; color: var(--sage); font-weight: 600; font-size: 15px; cursor: pointer; margin-bottom: 40px; border: none; background: transparent; transition: color 0.2s; padding: 0; }
+  .back-to-blog:hover { color: var(--moss); }
+  .post-hero-img { width: 100%; height: 400px; object-fit: cover; border-radius: var(--r-md); margin-bottom: 40px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+  .post-content h1 { font-family: 'Fraunces', serif; font-size: clamp(36px, 5vw, 52px); color: var(--ink); line-height: 1.15; margin-bottom: 20px; letter-spacing: -1px; }
+  .post-full-meta { display: flex; gap: 20px; font-size: 14px; color: var(--muted); margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--border); font-weight: 500; }
+  .post-body { font-size: 18px; color: var(--ink-soft); line-height: 1.8; white-space: pre-wrap; }
+  .post-body h3 { font-family: 'Fraunces', serif; font-size: 24px; color: var(--ink); margin: 32px 0 16px; }
+
   @media(max-width: 768px) {
     .blog-header { padding: 60px 24px 40px; }
     .blog-grid { padding: 0 24px; }
@@ -51,8 +61,13 @@ try {
     const module = req(fileName);
     const meta = module.meta || {}; 
     
+    // Automatically generate a URL-safe slug from the filename
+    // e.g. "./NewYearReset.js" becomes "newyearreset"
+    const generatedSlug = fileName.replace('./', '').replace('.js', '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
     return {
       id: index + 1,
+      slug: meta.slug || generatedSlug,
       title: meta.title || fileName.replace('./', '').replace('.js', ''),
       excerpt: meta.excerpt || "Click to read more...",
       category: meta.category || "Mental Health",
@@ -71,21 +86,25 @@ try {
 const FALLBACK_POSTS = [
   {
     id: 'f1',
+    slug: 'board-exam-anxiety',
     title: "Navigating Board Exam Anxiety: A Student's Survival Guide",
     excerpt: "Practical, science-backed strategies for managing stress when the pressure of 10th and 12th board exams feels like too much to handle.",
     category: "Exam Stress",
     date: "April 1, 2026",
     readTime: "5 min read",
     imgUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=800&q=80",
+    content: "<p>Board exams bring an immense amount of pressure...</p>"
   },
   {
     id: 'f2',
+    slug: 'high-functioning-anxiety',
     title: "Why You Can't 'Just Be Happy': Understanding High-Functioning Anxiety",
     excerpt: "You get good grades, you smile for photos, and you never miss a deadline. But inside, your mind is racing constantly. You are not alone.",
     category: "Mental Health",
     date: "March 28, 2026",
     readTime: "7 min read",
     imgUrl: "https://images.unsplash.com/photo-1516585427167-9f4af9627e6c?auto=format&fit=crop&w=800&q=80",
+    content: "<p>High-functioning anxiety is tricky because it hides behind success...</p>"
   }
 ];
 
@@ -95,6 +114,29 @@ export default function Blog({ navigate }) {
   const [activePost, setActivePost] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Automatically read the URL on page load and on back/forward navigation
+  useEffect(() => {
+    const checkUrlForPost = () => {
+      if (typeof window !== 'undefined') {
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        // If URL looks like /blog/newyearreset
+        if (pathParts[0] === 'blog' && pathParts[1]) {
+          const slugToFind = pathParts[1];
+          const post = BLOG_POSTS.find(p => p.slug === slugToFind);
+          if (post) {
+            setActivePost(post);
+          }
+        } else {
+          setActivePost(null);
+        }
+      }
+    };
+
+    checkUrlForPost(); // Check immediately
+    window.addEventListener('popstate', checkUrlForPost); // Listen for browser back button
+    return () => window.removeEventListener('popstate', checkUrlForPost);
+  }, []);
 
   // Inject CSS
   useEffect(() => {
@@ -108,6 +150,24 @@ export default function Blog({ navigate }) {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [activePost]);
+
+  // Intercept navigation commands from the Template
+  const smartNavigate = (path) => {
+    if (path === '/blog') {
+      setActivePost(null); // Clear the screen state when going back to grid
+    }
+    if (navigate) {
+      navigate(path);
+    } else {
+      window.location.href = path;
+    }
+  };
+
+  // Open post and push the slug to the URL history
+  const handleOpenPost = (post) => {
+    setActivePost(post);
+    smartNavigate(`/blog/${post.slug}`);
+  };
 
   // Extract unique categories
   const categories = useMemo(() => {
@@ -126,9 +186,35 @@ export default function Blog({ navigate }) {
   }, [activeCategory, searchQuery]);
 
   // Render Single Post Component if clicked
-  if (activePost && activePost.component) {
-    const PostComponent = activePost.component;
-    return <PostComponent navigate={navigate} />;
+  if (activePost) {
+    if (activePost.component) {
+      const PostComponent = activePost.component;
+      // We pass the 'smartNavigate' interceptor down to the template
+      return <PostComponent navigate={smartNavigate} />;
+    }
+
+    // Fallback if there is no separate React component file for this post
+    return (
+      <div className="blog-page" style={{ padding: '0', background: 'white' }}>
+        <div className="post-view">
+          <button className="back-to-blog" onClick={() => smartNavigate('/blog')}>
+            ← Back to all articles
+          </button>
+          <div className="post-content">
+            <span className="blog-tag">{activePost.category}</span>
+            <h1>{activePost.title}</h1>
+            <div className="post-full-meta">
+              <span>📅 {activePost.date}</span>
+              <span>⏱️ {activePost.readTime}</span>
+            </div>
+            {activePost.imgUrl && (
+              <img src={activePost.imgUrl} alt={activePost.title} className="post-hero-img" />
+            )}
+            <div className="post-body" dangerouslySetInnerHTML={{ __html: activePost.content }}></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Render Main Blog Listing
@@ -188,7 +274,7 @@ export default function Blog({ navigate }) {
           </div>
         ) : (
           filteredPosts.map(post => (
-            <div key={post.id} className="blog-card" onClick={() => setActivePost(post)}>
+            <div key={post.id} className="blog-card" onClick={() => handleOpenPost(post)}>
               {post.imgUrl && (
                 <div className="blog-img-wrapper">
                   <img src={post.imgUrl} alt={post.title} className="blog-img" />
