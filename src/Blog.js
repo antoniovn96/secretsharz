@@ -44,11 +44,37 @@ const BLOG_CSS = `
   }
 `;
 
-// ── SECRET SHARZ BLOG DATA ───────────────────────────────────────────────────
-// This acts as your database. You can add new posts here anytime.
-const BLOG_POSTS = [
+// ── AUTO-DETECT BLOG POSTS FROM FOLDER ─────────────────────────────────────
+let AUTO_BLOG_POSTS = [];
+try {
+  // Webpack magic: reads all .js files inside the /blogss/ folder automatically
+  const req = require.context('./blogss', false, /\.js$/);
+  
+  AUTO_BLOG_POSTS = req.keys().map((fileName, index) => {
+    const module = req(fileName);
+    // Grabs the exported 'meta' object from the file
+    const meta = module.meta || {}; 
+    
+    return {
+      id: index + 1,
+      title: meta.title || fileName.replace('./', '').replace('.js', ''),
+      excerpt: meta.excerpt || "Click to read more...",
+      category: meta.category || "Mental Health",
+      date: meta.date || "",
+      readTime: meta.readTime || "",
+      imgUrl: meta.imgUrl || "",
+      content: meta.content || "",
+      component: module.default // Grabs the actual React component exported from the file
+    };
+  });
+} catch (error) {
+  console.warn("Could not auto-load from ./blogss folder.", error);
+}
+
+// Keep the original placeholder posts as a fallback if the folder is empty
+const FALLBACK_POSTS = [
   {
-    id: 1,
+    id: 'f1',
     title: "Navigating Board Exam Anxiety: A Student's Survival Guide",
     excerpt: "Practical, science-backed strategies for managing stress when the pressure of 10th and 12th board exams feels like too much to handle.",
     category: "Exam Stress",
@@ -58,7 +84,7 @@ const BLOG_POSTS = [
     content: "Board exams bring an immense amount of pressure. From parental expectations to societal comparisons, it's completely normal to feel overwhelmed. But there are practical ways to manage it.\n\n<h3>1. The 4-7-8 Breathing Method</h3>\nBefore opening your textbook or entering the exam hall, inhale for 4 seconds, hold for 7, and exhale for 8. This physically forces your nervous system out of 'fight or flight' mode and brings your heart rate down.\n\n<h3>2. Break Tasks Down to the Ridiculous</h3>\nInstead of putting 'Study Physics' on your to-do list, write 'Read pages 12-15 of Chapter 3'. When the brain sees a massive task, it freezes in panic. Micro-tasks create momentum.\n\n<h3>3. You Are More Than Your Marks</h3>\nRemember that this exam is a stepping stone, not a destination. Five years from now, nobody will ask you about your Class 12 chemistry score. Be kind to yourself today."
   },
   {
-    id: 2,
+    id: 'f2',
     title: "Why You Can't 'Just Be Happy': Understanding High-Functioning Anxiety",
     excerpt: "You get good grades, you smile for photos, and you never miss a deadline. But inside, your mind is racing constantly. You are not alone.",
     category: "Mental Health",
@@ -68,7 +94,7 @@ const BLOG_POSTS = [
     content: "High-functioning anxiety is tricky because it hides behind success. To the outside world, you look like you have it all together. You get your work done, you're responsible, and you're the 'good kid'.\n\nBut internally, that success is driven by fear.\n\n<h3>The Symptoms We Ignore</h3>\n- Overthinking every conversation you had that day.\n- The inability to truly rest because you feel you 'should be doing something productive'.\n- Constant fear of letting people down.\n- Physical symptoms like tight shoulders, shallow breathing, or jaw clenching.\n\n<h3>How to Start Healing</h3>\nThe first step is acknowledging that feeling exhausted by your own mind isn't a badge of honor. It's okay to lower the bar. It's okay to rest without earning it. Try using the Secret Sharz Mind Space tools to log your anxious triggers without judging them."
   },
   {
-    id: 3,
+    id: 'f3',
     title: "How to Help a Friend Who Is Struggling Silently",
     excerpt: "We often don't know what to say when a friend is depressed or anxious. Here is exactly what to say (and what to avoid).",
     category: "Relationships",
@@ -78,7 +104,7 @@ const BLOG_POSTS = [
     content: "When a friend is going through a tough time, our instinct is to try and 'fix' it. We want to offer solutions or tell them to look on the bright side. But often, that's the exact opposite of what they need.\n\n<h3>Things to Avoid Saying</h3>\n- 'Just don't think about it.'\n- 'Other people have it much worse.'\n- 'You have so much to be happy about.'\nThese phrases invalidate their pain and make them feel guilty for struggling.\n\n<h3>What Actually Helps</h3>\nInstead of trying to fix the problem, validate the emotion.\n- 'That sounds really heavy. I'm so sorry you're dealing with this.'\n- 'I don't know exactly what to say, but I'm here for you.'\n- 'Do you want to talk about it, or do you just want a distraction right now?'\n\nSometimes, simply sitting in silence with someone is the most profound support you can offer."
   },
   {
-    id: 4,
+    id: 'f4',
     title: "5 Grounding Techniques for When Everything Feels Too Much",
     excerpt: "Panic attacks and overwhelming stress can disconnect you from reality. Here are quick, discreet ways to anchor yourself.",
     category: "Self-Care",
@@ -89,7 +115,9 @@ const BLOG_POSTS = [
   }
 ];
 
-export default function Blog() {
+const BLOG_POSTS = AUTO_BLOG_POSTS.length > 0 ? AUTO_BLOG_POSTS : FALLBACK_POSTS;
+
+export default function Blog({ navigate }) {
   const [activePost, setActivePost] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
 
@@ -120,6 +148,13 @@ export default function Blog() {
 
   // Render Single Post View
   if (activePost) {
+    // If the file is a true React component, let it handle its own rendering and routing
+    if (activePost.component) {
+      const PostComponent = activePost.component;
+      return <PostComponent navigate={navigate} />;
+    }
+
+    // Fallback for simple string-based posts
     return (
       <div className="blog-page" style={{ padding: '0', background: 'white' }}>
         <div className="post-view">
@@ -136,8 +171,6 @@ export default function Blog() {
             {activePost.imgUrl && (
               <img src={activePost.imgUrl} alt={activePost.title} className="post-hero-img" />
             )}
-            {/* The dangerouslySetInnerHTML is used safely here because we control the static content, 
-                allowing us to render HTML tags like <h3> directly from the database string */}
             <div className="post-body" dangerouslySetInnerHTML={{ __html: activePost.content }}></div>
           </div>
         </div>
