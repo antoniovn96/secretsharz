@@ -24,22 +24,45 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
 
   return (
     <>
-      <header style={styles.header}>
-        {/* 1. CLICKABLE & LARGER LOGO */}
+      <header className="main-header">
+        {/* CLICKABLE LOGO */}
         <div 
           className="logo-container" 
           onClick={() => handleNav('/')}
-          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
           title="Go to Homepage"
         >
           <img 
             src="/secret-sharz-logo.png" 
             alt="Secret Sharz Logo" 
-            style={styles.logo} 
+            className="header-logo"
           />
         </div>
 
-        {/* HAMBURGER MENU BUTTON */}
+        {/* DESKTOP NAVIGATION (Visible on larger screens) */}
+        <nav className="desktop-nav">
+          <button onClick={() => handleNav('/')} className="nav-link">Home</button>
+          <button onClick={() => handleNav('/mindspace')} className="nav-link">Mind Space</button>
+          <button onClick={() => handleNav('/wall')} className="nav-link">Sharz Wall</button>
+          <button onClick={() => handleNav('/vidyavantage')} className="nav-link highlight-link">VidyaVantage</button>
+
+          <div className="nav-divider"></div>
+
+          {currentUser ? (
+            <>
+              {isAdmin && (
+                <button onClick={() => handleNav('/admin')} className="nav-link admin-link">Admin Panel</button>
+              )}
+              <button onClick={() => handleNav('/dashboard')} className="nav-link">My Dashboard</button>
+              <button onClick={() => handleLogout && handleLogout()} className="nav-link logout-link">Sign Out</button>
+            </>
+          ) : (
+            <button onClick={() => handleNav('/auth')} className="nav-cta">
+              Sign In / Join
+            </button>
+          )}
+        </nav>
+
+        {/* MOBILE HAMBURGER BUTTON (Visible only on small screens) */}
         <button 
           className="hamburger-btn"
           onClick={() => setIsMenuOpen(true)}
@@ -51,13 +74,13 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
         </button>
       </header>
 
-      {/* OVERLAY BACKDROP */}
+      {/* OVERLAY BACKDROP FOR MOBILE MENU */}
       <div 
         className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} 
         onClick={() => setIsMenuOpen(false)}
       ></div>
 
-      {/* 3. CREATIVE SIDE DRAWER MENU */}
+      {/* MOBILE SIDE DRAWER MENU */}
       <div className={`side-drawer ${isMenuOpen ? 'open' : ''}`}>
         <div className="drawer-header">
           <span style={{ fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--sage)', fontWeight: 'bold' }}>
@@ -76,7 +99,7 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           <button onClick={() => handleNav('/wall')} className="drawer-link">
             <span>💬</span> Sharz Wall
           </button>
-          <button onClick={() => handleNav('/vidyavantage')} className="drawer-link highlight-link">
+          <button onClick={() => handleNav('/vidyavantage')} className="drawer-link highlight-link-mobile">
             <span>🎓</span> VidyaVantage
           </button>
 
@@ -101,7 +124,7 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
               <button onClick={() => handleNav('/auth')} className="drawer-link">
                 <span>🔑</span> Sign In
               </button>
-              <button onClick={() => handleNav('/auth')} className="drawer-cta">
+              <button onClick={() => handleNav('/auth')} className="drawer-cta-mobile">
                 Join Secret Sharz
               </button>
             </>
@@ -109,10 +132,101 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
         </nav>
       </div>
 
-      {/* INLINE CSS FOR THE MENU ANIMATIONS */}
+      {/* CSS STYLES */}
       <style>{`
-        .hamburger-btn {
+        /* MAIN HEADER */
+        .main-header {
           display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 48px; /* Reduced padding for a smaller header */
+          background-color: #0f172a;
+          border-bottom: 1px solid #334155;
+          z-index: 1000;
+          position: sticky;
+          top: 0;
+          height: 65px; /* Fixed normal height */
+        }
+
+        .logo-container {
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+        }
+
+        .header-logo {
+          height: 40px; /* Reduced from 65px to a standard logo size */
+          width: auto;
+          transition: transform 0.2s ease;
+        }
+
+        /* DESKTOP NAVIGATION */
+        .desktop-nav {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .nav-link {
+          background: transparent;
+          border: none;
+          color: rgba(255, 255, 255, 0.8);
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: color 0.2s ease;
+          padding: 8px 12px;
+          border-radius: 8px;
+        }
+        
+        .nav-link:hover {
+          color: white;
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .highlight-link {
+          color: #E8650A; /* VidyaVantage Saffron */
+          font-weight: 600;
+        }
+        .highlight-link:hover {
+          color: #F0A500; /* VidyaVantage Gold */
+        }
+
+        .nav-divider {
+          width: 1px;
+          height: 24px;
+          background: rgba(255, 255, 255, 0.15);
+          margin: 0 5px;
+        }
+
+        .admin-link {
+          color: #F59E0B;
+        }
+        .logout-link {
+          color: #ef4444;
+        }
+
+        .nav-cta {
+          background: var(--sage, #4A7C59);
+          color: white;
+          border: none;
+          padding: 8px 20px;
+          border-radius: 50px;
+          font-size: 14px;
+          font-weight: bold;
+          cursor: pointer;
+          font-family: inherit;
+          transition: background 0.2s ease, transform 0.2s ease;
+        }
+        .nav-cta:hover {
+          background: var(--moss, #2D5240);
+          transform: translateY(-1px);
+        }
+
+        /* HAMBURGER BUTTON */
+        .hamburger-btn {
+          display: none; /* Hidden on desktop */
           flex-direction: column;
           justify-content: space-between;
           height: 20px;
@@ -125,22 +239,19 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
         .hamburger-line {
           height: 3px;
           width: 100%;
-          background-color: var(--sage);
+          background-color: white;
           border-radius: 10px;
           transition: all 0.3s ease;
-        }
-        .hamburger-btn:hover .hamburger-line {
-          background-color: var(--sage-light);
         }
 
         /* DRAWER STYLES */
         .side-drawer {
           position: fixed;
           top: 0;
-          right: -350px; /* Hidden off-screen by default */
+          right: -350px;
           width: 320px;
           height: 100vh;
-          background: var(--ink); /* Dark sleek background */
+          background: #0f172a;
           box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
           z-index: 2000;
           transition: right 0.4s cubic-bezier(0.82, 0.085, 0.395, 0.895);
@@ -149,7 +260,7 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           padding: 30px;
         }
         .side-drawer.open {
-          right: 0; /* Slides in */
+          right: 0;
         }
 
         .menu-overlay {
@@ -193,7 +304,7 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           transition: background 0.2s;
         }
         .close-btn:hover {
-          background: var(--danger);
+          background: #ef4444;
         }
 
         .drawer-nav {
@@ -205,7 +316,7 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
         .drawer-link {
           background: transparent;
           border: none;
-          color: var(--text-main);
+          color: white;
           font-size: 16px;
           font-weight: 500;
           text-align: left;
@@ -223,27 +334,12 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
         }
         .drawer-link:hover {
           background: rgba(255,255,255,0.05);
-          color: var(--sage-light);
           transform: translateX(5px);
         }
 
-        .highlight-link {
-          background: rgba(124, 111, 160, 0.15); /* Lavender pale */
-          color: var(--lav-pale);
-        }
-        .highlight-link:hover {
-          background: var(--lavender);
-          color: white;
-        }
-
-        .admin-link {
-          color: #F59E0B; /* Warning yellow */
-        }
-        .logout-link {
-          color: var(--danger);
-        }
-        .logout-link:hover {
-          background: rgba(239, 68, 68, 0.1);
+        .highlight-link-mobile {
+          background: rgba(232, 101, 10, 0.15); 
+          color: #F0A500;
         }
 
         .drawer-divider {
@@ -252,8 +348,8 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           margin: 15px 0;
         }
 
-        .drawer-cta {
-          background: var(--sage);
+        .drawer-cta-mobile {
+          background: var(--sage, #4A7C59);
           color: white;
           border: none;
           padding: 15px;
@@ -265,13 +361,18 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           transition: all 0.2s ease;
           margin-top: 10px;
         }
-        .drawer-cta:hover {
-          background: var(--moss);
-          transform: translateY(-2px);
-        }
 
-        /* Mobile adjustments */
-        @media (max-width: 600px) {
+        /* RESPONSIVE BREAKPOINTS */
+        @media (max-width: 950px) {
+          .main-header {
+            padding: 10px 24px;
+          }
+          .desktop-nav {
+            display: none; /* Hides inline nav on mobile */
+          }
+          .hamburger-btn {
+            display: flex; /* Shows hamburger on mobile */
+          }
           .side-drawer {
             width: 80vw;
             right: -80vw;
@@ -281,22 +382,3 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
     </>
   );
 }
-
-const styles = {
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '15px 30px',
-    backgroundColor: '#0f172a',
-    borderBottom: '1px solid #334155',
-    zIndex: 1000, 
-    position: 'sticky', // Makes header sticky if desired
-    top: 0
-  },
-  logo: {
-    height: '65px', // Increased from 40px to make it much more visible
-    width: 'auto',
-    transition: 'transform 0.2s ease'
-  }
-};
