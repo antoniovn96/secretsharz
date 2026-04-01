@@ -6,6 +6,7 @@ import VidyaVantage from './VidyaVantage';
 import AuthPage from './AuthPage';
 import StudentDashboard from './StudentDashboard';
 import MindSpace from './MindSpace';
+import Blog from './Blog';
 import AdminDashboard from './AdminDashboard';
 import Header from './Header';
 import Footer from './Footer';
@@ -818,6 +819,9 @@ export default function App() {
           <VidyaVantage onBack={() => navigate(currentUser ? '/dashboard' : '/')} onSave={handleSaveAssessment} />
         </>
       );
+    }
+    if (currentPath.startsWith('/blog')) {
+      return <Blog />;
     }
     if (currentPath === '/') {
       return <HomePage currentUser={currentUser} isAdmin={isAdmin} setModal={setModal} setShowQuiz={setShowQuiz} navigate={navigate} />;
