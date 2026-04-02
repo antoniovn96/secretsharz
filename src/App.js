@@ -10,7 +10,7 @@ import MindSpace from './MindSpace';
 import AdminDashboard from './AdminDashboard';
 import Header from './Header';
 import Footer from './Footer';
-import Blog from './Blog'; // 👈 ADD THIS EXACT LINE!
+import Blog from './Blog'; 
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');`;
 
@@ -28,6 +28,7 @@ const CSS = `
     --note-green:#D1FAE5;--note-green-dark:#059669;
     --note-purple:#EDE9FE;--note-purple-dark:#7C3AED;
     --note-blue:#DBEAFE;--note-blue-dark:#2563EB;
+    --danger:#C0392B;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--warm-white);color:var(--ink);line-height:1.6;overflow-x:hidden;}
@@ -215,6 +216,7 @@ const CSS = `
   .note-textarea{width:100%;height:150px;border:1px solid var(--border);border-radius:12px;padding:15px;font-family:inherit;font-size:16px;resize:none;margin-bottom:15px;}
   .note-textarea:focus{outline:none;border-color:var(--sage);}
   .note-select{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:15px;}
+  .safety-error{color:var(--danger);font-size:14px;font-weight:600;margin-bottom:15px;background:#FFF0F0;padding:10px;border-radius:8px;}
 
   /* ── MYTH/FACT QUIZ STYLES ── */
   .quiz-overlay{position:fixed;inset:0;z-index:3000;background:rgba(30,40,32,0.65);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn 0.25s ease;}
@@ -817,7 +819,7 @@ export default function App() {
       );
     }
     if (currentPath.startsWith('/wall')) {
-      return <WallPage />;
+      return <WallPage navigate={navigate} />; // Pass navigate to WallPage
     }
     if (currentPath.startsWith('/vidyavantage')) {
       return (
@@ -1047,7 +1049,6 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
           </p>
         </div>
         
-        {/* Updated Image Box */}
         <div className="story-img-box" style={{ overflow: 'hidden', padding: 0 }}>
           <img 
             src="/20250508_103355.jpg" 
@@ -1122,11 +1123,45 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
 }
 
 // ── WALL PAGE ─────────────────────────────────────────────────────────────────
-function WallPage() {
+function WallPage({ navigate }) {
   const [wallNotes, setWallNotes] = useState(generateWallData);
   const [showAddNoteModal, setShowAddNoteModal] = useState(false);
   const [newNoteText, setNewNoteText] = useState('');
   const [newNoteTag, setNewNoteTag] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [showCrisisModal, setShowCrisisModal] = useState(false);
+
+  // 1. Define Vulgarity/Curse Words
+  const vulgarWords = [
+    'fuck', 'shit', 'bitch', 'asshole', 'dick', 'pussy', 'cunt', 'slut', 'whore', 'bastard', 'motherfucker', 'crap', 'fag', 'faggot', 'nigger', 'nigga', 'retard', 'retarded'
+  ];
+
+  // 2. Define Self-Harm / High-Risk Phrases
+  const riskPhrases = [
+    'kill myself', 'want to die', 'end it all', 'give up', 'suicide', 'can\'t take it anymore', 'no reason to live', 'end my life', 'cut myself', 'hurt myself', 'better off dead'
+  ];
+
+  const checkSafety = (text) => {
+    const lowerText = text.toLowerCase();
+
+    // Check for Self Harm first (Highest Priority)
+    for (let phrase of riskPhrases) {
+      if (lowerText.includes(phrase)) {
+        return 'CRISIS';
+      }
+    }
+
+    // Check for Vulgarity
+    for (let word of vulgarWords) {
+      // Use regex to match whole words only, so we don't accidentally block words like "class" or "pass"
+      const regex = new RegExp(`\\b${word}\\b`, 'i'); 
+      if (regex.test(lowerText)) {
+        return 'VULGAR';
+      }
+    }
+
+    return 'SAFE';
+  };
 
   const reactToNote = (id) => {
     setWallNotes(prev => prev.map(n => n.id === id ? { ...n, reactions: n.reactions + 1 } : n));
@@ -1134,6 +1169,23 @@ function WallPage() {
 
   const submitNewNote = () => {
     if (!newNoteText.trim()) return;
+    setErrorMsg('');
+
+    const safetyStatus = checkSafety(newNoteText);
+
+    if (safetyStatus === 'CRISIS') {
+      setShowAddNoteModal(false);
+      setShowCrisisModal(true);
+      setNewNoteText('');
+      return;
+    }
+
+    if (safetyStatus === 'VULGAR') {
+      setErrorMsg("Please rephrase your note. Our safe space does not allow profanity or offensive language.");
+      return;
+    }
+
+    // If safe, proceed with posting
     const newNote = {
       id: Date.now(),
       type: newNoteText.length > 80 ? 'long' : 'short',
@@ -1142,6 +1194,7 @@ function WallPage() {
       color: ["note-yellow","note-green","note-purple","note-blue"][Math.floor(Math.random() * 4)],
       reactions: 1
     };
+    
     setWallNotes(prev => [newNote, ...prev]);
     setShowAddNoteModal(false);
     setNewNoteText('');
@@ -1163,7 +1216,7 @@ function WallPage() {
       <div className="wall-header">
         <h1 className="wall-h1">Sharz Wall</h1>
         <p className="wall-sub">You are not the only one. Real thoughts from real students. No names. No judgement.</p>
-        <button className="add-note-btn" onClick={() => setShowAddNoteModal(true)}>✍️ Add Your Note</button>
+        <button className="add-note-btn" onClick={() => { setErrorMsg(''); setShowAddNoteModal(true); }}>✍️ Add Your Note</button>
       </div>
 
       <div style={{ textAlign:'center' }}>
@@ -1197,6 +1250,13 @@ function WallPage() {
               <h2 style={{ fontFamily:'Fraunces', margin:0 }}>Share your thought</h2>
               <button onClick={() => setShowAddNoteModal(false)} style={{ background:'none', border:'none', fontSize:'24px', cursor:'pointer' }}>×</button>
             </div>
+            
+            {errorMsg && (
+              <div className="safety-error">
+                {errorMsg}
+              </div>
+            )}
+
             <textarea className="note-textarea" placeholder="What's on your mind? (It's completely anonymous...)" value={newNoteText} onChange={e => setNewNoteText(e.target.value)} />
             <select className="note-select" value={newNoteTag} onChange={e => setNewNoteTag(e.target.value)}>
               <option value="">Add a tag (Optional)</option>
@@ -1209,6 +1269,53 @@ function WallPage() {
               🛡️ Note: All posts are screened by our AI to prevent self-harm content or bullying.
             </div>
             <button className="btn-primary" style={{ width:'100%' }} onClick={submitNewNote}>Share Anonymously</button>
+          </div>
+        </div>
+      )}
+
+      {/* CRISIS INTERVENTION MODAL */}
+      {showCrisisModal && (
+        <div className="note-modal-overlay" style={{ background: 'rgba(30,40,32,0.8)' }} onClick={() => setShowCrisisModal(false)}>
+          <div className="note-modal" style={{ borderTop: '6px solid var(--danger)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: '48px', textAlign: 'center', marginBottom: '10px' }}>❤️‍🩹</div>
+            <h2 style={{ fontFamily:'Fraunces', textAlign: 'center', marginBottom: '16px', color: 'var(--ink)' }}>You don't have to face this alone.</h2>
+            <p style={{ textAlign: 'center', color: 'var(--ink-soft)', marginBottom: '24px', fontSize: '15px', lineHeight: '1.6' }}>
+              Your note mentioned feelings of deep despair or self-harm. Please know that your life is incredibly valuable. Right now, the strongest thing you can do is reach out to someone who is trained to help you carry this pain.
+            </p>
+            
+            <div style={{ background: '#FFF0F0', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
+              <h4 style={{ color: 'var(--danger)', marginBottom: '16px', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>24/7 Free & Confidential Helplines</h4>
+              
+              <div style={{ marginBottom: '12px', borderBottom: '1px solid rgba(192,57,43,0.1)', paddingBottom: '12px' }}>
+                <div style={{ fontWeight: 'bold', color: 'var(--ink)' }}>Kiran (Govt. of India)</div>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--danger)' }}>1800-599-0019</div>
+              </div>
+              
+              <div style={{ marginBottom: '12px', borderBottom: '1px solid rgba(192,57,43,0.1)', paddingBottom: '12px' }}>
+                <div style={{ fontWeight: 'bold', color: 'var(--ink)' }}>iCall (TISS)</div>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--danger)' }}>9152987821</div>
+              </div>
+              
+              <div>
+                <div style={{ fontWeight: 'bold', color: 'var(--ink)' }}>Vandrevala Foundation</div>
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--danger)' }}>9999-666-555</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={() => setShowCrisisModal(false)}
+                style={{ flex: 1, padding: '14px', background: 'transparent', border: '2px solid var(--border)', borderRadius: '50px', fontWeight: 'bold', cursor: 'pointer', color: 'var(--muted)' }}
+              >
+                Close
+              </button>
+              <button 
+                onClick={() => { setShowCrisisModal(false); navigate('/safe'); }}
+                style={{ flex: 2, padding: '14px', background: 'var(--sage)', border: 'none', borderRadius: '50px', fontWeight: 'bold', cursor: 'pointer', color: 'white' }}
+              >
+                Go to Safe Corner →
+              </button>
+            </div>
           </div>
         </div>
       )}
