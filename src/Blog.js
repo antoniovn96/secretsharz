@@ -138,11 +138,10 @@ function parseDateToTs(dateStr) {
 // Automatically formats any valid date strictly into "DD-MM-YYYY" for screen display
 function formatDisplayDate(dateStr) {
   if (!dateStr) return "";
-  // If it's already perfectly formatted as DD-MM-YYYY, return it immediately
   if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) return dateStr;
   
   const ts = parseDateToTs(dateStr);
-  if (ts === 0) return dateStr; // Fallback to raw string if it can't be parsed
+  if (ts === 0) return dateStr; 
   
   const d = new Date(ts);
   const day = String(d.getUTCDate()).padStart(2, '0');
@@ -171,24 +170,19 @@ function highlightText(text, query) {
 // ── AUTO-DETECT BLOG POSTS FROM FOLDER ─────────────────────────────────────
 let BLOG_POSTS = [];
 try {
-  // Webpack magic: reads all .js files inside the /blogss/ folder automatically
-  // 'true' ensures it reads all subfolders recursively!
-  const req = require.context('./blogss', true, /\.js$/); 
+  // Webpack magic: reads all .js files inside the /blogss/ folder automatically.
+  // CRITICAL FIX: The regex /^(?!.*(Blog\.js|BlogPostTemplate\.js)).*\.js$/ explicitly ignores 
+  // Blog.js and BlogPostTemplate.js to prevent Vercel from crashing in an infinite loop!
+  const req = require.context('./blogss', true, /^(?!.*(Blog\.js|BlogPostTemplate\.js)).*\.js$/); 
   
   BLOG_POSTS = req.keys().map((fileName, index) => {
     const module = req(fileName);
-    // Grabs the exported 'meta' object from the file
     const meta = module.meta || {}; 
-    
-    // Calculates a reliable timestamp for accurate internal sorting
     const calculatedDateTs = meta.dateTs || parseDateToTs(meta.date);
-    
-    // Forces the visual display date to always be DD-MM-YYYY
     const displayDate = formatDisplayDate(meta.date);
 
     return {
       id: index + 1,
-      // Slug safely handles deep paths (e.g. /2026/February/post.js -> 2026-february-post)
       slug: meta.slug || fileName.replace('./', '').replace('.js', '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       title: meta.title || fileName.replace('./', '').replace('.js', ''),
       excerpt: meta.excerpt || "Click to read more...",
@@ -200,7 +194,7 @@ try {
       imgUrl: meta.imgUrl || "",
       featured: meta.featured || false,
       content: meta.content || "",
-      component: module.default // Grabs the actual React component exported from the file
+      component: module.default 
     };
   });
 } catch (error) {
@@ -358,7 +352,7 @@ export default function Blog({ navigate }) {
         .slice(0, 3);
       return <PostComponent navigate={smartNavigate} allPosts={BLOG_POSTS} relatedPosts={relatedPosts} />;
     }
-    // Fallback inline post view (If someone didn't use the template)
+    // Fallback inline post view
     return (
       <div className="blog-page" style={{ background: 'white', padding: 0 }}>
         <div className="post-view">
@@ -393,7 +387,7 @@ export default function Blog({ navigate }) {
         </div>
       </div>
 
-      {/* FEATURED POST (Only renders if there are any posts available) */}
+      {/* FEATURED POST */}
       {featuredPost && (
         <div className="blog-featured-wrap">
           <div className={`blog-featured ${!featuredPost.imgUrl ? 'blog-featured-no-img' : ''}`} onClick={() => handleOpenPost(featuredPost)}>
