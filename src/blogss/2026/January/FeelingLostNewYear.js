@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Why You Feel Lost at the Start of the Year (And What to Do)",
@@ -9,7 +9,7 @@ export const meta = {
   date: "22-01-2026",
   readTime: "6 min read",
   wordCount: 880,
-  imgUrl: "/blogss/feeling-lost-new-year.jpg",
+  imgUrl: "/blogss/2026/January/feeling-lost-new-year.jpg",
   tldr: "Feeling lost in January is a common psychological crash after the high expectations of the holidays. Stop trying to plan your whole life; focus only on taking the very next right step.",
   toc: [
     { id: "confusion", title: "1. The Anatomy of Emotional Confusion", level: 3 },
