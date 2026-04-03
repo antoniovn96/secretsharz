@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Emotional Detox Guide: Clean Your Mind for the New Year",
@@ -9,7 +9,7 @@ export const meta = {
   date: "03-01-2026",
   readTime: "6 min read",
   wordCount: 880,
-  imgUrl: "/blogss/emotional-detox-guide.jpg",
+  imgUrl: "/blogss/2026/January/emotional-detox-guide.jpg",
   tldr: "An emotional detox clears out accumulated stress and negativity. Start by identifying your emotional triggers, doing a digital detox, and replacing toxic habits with mindful routines.",
   toc: [
     { id: "what-is-it", title: "1. What is an Emotional Detox?", level: 3 },
