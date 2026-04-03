@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "How to Create a Calm and Positive Environment at Home",
@@ -9,7 +9,7 @@ export const meta = {
   date: "16-01-2026",
   readTime: "6 min read",
   wordCount: 880,
-  imgUrl: "/blogss/calm-home-environment.jpg",
+  imgUrl: "/blogss/2026/January/calm-home-environment.jpg",
   tldr: "Your physical environment constantly sends signals to your brain. By clearing visual clutter, creating a dedicated 'safe space,' and implementing a digital detox zone, you can drastically lower your baseline anxiety.",
   toc: [
     { id: "impact", title: "1. The Impact of Your Environment", level: 3 },
