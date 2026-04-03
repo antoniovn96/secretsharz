@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 // ── META ─────────────────────────────────────────────────────────────────────
 export const meta = {
@@ -9,7 +9,7 @@ export const meta = {
   date: "25 Jan 2026",
   readTime: "7 min read",
   wordCount: 1750,
-  imgUrl: "/blogss/digital-detox-mental-health.jpg",
+  imgUrl: "/blogss/2026/January/digital-detox-mental-health.jpg",
   tldr: "Excessive screen time physically alters the brain's reward system, worsens anxiety and sleep, and fuels comparison culture. But a structured detox — even just 7 days — measurably improves mood, focus, and sleep quality.",
   toc: [
     { id: "screen-addiction", title: "Are You Actually Addicted?", level: 2 },
