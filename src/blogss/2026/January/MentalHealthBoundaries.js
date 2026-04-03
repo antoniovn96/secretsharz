@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "The Importance of Setting Boundaries for Mental Health",
@@ -9,7 +9,7 @@ export const meta = {
   date: "23-01-2026",
   readTime: "7 min read",
   wordCount: 910,
-  imgUrl: "/blogss/mental-health-boundaries.jpg",
+  imgUrl: "/blogss/2026/January/mental-health-boundaries.jpg",
   tldr: "A boundary is not a wall to keep people out; it's a door with a lock that you control. Learn the difference between emotional and social boundaries, and how to communicate them without feeling guilty.",
   toc: [
     { id: "what-are-they", title: "1. What Are Boundaries?", level: 3 },
