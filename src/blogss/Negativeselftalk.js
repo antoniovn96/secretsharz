@@ -9,7 +9,7 @@ export const meta = {
   date: "26 Jan 2026",
   readTime: "8 min read",
   wordCount: 2000,
-  imgUrl: "/public/blogss/negative-self-talk-fix.jpg",
+  imgUrl: "/blogss/negative-self-talk-fix.jpg",
   tldr: "Negative self-talk runs on automatic cognitive distortions that feel true but aren't. CBT-based reframing — catching the thought, naming the distortion, and writing a balanced alternative — can measurably reduce anxiety and depression within 6 weeks.",
   toc: [
     { id: "what-is-self-talk", title: "What Is Self-Talk?", level: 2 },
@@ -125,11 +125,11 @@ const GYM_CSS = `
 `;
 
 function ThoughtReframingGym() {
-  const [thought, setThought]           = useState('');
+  const [thought, setThought] = useState('');
   const [selectedDist, setSelectedDist] = useState(null);
-  const [reframe, setReframe]           = useState(null);
-  const [journal, setJournal]           = useState([]);
-  const [phase, setPhase]               = useState('input'); // input | distortion | result
+  const [reframe, setReframe] = useState(null);
+  const [journal, setJournal] = useState([]);
+  const [phase, setPhase] = useState('input'); // input | distortion | result
 
   useEffect(() => {
     const s = document.createElement('style');
