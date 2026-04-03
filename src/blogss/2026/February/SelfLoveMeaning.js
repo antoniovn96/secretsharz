@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../../../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate'; // Corrected Path
 
 export const meta = {
   title: "What Self-Love Really Means for Students in 2026",
@@ -9,7 +9,7 @@ export const meta = {
   date: "01-02-2026",
   readTime: "8 min read",
   wordCount: 1250,
-  imgUrl: "public/blogss/2026/February/self-love-for-students-2026.jpg",
+  imgUrl: "/blogss/2026/February/self-love-for-students-2026.jpg", // Corrected Image Path
   tldr: "True self-love for students is an action, not a feeling. It means setting strict boundaries, getting enough sleep, forgiving your academic mistakes, and treating yourself with the same fierce compassion you would offer a best friend.",
   toc: [
     { id: "the-illusion", title: "1. The Social Media Illusion of Self-Love", level: 3 },
