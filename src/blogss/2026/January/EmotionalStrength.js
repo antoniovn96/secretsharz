@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Building Emotional Strength: Simple Daily Practices",
@@ -9,7 +9,7 @@ export const meta = {
   date: "19-01-2026",
   readTime: "6 min read",
   wordCount: 880,
-  imgUrl: "/blogss/emotional-strength-building.jpg",
+  imgUrl: "/blogss/2026/January/emotional-strength-building.jpg",
   tldr: "You build emotional strength the same way you build physical strength: through small, daily resistance. Practice setting boundaries, accepting failure as data, and utilizing radical self-compassion.",
   toc: [
     { id: "what-is-it", title: "1. What Actually is Emotional Strength?", level: 3 },
