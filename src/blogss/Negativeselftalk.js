@@ -6,7 +6,7 @@ export const meta = {
   title: "How to Deal with Negative Self-Talk in 2026",
   excerpt: "The voice in your head is not always telling the truth. Learn how to identify the patterns, challenge them using CBT techniques, and replace them with something real — not just positive.",
   category: "Mental Health",
-  date: "26 Jan 2026",
+  date: "26-01-2026",
   readTime: "8 min read",
   wordCount: 2000,
   imgUrl: "/blogss/negative-self-talk-fix.jpg",
@@ -125,11 +125,11 @@ const GYM_CSS = `
 `;
 
 function ThoughtReframingGym() {
-  const [thought, setThought] = useState('');
+  const [thought, setThought]           = useState('');
   const [selectedDist, setSelectedDist] = useState(null);
-  const [reframe, setReframe] = useState(null);
-  const [journal, setJournal] = useState([]);
-  const [phase, setPhase] = useState('input'); // input | distortion | result
+  const [reframe, setReframe]           = useState(null);
+  const [journal, setJournal]           = useState([]);
+  const [phase, setPhase]               = useState('input'); // input | distortion | result
 
   useEffect(() => {
     const s = document.createElement('style');
@@ -174,7 +174,7 @@ function ThoughtReframingGym() {
   return (
     <div className="gym-card">
       <div className="gym-title">🏋️ Thought Reframing Gym</div>
-      <div className="gym-sub">Write a real thought that's been bothering you, identify its pattern, and get a personalised CBT reframe. Treat this like a private journal — no one else can see it.</div>
+      <div className="gym-sub">Write a real thought that&apos;s been bothering you, identify its pattern, and get a personalised CBT reframe. Treat this like a private journal — no one else can see it.</div>
 
       {/* Step 1 */}
       <div className="gym-step">
@@ -183,7 +183,7 @@ function ThoughtReframingGym() {
           <div className="gym-step-label">Write the thought</div>
           <textarea
             className="gym-textarea"
-            placeholder='"I always mess things up." / "Nobody really likes me." / "I\'ll never be good enough..."'
+            placeholder="&quot;I always mess things up.&quot; / &quot;Nobody really likes me.&quot; / &quot;I'll never be good enough...&quot;"
             value={thought}
             onChange={e => { setThought(e.target.value); setPhase('input'); setReframe(null); }}
             disabled={phase === 'result'}
@@ -198,7 +198,7 @@ function ThoughtReframingGym() {
         <div className="gym-step-num">2</div>
         <div className="gym-step-body">
           <div className="gym-step-label">Identify the pattern</div>
-          <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '12px' }}>Which of these sounds most like your thought? (Pick the closest one — it doesn't have to be perfect)</p>
+          <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '12px' }}>Which of these sounds most like your thought? (Pick the closest one — it doesn&apos;t have to be perfect)</p>
           <div className="distortion-grid">
             {DISTORTIONS.map(d => (
               <button
@@ -262,7 +262,7 @@ function ThoughtReframingGym() {
                 <span className="gym-journal-dist">{entry.distortion}</span>
                 <span className="gym-journal-time">{entry.time}</span>
               </div>
-              <div className="gym-journal-thought">"{entry.thought}"</div>
+              <div className="gym-journal-thought">&quot;{entry.thought}&quot;</div>
               <div className="gym-journal-reframe-preview">{entry.reframe.slice(0, 100)}…</div>
             </div>
           ))}
@@ -280,16 +280,16 @@ export default function NegativeSelfTalk({ navigate, relatedPosts }) {
 
       <h2 id="what-is-self-talk">What Is Self-Talk?</h2>
       <p>
-        You have an internal monologue running every waking hour. It comments on everything you do, compares you to others, predicts how situations will go, and interprets what people mean when they look at you a certain way. This is <strong>self-talk</strong> — and for most people, it's overwhelmingly negative.
+        You have an internal monologue running every waking hour. It comments on everything you do, compares you to others, predicts how situations will go, and interprets what people mean when they look at you a certain way. This is <strong>self-talk</strong> — and for most people, it&apos;s overwhelmingly negative.
       </p>
       <p>
-        Research by the National Science Foundation found that people have approximately 6,200 thoughts per day, and for the average person, the majority of these are negative and repetitive. More alarmingly, 90% of today's negative thoughts are the same thoughts you had yesterday.
+        Research by the National Science Foundation found that people have approximately 6,200 thoughts per day, and for the average person, the majority of these are negative and repetitive. More alarmingly, 90% of today&apos;s negative thoughts are the same thoughts you had yesterday.
       </p>
       <p>
-        Negative self-talk isn't just unpleasant. It's clinically linked to higher rates of anxiety, depression, lower academic performance, and weaker immune function. The voice in your head can literally make you sick.
+        Negative self-talk isn&apos;t just unpleasant. It&apos;s clinically linked to higher rates of anxiety, depression, lower academic performance, and weaker immune function. The voice in your head can literally make you sick.
       </p>
       <blockquote>
-        "You would never speak to a friend the way you speak to yourself in your worst moments. Why do you give yourself less compassion than a stranger?"
+        &quot;You would never speak to a friend the way you speak to yourself in your worst moments. Why do you give yourself less compassion than a stranger?&quot;
       </blockquote>
 
       <h2 id="patterns">The 8 Patterns to Recognise</h2>
@@ -297,7 +297,7 @@ export default function NegativeSelfTalk({ navigate, relatedPosts }) {
         Cognitive Behavioural Therapy (CBT) — the most evidence-based form of therapy — identifies recurring patterns in negative self-talk called <strong>cognitive distortions</strong>. These are thinking errors that feel completely logical and true in the moment, but systematically distort reality in a negative direction.
       </p>
       <p>
-        You don't need to have anxiety or depression to experience these. Every human brain runs on these shortcuts. The difference between someone with high self-compassion and someone who struggles is simply their ability to <em>notice and name</em> the distortion when it's happening.
+        You don&apos;t need to have anxiety or depression to experience these. Every human brain runs on these shortcuts. The difference between someone with high self-compassion and someone who struggles is simply their ability to <em>notice and name</em> the distortion when it&apos;s happening.
       </p>
 
       {DISTORTIONS.map((d, i) => (
@@ -314,7 +314,7 @@ export default function NegativeSelfTalk({ navigate, relatedPosts }) {
       {/* ── INTERACTIVE GYM ── */}
       <h2 id="reframing-gym">Thought Reframing Gym</h2>
       <p>
-        The fastest way to understand reframing is to practice it on your own actual thoughts. Use the tool below — type a real thought that's been weighing on you, identify which pattern it follows, and receive a personalised CBT reframe built around your specific words.
+        The fastest way to understand reframing is to practice it on your own actual thoughts. Use the tool below — type a real thought that&apos;s been weighing on you, identify which pattern it follows, and receive a personalised CBT reframe built around your specific words.
       </p>
 
       <ThoughtReframingGym />
@@ -334,15 +334,15 @@ export default function NegativeSelfTalk({ navigate, relatedPosts }) {
         </div>
       ))}
 
-      <h2 id="affirmations">Why Affirmations Alone Don't Work</h2>
+      <h2 id="affirmations">Why Affirmations Alone Don&apos;t Work</h2>
       <p>
-        The popular advice to "just say positive affirmations" is well-intentioned but misses a crucial mechanism. If your brain doesn't believe the affirmation, it generates an automatic counter-argument — <em>"I am worthy"</em> is immediately followed by <em>"No you're not, remember what happened last Tuesday?"</em> — and the net result is feeling worse.
+        The popular advice to &quot;just say positive affirmations&quot; is well-intentioned but misses a crucial mechanism. If your brain doesn&apos;t believe the affirmation, it generates an automatic counter-argument — <em>&quot;I am worthy&quot;</em> is immediately followed by <em>&quot;No you&apos;re not, remember what happened last Tuesday?&quot;</em> — and the net result is feeling worse.
       </p>
       <p>
         Research by Joanne Wood at the University of Waterloo found that positive self-statements actually decreased mood in people with low self-esteem — the people who need them most.
       </p>
       <p>
-        The solution is <strong>balanced, specific, realistic self-talk</strong> rather than relentlessly positive talk. Instead of "I am amazing at everything," try: <em>"I struggled with this test, but I also helped my friend study, and I showed up even when I didn't feel like it."</em> That statement is credible. Your brain can accept it. And from credible foundations, genuine confidence is built.
+        The solution is <strong>balanced, specific, realistic self-talk</strong> rather than relentlessly positive talk. Instead of &quot;I am amazing at everything,&quot; try: <em>&quot;I struggled with this test, but I also helped my friend study, and I showed up even when I didn&apos;t feel like it.&quot;</em> That statement is credible. Your brain can accept it. And from credible foundations, genuine confidence is built.
       </p>
       <p>
         Start with the Reframing Gym above. Practice noticing one distorted thought per day. Over six weeks, this single habit — documented in dozens of CBT studies — consistently reduces symptoms of anxiety and depression by 30–50% without any other intervention. Your inner voice can change. It just needs a new script.
