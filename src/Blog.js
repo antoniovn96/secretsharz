@@ -122,9 +122,9 @@ const POSTS_PER_PAGE = 6;
 // A reliable date parser to convert "DD-MM-YYYY" or standard dates into a timestamp for sorting
 function parseDateToTs(dateStr) {
   if (!dateStr) return 0;
-  // Handle DD-MM-YYYY
-  if (dateStr.includes('-')) {
-    const parts = dateStr.split('-');
+  // Handle DD-MM-YYYY or DD/MM/YYYY seamlessly
+  if (dateStr.includes('-') || dateStr.includes('/')) {
+    const parts = dateStr.split(/[-/]/);
     if (parts.length === 3 && parts[0].length <= 2) {
       const [day, month, year] = parts;
       return new Date(`${year}-${month}-${day}T00:00:00Z`).getTime();
@@ -133,6 +133,23 @@ function parseDateToTs(dateStr) {
   // Fallback for other formats
   const parsed = new Date(dateStr).getTime();
   return isNaN(parsed) ? 0 : parsed;
+}
+
+// Automatically formats any valid date strictly into "DD-MM-YYYY" for screen display
+function formatDisplayDate(dateStr) {
+  if (!dateStr) return "";
+  // If it's already perfectly formatted as DD-MM-YYYY, return it immediately
+  if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) return dateStr;
+  
+  const ts = parseDateToTs(dateStr);
+  if (ts === 0) return dateStr; // Fallback to raw string if it can't be parsed
+  
+  const d = new Date(ts);
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const year = d.getUTCFullYear();
+  
+  return `${day}-${month}-${year}`;
 }
 
 function estimateReadTime(wordCount) {
@@ -155,23 +172,28 @@ function highlightText(text, query) {
 let BLOG_POSTS = [];
 try {
   // Webpack magic: reads all .js files inside the /blogss/ folder automatically
-  const req = require.context('./blogss', false, /\.js$/);
+  // 'true' ensures it reads all subfolders recursively!
+  const req = require.context('./blogss', true, /\.js$/); 
   
   BLOG_POSTS = req.keys().map((fileName, index) => {
     const module = req(fileName);
     // Grabs the exported 'meta' object from the file
     const meta = module.meta || {}; 
     
-    // Calculates a reliable timestamp from your "DD-MM-YYYY" date strings
+    // Calculates a reliable timestamp for accurate internal sorting
     const calculatedDateTs = meta.dateTs || parseDateToTs(meta.date);
+    
+    // Forces the visual display date to always be DD-MM-YYYY
+    const displayDate = formatDisplayDate(meta.date);
 
     return {
       id: index + 1,
+      // Slug safely handles deep paths (e.g. /2026/February/post.js -> 2026-february-post)
       slug: meta.slug || fileName.replace('./', '').replace('.js', '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       title: meta.title || fileName.replace('./', '').replace('.js', ''),
       excerpt: meta.excerpt || "Click to read more...",
       category: meta.category || "Mental Health",
-      date: meta.date || "",
+      date: displayDate,
       dateTs: calculatedDateTs,
       readTime: meta.readTime || "",
       wordCount: meta.wordCount || 0,
