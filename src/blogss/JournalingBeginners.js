@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Journaling for Mental Clarity: A Beginner's Guide",
@@ -9,7 +9,7 @@ export const meta = {
   date: "12-01-2026",
   readTime: "5 min read",
   wordCount: 810,
-  imgUrl: "/blogss/journaling-mental-clarity.jpg",
+  imgUrl: "/blogss/2026/January/journaling-mental-clarity.jpg",
   tldr: "Journaling moves anxious thoughts from the emotional part of your brain to the logical part. You don't need to be a writer; just do a 5-minute brain dump to declutter your mind.",
   toc: [
     { id: "benefits", title: "1. The True Benefits of Journaling", level: 3 },
