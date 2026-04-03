@@ -9,7 +9,7 @@ export const meta = {
   date: "25 Jan 2026",
   readTime: "7 min read",
   wordCount: 1750,
-  imgUrl: "/public/blogss/digital-detox-mental-health.jpg",
+  imgUrl: "/blogss/digital-detox-mental-health.jpg",
   tldr: "Excessive screen time physically alters the brain's reward system, worsens anxiety and sleep, and fuels comparison culture. But a structured detox — even just 7 days — measurably improves mood, focus, and sleep quality.",
   toc: [
     { id: "screen-addiction", title: "Are You Actually Addicted?", level: 2 },
@@ -22,7 +22,7 @@ export const meta = {
 
 // ── INTERACTIVE: SCREEN TIME AUDIT CALCULATOR ────────────────────────────────
 const CATEGORIES = [
-  { key: "social",  label: "Social Media",          icon: "📱", eg: "Instagram, Snapchat, Twitter" },
+  { key: "social",  label: "Social Media",         icon: "📱", eg: "Instagram, Snapchat, Twitter" },
   { key: "video",   label: "Video Streaming",        icon: "📺", eg: "YouTube, Reels, Netflix" },
   { key: "gaming",  label: "Gaming",                 icon: "🎮", eg: "BGMI, Free Fire, Chess" },
   { key: "chat",    label: "Messaging & Calls",      icon: "💬", eg: "WhatsApp, Discord" },
