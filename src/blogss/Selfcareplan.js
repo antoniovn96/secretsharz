@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import BlogPostTemplate from '../BlogPostTemplate';
 
 // ── META ─────────────────────────────────────────────────────────────────────
@@ -9,7 +9,7 @@ export const meta = {
   date: "27 Jan 2026",
   readTime: "8 min read",
   wordCount: 2000,
-  imgUrl: "/public/blogss/self-care-plan.jpg",
+  imgUrl: "/blogss/self-care-plan.jpg",
   tldr: "Self-care works only when it's tailored to you — your energy level, your schedule, your specific stressors. This post walks through all five types of self-care and lets you build a real, custom weekly plan you can screenshot and follow.",
   toc: [
     { id: "what-is-self-care", title: "What Self-Care Actually Is", level: 2 },
@@ -334,7 +334,7 @@ function SelfCarePlanBuilder() {
         <div className="builder-nav">
           <button className="builder-nav-btn ghost" onClick={() => setCatIdx(i => Math.max(0, i - 1))} style={{ visibility: catIdx === 0 ? 'hidden' : 'visible' }}>← Previous</button>
 
-          <div style={{ display: 'flex', flex-direction: 'column', align-items: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
             <div className="builder-progress-dots">
               {CATEGORIES.map((_, i) => (
                 <div key={i} className={`pdot ${i < catIdx ? 'done' : i === catIdx ? 'active' : ''}`} />
@@ -388,7 +388,7 @@ export default function SelfCarePlan({ navigate, relatedPosts }) {
         { icon: '💪', color: '#E8845A', title: 'Physical', desc: 'Sleep, movement, nutrition, and hydration. These are the literal biological foundations of mood regulation. Without adequate sleep alone, every other mental health strategy is working at a fraction of its power.' },
         { icon: '❤️', color: '#7C6FA0', title: 'Emotional', desc: 'Processing feelings rather than suppressing them. Journaling, crying, talking, naming what you feel — emotional care prevents the buildup of unprocessed experience that eventually manifests as anxiety, numbness, or explosive reactions.' },
         { icon: '🤝', color: '#5B9EBF', title: 'Social', desc: 'Nurturing real, reciprocal connections and practising healthy limits. Loneliness has been found to be as damaging to health as smoking 15 cigarettes a day. But chronic overextension — saying yes when you mean no — is equally damaging.' },
-        { icon: '🧠', color: '#4A7C59', title: 'Mental', desc: 'Protecting your cognitive space from overstimulation and boredom alike. This includes reading for pleasure, meditation, digital limits, and learning things just because they interest you — not because they'll help your marks.' },
+        { icon: '🧠', color: '#4A7C59', title: 'Mental', desc: 'Protecting your cognitive space from overstimulation and boredom alike. This includes reading for pleasure, meditation, digital limits, and learning things just because they interest you — not because they\'ll help your marks.' },
         { icon: '🌿', color: '#2D5240', title: 'Rest & Play', desc: 'Unstructured, unproductive time that allows your nervous system to fully recover. Rest isn\'t sleep — it\'s the absence of demands. Play is activity done for its own sake, with no performance or outcome attached.' },
       ].map((t, i) => (
         <div key={i} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '14px', marginBottom: '10px', border: `1.5px solid ${t.color}30`, background: `${t.color}0A` }}>
