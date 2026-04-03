@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "How to Let Go of Past Failures and Move Forward",
@@ -9,7 +9,7 @@ export const meta = {
   date: "13-01-2026",
   readTime: "6 min read",
   wordCount: 890,
-  imgUrl: "/blogss/letting-go-failure.jpg",
+  imgUrl: "/blogss/2026/January/letting-go-failure.jpg",
   tldr: "Failure isn't a reflection of your worth; it's just data. By using emotional release techniques and adopting a growth mindset, you can train your brain to learn from mistakes instead of obsessing over them.",
   toc: [
     { id: "why-hold-on", title: "1. Why We Hold Onto Failure", level: 3 },
