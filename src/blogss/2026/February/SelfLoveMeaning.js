@@ -9,7 +9,7 @@ export const meta = {
   date: "01-02-2026",
   readTime: "8 min read",
   wordCount: 1250,
-  imgUrl: "/blogss/self-love-for-students-2026.jpg",
+  imgUrl: "public/blogss/2026/February/self-love-for-students-2026.jpg",
   tldr: "True self-love for students is an action, not a feeling. It means setting strict boundaries, getting enough sleep, forgiving your academic mistakes, and treating yourself with the same fierce compassion you would offer a best friend.",
   toc: [
     { id: "the-illusion", title: "1. The Social Media Illusion of Self-Love", level: 3 },
