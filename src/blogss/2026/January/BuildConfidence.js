@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "How to Build Confidence Through Self-Awareness",
@@ -9,7 +9,7 @@ export const meta = {
   date: "29-01-2026",
   readTime: "7 min read",
   wordCount: 920,
-  imgUrl: "/blogss/confidence-self-awareness.jpg",
+  imgUrl: "/blogss/2026/January/confidence-self-awareness.jpg",
   tldr: "Fake confidence relies on external validation (grades, likes, compliments). Real confidence is built on self-awareness: acknowledging your flaws without shame and playing to your natural strengths.",
   toc: [
     { id: "basics", title: "1. Self-Awareness Basics", level: 3 },
