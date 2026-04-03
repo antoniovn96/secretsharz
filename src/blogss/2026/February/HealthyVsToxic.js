@@ -9,7 +9,7 @@ export const meta = {
   date: "03-02-2026",
   readTime: "8 min read",
   wordCount: 1350,
-  imgUrl: "public/blogss/2026/February/healthy-vs-toxic-relationships.jpg", // Image Path
+  imgUrl: "/blogss/2026/February/healthy-vs-toxic-relationships.jpg", // Image Path
   tldr: "A healthy relationship gives you energy, encourages your academic and personal growth, and respects your boundaries. A toxic relationship drains your energy, demands constant sacrifices, and makes you feel guilty for saying no.",
   toc: [
     { id: "the-confusion", title: "1. The Confusion Between Drama and Toxicity", level: 2 },
