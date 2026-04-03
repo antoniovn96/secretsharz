@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Goal Setting for Mental Health: How to Set Intentions That Actually Work",
@@ -9,7 +9,7 @@ export const meta = {
   date: "04-01-2026",
   readTime: "6 min read",
   wordCount: 910,
-  imgUrl: "/blogss/mental-health-goals.jpg",
+  imgUrl: "/blogss/2026/January/mental-health-goals.jpg",
   tldr: "Drop the toxic productivity. Swap rigid SMART goals for flexible intentions, prioritize consistency over perfection, and set goals that focus on how you FEEL, not just what you ACHIEVE.",
   toc: [
     { id: "difference", title: "1. The Difference Between Goals and Intentions", level: 3 },
