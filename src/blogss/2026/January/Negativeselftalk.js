@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 // ── META ─────────────────────────────────────────────────────────────────────
 export const meta = {
@@ -9,7 +9,7 @@ export const meta = {
   date: "26-01-2026",
   readTime: "8 min read",
   wordCount: 2000,
-  imgUrl: "/blogss/negative-self-talk-fix.jpg",
+  imgUrl: "/blogss/2026/January/negative-self-talk-fix.jpg",
   tldr: "Negative self-talk runs on automatic cognitive distortions that feel true but aren't. CBT-based reframing — catching the thought, naming the distortion, and writing a balanced alternative — can measurably reduce anxiety and depression within 6 weeks.",
   toc: [
     { id: "what-is-self-talk", title: "What Is Self-Talk?", level: 2 },
