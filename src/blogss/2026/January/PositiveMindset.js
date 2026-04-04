@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "How to Build a Positive Mindset at the Start of the Year",
@@ -9,7 +9,7 @@ export const meta = {
   date: "08-01-2026",
   readTime: "7 min read",
   wordCount: 920,
-  imgUrl: "/blogss/positive-mindset-2026.jpg",
+  imgUrl: "/blogss/2026/January/positive-mindset-2026.jpg",
   tldr: "A positive mindset isn't about ignoring the bad; it's about believing you can handle the bad. Learn to reframe negative thoughts and use realistic affirmations to build academic resilience.",
   toc: [
     { id: "what-is-it", title: "1. What Exactly is a Mindset?", level: 3 },
