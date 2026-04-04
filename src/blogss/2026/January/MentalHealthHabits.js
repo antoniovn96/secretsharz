@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "5 Simple Habits to Improve Your Mental Health in 2026",
@@ -9,7 +9,7 @@ export const meta = {
   date: "05-01-2026",
   readTime: "5 min read",
   wordCount: 820,
-  imgUrl: "/blogss/mental-health-habits-2026.jpg",
+  imgUrl: "/blogss/2026/January/mental-health-habits-2026.jpg",
   tldr: "You don't need a massive life overhaul. Focus on 5 micro-habits: 8 hours of sleep, drinking water, 5 minutes of journaling, balancing screen time, and radical consistency.",
   toc: [
     { id: "big-changes", title: "1. Why Small Habits Beat Big Changes", level: 3 },
