@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 // ── META ─────────────────────────────────────────────────────────────────────
 export const meta = {
@@ -9,7 +9,7 @@ export const meta = {
   date: "27 Jan 2026",
   readTime: "8 min read",
   wordCount: 2000,
-  imgUrl: "/blogss/self-care-plan.jpg",
+  imgUrl: "/blogss/2026/January/self-care-plan.jpg",
   tldr: "Self-care works only when it's tailored to you — your energy level, your schedule, your specific stressors. This post walks through all five types of self-care and lets you build a real, custom weekly plan you can screenshot and follow.",
   toc: [
     { id: "what-is-self-care", title: "What Self-Care Actually Is", level: 2 },
