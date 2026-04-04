@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Daily Mental Health Routine for Students in 2026",
@@ -9,7 +9,7 @@ export const meta = {
   date: "10-01-2026",
   readTime: "7 min read",
   wordCount: 920,
-  imgUrl: "/blogss/student-mental-health-routine.jpg",
+  imgUrl: "/blogss/2026/January/student-mental-health-routine.jpg",
   tldr: "You don't need a complicated 3-hour morning routine. Focus on 10 minutes of screen-free mornings, micro-breaks at school, and a brain-dumping night routine to protect your peace.",
   toc: [
     { id: "morning", title: "1. The Morning Routine (Setting the Tone)", level: 3 },
