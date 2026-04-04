@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Mid-Month Mental Health Reset: Are You on Track?",
@@ -9,7 +9,7 @@ export const meta = {
   date: "15-01-2026",
   readTime: "6 min read",
   wordCount: 850,
-  imgUrl: "/blogss/mid-month-reset.jpg",
+  imgUrl: "/blogss/2026/January/mid-month-reset.jpg",
   tldr: "Don't wait until February to fix a failing routine. Use our interactive energy audit to pinpoint exactly which area of your life is draining you, and adjust your plans accordingly.",
   toc: [
     { id: "slump", title: "1. The Mid-Month Motivation Slump", level: 3 },
