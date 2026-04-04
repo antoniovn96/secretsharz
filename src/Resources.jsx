@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 
 // ── FIXED IMPORT PATH ──────────────────────────────
-import POCSORStudents from './resources/pocso/children/POCSORStudents';
+import POCSORStudents from './resources/pocso/POCSORStudents';
 
 // ── RESOURCE LIBRARY CSS ──────────────────────────────────────────────────
 const RESOURCE_CSS = `
