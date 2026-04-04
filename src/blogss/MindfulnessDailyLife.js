@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "How to Practice Mindfulness in Daily Life (Simple Techniques)",
@@ -9,7 +9,7 @@ export const meta = {
   date: "24-01-2026",
   readTime: "5 min read",
   wordCount: 840,
-  imgUrl: "/blogss/mindfulness-daily-life.jpg",
+  imgUrl: "/blogss/2026/January/mindfulness-daily-life.jpg",
   tldr: "Mindfulness is just paying attention to the present moment without judging it. Use our interactive 5-Senses tool or practice 'mindful walking' to instantly lower your stress hormones.",
   toc: [
     { id: "what-is-it", title: "1. What is Mindfulness (Really)?", level: 3 },
