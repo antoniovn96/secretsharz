@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Signs You Need a Mental Reset in Your Life",
@@ -9,7 +9,7 @@ export const meta = {
   date: "09-01-2026",
   readTime: "5 min read",
   wordCount: 840,
-  imgUrl: "/blogss/mental-reset-signs.jpg",
+  imgUrl: "/blogss/2026/January/mental-reset-signs.jpg",
   tldr: "Burnout hides behind 'tiredness'. If you dread waking up, snap at loved ones, and feel emotionally numb, you don't need a nap—you need a full mental reset.",
   toc: [
     { id: "burnout", title: "1. The Sneaky Symptoms of Burnout", level: 3 },
