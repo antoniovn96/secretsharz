@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Weekly Mental Health Check-In: How Are You Really Feeling?",
@@ -9,7 +9,7 @@ export const meta = {
   date: "07-01-2026",
   readTime: "6 min read",
   wordCount: 880,
-  imgUrl: "/blogss/mental-health-check-in.jpg",
+  imgUrl: "/blogss/2026/January/mental-health-check-in.jpg",
   tldr: "A weekly check-in prevents burnout by catching stress early. Use our 5-minute template to assess your physical energy, emotional state, and what you need to let go of this week.",
   toc: [
     { id: "importance", title: "1. The Importance of Weekly Check-Ins", level: 3 },
