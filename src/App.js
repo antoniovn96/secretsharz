@@ -822,6 +822,9 @@ export default function App() {
     if (currentPath.startsWith('/wall')) {
       return <WallPage navigate={navigate} />; // Pass navigate to WallPage
     }
+if (currentPath.startsWith('/resources')) {
+      return <Resources navigate={navigate} />;
+    }
     if (currentPath.startsWith('/vidyavantage')) {
       return (
         <>
