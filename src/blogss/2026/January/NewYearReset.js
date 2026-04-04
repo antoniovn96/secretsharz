@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "New Year Mental Reset: How to Start 2026 with a Clear Mind",
@@ -9,7 +9,7 @@ export const meta = {
   date: "01-01-2026",
   readTime: "6 min read",
   wordCount: 850,
-  imgUrl: "/blogss/mental-reset-new-year-2026.jpg",
+  imgUrl: "/blogss/2026/January/mental-reset-new-year-2026.jpg",
   tldr: "Don't rush into resolutions. Take a 1-minute stress relief pause, let go of academic pressure, and set flexible intentions instead of rigid rules.",
   toc: [
     { id: "students", title: "1. Why Students Feel Overwhelmed in the New Year", level: 3 },
