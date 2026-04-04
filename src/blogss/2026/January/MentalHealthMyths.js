@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Mental Health Myths You Should Stop Believing in 2026",
@@ -9,7 +9,7 @@ export const meta = {
   date: "28-01-2026",
   readTime: "6 min read",
   wordCount: 840,
-  imgUrl: "/blogss/mental-health-myths.jpg",
+  imgUrl: "/blogss/2026/January/mental-health-myths.jpg",
   tldr: "Social stigma thrives on misinformation. Mental health issues are biological, not character flaws. Busting these myths is the first step to creating a safer environment for yourself and your peers.",
   toc: [
     { id: "social-stigma", title: "1. The Danger of Social Stigma", level: 3 },
