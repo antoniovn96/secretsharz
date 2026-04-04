@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Mental Health for Students: Common Challenges and Solutions",
@@ -9,7 +9,7 @@ export const meta = {
   date: "20-01-2026",
   readTime: "7 min read",
   wordCount: 950,
-  imgUrl: "/blogss/student-mental-health-challenges.jpg",
+  imgUrl: "/blogss/2026/January/student-mental-health-challenges.jpg",
   tldr: "You are not failing at life; the system is just incredibly demanding. By identifying your core stressor (Academics, Social, or Future Fear), you can apply targeted coping strategies.",
   toc: [
     { id: "reality", title: "1. The Reality of Being a Student Today", level: 3 },
