@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "The Power of Small Wins for Mental Health Improvement",
@@ -9,7 +9,7 @@ export const meta = {
   date: "14-01-2026",
   readTime: "5 min read",
   wordCount: 810,
-  imgUrl: "/blogss/small-wins-mental-health.jpg",
+  imgUrl: "/blogss/2026/January/small-wins-mental-health.jpg",
   tldr: "When you achieve a 'small win' (like making your bed), your brain releases dopamine, which motivates you to do a bigger task. Momentum is built in inches, not miles.",
   toc: [
     { id: "what-are-they", title: "1. What Are Small Wins?", level: 3 },
