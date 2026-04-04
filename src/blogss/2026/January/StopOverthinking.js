@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Overthinking in the New Year: How to Stop and Take Control",
@@ -9,7 +9,7 @@ export const meta = {
   date: "11-01-2026",
   readTime: "7 min read",
   wordCount: 950,
-  imgUrl: "/blogss/stop-overthinking-2026.jpg",
+  imgUrl: "/blogss/2026/January/stop-overthinking-2026.jpg",
   tldr: "Overthinking is a fear response, not a problem-solving strategy. Break the loop by recognizing triggers, giving your anxiety an 'appointment time,' and grounding yourself in the physical present.",
   toc: [
     { id: "causes", title: "1. What Actually Causes Overthinking?", level: 3 },
