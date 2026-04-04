@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "How to Stay Motivated Without Burning Out",
@@ -9,7 +9,7 @@ export const meta = {
   date: "21-01-2026",
   readTime: "6 min read",
   wordCount: 910,
-  imgUrl: "/blogss/stay-motivated-no-burnout.jpg",
+  imgUrl: "/blogss/2026/January/stay-motivated-no-burnout.jpg",
   tldr: "Motivation is an emotion; it fades. Discipline is an action; it stays. You avoid burnout by lowering your daily expectations to 'minimum baselines' and prioritizing rest as a productive strategy.",
   toc: [
     { id: "motivation-vs-discipline", title: "1. The Motivation Trap", level: 3 },
