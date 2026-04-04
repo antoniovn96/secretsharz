@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "How to Prepare Emotionally for the Rest of the Year",
@@ -9,7 +9,7 @@ export const meta = {
   date: "30-01-2026",
   readTime: "7 min read",
   wordCount: 880,
-  imgUrl: "/blogss/emotional-preparation-year.jpg",
+  imgUrl: "/blogss/2026/January/emotional-preparation-year.jpg",
   tldr: "Emotional preparation means checking your internal batteries before the tough months hit. Use our Readiness Battery to see if you need to focus on rest, planning, or setting boundaries for the rest of 2026.",
   toc: [
     { id: "reflection", title: "1. The Power of Mid-Stream Reflection", level: 3 },
