@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "How to Let Go of Negative Thoughts and Start Fresh in 2026",
@@ -9,7 +9,7 @@ export const meta = {
   date: "02-01-2026",
   readTime: "7 min read",
   wordCount: 950, 
-  imgUrl: "/blogss/let-go-negative-thoughts.jpg",
+  imgUrl: "/blogss/2026/January/let-go-negative-thoughts.jpg",
   tldr: "Negative thoughts are just habits, not facts. You can break the cycle by identifying cognitive distortions, using physical pattern interrupts, and doing a 5-minute release journal.",
   toc: [ 
     { id: "what-are-they", title: "1. What Are Negative Thought Patterns?", level: 3 },
