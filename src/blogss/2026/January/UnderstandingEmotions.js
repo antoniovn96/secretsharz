@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Understanding Your Emotions: A Beginner's Guide for Students",
@@ -9,7 +9,7 @@ export const meta = {
   date: "17-01-2026",
   readTime: "7 min read",
   wordCount: 940,
-  imgUrl: "/blogss/understanding-emotions.jpg",
+  imgUrl: "/blogss/2026/January/understanding-emotions.jpg",
   tldr: "You cannot manage an emotion you cannot name. By expanding your emotional vocabulary beyond 'mad, sad, and glad,' you strip intense feelings of their power and gain control over your reactions.",
   toc: [
     { id: "types", title: "1. Why 'Fine' and 'Bad' Are Dangerous Words", level: 3 },
