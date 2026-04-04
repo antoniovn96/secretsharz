@@ -610,7 +610,7 @@ const HANDBOOK = {
               ['Sexual Harassment (Section 11)', 'Unwanted sexual comments, gestures, messages, or requests directed at a child.'],
               ['Mandatory Reporting', 'The legal duty of any adult who is aware of child sexual abuse to report it immediately to the police or Child Welfare Committee.'],
               ['FIR (First Information Report)', 'A written document prepared by the police when they receive information about a cognizable offence. Your starting point for legal action.'],
-              ['CWC (Child Welfare Committee)', 'A government body that protects children's welfare and coordinates care and rehabilitation.'],
+              ['CWC (Child Welfare Committee)', "A government body that protects children's welfare and coordinates care and rehabilitation."],
               ['Grooming', 'When an abuser deliberately builds trust and a relationship with a child (and sometimes the family) to eventually abuse them. Can happen online and offline.'],
               ['Confidentiality', 'Under POCSO, your identity (name, school, photo) cannot be disclosed in any media or public forum at any time.'],
               ['SJPU', 'Special Juvenile Police Unit — a trained unit within the police that handles cases involving children.'],
