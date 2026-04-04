@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 
-// ── Import resource pages as they are created ──────────────────────────────
-// Pattern: import MyResource from './resources/topic/audience/MyResource';
-// Then add an entry to RESOURCE_LIST below with component: MyResource
-import POCSORStudents from './resources/pocso/children/POCSORStudents';
+// ── FIXED IMPORT PATH ──────────────────────────────
+import POCSORStudents from './resources/pocso/POCSORStudents';
 
 // ── RESOURCE LIBRARY CSS ──────────────────────────────────────────────────
 const RESOURCE_CSS = `
@@ -92,6 +90,8 @@ const RESOURCE_CSS = `
   .res-card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted, #7A8A7D); font-weight: 500; border-top: 1px solid rgba(30,40,32,0.06); padding-top: 16px; }
   .res-card-cta { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--sage, #4A7C59); transition: gap 0.2s; }
   .res-card:hover .res-card-cta { gap: 10px; }
+  .res-pdf-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(192,57,43,0.1); color: #C0392B; border-radius: 20px; text-decoration: none; font-weight: 700; transition: background 0.2s; }
+  .res-pdf-btn:hover { background: rgba(192,57,43,0.2); }
 
   /* ── New badge ── */
   .res-new-badge { position: absolute; top: 14px; right: 14px; background: var(--sage, #4A7C59); color: white; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 3px 9px; border-radius: 20px; }
@@ -128,10 +128,6 @@ const RESOURCE_CSS = `
 `;
 
 // ── RESOURCE LIST ─────────────────────────────────────────────────────────────
-// To add a new resource:
-// 1. Create your component in src/resources/[topic]/[audience]/MyResource.jsx
-// 2. Import it above
-// 3. Add an entry here following the same shape
 const RESOURCE_LIST = [
   {
     id: 'pocso-students',
@@ -151,30 +147,8 @@ const RESOURCE_LIST = [
     lastUpdated: 'January 2026',
     isNew: true,
     component: POCSORStudents,
+    pdfLink: '/POCSO Guidelines-flat.pdf' // Added PDF Link here
   },
-  // ── COMING SOON — uncomment and add component when ready ──
-  // {
-  //   id: 'pocso-parents',
-  //   slug: 'pocso-parents',
-  //   title: 'POCSO: A Parent\'s Guide',
-  //   subtitle: 'Parent Awareness Handbook',
-  //   topic: 'POCSO', audience: ['Parents'], ageGroups: ['All'],
-  //   formats: ['PDF'], languages: ['English'],
-  //   icon: '👨‍👩‍👧', color: '#7C6FA0', colorPale: '#F0EDF8', accentColor: '#7C6FA0',
-  //   description: 'Coming soon.',
-  //   lastUpdated: 'Coming Soon', isNew: false, comingSoon: true, component: null,
-  // },
-  // {
-  //   id: 'pocso-teachers',
-  //   slug: 'pocso-teachers',
-  //   title: 'POCSO: Teacher & Counsellor Toolkit',
-  //   subtitle: 'School Implementation Guide',
-  //   topic: 'POCSO', audience: ['Teachers', 'Counsellors'], ageGroups: ['All'],
-  //   formats: ['PDF', 'PPT'], languages: ['English'],
-  //   icon: '📋', color: '#5B9EBF', colorPale: '#EAF4FA', accentColor: '#5B9EBF',
-  //   description: 'Coming soon.',
-  //   lastUpdated: 'Coming Soon', isNew: false, comingSoon: true, component: null,
-  // },
 ];
 
 const ALL_AUDIENCES = ['Students', 'Parents', 'Teachers', 'Counsellors', 'NGO Workers'];
@@ -184,6 +158,7 @@ const ALL_FORMATS   = ['PDF', 'PPT'];
 // ── RESOURCE CARD COMPONENT ───────────────────────────────────────────────────
 function ResourceCard({ resource, onClick, searchQuery, animDelay }) {
   const ref = useRef(null);
+  
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -243,12 +218,27 @@ function ResourceCard({ resource, onClick, searchQuery, animDelay }) {
           ))}
         </div>
 
+        {/* Updated Footer with Direct Download Link */}
         <div className="res-card-meta">
           <span>🗓 Updated {resource.lastUpdated}</span>
-          {resource.comingSoon
-            ? <span style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: 700 }}>Coming Soon →</span>
-            : <span className="res-card-cta">Open Resource →</span>
-          }
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {resource.pdfLink && (
+              <a 
+                href={resource.pdfLink} 
+                download 
+                target="_blank" 
+                rel="noreferrer"
+                className="res-pdf-btn"
+                onClick={(e) => e.stopPropagation()} // Stop it from opening the resource page when clicking download
+              >
+                ⬇️ PDF
+              </a>
+            )}
+            {resource.comingSoon
+              ? <span style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: 700 }}>Coming Soon →</span>
+              : <span className="res-card-cta">Open →</span>
+            }
+          </div>
         </div>
       </div>
     </div>
