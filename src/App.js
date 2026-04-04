@@ -1124,21 +1124,39 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
 
 // ── WALL PAGE ─────────────────────────────────────────────────────────────────
 function WallPage({ navigate }) {
-  const [wallNotes, setWallNotes] = useState(generateWallData);
+  // 1. Initialize state. We'll populate it fully in the useEffect to prevent hydration issues.
+  const [wallNotes, setWallNotes] = useState(generateWallData); 
   const [showAddNoteModal, setShowAddNoteModal] = useState(false);
   const [newNoteText, setNewNoteText] = useState('');
   const [newNoteTag, setNewNoteTag] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [showCrisisModal, setShowCrisisModal] = useState(false);
 
-  // 1. Define Vulgarity/Curse Words
+  // 2. Load saved notes from LocalStorage when the page first loads
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedNotes = localStorage.getItem('sharzWallNotes');
+      if (savedNotes) {
+        setWallNotes(JSON.parse(savedNotes));
+      }
+    }
+  }, []);
+
+  // 3. Save notes to LocalStorage whenever a new note is added or liked
+  useEffect(() => {
+    if (typeof window !== 'undefined' && wallNotes.length > 0) {
+      localStorage.setItem('sharzWallNotes', JSON.stringify(wallNotes));
+    }
+  }, [wallNotes]);
+
+  // Define Vulgarity/Curse Words
   const vulgarWords = [
     'fuck', 'shit', 'bitch', 'asshole', 'dick', 'pussy', 'cunt', 'slut', 'whore', 'bastard', 'motherfucker', 'crap', 'fag', 'faggot', 'nigger', 'nigga', 'retard', 'retarded'
   ];
 
-  // 2. Define Self-Harm / High-Risk Phrases
+  // Define Self-Harm / High-Risk Phrases
   const riskPhrases = [
-    'kill myself', 'want to die', 'end it all', 'give up', 'suicide', 'can\'t take it anymore', 'no reason to live', 'end my life', 'cut myself', 'hurt myself', 'better off dead'
+    'kill myself', 'want to die', 'end it all', 'give up', 'suicide', "can't take it anymore", 'no reason to live', 'end my life', 'cut myself', 'hurt myself', 'better off dead'
   ];
 
   const checkSafety = (text) => {
@@ -1153,7 +1171,6 @@ function WallPage({ navigate }) {
 
     // Check for Vulgarity
     for (let word of vulgarWords) {
-      // Use regex to match whole words only, so we don't accidentally block words like "class" or "pass"
       const regex = new RegExp(`\\b${word}\\b`, 'i'); 
       if (regex.test(lowerText)) {
         return 'VULGAR';
@@ -1216,7 +1233,18 @@ function WallPage({ navigate }) {
       <div className="wall-header">
         <h1 className="wall-h1">Sharz Wall</h1>
         <p className="wall-sub">You are not the only one. Real thoughts from real students. No names. No judgement.</p>
-        <button className="add-note-btn" onClick={() => { setErrorMsg(''); setShowAddNoteModal(true); }}>✍️ Add Your Note</button>
+        
+        <div>
+          <button className="add-note-btn" onClick={() => { setErrorMsg(''); setShowAddNoteModal(true); }}>✍️ Add Your Note</button>
+        </div>
+
+        {/* ── NEW COUNTER ADDED HERE ── */}
+        <div style={{ marginTop: '24px', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.1)', padding: '8px 16px', borderRadius: '50px', border: '1px solid rgba(255,255,255,0.2)' }}>
+          <span style={{ fontSize: '18px' }}>📬</span>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: 'rgba(255,255,255,0.9)' }}>
+            <span style={{ color: 'var(--sage-light)', fontSize: '16px', fontWeight: '700' }}>{wallNotes.length.toLocaleString()}</span> messages received
+          </span>
+        </div>
       </div>
 
       <div style={{ textAlign:'center' }}>
@@ -1226,7 +1254,7 @@ function WallPage({ navigate }) {
       <div className="masonry-grid">
         {wallNotes.map((note, index) => (
           <React.Fragment key={note.id}>
-            {index === 15 && <div className="scroll-msg" style={{ display:'block', width:'100%', margin:'20px 0' }}>Take a breath 🌿 You&apos;re doing okay.</div>}
+            {index === 15 && <div className="scroll-msg" style={{ display:'block', width:'100%', margin:'20px 0' }}>Take a breath 🌿 You're doing okay.</div>}
             {index === 45 && <div className="scroll-msg" style={{ display:'block', width:'100%', margin:'20px 0' }}>Pause for a second. Drop your shoulders.</div>}
             <div className={`note-card ${note.color}`}>
               {note.tag && <div className="note-tag">{note.tag}</div>}
@@ -1243,6 +1271,7 @@ function WallPage({ navigate }) {
         ))}
       </div>
 
+      {/* ADD NOTE MODAL */}
       {showAddNoteModal && (
         <div className="note-modal-overlay" onClick={() => setShowAddNoteModal(false)}>
           <div className="note-modal" onClick={e => e.stopPropagation()}>
