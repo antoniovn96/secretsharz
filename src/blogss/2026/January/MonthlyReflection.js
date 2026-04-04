@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "End-of-Month Reflection: What Did You Learn About Yourself?",
@@ -9,7 +9,7 @@ export const meta = {
   date: "31-01-2026",
   readTime: "6 min read",
   wordCount: 850,
-  imgUrl: "/blogss/monthly-reflection-january.jpg",
+  imgUrl: "/blogss/2026/January/monthly-reflection-january.jpg",
   tldr: "Don't let the months blur together. End-of-month reflection allows you to close the mental tabs of the past 30 days. Use the 'Rose, Bud, Thorn' method to safely process your wins, challenges, and future hopes.",
   toc: [
     { id: "why-reflect", title: "1. Why End-of-Month Reflection Matters", level: 3 },
