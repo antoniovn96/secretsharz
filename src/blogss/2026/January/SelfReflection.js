@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "Why Self-Reflection is Important for Emotional Growth",
@@ -9,7 +9,7 @@ export const meta = {
   date: "06-01-2026",
   readTime: "7 min read",
   wordCount: 890,
-  imgUrl: "/blogss/self-reflection-growth.jpg",
+  imgUrl: "/blogss/2026/January/self-reflection-growth.jpg",
   tldr: "Self-reflection is the act of evaluating your own thoughts and behaviors. It separates who you ARE from what you DO, helping you avoid repeating the same academic and emotional mistakes.",
   toc: [
     { id: "what-is-it", title: "1. What Exactly is Self-Reflection?", level: 3 },
