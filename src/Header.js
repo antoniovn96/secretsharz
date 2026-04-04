@@ -42,6 +42,10 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
         <nav className="desktop-nav">
           <button onClick={() => handleNav('/')} className="nav-link">Home</button>
           <button onClick={() => handleNav('/mindspace')} className="nav-link">Mind Space</button>
+          
+          {/* RESOURCES ADDED HERE (Before Sharz Wall) */}
+          <button onClick={() => handleNav('/resources')} className="nav-link">Resources</button>
+          
           <button onClick={() => handleNav('/wall')} className="nav-link">Sharz Wall</button>
           <button onClick={() => handleNav('/blog')} className="nav-link">Blog</button>
           <button onClick={() => handleNav('/vidyavantage')} className="nav-link highlight-link">VidyaVantage</button>
@@ -97,6 +101,12 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           <button onClick={() => handleNav('/mindspace')} className="drawer-link">
             <span>🧠</span> Mind Space
           </button>
+          
+          {/* RESOURCES ADDED HERE FOR MOBILE */}
+          <button onClick={() => handleNav('/resources')} className="drawer-link">
+            <span>📚</span> Resources
+          </button>
+          
           <button onClick={() => handleNav('/wall')} className="drawer-link">
             <span>💬</span> Sharz Wall
           </button>
