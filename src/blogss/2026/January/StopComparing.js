@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import BlogPostTemplate from '../BlogPostTemplate';
+import BlogPostTemplate from '../../../BlogPostTemplate';
 
 export const meta = {
   title: "How to Stop Comparing Yourself to Others in 2026",
@@ -9,7 +9,7 @@ export const meta = {
   date: "18-01-2026",
   readTime: "7 min read",
   wordCount: 910,
-  imgUrl: "/blogss/stop-comparing-yourself.jpg",
+  imgUrl: "/blogss/2026/January/stop-comparing-yourself.jpg",
   tldr: "You are comparing your messy, behind-the-scenes reality to everyone else's curated highlight reel. Stop trying to 'beat' others; focus entirely on being 1% better than who you were yesterday.",
   toc: [
     { id: "social-comparison", title: "1. The Psychology of Social Comparison", level: 3 },
