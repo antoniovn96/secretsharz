@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 
 // ── FIXED IMPORT PATH ──────────────────────────────
 import POCSORStudents from './resources/pocso/POCSORStudents';
+import Lifeskillstrainer from './resources/lifeskills/Lifeskillstrainer';
 
 // ── RESOURCE LIBRARY CSS ──────────────────────────────────────────────────
 const RESOURCE_CSS = `
@@ -145,10 +146,31 @@ const RESOURCE_LIST = [
     accentColor: '#4A7C59',
     description: 'A complete, age-appropriate handbook on POCSO rights for students — available in three separate versions for Primary, Upper Primary, and Secondary classes. Includes a classroom-ready PowerPoint presentation and printable handbook for each age group.',
     lastUpdated: 'January 2026',
-    isNew: true,
+    isNew: false,
     component: POCSORStudents,
-    pdfLink: '/POCSO Guidelines-flat.pdf' // Added PDF Link here
+    pdfLink: '/POCSO Guidelines-flat.pdf'
   },
+  // ── NEW LIFE SKILLS RESOURCE ──
+  {
+    id: 'lifeskills-trainer',
+    slug: 'lifeskills-trainer',
+    title: 'Life Skills Training Module',
+    subtitle: 'Comprehensive Guide for Educators',
+    topic: 'Life Skills',
+    audience: ['Teachers', 'Counsellors', 'NGO Workers'],
+    ageGroups: ['All Ages'],
+    formats: ['Interactive'],
+    languages: ['English'],
+    icon: '🌱',
+    color: '#E8845A', // Peach/Orange theme
+    colorPale: '#FDF0EA',
+    accentColor: '#C0392B',
+    description: 'A comprehensive interactive module designed for educators and counsellors to effectively teach core life skills, build resilience, and foster emotional intelligence in students.',
+    lastUpdated: 'April 2026',
+    isNew: true,
+    component: Lifeskillstrainer,
+    pdfLink: null // Add a path here if you have a downloadable PDF for this one too
+  }
 ];
 
 const ALL_AUDIENCES = ['Students', 'Parents', 'Teachers', 'Counsellors', 'NGO Workers'];
