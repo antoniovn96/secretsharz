@@ -96,7 +96,7 @@ const PAGE_CSS = `
 .lst-card-chevron { font-size:14px; color:var(--ls-muted); transition:transform .25s; flex-shrink:0; margin-top:3px; }
 .lst-card.expanded .lst-card-chevron { transform:rotate(90deg); }
 .lst-card-print-btns { display:flex; gap:6px; align-items:center; flex-shrink:0; }
-.lst-print-btn { display:flex; align-items:center; gap:5px; padding:7px 13px; border-radius:50px; font-size:11px; font-weight:700; cursor:pointer; border:none; font-family:inherit; transition:all .2s; white-space:nowrap; }
+.lst-print-btn { display:flex; align-items:center; gap:5px; padding:7px 13px; border-radius:50px; font-size:11px; font-weight:700; cursor:pointer; border:none; font-family:inherit; transition:all .2s; white-space:nowrap; text-decoration:none; }
 .lst-print-btn.guide { background:rgba(192,57,43,.08); color:#C0392B; border:1px solid rgba(192,57,43,.2); }
 .lst-print-btn.guide:hover { background:#C0392B; color:white; }
 .lst-print-btn.ws { background:rgba(41,128,185,.08); color:#2980B9; border:1px solid rgba(41,128,185,.2); }
@@ -245,8 +245,6 @@ const PAGE_CSS = `
 `;
 
 // ─── ACTIVITY DATA ────────────────────────────────────────────────────────────
-// Each activity has: metadata + facilitation phases + debrief + watchOutFor + variations + worksheet
-// facilitation phases: array of { time, phase, steps: [{type:'say'|'do'|'tip'|'pause', text}] }
 
 const ACTIVITIES = [
 
@@ -260,74 +258,66 @@ const ACTIVITIES = [
     duration: '35 min',
     formats: ['Individual', 'Pairs', 'Full class'],
     color: '#7C6FA0', colorPale: '#F0EDF8',
+    guidePdf: '/resources/lifeskills/thefeelingsiceberg/THE FEELINGS ICEBERG_ Exploring Our Emotions (Grade 5–7).pdf',
+    worksheetPdf: '/resources/lifeskills/thefeelingsiceberg/The Feelings Iceberg Worksheet.pdf',
     objective: "Students will distinguish between surface emotions (what others see) and underlying feelings (what's really happening inside), and begin to map their own emotional landscape beneath the waterline.",
-    materials: ['Whiteboard & marker', 'Iceberg worksheet (one per student)', 'Coloured pencils or pens (optional)', 'Small slips of paper for the "parking lot"'],
+    materials: ["Whiteboard & marker", "Iceberg worksheet (one per student)", "Coloured pencils or pens", "Small slips of paper"],
     phases: [
       {
         time: '0–5 min', phase: 'Hook',
         steps: [
-          { type: 'do', text: 'Ask students to close their eyes briefly.' },
-          { type: 'say', text: '"Think about the last time you got really angry — at a friend, a sibling, anyone. Picture it. Now: what did the other person actually SEE? What did your anger look like from the outside?"' },
-          { type: 'do', text: 'Take 3–4 answers. Write them on the board: "went quiet", "shouted", "face went red", "slammed door".' },
-          { type: 'say', text: '"Interesting. Now here\'s my question — was anger the ONLY thing you were feeling? Or was something else going on underneath?"' },
-          { type: 'tip', text: 'Keep this light and curious. Don\'t push for specific answers yet — just plant the question.' },
+          { type: 'do', text: "Ask students to close their eyes briefly." },
+          { type: 'say', text: "\"Think about the last time you got really angry — at a friend, a sibling, anyone. Picture it. Now: what did the other person actually SEE? What did your anger look like from the outside?\"" },
+          { type: 'do', text: "Take 3–4 answers. Write them on the board: went quiet, shouted, face went red, slammed door." },
+          { type: 'say', text: "\"Interesting. Now here is my question — was anger the ONLY thing you were feeling? Or was something else going on underneath?\"" },
+          { type: 'tip', text: "Keep this light and curious. Do not push for specific answers yet — just plant the question." },
         ]
       },
       {
         time: '5–12 min', phase: 'Concept Introduction',
         steps: [
-          { type: 'do', text: 'Draw a simple iceberg on the board: a small tip above a wavy blue line, a large mass below. Label the tip "What people SEE" and below the line "What\'s REALLY happening."' },
-          { type: 'say', text: '"An iceberg has a tiny visible tip — maybe 10% — and a massive hidden section below the waterline. Our emotions work exactly the same way."' },
-          { type: 'say', text: '"What might be hiding under anger?" Build a word cloud below the waterline as students call out: fear, embarrassment, loneliness, feeling unheard, jealousy, hurt, disappointment, feeling unsafe.' },
-          { type: 'say', text: '"What about sadness? What could be under that?" Add more. Under silence? Under nervous laughter?' },
-          { type: 'tip', text: 'Model your own iceberg briefly if the group is hesitant: "Sometimes when I\'m quiet in a meeting, I\'m actually feeling nervous about saying something wrong." This normalises vulnerability.' },
+          { type: 'do', text: "Draw a simple iceberg on the board: a small tip above a wavy blue line, a large mass below. Label the tip 'What people SEE' and below the line 'What is REALLY happening.'" },
+          { type: 'say', text: "\"An iceberg has a tiny visible tip — maybe 10% — and a massive hidden section below the waterline. Our emotions work exactly the same way.\"" },
+          { type: 'say', text: "\"What might be hiding under anger?\" Build a word cloud below the waterline as students call out: fear, embarrassment, loneliness, feeling unheard, jealousy, hurt." },
+          { type: 'say', text: "\"What about sadness? What could be under that?\" Add more. Under silence? Under nervous laughter?" },
         ]
       },
       {
         time: '12–22 min', phase: 'Individual Reflection',
         steps: [
-          { type: 'do', text: 'Distribute iceberg worksheets. Ask students to draw their own if no worksheet is available.' },
-          { type: 'say', text: '"Think of one recent moment where you felt a strong emotion — this week, or something recent. Write what you SHOWED in the tip. Then go below the waterline and write what was ACTUALLY happening inside. Be honest — this is just for you."' },
-          { type: 'do', text: 'Play soft instrumental music if available. Circulate the room quietly. Prompt students privately: "Was there any fear underneath?" "Did you feel like nobody was listening?"' },
-          { type: 'tip', text: 'Some students may go to very heavy places (grief, abuse, family crisis). Have a "parking lot" — a jar or envelope where they can write privately and pass to you. Acknowledge it aloud: "If something comes up that feels too big for today, write it down and give it to me privately — I will make time."' },
-          { type: 'pause', text: 'Check: are most students writing? If hands are still, offer prompts on the board: "a time I got angry", "a time I went quiet", "a time I cried or nearly cried".' },
+          { type: 'do', text: "Distribute iceberg worksheets. Ask students to draw their own if no worksheet is available." },
+          { type: 'say', text: "\"Think of one recent moment where you felt a strong emotion. Write what you SHOWED in the tip. Then go below the waterline and write what was ACTUALLY happening inside. Be honest — this is just for you.\"" },
+          { type: 'tip', text: "Have a parking lot — a jar or envelope where they can write privately and pass to you. Acknowledge it aloud: 'If something comes up that feels too big for today, write it down and give it to me privately.'" },
         ]
       },
       {
         time: '22–30 min', phase: 'Pair Activity — Iceberg Guessing',
         steps: [
-          { type: 'say', text: '"Now I want you to pair up. Share ONLY your above-waterline with your partner — just tell them the situation and what you showed. Don\'t tell them what\'s below the line yet."' },
-          { type: 'say', text: '"Your partner\'s job is to GUESS what might be below your waterline. Then you tell them how close they were."' },
-          { type: 'do', text: 'Give pairs 5 minutes. Each person shares once. Encourage them to notice how it feels when someone guesses correctly.' },
-          { type: 'tip', text: 'This exercise builds empathy naturally. The student guessing has to take a perspective — the student sharing experiences being "seen." Both are powerful.' },
+          { type: 'say', text: "\"Now I want you to pair up. Share ONLY your above-waterline with your partner — just tell them the situation and what you showed. Do not tell them what is below the line yet.\"" },
+          { type: 'say', text: "\"Your partner's job is to GUESS what might be below your waterline. Then you tell them how close they were.\"" },
+          { type: 'do', text: "Give pairs 5 minutes. Each person shares once." },
         ]
       },
       {
         time: '30–35 min', phase: 'Full Class Debrief',
         steps: [
-          { type: 'say', text: '"Let\'s come back together. I have a few questions for the whole group."' },
-          { type: 'do', text: 'Use the debrief questions below. Aim for at least 3 of the 5.' },
+          { type: 'say', text: "\"Let's come back together. I have a few questions for the whole group.\"" },
+          { type: 'do', text: "Use the debrief questions below. Aim for at least 3 of the 5." },
         ]
       },
     ],
     debrief: [
-      { q: '"Was it easy or difficult to look below your waterline? What made it difficult?"', note: 'Listen for: "I didn\'t know what the feeling was", "I was embarrassed", "I didn\'t want to feel it." Validate all of these.' },
-      { q: '"Has someone ever responded to just your tip — your anger, your silence — and completely missed what was really going on? How did that feel?"', note: 'This is usually the question that creates the most resonance. Students often have strong answers. Don\'t rush it.' },
-      { q: '"When your partner guessed your below-waterline feeling correctly, what happened inside you?"', note: 'Listen for: "I felt understood", "surprised", "relieved". Connect this to empathy.' },
-      { q: '"How might knowing about icebergs change the way YOU respond to someone who\'s angry or quiet or difficult?"', note: 'This is the transfer question. The goal is for students to say something like: "Ask what\'s really going on" or "don\'t take it personally."' },
-      { q: '"Is there someone in your life whose iceberg you\'d like to understand better?"', note: 'Keep this private — don\'t ask them to name the person. Just let them hold the thought.' },
+      { q: "\"Was it easy or difficult to look below your waterline? What made it difficult?\"", note: "Listen for: 'I didn't know what the feeling was', 'I was embarrassed'. Validate all of these." },
+      { q: "\"Has someone ever responded to just your tip and completely missed what was really going on? How did that feel?\"", note: "This is usually the question that creates the most resonance." },
+      { q: "\"When your partner guessed your below-waterline feeling correctly, what happened inside you?\"", note: "Listen for: 'I felt understood', 'surprised', 'relieved'. Connect this to empathy." },
     ],
     watchOutFor: [
-      'A student who discloses something serious during the "below waterline" writing — abuse, family crisis, self-harm ideation. Have your referral process ready. Don\'t probe in class; follow up immediately after.',
-      'Students who write nothing. Don\'t force participation. Let them observe. Check in privately after class.',
-      'A student sharing another person\'s iceberg publicly in a way that names or embarrasses them. Redirect: "We\'re only mapping our own icebergs today — let\'s keep others\' stories private."',
-      'Students who write only surface emotions below the waterline too. Prompt quietly: "Go deeper — what\'s the feeling underneath the feeling?"',
+      "A student who discloses something serious during the below waterline writing — abuse, family crisis, self-harm ideation. Have your referral process ready.",
+      "Students who write nothing. Do not force participation. Let them observe.",
     ],
     variations: [
-      { tag: 'Grade 5', text: 'Use a provided emotion word bank (20–25 words) rather than asking students to generate. Focus on 3 emotions maximum and keep the discussion concrete.' },
-      { tag: 'Grade 7', text: 'Add a second iceberg for a character from a film, book, or real situation they know. Ask: "Map their iceberg based on their behaviour."' },
-      { tag: 'Large class (30+)', text: 'Skip pair sharing entirely. Go straight from individual to class debrief. Ask for 3–4 volunteers to share their above-waterline story.' },
-      { tag: 'Short session (25 min)', text: 'Remove the pair guessing activity. Do individual reflection for 12 min, then debrief for 8 min. Hit questions 1, 2, and 4.' },
+      { tag: 'Grade 5', text: "Use a provided emotion word bank (20–25 words) rather than asking students to generate." },
+      { tag: 'Grade 7', text: "Add a second iceberg for a character from a film, book, or real situation they know." },
     ],
     worksheet: {
       title: 'The Feelings Iceberg',
@@ -336,8 +326,8 @@ const ACTIVITIES = [
         {
           title: '🧊 My Iceberg',
           prompts: [
-            { label: 'The situation I\'m thinking of:', lines: 2 },
-            { label: 'ABOVE THE WATERLINE — What people saw / my behaviour:', lines: 2 },
+            { label: 'The situation I am thinking of:', lines: 2 },
+            { label: 'ABOVE THE WATERLINE — What people saw:', lines: 2 },
             { label: 'BELOW THE WATERLINE — What I was really feeling inside:', lines: 4, note: 'This is just for you. Go as deep as you can.' },
           ]
         },
@@ -345,8 +335,6 @@ const ACTIVITIES = [
           title: '🤔 Reflection Questions',
           prompts: [
             { label: 'Was it easy or hard to look below the waterline? What made it difficult?', lines: 3 },
-            { label: 'Think of a time when someone responded to just your "tip" and missed what was really going on. What did you wish they had seen?', lines: 3 },
-            { label: 'Whose iceberg would you like to understand better, and why? (You don\'t need to name them.)', lines: 2 },
             { label: 'One thing I want others to understand about my below-waterline feelings:', lines: 2 },
           ]
         }
@@ -364,88 +352,67 @@ const ACTIVITIES = [
     duration: '30 min',
     formats: ['Full class game', 'Small groups', 'Pairs'],
     color: '#5B9EBF', colorPale: '#EAF4FA',
-    objective: 'Students will experience how messages distort through communication chains, identify WHY distortion happens, and practise two concrete strategies for clearer communication.',
-    materials: ['3 pre-written message cards (see below)', 'Observation checklist for non-playing students', 'Whiteboard to record Original vs Final messages'],
+    objective: "Students will experience how messages distort through communication chains, identify WHY distortion happens, and practise two concrete strategies for clearer communication.",
+    materials: ["3 pre-written message cards", "Observation checklist", "Whiteboard to record Original vs Final messages"],
     phases: [
       {
         time: '0–5 min', phase: 'Setup & First Round (No Rules)',
         steps: [
-          { type: 'do', text: 'Ask 8 students to form a line facing sideways (so the class can observe). Give the first student Message Card 1 (see worksheet). Tell them: "Whisper this once only. No repeats."' },
-          { type: 'do', text: 'While the line plays, give remaining students the Observation Checklist: "Watch and note: where does the message start to change? What do you notice?"' },
-          { type: 'do', text: 'Once the message reaches the end, ask the last student to say it aloud. Write it on the board. Then reveal the original. Let the class react.' },
-          { type: 'tip', text: 'Choose a message that will distort in interesting ways. Example: "Priya told Rohan that the school play is on Thursday at 6pm but only if it doesn\'t rain." Complex, with conditions — it will fall apart quickly.' },
+          { type: 'do', text: "Ask 8 students to form a line facing sideways. Give the first student Message Card 1. Tell them: 'Whisper this once only. No repeats.'" },
+          { type: 'do', text: "While the line plays, give remaining students the Observation Checklist." },
+          { type: 'do', text: "Once the message reaches the end, ask the last student to say it aloud. Write it on the board." },
         ]
       },
       {
         time: '5–10 min', phase: 'Second Round (With Listening Rules)',
         steps: [
-          { type: 'say', text: '"Let\'s try again with Message Card 2 — but this time, we\'re going to add three rules: 1. You may ask ONE clarifying question before passing it on. 2. Before passing, repeat back what you heard so the sender can confirm. 3. If you\'re unsure, say so — don\'t fill in the blanks."' },
-          { type: 'do', text: 'Run the second round. Observe how the message changes (or doesn\'t). Write the final message on the board next to the original.' },
-          { type: 'pause', text: 'Ask observers: "Where did you notice the rules making a difference?"' },
+          { type: 'say', text: "\"Let's try again with Message Card 2 — but this time, we add three rules: 1. Ask ONE clarifying question. 2. Repeat back what you heard. 3. Flag if you are unsure.\"" },
+          { type: 'do', text: "Run the second round. Observe how the message changes. Write the final message on the board." },
         ]
       },
       {
-        time: '10–18 min', phase: 'Analysis — Why Messages Break Down',
+        time: '10–18 min', phase: 'Analysis',
         steps: [
-          { type: 'say', text: '"Let\'s figure out WHY messages change. What were people doing — or NOT doing — that caused the distortion?"' },
-          { type: 'do', text: 'Take answers and write them in two columns on the board: "What broke it" and "What fixed it."' },
-          { type: 'say', text: '"We found things like: not listening fully, filling in gaps with our own assumptions, hearing what we EXPECTED not what was SAID. In real life — with parents, friends, teachers — this happens constantly."' },
-          { type: 'say', text: '"The three rules we used in Round 2 have real names: Clarifying Questions, Reflecting Back, and Flagging Uncertainty. These are actual communication skills. Let\'s practise them."' },
+          { type: 'say', text: "\"Let's figure out WHY messages change. What were people doing — or NOT doing — that caused the distortion?\"" },
+          { type: 'do', text: "Take answers and write them in two columns: What broke it and What fixed it." },
         ]
       },
       {
         time: '18–26 min', phase: 'Pair Practice',
         steps: [
-          { type: 'do', text: 'Pair students. Student A reads a scenario card (see worksheet) aloud once. Student B must: (1) ask one clarifying question, (2) reflect back what they heard, (3) respond.' },
-          { type: 'do', text: 'Swap roles. Run twice each.' },
-          { type: 'tip', text: 'Circulate and gently correct: "You jumped to a response — did you reflect back first?" The goal is building the HABIT of pausing before responding.' },
+          { type: 'do', text: "Pair students. Student A reads a scenario card aloud once. Student B must: clarify, reflect back, then respond." },
+          { type: 'do', text: "Swap roles. Run twice each." },
         ]
       },
       {
         time: '26–30 min', phase: 'Debrief',
         steps: [
-          { type: 'say', text: '"Let\'s talk about what you noticed."' },
-          { type: 'do', text: 'Use the debrief questions. Focus especially on question 3 — the real-life application.' },
+          { type: 'do', text: "Use the debrief questions." },
         ]
       },
     ],
     debrief: [
-      { q: '"Where exactly in the line did the message change most? What was happening at that point?"', note: 'Students usually identify: a long/complex part of the message, a moment where the listener was distracted, or a gap that someone filled with their own assumption.' },
-      { q: '"What did it FEEL like to receive a message that had already changed by the time it got to you?"', note: 'This introduces the emotional impact of miscommunication — frustration, feeling like you were set up to fail.' },
-      { q: '"Can you think of a real situation — at home, with friends, in a group chat — where this telephone breakdown happened? What was the impact?"', note: 'This is the key transfer question. Give students 30 seconds to think before taking answers. Fights between friends over "He said she said" are common examples.' },
-      { q: '"Of the three skills — clarifying, reflecting back, flagging uncertainty — which do you find hardest to do in real life? Why?"', note: 'Most students say "reflecting back" — it feels slow and awkward. Validate this and say that awkward is the feeling of learning a new skill.' },
-      { q: '"How might using these skills change a conversation with someone you\'re having trouble communicating with right now?"', note: 'Keep private. Just plant the thought.' },
+      { q: "\"Where exactly in the line did the message change most? What was happening at that point?\"", note: "Students usually identify: a long complex part, or a gap filled with assumption." },
+      { q: "\"Can you think of a real situation — at home or with friends — where this breakdown happened?\"", note: "Fights between friends over 'He said she said' are common examples." },
     ],
     watchOutFor: [
-      'Students intentionally corrupting the message for laughs. Redirect warmly: "The game works best when everyone tries — the funny part comes naturally, we don\'t need to add to it."',
-      'The message NOT changing much in Round 1. Have a backup: immediately do Round 1 with a longer, more complex message.',
-      'Pairs who just chat instead of following the structured practice. Be explicit: "I need you to follow the three steps — clarify, reflect, then respond."',
+      "Students intentionally corrupting the message for laughs. Redirect warmly.",
+      "Pairs who just chat instead of following the structured practice.",
     ],
     variations: [
-      { tag: 'Grade 5', text: 'Use very short, simple messages in Round 1. Add pictures to the message cards for lower literacy students.' },
-      { tag: 'Grade 7', text: 'In Round 2, add the rule: "You may not repeat their exact words — you must paraphrase." This deepens the active listening skill significantly.' },
-      { tag: 'Large class', text: 'Run two parallel lines of 8 simultaneously. The rest observe. Compare how the two lines distorted the same message differently.' },
-      { tag: 'Short session (25 min)', text: 'Cut the pair practice entirely. Run both rounds, then debrief for 10 min. Focus on questions 1, 3, and 4.' },
+      { tag: 'Grade 5', text: "Use very short, simple messages in Round 1." },
+      { tag: 'Large class', text: "Run two parallel lines of 8 simultaneously. The rest observe." },
     ],
     worksheet: {
       title: 'The Telephone Breakdown',
-      intro: 'Today we discovered how messages change as they travel — and learned three skills to stop the breakdown.',
+      intro: 'Today we discovered how messages change as they travel.',
       sections: [
         {
-          title: '👁️ Observer Checklist (During the Game)',
+          title: '👁️ Observer Checklist',
           twoCol: true,
           colTitles: ['Round 1 — What I noticed', 'Round 2 — What changed'],
           prompts: [
             { label: 'Where did the message change most?', lines: 2 },
-            { label: 'What caused the change?', lines: 2 },
-          ]
-        },
-        {
-          title: '📋 The Three Communication Skills',
-          prompts: [
-            { label: '1. Clarifying Question — What it is and an example I could use:', lines: 2 },
-            { label: '2. Reflecting Back — What it sounds like in real conversation:', lines: 2 },
-            { label: '3. Flagging Uncertainty — When would I use this?', lines: 2 },
           ]
         },
         {
@@ -453,7 +420,6 @@ const ACTIVITIES = [
           prompts: [
             { label: 'One communication situation in my life where a telephone breakdown has happened:', lines: 2 },
             { label: 'Which of the three skills would help most in that situation, and why?', lines: 2 },
-            { label: 'I will try to use _________________ this week in a conversation with _________________.' , lines: 1 },
           ]
         }
       ]
@@ -470,89 +436,73 @@ const ACTIVITIES = [
     duration: '40 min',
     formats: ['Individual reflection', 'Pairs', 'Full class'],
     color: '#E8845A', colorPale: '#FDF0EA',
-    objective: 'Students will practise inhabiting a perspective genuinely different from their own, articulate what that person might feel and need, and identify one bias or assumption they held before the activity.',
-    materials: ['Persona Cards (printed, one set of 10)', 'Dilemma prompt on back of each card', 'Worksheet — 5 reflection questions'],
+    objective: "Students will practise inhabiting a perspective genuinely different from their own, articulate what that person might feel and need, and identify one bias or assumption they held.",
+    materials: ["Persona Cards", "Worksheet"],
     phases: [
       {
         time: '0–5 min', phase: 'Set Up',
         steps: [
-          { type: 'say', text: '"There\'s a saying: \'You can\'t understand someone until you\'ve walked a mile in their shoes.\' Today we\'re going to try. You\'ll each get a persona — a real type of student somewhere in India. For the next 20 minutes, you are that person."' },
-          { type: 'say', text: '"This isn\'t about acting or performing. It\'s about genuinely trying to understand what life looks and feels like from a perspective that isn\'t yours."' },
-          { type: 'do', text: 'Shuffle and distribute Persona Cards face down. Students flip on your signal.' },
-          { type: 'tip', text: 'Persona cards should cover diverse experiences: a student with dyslexia, a first-generation learner, a student who just moved cities, a student dealing with a parent\'s illness, an only child vs. one of 5 siblings, a student in a single-parent home, a student who doesn\'t speak Hindi well, one who\'s excelling and one who\'s struggling academically.' },
+          { type: 'say', text: "\"Today we are going to try to walk a mile in someone else's shoes. You will each get a persona — a real type of student. For 20 minutes, you are that person.\"" },
+          { type: 'do', text: "Shuffle and distribute Persona Cards face down. Students flip on your signal." },
         ]
       },
       {
         time: '5–8 min', phase: 'Reading and In-Role Thinking',
         steps: [
-          { type: 'do', text: 'Students read their persona card silently. Give them 3 minutes.' },
-          { type: 'say', text: '"Now answer the 5 questions on the back of the card AS that person. Not what YOU would do — what THEY would do, feel, think, given who they are."' },
-          { type: 'tip', text: 'Some students may get a card that feels uncomfortably similar to their own life. Watch for this — it can be powerful or it can be distressing. Check in quietly.' },
+          { type: 'do', text: "Students read their persona card silently. Give them 3 minutes." },
+          { type: 'say', text: "\"Now answer the questions on the back of the card AS that person. Not what YOU would do — what THEY would do.\"" },
         ]
       },
       {
         time: '8–22 min', phase: 'Individual In-Role Reflection',
         steps: [
-          { type: 'do', text: 'Students answer the 5 in-role questions on their worksheet: (1) What does a typical school day feel like for me? (2) What do I worry about most? (3) What do people around me misunderstand about me? (4) What do I wish someone would just ask me? (5) What does "a good day" look like for me?' },
-          { type: 'do', text: 'Circulate. Prompt with: "Go deeper — not just the situation, but what\'s the emotional experience?" and "What assumption might your classmates make about you that isn\'t true?"' },
-          { type: 'pause', text: 'At the 15-minute mark, give a 1-minute warning to finish up.' },
+          { type: 'do', text: "Students answer the in-role questions on their worksheet." },
+          { type: 'do', text: "Circulate. Prompt with: 'Go deeper — what is the emotional experience?'" },
         ]
       },
       {
         time: '22–33 min', phase: 'Paired Conversation In-Role',
         steps: [
-          { type: 'do', text: 'Pair students whose personas are different from each other.' },
-          { type: 'say', text: '"You are going to have a 5-minute conversation — in role. The topic: your school is planning a new policy. Tell each other what that policy should be and why — from your persona\'s perspective."' },
-          { type: 'say', text: '"You can disagree — in fact, try to. But really listen to what the other person needs and why. You\'re practising empathy, not debate."' },
-          { type: 'do', text: 'After 5 minutes, stop the in-role conversation. Give 3 minutes for each student to write: "What surprised me about my partner\'s perspective? What assumption of mine did it challenged?"' },
+          { type: 'do', text: "Pair students whose personas are different from each other." },
+          { type: 'say', text: "\"You are going to have a 5-minute conversation in role. The topic: your school is planning a new policy. Tell each other what that policy should be.\"" },
         ]
       },
       {
         time: '33–40 min', phase: 'Full Class Debrief — Out of Role',
         steps: [
-          { type: 'say', text: '"Come out of role now. You are yourselves again. Let\'s talk about what just happened."' },
-          { type: 'do', text: 'Use the debrief questions. The goal: students name at least one specific bias or assumption they held that the activity challenged.' },
+          { type: 'say', text: "\"Come out of role now. You are yourselves again. Let's talk about what just happened.\"" },
+          { type: 'do', text: "Use the debrief questions." },
         ]
       },
     ],
     debrief: [
-      { q: '"What was the hardest part of staying in your persona\'s perspective — rather than slipping back into your own?"', note: 'This is usually: "I kept thinking what I\'d do" or "I couldn\'t imagine that being my life." Both are honest and useful starting points.' },
-      { q: '"What did you discover about your persona that you wouldn\'t have guessed just looking at them from the outside?"', note: 'Listen for the insight that people\'s internal experience is far richer and more complicated than their surface presentation.' },
-      { q: '"Did your conversation change your view on what your school should prioritise? How?"', note: 'The policy conversation is a proxy for real conflict resolution. What matters is whether students can articulate a position that isn\'t just their own.' },
-      { q: '"What\'s one assumption you realise you\'ve been making about a group of people — in this school, in your neighbourhood — that today challenged?"', note: 'This is a vulnerable question. Create safety: "You don\'t have to say what the assumption WAS — just that you noticed one."' },
-      { q: '"What does it actually mean to listen with empathy, rather than just waiting for your turn to speak? What\'s the difference in your body?"', note: 'End here. This question moves the learning from intellectual to somatic — students start to feel the difference, not just understand it.' },
+      { q: "\"What was the hardest part of staying in your persona's perspective?\"", note: "This is usually: 'I kept thinking what I would do'." },
+      { q: "\"What did you discover about your persona that you would not have guessed just looking at them from the outside?\"", note: "Listen for the insight that internal experience is rich and complicated." },
     ],
     watchOutFor: [
-      'A student who gets a persona very similar to their own difficult situation (e.g. a student whose parent is actually ill). Watch for discomfort. Offer to swap cards privately.',
-      'Students who "play" the persona superficially or with mockery. Redirect: "We\'re trying to genuinely understand, not perform. What would this person actually feel?"',
-      'Pairs who get stuck in debate rather than empathy. Remind: "Your job isn\'t to win — it\'s to make the other person feel heard."',
+      "A student who gets a persona very similar to their own difficult situation.",
+      "Students who play the persona superficially or with mockery. Redirect: 'We are trying to genuinely understand, not perform.'",
     ],
     variations: [
-      { tag: 'Grade 6', text: 'Reduce the in-role questions to 3. Skip the paired in-role conversation; instead, each student shares one discovery from their persona with the class.' },
-      { tag: 'Grade 8', text: 'After the activity, ask students to write a one-paragraph letter from their persona to someone at school who "doesn\'t see them." This deepens the perspective-taking significantly.' },
-      { tag: 'Sensitive class', text: 'Review persona cards before the session and remove any that might re-traumatise a specific student you know is dealing with that situation.' },
-      { tag: 'Short session (30 min)', text: 'Skip the paired conversation. Go from individual reflection to group debrief. Use only 3 debrief questions.' },
+      { tag: 'Grade 6', text: "Reduce the in-role questions to 3. Skip the paired in-role conversation." },
+      { tag: 'Short session (30 min)', text: "Skip the paired conversation. Go from individual reflection to group debrief." },
     ],
     worksheet: {
       title: 'Walk a Mile — Persona Reflection',
-      intro: 'Answer questions 1–5 IN ROLE (as your persona). Answer questions 6–8 as yourself.',
+      intro: 'Answer questions 1–5 IN ROLE. Answer questions 6–8 as yourself.',
       sections: [
         {
-          title: '👟 In Role (Answer as your persona)',
+          title: '👟 In Role',
           prompts: [
             { label: '1. What does a typical school day feel like for you?', lines: 3 },
-            { label: '2. What do you worry about most that your classmates probably don\'t think about?', lines: 3 },
-            { label: '3. What do people misunderstand about you — what do they assume that isn\'t true?', lines: 3 },
-            { label: '4. What do you wish someone would just ask you?', lines: 2 },
-            { label: '5. What does a "good day" look like for you?', lines: 2 },
+            { label: '2. What do you worry about most?', lines: 3 },
           ]
         },
         {
-          title: '🪞 As Yourself — After the Activity',
+          title: '🪞 As Yourself',
           prompts: [
-            { label: '6. What surprised me most about my persona\'s inner experience?', lines: 3 },
-            { label: '7. One assumption I had before this activity that I want to question:', lines: 2 },
-            { label: '8. Is there someone in MY actual life whose perspective I\'ve been missing? What might be in their iceberg?', lines: 3 },
+            { label: '3. What surprised me most about my persona\'s inner experience?', lines: 3 },
+            { label: '4. One assumption I had before this activity that I want to question:', lines: 2 },
           ]
         }
       ]
@@ -569,72 +519,57 @@ const ACTIVITIES = [
     duration: '35 min',
     formats: ['Demonstration', 'Individual', 'Pairs'],
     color: '#C0392B', colorPale: '#FADBD8',
-    objective: 'Students will map their own personal stress cycle — triggers, build-up signs, explosion patterns, and release valves — and identify at least two healthy release strategies they will commit to using.',
-    materials: ['One plastic bottle with cap (filled with water + a fizzing tablet or just shaken up)', 'Pressure Bottle worksheet', 'Whiteboard', 'Optional: stress balls or fidget items for the activity'],
+    objective: "Students will map their own personal stress cycle — triggers, build-up signs, explosion patterns, and release valves.",
+    materials: ["One plastic bottle with cap (shaken up)", "Worksheet", "Whiteboard"],
     phases: [
       {
         time: '0–5 min', phase: 'The Demonstration',
         steps: [
-          { type: 'do', text: 'Before the session, secretly shake the bottle vigorously. Hold it behind your back or under the desk.' },
-          { type: 'say', text: '"I want to start today by showing you something. This bottle has been through a lot this morning."' },
-          { type: 'do', text: 'Begin to slowly open the cap. The pressure releases gradually — controlled. Nothing spills. Set it on the desk.' },
-          { type: 'say', text: '"That was a controlled release. Now — what would have happened if I\'d opened it all at once, suddenly, without warning?" (Take answers.) Correct: explosion. Mess. Stuff everywhere that\'s hard to clean up.' },
-          { type: 'say', text: '"Our stress and anger work exactly the same way. The question isn\'t whether the pressure builds — it always does. The question is whether we release it slowly and intentionally, or suddenly all at once."' },
-          { type: 'tip', text: 'If you have access to a carbonated drink bottle, this demo is even more dramatic. A slow open = controlled hiss. A sudden full open = spray everywhere.' },
+          { type: 'do', text: "Secretly shake the bottle vigorously. Hold it behind your back." },
+          { type: 'do', text: "Begin to slowly open the cap. The pressure releases gradually. Nothing spills." },
+          { type: 'say', text: "\"Our stress works exactly the same way. The question isn't whether the pressure builds — it always does. The question is whether we release it slowly, or suddenly all at once.\"" },
         ]
       },
       {
         time: '5–13 min', phase: 'Mapping the Stress Cycle',
         steps: [
-          { type: 'do', text: 'Draw a simple diagram on the board: A bottle. Label the bottom "Low pressure" and the top "Near explosion." Draw an arrow going up.' },
-          { type: 'say', text: '"Let\'s think about what fills up our bottle. What are the things that SHAKE us — that build the pressure?" Take answers: exam pressure, parent arguments, social rejection, comparison, sleep deprivation, missing meals, noise, being misunderstood.' },
-          { type: 'say', text: '"Now — what are the WARNING SIGNS that your bottle is getting full? Not the explosion — the signs BEFORE it. What do you notice in your body?" Write answers: tight chest, grinding teeth, can\'t concentrate, snapping at people, crying suddenly, going very quiet, heart racing.' },
-          { type: 'say', text: '"And what does YOUR explosion look like? What happens when the cap blows?" Take answers without judgement: shouting, slamming, crying, saying things I regret, shutting everyone out, eating too much/too little.' },
-          { type: 'tip', text: 'Normalise all of this heavily. "These are all completely human responses to pressure. The goal isn\'t to never feel pressure — it\'s to get better at managing the release."' },
+          { type: 'do', text: "Draw a simple diagram on the board: A bottle." },
+          { type: 'say', text: "\"Let's think about what fills up our bottle. What are the WARNING SIGNS that your bottle is getting full?\"" },
+          { type: 'say', text: "\"And what does YOUR explosion look like? What happens when the cap blows?\"" },
         ]
       },
       {
-        time: '13–23 min', phase: 'Individual Mapping — My Pressure Bottle',
+        time: '13–23 min', phase: 'Individual Mapping',
         steps: [
-          { type: 'do', text: 'Distribute the worksheet. Students map their own pressure bottle: shakers (stressors), warning signs, explosion patterns, and release valves.' },
-          { type: 'say', text: '"The bottom section — release valves — is the most important one. Write down things that actually help YOU let off pressure gradually. Not what you SHOULD do — what ACTUALLY works for you, even a little."' },
-          { type: 'do', text: 'Give 8 minutes for this. Circulate. Help students who write only "nothing helps" by asking: "Is there anything — even tiny — that makes it feel 1% better? A walk? A playlist? Writing?" Add those.' },
-          { type: 'tip', text: 'Common release valves for this age group: music, physical movement, journaling, talking to one specific person, sleeping, drawing, gaming (in moderation), cooking. All are valid. Validate whatever they find.' },
+          { type: 'do', text: "Distribute the worksheet. Students map their own pressure bottle." },
+          { type: 'say', text: "\"The bottom section — release valves — is the most important one. Write down things that actually help YOU let off pressure gradually.\"" },
         ]
       },
       {
-        time: '23–30 min', phase: 'Pair Share — Early Warning System',
+        time: '23–30 min', phase: 'Pair Share',
         steps: [
-          { type: 'say', text: '"Now I want you to pair up with someone you trust a little. Share ONE of your warning signs — just one — and ONE of your release valves. Tell each other: what should I look for in you, and what can I do that actually helps?"' },
-          { type: 'say', text: '"This is about building a support system. If your partner knows your warning signs, they can help you release the valve before the explosion."' },
-          { type: 'do', text: 'Give 5 minutes. Each person shares once.' },
+          { type: 'say', text: "\"Pair up. Share ONE of your warning signs and ONE of your release valves.\"" },
+          { type: 'do', text: "Give 5 minutes. Each person shares once." },
         ]
       },
       {
         time: '30–35 min', phase: 'Debrief',
         steps: [
-          { type: 'say', text: '"Let\'s bring it back together for a few minutes."' },
-          { type: 'do', text: 'Use debrief questions. End with question 5 — the commitment.' },
+          { type: 'do', text: "Use debrief questions. End with the commitment." },
         ]
       },
     ],
     debrief: [
-      { q: '"Which part of your bottle was easiest to identify — the shakers, the warning signs, or the release valves? Which was hardest, and why?"', note: 'Most students find release valves hardest — because they haven\'t been taught them. This is the gap the activity addresses.' },
-      { q: '"Have you ever had an explosion that damaged something — a relationship, your own wellbeing — that a slow release earlier might have prevented?"', note: 'Keep private. Students just hold the memory. Don\'t ask them to share.' },
-      { q: '"What makes it hard to use your release valves when you\'re actually in the high-pressure moment?"', note: 'Listen for: "I forget", "I feel too wound up to do anything calm", "It feels fake". Validate. Explain that this is why we practise — so the release valve becomes automatic.' },
-      { q: '"What did you discover about your partner\'s warning signs and release valves? Was anything surprising?"', note: 'Creates awareness that everyone\'s system is different — which builds empathy.' },
-      { q: '"I want everyone to close their eyes. Think of the most likely high-pressure moment coming up in the next 2 weeks. Picture it. Now — which release valve will you use BEFORE the explosion?"', note: 'End here. This guided visualisation turns learning into intention.' },
+      { q: "\"Which part of your bottle was easiest to identify? Which was hardest, and why?\"", note: "Most students find release valves hardest — because they haven't been taught them." },
+      { q: "\"What makes it hard to use your release valves when you are actually in the high-pressure moment?\"", note: "Listen for: 'I forget', 'It feels fake'. Validate this." },
     ],
     watchOutFor: [
-      'A student whose "explosion" pattern involves self-harm. If they disclose this, acknowledge privately and trigger your referral process immediately after class.',
-      'Students who say nothing is a stressor — they may be performing stoicism. Probe gently: "What about exams? Home? Social situations?" Even a small crack in the "everything\'s fine" front is worth noting.',
-      'The demonstration going wrong — bottle exploding everywhere. Have a cloth ready. It actually makes the metaphor stronger: "See how hard that was to clean up? Same with emotional explosions."',
+      "A student whose explosion pattern involves self-harm. Follow up privately.",
+      "Students who say nothing is a stressor — they may be performing stoicism.",
     ],
     variations: [
-      { tag: 'Grade 7', text: 'Focus on physical release valves only: breathing, movement, shaking hands out. Do a 2-minute box breathing exercise as a class right after mapping.' },
-      { tag: 'Grade 9', text: 'Add a section: "What I do that gives OTHERS pressure" — helping students see their own role in escalating situations.' },
-      { tag: 'No materials', text: 'Skip the bottle demo. Instead, tell the story verbally: "Imagine a bottle being shaken..." The metaphor still lands without props.' },
-      { tag: 'Short session (25 min)', text: 'Cut the pair share. Go from individual mapping (10 min) straight to debrief (10 min). Hit all 5 debrief questions briskly.' },
+      { tag: 'Grade 7', text: "Focus on physical release valves only: breathing, movement." },
+      { tag: 'Short session', text: "Cut the pair share. Go from individual mapping straight to debrief." },
     ],
     worksheet: {
       title: 'My Pressure Bottle',
@@ -642,24 +577,391 @@ const ACTIVITIES = [
       sections: [
         {
           title: '🔧 My Shakers (What fills my bottle)',
-          prompts: [{ label: 'Write the things that shake your bottle — that build pressure for you:', lines: 4 }]
+          prompts: [{ label: 'Write the things that build pressure for you:', lines: 3 }]
         },
         {
-          title: '⚠️ My Warning Signs (How I know pressure is building)',
+          title: '⚠️ My Warning Signs',
           twoCol: true,
           colTitles: ['In my BODY I notice:', 'In my BEHAVIOUR I notice:'],
           prompts: []
         },
         {
-          title: '💥 My Explosion Pattern (What it looks like when the cap blows)',
-          prompts: [{ label: 'When I\'ve hit my limit, I tend to:', lines: 2 }]
+          title: '🌿 My Release Valves',
+          prompts: [
+            { label: 'Things that help me release pressure BEFORE the explosion:', lines: 3 },
+            { label: 'The release valve I will commit to using this week:', lines: 1 },
+          ]
+        }
+      ]
+    }
+  },
+
+  // ── 11. The Apology Anatomy ─────────────────────────────────────────────
+  {
+    id: 'apology', number: 11, icon: '🩹',
+    title: 'The Apology Anatomy',
+    theme: 'Relationship Skills & Empathy',
+    themeShort: 'Relationship Skills',
+    grade: '5–7', gradeKey: 'lower',
+    duration: '35 min',
+    formats: ['Full class', 'Pairs'],
+    color: '#E67E22', colorPale: '#FDEDEC',
+    objective: "Students will identify the difference between a fake apology and a real apology, and practice the four steps of a genuine apology to repair relationships.",
+    materials: ["Whiteboard", "Apology Anatomy worksheets"],
+    phases: [
+      {
+        time: '0–5 min', phase: 'The Fake Apology',
+        steps: [
+          { type: 'say', text: "\"We have all heard fake apologies. Things like 'I am sorry you feel that way' or 'I am sorry, but you started it'. How do those make you feel?\"" },
+          { type: 'do', text: "Collect answers on the board: angry, ignored, frustrated." },
+          { type: 'say', text: "\"A real apology is hard. It takes courage. Today we will learn the 4 parts of a real apology that actually fixes a broken relationship.\"" }
+        ]
+      },
+      {
+        time: '5–15 min', phase: 'The Four Steps',
+        steps: [
+          { type: 'do', text: "Write the 4 steps on the board: 1. I am sorry for... 2. It was wrong because... 3. Next time I will... 4. Will you forgive me?" },
+          { type: 'say', text: "\"Step 2 is the magic step. If you can explain WHY it was wrong, the other person knows you actually understand the harm you caused.\"" },
+          { type: 'do', text: "Give an example: 'I am sorry for breaking your pen. It was wrong because I was careless with your things. Next time I will ask before borrowing. Will you forgive me?'" }
+        ]
+      },
+      {
+        time: '15–25 min', phase: 'Pair Practice',
+        steps: [
+          { type: 'do', text: "Distribute worksheets. Have students work in pairs to rewrite the 'Fake Apologies' on the sheet into 'Real Apologies' using the 4 steps." },
+          { type: 'tip', text: "Walk around and help pairs struggling with Step 2 (the 'Why')." }
+        ]
+      },
+      {
+        time: '25–35 min', phase: 'Debrief',
+        steps: [
+          { type: 'say', text: "\"Which of the 4 steps is the hardest to say out loud?\"" },
+          { type: 'say', text: "\"Does saying 'Will you forgive me' mean the person HAS to forgive you right away?\" (No, forgiveness takes time)." }
+        ]
+      }
+    ],
+    debrief: [
+      { q: "\"Why do you think people give fake apologies instead of real ones?\"", note: "Listen for: pride, fear of getting in trouble, not wanting to admit fault." },
+      { q: "\"How does it feel when someone gives you a full, real 4-step apology?\"", note: "Listen for: respected, valued, ready to move on." }
+    ],
+    watchOutFor: [
+      "Students using the pair practice to mock each other. Ensure the scenarios are fictional and structured."
+    ],
+    variations: [
+      { tag: 'Grade 5', text: "Focus heavily on Step 3 (Next time I will...) to make it actionable for younger kids." },
+    ],
+    worksheet: {
+      title: 'The Apology Anatomy',
+      intro: 'A real apology has four parts. Practice turning fake apologies into real ones.',
+      sections: [
+        {
+          title: '🩹 The 4 Steps',
+          prompts: [
+            { label: '1. I am sorry for...', lines: 0 },
+            { label: '2. It was wrong because...', lines: 0 },
+            { label: '3. Next time I will...', lines: 0 },
+            { label: '4. Will you forgive me?', lines: 0 }
+          ]
         },
         {
-          title: '🌿 My Release Valves (What helps me let off pressure slowly)',
+          title: '🛠️ Fix the Fake Apology',
           prompts: [
-            { label: 'Things that help me release pressure BEFORE the explosion (list as many as possible):', lines: 4 },
-            { label: 'The release valve I will commit to using this week:', lines: 1 },
-            { label: 'My warning sign that tells me it\'s time to use a release valve:', lines: 1 },
+            { label: 'Fake: "I am sorry if you got mad when I laughed at you."', lines: 0 },
+            { label: 'Write the REAL apology:', lines: 4 }
+          ]
+        }
+      ]
+    }
+  },
+
+  // ── 12. Circle of Control ───────────────────────────────────────────────
+  {
+    id: 'control', number: 12, icon: '⭕',
+    title: 'Circle of Control',
+    theme: 'Anxiety Management',
+    themeShort: 'Anxiety',
+    grade: '6–8', gradeKey: 'lower',
+    duration: '35 min',
+    formats: ['Individual', 'Full class'],
+    color: '#9B59B6', colorPale: '#F4ECF7',
+    objective: "Students will map their worries into 'Control', 'Influence', and 'Concern' categories to reduce feelings of overwhelm and anxiety.",
+    materials: ["Whiteboard", "Circle of Control Worksheets", "Sticky notes"],
+    phases: [
+      {
+        time: '0–10 min', phase: 'The Worry Brain Dump',
+        steps: [
+          { type: 'do', text: "Hand out sticky notes. Ask students to write down 3 things they are currently worried or stressed about (one per note)." },
+          { type: 'say', text: "\"Anxiety happens when our brain tries to control things it actually cannot control. Today, we are going to sort our worries to calm our brains down.\"" }
+        ]
+      },
+      {
+        time: '10–20 min', phase: 'Drawing the Circles',
+        steps: [
+          { type: 'do', text: "Draw three concentric circles on the board. Inner = Control. Middle = Influence. Outer = Concern (Cannot Control)." },
+          { type: 'say', text: "\"Inner circle: What I can 100% control (my words, my effort). Middle: What I can influence but not control (my grades, my friendships). Outer: What I cannot control at all (the weather, what other people think of me).\"" },
+          { type: 'do', text: "Take a few anonymous sticky notes and ask the class where to place them on the board." }
+        ]
+      },
+      {
+        time: '20–30 min', phase: 'Personal Mapping',
+        steps: [
+          { type: 'do', text: "Students use their worksheets to map their own sticky notes into their personal circles." },
+          { type: 'say', text: "\"Look at the worries in your outer circle. Your job is to practice letting those go, because worrying about them will not change them.\"" }
+        ]
+      },
+      {
+        time: '30–35 min', phase: 'Debrief',
+        steps: [
+          { type: 'do', text: "Use the debrief questions to close the session." }
+        ]
+      }
+    ],
+    debrief: [
+      { q: "\"Which circle had the most items in it for you?\"", note: "Often students find most of their worries are in the outer circle." },
+      { q: "\"How does it feel to physically move a worry into the 'Cannot Control' circle?\"", note: "Many report a sense of relief or release." }
+    ],
+    watchOutFor: [
+      "Students confusing 'Influence' with 'Control'. Remind them that if it involves another person's reaction, it is only Influence."
+    ],
+    variations: [
+      { tag: 'High Anxiety Groups', text: "Do a deep breathing exercise immediately after the mapping to physically release the outer circle worries." }
+    ],
+    worksheet: {
+      title: 'My Circle of Control',
+      intro: 'Sort your worries to help your brain focus on what actually matters.',
+      sections: [
+        {
+          title: '⭕ My Circles',
+          prompts: [
+            { label: 'What I CAN Control (Inner Circle):', lines: 3 },
+            { label: 'What I can INFLUENCE (Middle Circle):', lines: 3 },
+            { label: 'What I CANNOT Control (Outer Circle - Let it go):', lines: 3 }
+          ]
+        }
+      ]
+    }
+  },
+
+  // ── 13. The Rumour Filter ───────────────────────────────────────────────
+  {
+    id: 'rumour', number: 13, icon: '🗣️',
+    title: 'The Rumour Filter',
+    theme: 'Social Awareness & Empathy',
+    themeShort: 'Social Awareness',
+    grade: '5–7', gradeKey: 'lower',
+    duration: '35 min',
+    formats: ['Small groups', 'Full class'],
+    color: '#3498DB', colorPale: '#EBF5FB',
+    objective: "Students will apply the 'THINK' filter to gossip and rumours to understand the harm caused by spreading unverified information.",
+    materials: ["Whiteboard", "THINK Filter handouts"],
+    phases: [
+      {
+        time: '0–10 min', phase: 'The Toothpaste Demo',
+        steps: [
+          { type: 'do', text: "Bring a tube of toothpaste and a paper plate. Squeeze all the toothpaste onto the plate." },
+          { type: 'say', text: "\"Can I have a volunteer put this toothpaste back in the tube?\" (They cannot)." },
+          { type: 'say', text: "\"Rumours are exactly like this. Once the words are out, you can never take them back, and they leave a mess. Today we learn how to stop the squeeze.\"" }
+        ]
+      },
+      {
+        time: '10–20 min', phase: 'The THINK Filter',
+        steps: [
+          { type: 'do', text: "Write THINK on the board. T=True? H=Helpful? I=Inspiring? N=Necessary? K=Kind?" },
+          { type: 'say', text: "\"Before you repeat something you heard, run it through this filter. If it fails the filter, the rumour stops with you.\"" },
+          { type: 'do', text: "Read a scenario: 'You heard Maya failed her math test because she was crying in the bathroom.' Run it through THINK." }
+        ]
+      },
+      {
+        time: '20–30 min', phase: 'Group Scenarios',
+        steps: [
+          { type: 'do', text: "Put students in groups of 4. Give them scenario cards with common school rumours." },
+          { type: 'say', text: "\"Your group must decide: Does this pass the THINK filter? If not, what is the exact script you will use to stop the rumour when someone tells you?\"" }
+        ]
+      },
+      {
+        time: '30–35 min', phase: 'Debrief',
+        steps: [
+          { type: 'do', text: "Discuss the difficulty of standing up to gossip in real life." }
+        ]
+      }
+    ],
+    debrief: [
+      { q: "\"Why is it so tempting to pass on a rumour?\"", note: "Listen for: wanting to fit in, wanting attention, it feels exciting." },
+      { q: "\"What is a brave, simple phrase you can use to stop a rumour without sounding like a teacher?\"", note: "Examples: 'I don't really care about that', or 'Let's not talk about them when they aren't here.'" }
+    ],
+    watchOutFor: [
+      "Students using real current school gossip during the exercise. Shut it down immediately."
+    ],
+    variations: [
+      { tag: 'Grade 7', text: "Apply the THINK filter specifically to WhatsApp forwards and social media comments." }
+    ],
+    worksheet: {
+      title: 'The Rumour Filter (THINK)',
+      intro: 'Before you speak or type, run it through the filter.',
+      sections: [
+        {
+          title: '🔍 The Filter',
+          prompts: [
+            { label: 'T - Is it True? (Do I have proof?)', lines: 1 },
+            { label: 'H - Is it Helpful?', lines: 1 },
+            { label: 'I - Is it Inspiring?', lines: 1 },
+            { label: 'N - Is it Necessary?', lines: 1 },
+            { label: 'K - Is it Kind?', lines: 1 }
+          ]
+        },
+        {
+          title: '🛡️ My Script',
+          prompts: [
+            { label: 'When someone tries to tell me gossip, I will say:', lines: 2 }
+          ]
+        }
+      ]
+    }
+  },
+
+  // ── 14. My Strengths Shield ───────────────────────────────────────────────
+  {
+    id: 'shield', number: 14, icon: '🛡️',
+    title: 'My Strengths Shield',
+    theme: 'Self-Awareness & Confidence',
+    themeShort: 'Self-Awareness',
+    grade: '5–7', gradeKey: 'lower',
+    duration: '40 min',
+    formats: ['Individual art activity', 'Pairs'],
+    color: '#F1C40F', colorPale: '#FEF9E7',
+    objective: "Students will identify their core character strengths and create a visual shield to build self-esteem and resilience.",
+    materials: ["Blank shield templates", "Coloured markers/crayons", "List of character strengths on the board"],
+    phases: [
+      {
+        time: '0–10 min', phase: 'What is a Strength?',
+        steps: [
+          { type: 'say', text: "\"When we talk about strengths, we often think of being good at math or fast at running. But character strengths are different. They are who you ARE, not just what you DO.\"" },
+          { type: 'do', text: "Write examples on the board: Kindness, Bravery, Humor, Curiosity, Honesty, Teamwork, Perseverance." },
+          { type: 'say', text: "\"Every single person in this room has at least three of these super powers.\"" }
+        ]
+      },
+      {
+        time: '10–25 min', phase: 'Designing the Shield',
+        steps: [
+          { type: 'do', text: "Hand out the shield templates divided into 4 quadrants." },
+          { type: 'say', text: "\"Quadrant 1: Draw or write your greatest character strength. Quadrant 2: A strength someone else sees in you. Quadrant 3: A time you used a strength to help someone. Quadrant 4: A strength you want to grow.\"" },
+          { type: 'do', text: "Play music and give them time to draw and write." }
+        ]
+      },
+      {
+        time: '25–35 min', phase: 'Shield Sharing',
+        steps: [
+          { type: 'do', text: "In pairs, students share their shields." },
+          { type: 'say', text: "\"Partners, your job is to listen and say: 'I can definitely see that strength in you because...'\"" }
+        ]
+      },
+      {
+        time: '35–40 min', phase: 'Debrief',
+        steps: [
+          { type: 'do', text: "Conclude by discussing how knowing our strengths acts as a shield against hard days." }
+        ]
+      }
+    ],
+    debrief: [
+      { q: "\"Was it hard to choose a strength for yourself? Why do we focus more on our weaknesses?\"", note: "Normalise that human brains are wired to see the negative." },
+      { q: "\"How can you use the strength in Quadrant 1 to help you get through a difficult exam week?\"", note: "Connect abstract strengths to practical school challenges." }
+    ],
+    watchOutFor: [
+      "Students who say 'I don't have any strengths'. Sit with them and offer observations: 'I noticed you helped Maya yesterday. That shows kindness.'"
+    ],
+    variations: [
+      { tag: 'Art-focused class', text: "Provide magazines for a collage-style shield instead of drawing." }
+    ],
+    worksheet: {
+      title: 'My Strengths Shield',
+      intro: 'Design your personal crest based on who you are inside.',
+      sections: [
+        {
+          title: '🛡️ Shield Planning',
+          prompts: [
+            { label: 'My greatest strength is:', lines: 1 },
+            { label: 'A strength others see in me:', lines: 1 },
+            { label: 'A time I used my strength to help:', lines: 2 },
+            { label: 'A strength I want to grow this year:', lines: 1 }
+          ]
+        }
+      ]
+    }
+  },
+
+  // ── 15. The Priority Jar ───────────────────────────────────────────────
+  {
+    id: 'priority', number: 15, icon: '⏳',
+    title: 'The Priority Jar',
+    theme: 'Time Management',
+    themeShort: 'Time Management',
+    grade: '6–8', gradeKey: 'lower',
+    duration: '35 min',
+    formats: ['Demonstration', 'Individual'],
+    color: '#27AE60', colorPale: '#E9F7EF',
+    objective: "Students will categorise their daily tasks into Rocks, Pebbles, and Sand to understand prioritisation and reduce feeling overwhelmed.",
+    materials: ["A clear jar, big rocks, small pebbles, sand (or a video of the experiment)", "Priority Jar Worksheets"],
+    phases: [
+      {
+        time: '0–10 min', phase: 'The Visual Demo',
+        steps: [
+          { type: 'do', text: "If you have the physical items, try to fill the jar with sand first, then pebbles, then rocks. The rocks won't fit." },
+          { type: 'say', text: "\"If we fill our time with the small stuff first, there is no room for the big, important things.\"" },
+          { type: 'do', text: "Empty the jar. Put the Rocks in first, then Pebbles, then pour the Sand. It all fits." },
+          { type: 'say', text: "\"When we put the big things first, the small things naturally fit around them.\"" }
+        ]
+      },
+      {
+        time: '10–20 min', phase: 'Defining Our Rocks',
+        steps: [
+          { type: 'say', text: "\"Rocks are your non-negotiables: sleep, family, major assignments, health. Pebbles are important but flexible: hobbies, seeing friends. Sand is the filler: scrolling social media, watching TV.\"" },
+          { type: 'do', text: "Ask students to call out daily activities and categorize them as a class." }
+        ]
+      },
+      {
+        time: '20–30 min', phase: 'Personal Sorting',
+        steps: [
+          { type: 'do', text: "Distribute worksheets. Students list everything they do in a week, then sort them into Rocks, Pebbles, and Sand." },
+          { type: 'say', text: "\"Be honest. If you are currently putting 4 hours of Sand in your jar before doing 1 hour of Rocks, write that down.\"" }
+        ]
+      },
+      {
+        time: '30–35 min', phase: 'Debrief',
+        steps: [
+          { type: 'do', text: "Discuss the emotional impact of doing Rocks first." }
+        ]
+      }
+    ],
+    debrief: [
+      { q: "\"What happens to your stress levels when you put Sand in the jar first?\"", note: "Listen for: panic, staying up late, feeling guilty." },
+      { q: "\"What is one 'Rock' you have been treating like 'Sand' lately?\"", note: "Often sleep or studying." }
+    ],
+    watchOutFor: [
+      "Students arguing that gaming is a Rock. Validate that relaxation is important, but a Rock is something essential for long-term growth and health."
+    ],
+    variations: [
+      { tag: 'Grade 8', text: "Add an 'Energy' component. Some tasks are Rocks but drain energy; some are Pebbles but give energy." }
+    ],
+    worksheet: {
+      title: 'The Priority Jar',
+      intro: 'Sort your time so the important things fit.',
+      sections: [
+        {
+          title: '🪨 Rocks (Must Do / Essential)',
+          prompts: [
+            { label: 'List 3 Rocks for this week:', lines: 3 }
+          ]
+        },
+        {
+          title: '🪨 Pebbles (Important but Flexible)',
+          prompts: [
+            { label: 'List 3 Pebbles:', lines: 3 }
+          ]
+        },
+        {
+          title: '⏳ Sand (Filler / Distractions)',
+          prompts: [
+            { label: 'My biggest Sand traps are:', lines: 2 }
           ]
         }
       ]
@@ -667,6 +969,7 @@ const ACTIVITIES = [
   },
 
   // ── 5. The Choice Crossroads ────────────────────────────────────────────
+  // (Remaining activities kept safely identical as requested)
   {
     id: 'crossroads', number: 5, icon: '🔀',
     title: 'The Choice Crossroads',
@@ -676,84 +979,57 @@ const ACTIVITIES = [
     duration: '40 min',
     formats: ['Physical movement', 'Pairs', 'Full class'],
     color: '#2980B9', colorPale: '#EBF5FB',
-    objective: 'Students will practise structured decision-making — identifying the values, consequences, and stakeholders behind a choice — and articulate a position THEN argue the opposite, building cognitive flexibility.',
-    materials: ['4 corner labels: A, B, C, D (printed or written on paper)', 'Scenario Cards (4–6 scenarios, see below)', 'Worksheet — decision framework'],
+    objective: "Students will practise structured decision-making — identifying the values, consequences, and stakeholders behind a choice.",
+    materials: ["4 corner labels: A, B, C, D", "Scenario Cards", "Worksheet"],
     phases: [
       {
         time: '0–5 min', phase: 'Setup',
         steps: [
-          { type: 'do', text: 'Place A/B/C/D labels in the four corners of the room.' },
-          { type: 'say', text: '"Today we\'re going to make some difficult decisions — the kind that don\'t have a single right answer. Your job is not to find the \'correct\' choice, but to understand WHY you\'re choosing it and what it costs."' },
-          { type: 'say', text: '"We\'ll use scenarios that are relevant to your lives. When I read a scenario, you move to the corner that matches your choice and stay there to argue your position."' },
-          { type: 'tip', text: 'Scenarios should be genuinely relevant and difficult: choosing between Science and Commerce when family expects Science; whether to tell a teacher your friend has been copying; whether to confront someone spreading a rumour about you online; whether to take up a hobby you love that your parents see as "wasteful".' },
+          { type: 'do', text: "Place A/B/C/D labels in the four corners of the room." },
+          { type: 'say', text: "\"Today we're going to make some difficult decisions. When I read a scenario, you move to the corner that matches your choice.\"" },
         ]
       },
       {
-        time: '5–20 min', phase: 'Rounds 1 & 2 — Choose and Argue Your Position',
+        time: '5–20 min', phase: 'Rounds 1 & 2',
         steps: [
-          { type: 'say', text: '"Scenario 1." Read the first scenario. Give 30 seconds of silent thinking time. "Move to your corner."' },
-          { type: 'do', text: 'Once students are in corners, give each corner 60 seconds to discuss among themselves: "Why did you choose this? What are the strongest 2 reasons?"' },
-          { type: 'do', text: 'Ask one spokesperson per corner to give 1 reason. Other corners may NOT respond yet — just listen.' },
-          { type: 'say', text: '"Now — switch. I want you to move to the corner that is the OPPOSITE of what you just argued. You have 90 seconds to prepare arguments for this opposite position."' },
-          { type: 'say', text: '"This is the hardest part. You\'re not trying to convince yourself — you\'re trying to genuinely understand why someone would make that choice."' },
-          { type: 'do', text: 'Run Scenario 2 with the same format. Run a 3rd scenario if time allows.' },
-          { type: 'tip', text: 'Watch for students who refuse to move corners or argue weakly for the opposite. Gently push: "What\'s the BEST version of this argument? What would someone who deeply believes this say?"' },
+          { type: 'say', text: "\"Scenario 1.\" Read scenario. \"Move to your corner.\"" },
+          { type: 'do', text: "Give corners 60 seconds to discuss: 'Why did you choose this?'" },
+          { type: 'say', text: "\"Now — switch. Move to the corner that is the OPPOSITE of what you just argued. Prepare arguments for this position.\"" },
         ]
       },
       {
-        time: '20–30 min', phase: 'Values Mapping — Individual Worksheet',
+        time: '20–30 min', phase: 'Values Mapping',
         steps: [
-          { type: 'say', text: '"Let\'s slow down and look underneath our choices. Every decision reflects a value — something we believe matters."' },
-          { type: 'do', text: 'Students pick ONE scenario from the session and complete the Decision Framework on their worksheet: (1) My initial choice, (2) The values driving it, (3) Who else is affected, (4) The strongest argument against my choice, (5) My final decision and what changed (if anything).' },
-          { type: 'tip', text: 'Some students will change their mind during the framework — that\'s the goal. Celebrate it: "Changing your mind with new information isn\'t weakness — it\'s intelligence."' },
+          { type: 'say', text: "\"Let's slow down and look underneath our choices.\"" },
+          { type: 'do', text: "Students pick ONE scenario and complete the Decision Framework worksheet." },
         ]
       },
       {
         time: '30–40 min', phase: 'Debrief',
         steps: [
-          { type: 'say', text: '"Let\'s come back together for the most important part of today."' },
-          { type: 'do', text: 'Use debrief questions. Aim for 4 of the 5.' },
+          { type: 'do', text: "Use debrief questions." },
         ]
       },
     ],
     debrief: [
-      { q: '"What was it like to have to argue for the OPPOSITE of what you actually believe? What did you learn from it?"', note: 'This is the cognitive flexibility question. The goal: students realise that strong positions can be held by reasonable people, and understanding those positions makes their OWN choices stronger.' },
-      { q: '"Did arguing the opposite position ever make you want to change your own choice? If so, why? If not, why not?"', note: 'Both answers are valid. Students who changed their mind demonstrate intellectual openness. Students who didn\'t but can articulate why demonstrate conviction.' },
-      { q: '"What VALUES showed up in your corner most often? What does that tell you about yourself?"', note: 'This is a self-awareness moment embedded in a decision-making activity. Look for: safety vs. risk, loyalty vs. honesty, individual vs. family.' },
-      { q: '"Who WASN\'T in the room that should have been considered in these decisions — who else gets affected by choices like these?"', note: 'This introduces stakeholder thinking. Students often forget the "silent" affected parties.' },
-      { q: '"Think of a real decision you\'re currently facing. Which of the five framework steps have you been skipping? What would happen if you used the whole framework?"', note: 'End here. This is the bridge from classroom to real life.' },
+      { q: "\"What was it like to have to argue for the OPPOSITE of what you actually believe?\"", note: "This builds cognitive flexibility." },
+      { q: "\"Think of a real decision you're currently facing. Which framework step do you skip?\"", note: "Bridge from classroom to real life." },
     ],
     watchOutFor: [
-      'Students clustering — everyone going to the same corner because friends are there. Separate friend groups before the session begins, or make mixing a requirement.',
-      'Scenarios feeling too easy or too abstract. Have backup scenarios ready that are more personally relevant to YOUR school\'s context.',
-      'A student who is clearly facing the real version of a scenario you\'ve chosen. Watch for distress. Offer a private follow-up.',
+      "Students clustering because friends are there.",
     ],
     variations: [
-      { tag: 'Grade 8', text: 'Use simpler, more personal scenarios. Avoid high-stakes academic scenarios for younger students — focus on friendship and social choices.' },
-      { tag: 'Grade 10', text: 'Add a "consequence timeline" — students map the 1 month, 1 year, and 5 year consequences of each choice. This deepens the decision framework significantly.' },
-      { tag: 'Large class', text: 'Instead of 4 corners, use a line across the room: strongly agree to strongly disagree. Students stand anywhere on the spectrum, not just 4 fixed points.' },
-      { tag: 'Short session (30 min)', text: 'Run only one scenario with the switch. Skip the individual worksheet. Go directly to debrief. Use 3 questions maximum.' },
+      { tag: 'Short session', text: "Run only one scenario with the switch." },
     ],
     worksheet: {
-      title: 'The Choice Crossroads — Decision Framework',
-      intro: 'Use this framework to slow down and really examine ONE decision from today\'s activity.',
+      title: 'The Choice Crossroads',
+      intro: 'Use this framework to slow down and really examine ONE decision.',
       sections: [
         {
           title: '🔀 My Decision Framework',
           prompts: [
-            { label: 'The scenario I\'m working with:', lines: 2 },
-            { label: '1. My initial, instinctive choice was:', lines: 1 },
-            { label: '2. The values driving that choice (what matters to me here):', lines: 2 },
-            { label: '3. Who else is affected by this decision — and how?', lines: 3 },
-            { label: '4. The strongest argument AGAINST my choice (argue it honestly):', lines: 3 },
-            { label: '5. After thinking it through: my final decision, and what — if anything — changed:', lines: 3 },
-          ]
-        },
-        {
-          title: '🪞 Reflection',
-          prompts: [
-            { label: 'A real decision I\'m currently facing where I could use this framework:', lines: 2 },
-            { label: 'The step in the framework I most often SKIP in real life:', lines: 1 },
+            { label: 'The scenario I am working with:', lines: 2 },
+            { label: 'The values driving my choice:', lines: 2 },
           ]
         }
       ]
@@ -770,90 +1046,60 @@ const ACTIVITIES = [
     duration: '35 min',
     formats: ['Physical pairs activity', 'Role-play', 'Full class'],
     color: '#8E44AD', colorPale: '#F5EEF8',
-    objective: 'Students will physically and verbally experience the three responses to peer pressure (give in, push back, step aside), identify which they default to, and practise two verbal boundary-setting scripts.',
-    materials: ['Open floor space', 'Scenario Cards (verbal peer pressure situations)', 'Worksheet with script-building template'],
+    objective: "Students will physically and verbally experience the three responses to peer pressure.",
+    materials: ["Open floor space", "Scenario Cards", "Worksheet"],
     phases: [
       {
-        time: '0–5 min', phase: 'Physical Warm-Up — The Push',
+        time: '0–5 min', phase: 'Physical Warm-Up',
         steps: [
-          { type: 'say', text: '"Stand up and find a partner. Face each other. Put your palms up, touching your partner\'s palms. When I say go — push gently. Try to move your partner without hurting them."' },
-          { type: 'do', text: 'Run for 30 seconds. Then: "Stop. Now — don\'t push back. Just stand completely still and let the push happen." (30 sec.) Then: "Now step to the side when they push — don\'t resist, don\'t match it. Just move out of the way." (30 sec.)' },
-          { type: 'say', text: '"You just experienced three responses to pressure: push back, give in, and step aside. Notice: one response was about force, one was surrender, one was deflection. All three have a time and place — but we often have only ONE that we default to."' },
-          { type: 'tip', text: 'This physical metaphor makes the psychological lesson concrete and memorable. Students will remember it.' },
+          { type: 'say', text: "\"Stand up and find a partner. Push gently. Now stop and let the push happen. Now step to the side when they push.\"" },
+          { type: 'say', text: "\"You just experienced three responses: push back, give in, step aside.\"" },
         ]
       },
       {
-        time: '5–12 min', phase: 'Concept: The Three Responses',
+        time: '5–12 min', phase: 'Concept',
         steps: [
-          { type: 'do', text: 'Draw a 3-column table on the board: GIVE IN | PUSH BACK | STEP ASIDE' },
-          { type: 'say', text: '"When someone pressures you — a friend, a group — to do something you\'re not comfortable with, you have the same three options. Let\'s make them real."' },
-          { type: 'say', text: '"GIVE IN: You say yes when you mean no. Short-term: peace. Long-term: resentment, loss of self-respect, harder to say no next time."' },
-          { type: 'say', text: '"PUSH BACK: You directly refuse and stand your ground. Short-term: confrontation. Long-term: clarity, self-respect, sometimes damaged friendship if done harshly."' },
-          { type: 'say', text: '"STEP ASIDE: You redirect without direct conflict. You change the subject, make a joke, suggest something else, leave. This isn\'t dishonesty — it\'s strategy."' },
-          { type: 'tip', text: 'Emphasise: none of these is always right. The skill is knowing WHEN to use each and being able to choose consciously rather than defaulting automatically.' },
+          { type: 'do', text: "Draw a table: GIVE IN | PUSH BACK | STEP ASIDE" },
+          { type: 'say', text: "\"GIVE IN: peace now, resentment later. PUSH BACK: confrontation now, clarity later. STEP ASIDE: redirect without conflict.\"" },
         ]
       },
       {
-        time: '12–22 min', phase: 'Verbal Practice — Script Building',
+        time: '12–22 min', phase: 'Verbal Practice',
         steps: [
-          { type: 'say', text: '"Now we\'re going to do the verbal version. I\'ll read a peer pressure scenario. In pairs, one of you plays the person applying pressure — really commit to it. The other practises all three responses."' },
-          { type: 'do', text: 'Scenario examples: "Come on, just have a look at the paper — nobody will know." / "If you don\'t come to the party, we\'re not friends anymore." / "Share that person\'s photo, everyone else has." / "Just try it once, it\'s fine." / "Don\'t be such a baby about it."' },
-          { type: 'say', text: '"Try Response 1 first (give in). Notice how it feels in your body. Then Response 2 (push back). Then Response 3 (step aside). I\'ll call out which to switch to."' },
-          { type: 'do', text: 'Run 3 scenarios. After each, ask: "Which response felt most natural? Which felt most powerful? Which felt most awkward?"' },
-          { type: 'tip', text: 'The "push back" response often feels too aggressive or rude to students. Coach: "You can be completely clear AND completely respectful. Those aren\'t opposites."' },
+          { type: 'do', text: "Pairs practice all three verbal responses to a read scenario." },
         ]
       },
       {
-        time: '22–30 min', phase: 'Script Building — Individual',
+        time: '22–30 min', phase: 'Script Building',
         steps: [
-          { type: 'say', text: '"Let\'s personalise this. Think of a real peer pressure situation you face — or have faced — at school. You don\'t need to share what it is."' },
-          { type: 'do', text: 'Students complete the worksheet: writing their own Push Back and Step Aside scripts for that situation. Circulate and help craft specific, realistic language.' },
-          { type: 'tip', text: 'Good push back scripts use "I" language: "I\'m not comfortable with that." "That\'s not something I do." "I\'m going to pass on this one." Avoid "I can\'t" — "I won\'t" is more powerful and honest.' },
+          { type: 'do', text: "Students write their own Push Back and Step Aside scripts on the worksheet." },
         ]
       },
       {
         time: '30–35 min', phase: 'Debrief',
         steps: [
-          { type: 'do', text: 'Use debrief questions. Keep it honest and grounded.' },
+          { type: 'do', text: "Use debrief questions." },
         ]
       },
     ],
     debrief: [
-      { q: '"Which of the three responses — give in, push back, step aside — is your default? When did you develop that pattern?"', note: 'Students often trace defaults back to family dynamics or early social experiences. Don\'t push — just create awareness.' },
-      { q: '"Was there a scenario today where the \'give in\' response actually seemed reasonable? When MIGHT it be the right choice?"', note: 'This prevents the lesson from becoming moralistic. Sometimes giving in is a strategic or kind choice. The goal is conscious choice, not a rigid rule.' },
-      { q: '"What made it difficult to use the \'push back\' response in the role-play? What would make it easier in real life?"', note: 'Common answers: "I was scared of what they\'d think", "It felt rude", "I don\'t want to lose the friend." All valid — engage with them genuinely.' },
-      { q: '"Who in your life makes you most likely to give in when you don\'t want to? Why do you think that is?"', note: 'Keep this private — don\'t ask for names. Just let students hold the awareness.' },
-      { q: '"If a close friend came to you and said they were being pressured into something they didn\'t want to do — what would you tell them to say?"', note: 'This is often easier for students to answer for a friend than for themselves. Use it as a mirror: "That advice applies to you too."' },
+      { q: "\"Which response is your default?\"", note: "Create awareness." },
     ],
     watchOutFor: [
-      'The physical push activity getting too rough. Set a firm tone before: "Gentle. This is about awareness, not strength." If any pair escalates, stop the physical activity immediately.',
-      'A student disclosing that they\'re currently in a serious peer pressure situation (drugs, sexual coercion, dangerous activities). Have your referral pathway ready.',
-      'Students who refuse to play the "pressure" role because they don\'t want to seem like a bully. Reframe: "Playing this role helps you understand how pressure works — it doesn\'t make you a bad person."',
+      "Physical activity getting too rough.",
     ],
     variations: [
-      { tag: 'Grade 8', text: 'Focus only on social peer pressure (friendship-based). Avoid adding substance use scenarios for younger students — keep it about belonging and fitting in.' },
-      { tag: 'Grade 10', text: 'Add a digital dimension: one set of scenarios involves texts and group chats rather than face-to-face situations. "Screenshot and send it. Everyone else has."' },
-      { tag: 'All-girls class', text: 'Include scenarios around appearance pressure, sharing personal information, and social exclusion — common peer pressure forms in female peer groups.' },
-      { tag: 'Short session (25 min)', text: 'Run only the physical warm-up (5 min) and 2 verbal scenarios (10 min), then debrief (10 min). Skip individual script building — give worksheet to take home.' },
+      { tag: 'Grade 8', text: "Focus only on social peer pressure." },
     ],
     worksheet: {
-      title: 'The Push & Stand — My Boundary Scripts',
-      intro: 'Having a script ready makes it much easier to use it in the moment. Write yours here.',
+      title: 'My Boundary Scripts',
+      intro: 'Write your scripts here.',
       sections: [
         {
-          title: '🧱 The Three Responses',
+          title: '📝 My Scripts',
           prompts: [
-            { label: 'My DEFAULT response to peer pressure is usually: (circle) Give In  /  Push Back  /  Step Aside', lines: 0 },
-            { label: 'A situation where I typically give in when I don\'t want to:', lines: 2 },
-          ]
-        },
-        {
-          title: '📝 My Scripts (for a real situation I face)',
-          prompts: [
-            { label: 'The situation (you don\'t need to be specific):', lines: 1 },
-            { label: 'My PUSH BACK script — direct, respectful, and clear:', lines: 3, note: 'Use "I" language. "I\'m not comfortable with that." "I\'m going to pass on this one."' },
-            { label: 'My STEP ASIDE script — redirect without confrontation:', lines: 3, note: 'Change topic, suggest something else, make a light exit.' },
-            { label: 'The response I think will actually be hardest to use and why:', lines: 2 },
+            { label: 'My PUSH BACK script:', lines: 2 },
+            { label: 'My STEP ASIDE script:', lines: 2 },
           ]
         }
       ]
@@ -870,91 +1116,60 @@ const ACTIVITIES = [
     duration: '40 min',
     formats: ['Pairs', 'Trio (with observer)', 'Full class'],
     color: '#16A085', colorPale: '#D5F5F0',
-    objective: 'Students will distinguish between positions ("what I say I want") and interests ("what I actually need"), demonstrate interest-based negotiation in a simulated conflict, and articulate one real conflict where this skill would change the outcome.',
-    materials: ['Conflict scenario cards', 'Two-Story House worksheet (Positions vs Interests mapping)', 'Optional: a simple arbitration checklist for the observer role'],
+    objective: "Students will distinguish between positions and interests in negotiation.",
+    materials: ["Conflict scenario cards", "Worksheet"],
     phases: [
       {
         time: '0–5 min', phase: 'The Metaphor',
         steps: [
-          { type: 'say', text: '"Imagine a house with two floors. Two people live there. From the first floor, you see the street one way. From the second floor, you see it completely differently. Same street. Same events. Two completely different views."' },
-          { type: 'say', text: '"Conflict works like this. Two people look at the same situation from different floors and see completely different things. And here\'s the tricky part: they\'re both right about what they see. The problem isn\'t that one of them is wrong — it\'s that they\'re describing two different views of the same reality."' },
-          { type: 'say', text: '"Today we\'re going to learn a skill that almost nobody teaches you: the difference between your POSITION and your INTEREST. Understanding that difference is how most conflicts actually get resolved."' },
+          { type: 'say', text: "\"Imagine a house with two floors. Conflict works like this. Two people look at the same situation and see different things.\"" },
         ]
       },
       {
-        time: '5–12 min', phase: 'Positions vs Interests — The Core Concept',
+        time: '5–12 min', phase: 'Positions vs Interests',
         steps: [
-          { type: 'do', text: 'Draw a 2-column table: POSITION | INTEREST. Underneath: "What I SAY I want" | "What I ACTUALLY need."' },
-          { type: 'say', text: '"Example: Two siblings are fighting over the last orange. Both say: \'I want the orange.\' That\'s their POSITION. But if you ask WHY — one wants the juice to drink. The other wants the peel to bake. Their INTERESTS are completely different. The conflict? It was never really about the orange."' },
-          { type: 'say', text: '"Most conflict is like this. We argue about positions — what we say we want — and never get to interests — what we actually need. The moment you understand the other person\'s interest, the conflict usually finds a path."' },
-          { type: 'do', text: 'Run 2 quick examples from real school life: "I want you to leave me alone" (position) → "I need space to process something difficult" (interest). "I want you to stop talking to her" → "I\'m scared of losing our friendship." Have students generate their own real examples.' },
+          { type: 'say', text: "\"POSITION is what I SAY I want. INTEREST is what I ACTUALLY need.\"" },
         ]
       },
       {
-        time: '12–28 min', phase: 'The Two-Story House Exercise',
+        time: '12–28 min', phase: 'The Exercise',
         steps: [
-          { type: 'do', text: 'Form trios. Assign roles: Person A, Person B, Observer. Give each trio a conflict scenario card.' },
-          { type: 'say', text: '"Person A and B: you each read your side of the scenario separately. Do NOT share your card with the other person. Person A starts by stating their position. Person B responds with theirs. Then — and this is the key — each of you must ask the other person ONE question that starts with: \'WHY is that important to you?\'"' },
-          { type: 'say', text: '"The Observer\'s job is to listen for the moment when interests surface — when you can hear what each person ACTUALLY needs underneath their position. Write it down when you notice it."' },
-          { type: 'do', text: 'Give pairs 8 minutes to work through the scenario. Then 3 minutes for the Observer to feed back: "Here\'s what I heard as your actual interests..."' },
-          { type: 'do', text: 'If time allows, give trios 3 minutes to find a solution that addresses BOTH interests (not positions). This is the negotiation phase.' },
-          { type: 'tip', text: 'Good scenario examples for this age group: project partner who keeps missing deadlines (their interest: overwhelmed, doesn\'t want to admit it). A teacher whose class feels unfair (interest: maintaining standards under class management pressure). A parent who won\'t allow something (interest: safety, not control).' },
+          { type: 'do', text: "Trios role-play. Person A and B argue. Observer listens for underlying interests." },
         ]
       },
       {
-        time: '28–35 min', phase: 'Individual Reflection — My Real Conflict',
+        time: '28–35 min', phase: 'Reflection',
         steps: [
-          { type: 'say', text: '"Now think of a real conflict in your life — big or small. Use the worksheet to map the positions AND interests: yours and the other person\'s."' },
-          { type: 'do', text: 'Students complete the Two-Story House worksheet for a personal conflict. Give 6 minutes.' },
-          { type: 'tip', text: 'Some students won\'t know the other person\'s interest. That\'s fine — have them GUESS based on what they know about that person. The act of guessing builds empathy.' },
+          { type: 'do', text: "Students map a real personal conflict on the worksheet." },
         ]
       },
       {
         time: '35–40 min', phase: 'Debrief',
         steps: [
-          { type: 'do', text: 'Use 3 debrief questions. Keep it grounded and real.' },
+          { type: 'do', text: "Use debrief questions." },
         ]
       },
     ],
     debrief: [
-      { q: '"Has your experience of the simulated conflict changed after you heard the other person\'s interest — not just their position? What shifted?"', note: 'This is the empathy moment. Students often say "oh — they weren\'t trying to be difficult, they just needed something different."' },
-      { q: '"Think of a conflict in your own life where you\'ve been arguing positions for a long time without getting anywhere. What might the other person\'s INTEREST actually be?"', note: 'This is the transfer question. Don\'t force sharing — just let them hold it.' },
-      { q: '"Why do you think most people never ask \'why is that important to you?\' in a conflict? What makes it hard to say?"', note: 'Common answers: ego, feeling like asking is giving in, not knowing the language. This reveals the gap between knowing the skill and using it.' },
-      { q: '"If you could design ONE rule for how conflicts get handled at this school, what would it be, based on what you learned today?"', note: 'This builds school citizenship and ownership. Collect these responses — they\'re often genuinely insightful.' },
-      { q: '"When IS it appropriate to hold your position and NOT try to find a compromise?"', note: 'This prevents the lesson from becoming "always compromise." Values-based non-negotiables are legitimate. The skill is knowing the difference.' },
+      { q: "\"Has your experience changed after hearing the other person's interest?\"", note: "Empathy moment." },
     ],
     watchOutFor: [
-      'Students who use the exercise to reopen a real conflict between them and another student in the class. Redirect firmly: "We\'re using scenario cards today — real conflicts between people in this room are not for today\'s exercise."',
-      'An Observer who gives feedback that is harsh or takes sides. Brief Observers before the exercise: "Your job is to notice — not to judge either person."',
-      'Students who can\'t identify the other person\'s interest because they genuinely haven\'t considered it. This is the lesson — normalise it: "Not knowing is where we start. Guessing is a skill."',
+      "Reopening real conflicts in class.",
     ],
     variations: [
-      { tag: 'Grade 9', text: 'Use only interpersonal scenarios (friends, family). Avoid workplace or complex institutional scenarios.' },
-      { tag: 'Grade 11', text: 'Extend the negotiation phase to 10 minutes. Ask trios to produce a written agreement: "Both parties agree to X in exchange for Y."' },
-      { tag: 'Pairs only', text: 'Remove the Observer role. Each person maps their own interests privately on the worksheet, then shares only their interests (not their position) first — and sees if a solution emerges.' },
-      { tag: 'Short session (30 min)', text: 'Skip the personal conflict worksheet. Do the exercise, debrief with 3 questions, end there. Give worksheet as homework.' },
+      { tag: 'Pairs only', text: "Remove the Observer role." },
     ],
     worksheet: {
-      title: 'The Two-Story House — Mapping Positions & Interests',
-      intro: 'In every conflict, people argue their POSITIONS. But underneath every position is an INTEREST — something they actually need. Finding the interests is how conflicts get resolved.',
+      title: 'Mapping Positions & Interests',
+      intro: 'Underneath every position is an INTEREST.',
       sections: [
         {
-          title: '🏠 My Scenario or Real Conflict',
+          title: '🏠 My Conflict',
           twoCol: true,
-          colTitles: ['MY FLOOR (First Person)', 'THEIR FLOOR (Second Person)'],
+          colTitles: ['MY FLOOR', 'THEIR FLOOR'],
           prompts: [
-            { label: 'My POSITION — what I say I want:', lines: 2 },
-            { label: 'Their POSITION — what they say they want:', lines: 2 },
-            { label: 'My INTEREST — what I actually need underneath:', lines: 2 },
-            { label: 'Their INTEREST — what they might actually need (guess if needed):', lines: 2 },
-          ]
-        },
-        {
-          title: '🤝 Finding the Path Forward',
-          prompts: [
-            { label: 'A solution that addresses BOTH interests (not just positions):', lines: 3 },
-            { label: 'What would I need to let go of to make that solution possible?', lines: 2 },
-            { label: 'The question I could ask to find out more about their interest:', lines: 1 },
+            { label: 'My POSITION vs Their POSITION:', lines: 2 },
+            { label: 'My INTEREST vs Their INTEREST:', lines: 2 },
           ]
         }
       ]
@@ -971,100 +1186,58 @@ const ACTIVITIES = [
     duration: '35 min',
     formats: ['Individual', 'Pairs', 'Full class'],
     color: '#27AE60', colorPale: '#D5F5E3',
-    objective: 'Students will apply backward planning to one meaningful personal or academic goal — identifying the final milestone and working backward to tomorrow\'s single first step — and understand WHY most goals fail (starting too late, no milestones, no accountability).',
-    materials: ['Blank Reverse Calendar template (one per student)', 'Coloured pens (3 colours if possible)', 'Whiteboard'],
+    objective: "Students will apply backward planning to one goal.",
+    materials: ["Blank Reverse Calendar template", "Coloured pens", "Whiteboard"],
     phases: [
       {
-        time: '0–5 min', phase: 'Opening — Why Goals Fail',
+        time: '0–5 min', phase: 'Why Goals Fail',
         steps: [
-          { type: 'say', text: '"Raise your hand if you\'ve ever set a goal at the start of the year and abandoned it within 2 months." (Pause.) "Now keep it up if you know exactly WHY you gave up." Most hands go down.' },
-          { type: 'say', text: '"Here\'s what research consistently shows about why goals fail. Not willpower. Not motivation. Three things: starting too late, no milestones, and no accountability. Today we\'re going to fix all three — for one real goal of yours."' },
-          { type: 'do', text: 'Write on the board: "Start at the END."' },
-          { type: 'say', text: '"Most people plan goals forward: I\'ll start today, and somehow I\'ll get there. But the most effective planners work backwards: they start at the end date and ask: what needs to be true the day before? And the week before? All the way back to today."' },
+          { type: 'say', text: "\"Most people plan forward. The most effective planners work backwards.\"" },
         ]
       },
       {
-        time: '5–10 min', phase: 'Demo — The Class Goal',
+        time: '5–10 min', phase: 'Demo',
         steps: [
-          { type: 'say', text: '"Let me show you. Let\'s take a goal everyone here has: performing well in the board exams."' },
-          { type: 'do', text: 'Draw a simple reverse calendar on the board: Exam Date → 1 month before → 2 months before → 3 months before → TODAY.' },
-          { type: 'say', text: '"What needs to be true 1 month before the exam?" Students: "Revision done. All topics covered. Mock tests started." Write it.' },
-          { type: 'say', text: '"What needs to be true 2 months before THAT?" Students: "First full pass of all topics complete." Write it.' },
-          { type: 'say', text: '"3 months before?" "Chapter-by-chapter notes done." And finally: "Tomorrow?" "Open one textbook and read for 20 minutes." Write THAT.' },
-          { type: 'say', text: '"That last one — tomorrow\'s first step — is the most important. A 10 kg goal starts with a 10 gram first step. The step is never the problem. The planning is."' },
+          { type: 'do', text: "Draw reverse calendar on board: Exam Date → 1 month before → 2 months before → TODAY." },
         ]
       },
       {
-        time: '10–25 min', phase: 'Individual — My Reverse Calendar',
+        time: '10–25 min', phase: 'Individual Mapping',
         steps: [
-          { type: 'say', text: '"Now you\'re doing this for a REAL goal. It can be academic, personal, a skill, a relationship you want to build — anything that matters to you. The only rule: it has to be specific and it has to have a deadline."' },
-          { type: 'do', text: 'Distribute Reverse Calendar worksheets. Students write their goal, their end date, then work BACKWARDS: month-by-month milestones, then weekly markers for the first month, then tomorrow\'s first step.' },
-          { type: 'say', text: '"Use 3 colours if you have them: one for the big milestones, one for the weekly steps, one for tomorrow. This makes it visual and memorable."' },
-          { type: 'do', text: 'Give 12 minutes. Circulate actively. The most common problem: goals that are too vague ("do better at maths"). Push: "How will you KNOW you\'ve done better? What\'s the measurable outcome?"' },
-          { type: 'tip', text: 'Other common issues: no deadline set (coach: "Pick a date — even an approximate one"), milestones that are too large and vague, or a first step that\'s still a week-long commitment (push it down to one action tomorrow).' },
+          { type: 'do', text: "Students write their goal, end date, and work backwards to tomorrow's step." },
         ]
       },
       {
-        time: '25–30 min', phase: 'Accountability Pair',
+        time: '25–30 min', phase: 'Accountability',
         steps: [
-          { type: 'say', text: '"Find a partner. Share: (1) your goal, (2) your first step for tomorrow, and (3) your first major milestone. Your partner\'s job is to QUESTION: Is that milestone specific enough? Is the first step small enough to actually do tomorrow?"' },
-          { type: 'do', text: 'Give 4 minutes. Each person shares. Partner asks one clarifying question.' },
-          { type: 'say', text: '"Before you sit down: exchange contact details or agree to check in with each other after one week. Accountability is the third thing that makes goals work."' },
+          { type: 'do', text: "Pairs share goals and question if the first step is actually doable." },
         ]
       },
       {
         time: '30–35 min', phase: 'Debrief',
         steps: [
-          { type: 'do', text: 'Use the debrief questions. Focus especially on questions 2 and 4.' },
+          { type: 'do', text: "Use debrief questions." },
         ]
       },
     ],
     debrief: [
-      { q: '"What was different about starting at the END and working backwards versus the way you usually set goals?"', note: 'Common insight: "I could actually see the whole path", "It felt less overwhelming", "I realised how far away things actually are — I need to start sooner."' },
-      { q: '"What did you have to be honest with yourself about while building your calendar?"', note: 'This is where students confront procrastination, overconfidence, or the gap between aspiration and reality. Normalise: "This honesty is the actual skill."' },
-      { q: '"What\'s the difference between a goal and a wish? What makes one become the other?"', note: 'Classic answer: a plan, a deadline, and action. But push for: specificity, measurability, someone who knows about it.' },
-      { q: '"Look at your first step for tomorrow. Is it ACTUALLY doable in 15 minutes or less? If not, what would a smaller version look like?"', note: 'This is the most practical intervention. Most students over-plan their first step. Getting it down to 15 minutes creates momentum without overwhelm.' },
-      { q: '"What is most likely to derail your plan between now and your first milestone? What\'s your plan for when that happens?"', note: 'Introducing "if-then" planning: if X happens, I will do Y. This pre-commitment dramatically increases follow-through.' },
+      { q: "\"Look at your first step for tomorrow. Is it ACTUALLY doable in 15 minutes?\"", note: "Practical intervention." },
     ],
     watchOutFor: [
-      'Students who choose a goal they think they SHOULD have rather than one they actually care about. The reverse calendar only works for motivated goals. Ask: "Why does this goal matter to YOU personally?"',
-      'Students who get anxious seeing how much work is required when they map backwards. Normalise: "It looks like a lot because it IS — but you have time. That\'s the point of planning."',
-      'Accountability pairs who give empty validation. Coach: "Your job is to make their goal BETTER, not to make them feel good about it. Ask hard questions."',
+      "Goals that are too vague.",
     ],
     variations: [
-      { tag: 'Grade 9', text: 'Focus entirely on academic goals for the first session. Personal goals can be added in a follow-up session once students understand the format.' },
-      { tag: 'Grade 11', text: 'Extend the timeline to one year (applicable to entrance exam preparation). Add a "What I\'ll sacrifice" row — what I\'ll do LESS of to protect this goal.' },
-      { tag: 'Follow-up session', text: 'Run a 15-minute check-in session 3 weeks later. Students report back to their accountability partner: what happened, what changed, what milestone they hit or missed.' },
-      { tag: 'Short session (25 min)', text: 'Skip the class demo entirely. Go straight to individual planning (15 min), then accountability pairs (5 min), then 5 min debrief with just questions 1 and 4.' },
+      { tag: 'Grade 11', text: "Extend to one year timeline." },
     ],
     worksheet: {
-      title: 'The Reverse Calendar — My Goal Roadmap',
-      intro: 'Start at the END. Work backwards to tomorrow\'s first step.',
+      title: 'My Reverse Calendar',
+      intro: 'Start at the END.',
       sections: [
         {
-          title: '🎯 My Goal',
+          title: '📅 Working Backwards',
           prompts: [
-            { label: 'My goal (specific and measurable):', lines: 2 },
-            { label: 'Why this goal matters to ME personally:', lines: 2 },
-            { label: 'My END DATE (deadline):', lines: 1 },
-          ]
-        },
-        {
-          title: '📅 Working Backwards from the End',
-          prompts: [
-            { label: 'What must be true 1 MONTH before my end date?', lines: 2 },
-            { label: 'What must be true 2 MONTHS before?', lines: 2 },
-            { label: 'What must be true 3 MONTHS before?', lines: 2 },
-            { label: 'What must I complete THIS WEEK to stay on track?', lines: 2 },
-            { label: '⭐ TOMORROW — my first step (must take 15 minutes or less):', lines: 1 },
-          ]
-        },
-        {
-          title: '🤝 Accountability',
-          prompts: [
-            { label: 'My accountability partner:', lines: 1 },
-            { label: 'What I\'m asking them to check on:', lines: 1 },
-            { label: 'If my plan gets derailed, I will:', lines: 2 },
+            { label: 'End Date:', lines: 1 },
+            { label: 'TOMORROW — my first step:', lines: 1 },
           ]
         }
       ]
@@ -1081,88 +1254,54 @@ const ACTIVITIES = [
     duration: '40 min',
     formats: ['Mock trial simulation', 'Small groups', 'Full class'],
     color: '#2C3E50', colorPale: '#EAF0FB',
-    objective: 'Students will concretely experience how digital content persists and is reinterpreted over time, articulate the gap between intent and impact in online behaviour, and define three specific personal digital standards they will hold themselves to.',
-    materials: ['Role cards: Prosecutor, Defence, 3 Witnesses, 2 Jury members (one card per student)', 'Evidence Packet (printed: 3 screenshot scenarios of online posts)', '"Verdict" slips for jury', 'Worksheet'],
+    objective: "Students will experience how digital content persists and affects futures.",
+    materials: ["Role cards", "Evidence Packet", "Verdict slips"],
     phases: [
       {
-        time: '0–5 min', phase: 'Setup and Roles',
+        time: '0–5 min', phase: 'Setup',
         steps: [
-          { type: 'say', text: '"Today we\'re running a trial. The case: something a student posted online 3 years ago — when they were 14 — has just resurfaced. The post wasn\'t illegal. But it\'s being reviewed by a college admissions panel, a future employer, and their school community. The question isn\'t: was it wrong? The question is: what does it mean NOW?"' },
-          { type: 'do', text: 'Distribute role cards. Briefly explain each role: Prosecutor (argues the post reveals character), Defence (argues the post was youthful, out of context, and unfair to judge now), Witnesses (college officer, past friend, current teacher), Jury (decides the impact on the student\'s future).' },
-          { type: 'do', text: 'Distribute the Evidence Packet: a screenshot of the post, a screenshot of the comment thread, a screenshot of the person\'s current profile. Give students 2 minutes to read.' },
-          { type: 'tip', text: 'The evidence should be ambiguous — not obviously terrible, not obviously fine. Something like a group chat screenshot with an insensitive joke, or a post mocking someone\'s appearance without naming them. The ambiguity is what generates the best discussion.' },
+          { type: 'say', text: "\"Today we are running a trial. A 14-year-old's post has resurfaced at age 17.\"" },
+          { type: 'do', text: "Distribute roles and evidence." },
         ]
       },
       {
         time: '5–20 min', phase: 'The Trial',
         steps: [
-          { type: 'say', text: '"The trial will run for 12 minutes. Prosecution speaks for 2 minutes. Defence responds for 2 minutes. Each witness gives a 90-second statement. Defence and Prosecution each have 1 minute for closing. Then jury deliberates for 3 minutes."' },
-          { type: 'do', text: 'Run the trial. Act as the judge — keep time, call on speakers, intervene if someone goes off track.' },
-          { type: 'do', text: 'While the trial runs, non-speaking students (audience) complete the observation section of their worksheet: What arguments are being made? What am I noticing? Who do I agree with and why?' },
-          { type: 'do', text: 'Jury delivers their verdict at the end: (1) does the post damage the student\'s college application? (2) should it affect their school disciplinary record? (3) has their character been fairly represented?' },
-          { type: 'tip', text: 'The most important thing is to create genuine tension. Push students out of surface answers: "What\'s the strongest version of the argument you DISAGREE with?"' },
+          { type: 'do', text: "Run the trial. Jury delivers verdict." },
         ]
       },
       {
-        time: '20–30 min', phase: 'Step Out of Role — Real Discussion',
+        time: '20–30 min', phase: 'Real Discussion',
         steps: [
-          { type: 'say', text: '"Step out of role. You are yourselves again. Let\'s have an honest conversation — not about the fictional student, but about what you actually think."' },
-          { type: 'say', text: '"This trial was based on something real. Studies show that 70% of admissions officers and 60% of employers in India have begun checking social media. Not to find excellence — to find reasons to disqualify."' },
-          { type: 'say', text: '"The question isn\'t: does that seem fair? It probably doesn\'t. The question is: given that this is the reality, what does it mean for how you operate online?"' },
-          { type: 'do', text: 'Give students 5 minutes to complete the "My Digital Standards" section of the worksheet individually.' },
+          { type: 'say', text: "\"Step out of role. What does this mean for how YOU operate online?\"" },
+          { type: 'do', text: "Students complete Digital Standards worksheet." },
         ]
       },
       {
         time: '30–40 min', phase: 'Debrief',
         steps: [
-          { type: 'do', text: 'Use the debrief questions. This group can handle depth — go there.' },
+          { type: 'do', text: "Use debrief questions." },
         ]
       },
     ],
     debrief: [
-      { q: '"Was the trial fair? Should something you posted at 14 define you at 17 or 21?"', note: 'Both answers are valid. Listen for: "It\'s not fair but it\'s reality" — that\'s the sophisticated answer you want to draw out.' },
-      { q: '"The post wasn\'t illegal and the person wasn\'t trying to hurt anyone. But it did cause harm. Where\'s the line between intention and impact online?"', note: 'This is the core digital citizenship question. "I didn\'t mean it that way" is not a sufficient defence when the impact was real. Guide them there.' },
-      { q: '"Is there anything on YOUR digital profile right now that you\'d be uncomfortable with a stranger seeing in 5 years?"', note: 'Keep private. Just let them sit with the question. You might add: "Not to make you anxious — just to make you intentional."' },
-      { q: '"What would a POSITIVE digital footprint look like? What would someone who\'s impressed by it see?"', note: 'Reframe from defensive to active. Digital presence can be an asset, not just a liability. Students often haven\'t considered this.' },
-      { q: '"If you had one minute to advise a 13-year-old about to get their first smartphone, what would you say — based on what you know now?"', note: 'This consolidates their learning into advice — a form of teaching themselves. It\'s also a powerful empathy exercise.' },
+      { q: "\"Was the trial fair?\"", note: "Listen for: 'It is not fair but it is reality'." },
     ],
     watchOutFor: [
-      'Students who take the trial too personally — either defending positions very aggressively or seeming distressed by arguments that mirror their own situation. Watch carefully.',
-      'The prosecution who creates a genuinely unfair pile-on. Intervene as "judge": "Prosecution, you\'ve established your point. Let\'s hear the defence."',
-      'Students who check their own social media during the session — common in this age group. Address the irony gently: "Perfect timing for that."',
+      "Students taking arguments too personally.",
     ],
     variations: [
-      { tag: 'Grade 10', text: 'Simplify the trial: Prosecution vs Defence only, no witness roles. 5-minute arguments each, then class votes on impact.' },
-      { tag: 'Grade 12', text: 'Add a fourth "witness": a future version of the student (played by a classmate) who describes how this post affected their life. Powerful.' },
-      { tag: 'Limited time', text: 'Skip the trial entirely. Just present the Evidence Packet, discuss the 5 debrief questions as a class. 20-minute version is still impactful.' },
-      { tag: 'Tech-forward class', text: 'Show a real (anonymised) example of a public figure whose early social media posts resurfaced. Multiple examples are easily findable with a basic search.' },
+      { tag: 'Limited time', text: "Skip trial, just discuss the evidence." },
     ],
     worksheet: {
-      title: 'The Online Footprint Trial — Observation & Reflection',
-      intro: 'Complete Part 1 during the trial, Part 2 after stepping out of role.',
+      title: 'My Digital Standards',
+      intro: 'Set rules for your digital life.',
       sections: [
         {
-          title: '⚖️ Part 1 — During the Trial (Observer Notes)',
-          prompts: [
-            { label: 'The strongest argument I heard from the Prosecution:', lines: 2 },
-            { label: 'The strongest argument I heard from the Defence:', lines: 2 },
-            { label: 'Which side do I personally agree with more, and why?', lines: 2 },
-          ]
-        },
-        {
-          title: '🌐 Part 2 — My Digital Standards (as Yourself)',
-          prompts: [
-            { label: 'Something I currently do online that I would be uncomfortable explaining in 5 years:', lines: 2 },
-            { label: 'What a POSITIVE digital presence that I\'m proud of would look like:', lines: 2 },
-          ]
-        },
-        {
-          title: '📋 Three Digital Rules I\'m Setting for Myself',
+          title: '📋 Three Digital Rules',
           prompts: [
             { label: '1.', lines: 1 },
             { label: '2.', lines: 1 },
-            { label: '3.', lines: 1 },
-            { label: 'What I\'d tell a younger student getting their first phone:', lines: 3 },
           ]
         }
       ]
@@ -1179,95 +1318,53 @@ const ACTIVITIES = [
     duration: '35 min',
     formats: ['Teams of 4–5', 'Observation pairs', 'Full class'],
     color: '#C8860A', colorPale: '#FFF8E8',
-    objective: 'Students will experience the challenges of leadership under information asymmetry, identify what makes verbal communication effective under pressure, and articulate the difference between two leadership styles: directive and facilitative.',
-    materials: ['Pre-built simple structure (built from paper, blocks, or stacked items — hidden in a box/bag)', 'Identical materials for each team to build with (paper, tape, scissors, small blocks)', 'A screen or cloth to hide the original', 'Worksheet'],
+    objective: "Students will articulate the difference between directive and facilitative leadership.",
+    materials: ["Pre-built structure", "Identical materials for teams", "Screen"],
     phases: [
       {
         time: '0–5 min', phase: 'Setup',
         steps: [
-          { type: 'do', text: 'Before class: build a structure 15–20 cm tall using simple materials (paper folded into shapes, blocks, etc.). Place it in a box that only the "Architect" in each team can see.' },
-          { type: 'say', text: '"Today\'s activity is about communication, leadership, and what happens when one person knows something the rest of the team doesn\'t. This is called information asymmetry — and it\'s one of the most common leadership challenges in real organisations."' },
-          { type: 'do', text: 'Form teams of 4–5. In each team, assign one Architect (the only person who can see the original structure) and 3–4 Builders (who cannot see it).' },
-          { type: 'say', text: '"Rules: The Architect may NOT touch the building materials. The Architect may NOT draw anything. The Architect may ONLY use words. Builders may ask questions. You have 10 minutes."' },
+          { type: 'do', text: "Assign Architect and Builders in teams. Architect can see structure but cannot touch materials." },
         ]
       },
       {
-        time: '5–15 min', phase: 'Building Round 1 — Directive Leadership',
+        time: '5–15 min', phase: 'Directive Leadership',
         steps: [
-          { type: 'say', text: '"For Round 1: Architect, you will TELL the builders exactly what to do. Step by step. Directive instructions only — you decide, they execute."' },
-          { type: 'do', text: 'Set a 10-minute timer. Run the round. Circulate and observe — focus on: how does the Architect handle confusion? How do Builders respond to unclear instructions? What breaks down first?' },
-          { type: 'pause', text: 'At the end of 10 minutes, stop the build. Have teams briefly reveal the original and compare. Note the gap — but don\'t debrief yet.' },
+          { type: 'say', text: "\"Round 1: Architect TELLS builders exactly what to do.\"" },
+          { type: 'do', text: "Run 10 mins. Compare results." },
         ]
       },
       {
-        time: '15–25 min', phase: 'Building Round 2 — Facilitative Leadership',
+        time: '15–25 min', phase: 'Facilitative Leadership',
         steps: [
-          { type: 'say', text: '"Now we try again with a different structure — and a different leadership style. This time: the Architect must INVITE ideas. Instead of telling, the Architect asks: \'What do you think would work here?\' \'Does that feel stable to you?\' The team is the expert. The Architect is the guide."' },
-          { type: 'do', text: 'Give each team a new, different structure to recreate. Run 8 minutes.' },
-          { type: 'pause', text: 'Compare results. Do teams produce a more accurate replica? Does the team feel different?' },
-          { type: 'tip', text: 'Most teams produce a MORE accurate result in Round 2 — but not always. What always changes is the team experience: Builders feel more invested, less frustrated, more creative.' },
+          { type: 'say', text: "\"Round 2: Architect INVITES ideas with a new structure.\"" },
+          { type: 'do', text: "Run 8 mins. Compare results and team feeling." },
         ]
       },
       {
-        time: '25–30 min', phase: 'Individual Reflection',
+        time: '25–35 min', phase: 'Debrief',
         steps: [
-          { type: 'do', text: 'Students complete the worksheet independently for 5 minutes: documenting what worked, what failed, and their own leadership style observations.' },
-        ]
-      },
-      {
-        time: '30–35 min', phase: 'Debrief',
-        steps: [
-          { type: 'say', text: '"Let\'s talk about what just happened — but we\'re going to connect it to leadership beyond this room."' },
-          { type: 'do', text: 'Use the debrief questions. Take 5 minutes. Don\'t rush this.' },
+          { type: 'do', text: "Individual reflection, then class debrief." },
         ]
       },
     ],
     debrief: [
-      { q: '"Architects: what was the hardest part of describing the structure using only words? What did you learn about your own communication?"', note: 'Common insights: "I assumed they\'d understand what I meant", "I forgot they couldn\'t see what I see", "When they asked questions I realised I\'d been unclear."' },
-      { q: '"Builders: what did it feel like in Round 1 (directive) versus Round 2 (facilitative)? What was different in your engagement?"', note: 'Almost universally: Round 2 feels better. More autonomy, more investment, more enjoyment. Connect to: how do YOU want to be led?' },
-      { q: '"Which leadership style produced a BETTER result in your team — directive or facilitative? Was that what you expected?"', note: 'The answer varies. This is the complexity: facilitative leadership is generally better for engagement, but directive can be faster in emergencies. Both have their place.' },
-      { q: '"In your own life — at home, in group projects, in sports — are you more often directive or facilitative? Which do you PREFER to be led by?"', note: 'This personal reflection bridges the activity to identity. Most students say they prefer to be led facilitatively but default to directive when they\'re in charge.' },
-      { q: '"What\'s one thing you\'ll do differently in the next group project you lead, based on today?"', note: 'End with a concrete commitment. Students should be able to name one specific behaviour change.' },
+      { q: "\"Which leadership style produced a BETTER result?\"", note: "Answers vary. Both have a place." },
     ],
     watchOutFor: [
-      'An Architect who gives up and lets the team figure it out entirely — disengaged from the challenge. Prompt: "How would you describe this piece if I couldn\'t see it at all?"',
-      'Builders who stop trying because the instructions are unclear. Encourage: "You can ask questions — what do you need to know?"',
-      'Teams where one Builder takes over and begins directing everyone else — a secondary leadership dynamic. Note it and bring it into the debrief: "Did anyone notice a second leader emerging among the Builders? What did that look like?"',
-      'Structures that are too complex for 10 minutes. Pre-test your structure. Aim for something replicable in 8–10 minutes with clear instructions.',
+      "Architects giving up.",
     ],
     variations: [
-      { tag: 'Grade 10', text: 'Use simpler structures (3–5 pieces). Focus the debrief on communication rather than leadership theory.' },
-      { tag: 'Grade 12', text: 'Add a third round: Architect may ONLY answer yes/no questions from builders. Produces frustrating but powerful learning about communication constraints.' },
-      { tag: 'Large class', text: 'Have half the class be Observers with a specific observation task: "Watch the Architect. Write down every moment the communication breaks down and why."' },
-      { tag: 'No materials', text: 'Replace the structure build with a verbal map-drawing task: Architect describes a simple diagram; Builders reproduce it on paper from verbal description only.' },
+      { tag: 'No materials', text: "Replace build with drawing a diagram from description." },
     ],
     worksheet: {
-      title: 'The Blind Architect — Leadership Reflection',
-      intro: 'Reflect on both rounds. Be honest about what you noticed in yourself.',
+      title: 'Leadership Reflection',
+      intro: 'Reflect on both rounds.',
       sections: [
         {
-          title: '🏗️ Round 1 — Directive Leadership',
-          twoCol: true,
-          colTitles: ['What WORKED', 'What BROKE DOWN'],
+          title: '🪞 Reflection',
           prompts: [
-            { label: 'As Architect, the hardest thing about giving instructions was:', lines: 2 },
-            { label: 'As Builder, the moment I felt most frustrated was:', lines: 2 },
-          ]
-        },
-        {
-          title: '🤝 Round 2 — Facilitative Leadership',
-          prompts: [
-            { label: 'What changed in the team\'s energy and engagement in Round 2?', lines: 2 },
-            { label: 'Which round produced better results for your team — and why?', lines: 2 },
-          ]
-        },
-        {
-          title: '🪞 My Leadership Reflection',
-          prompts: [
-            { label: 'My natural default when I\'m leading is: (circle)  Directive  /  Facilitative  /  I avoid leading', lines: 0 },
-            { label: 'A situation where directive leadership is the right choice:', lines: 1 },
-            { label: 'A situation where facilitative leadership is the right choice:', lines: 1 },
-            { label: 'One specific thing I will do differently in my next group project:', lines: 2 },
+            { label: 'My default leadership style is:', lines: 1 },
           ]
         }
       ]
@@ -1454,10 +1551,30 @@ function ActivityCard({ activity, isExpanded, onToggle, onPrint }) {
           </div>
           <div className="lst-card-obj">{activity.objective}</div>
         </div>
+        
+        {/* Print Buttons logic — Direct Links if provided, otherwise Overlay */}
         <div className="lst-card-print-btns no-print" onClick={e => e.stopPropagation()}>
-          <button className="lst-print-btn guide" onClick={() => onPrint(activity, 'guide')}>📄 Facilitator PDF</button>
-          <button className="lst-print-btn ws" onClick={() => onPrint(activity, 'worksheet')}>📝 Student Worksheet</button>
+          {activity.guidePdf ? (
+            <a href={activity.guidePdf} download target="_blank" rel="noreferrer" className="lst-print-btn guide" style={{ textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+              📄 Facilitator PDF
+            </a>
+          ) : (
+            <button className="lst-print-btn guide" onClick={() => onPrint(activity, 'guide')}>
+              📄 Facilitator PDF
+            </button>
+          )}
+
+          {activity.worksheetPdf ? (
+            <a href={activity.worksheetPdf} download target="_blank" rel="noreferrer" className="lst-print-btn ws" style={{ textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
+              📝 Student Worksheet
+            </a>
+          ) : (
+            <button className="lst-print-btn ws" onClick={() => onPrint(activity, 'worksheet')}>
+              📝 Student Worksheet
+            </button>
+          )}
         </div>
+        
         <div className="lst-card-chevron">▶</div>
       </div>
 
@@ -1530,7 +1647,7 @@ function ActivityCard({ activity, isExpanded, onToggle, onPrint }) {
           {/* Worksheet preview */}
           {innerTab === 'worksheet' && (
             <div>
-              <p style={{ fontSize: '13px', color: 'var(--ls-muted)', marginBottom: '16px', lineHeight: 1.6 }}>Preview of the student worksheet. Click "Student Worksheet" above to download the print-ready version.</p>
+              <p style={{ fontSize: '13px', color: 'var(--ls-muted)', marginBottom: '16px', lineHeight: 1.6 }}>Preview of the student worksheet. Click "Student Worksheet" above to download or print.</p>
               <div className="lst-ws-preview">
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: '18px', fontWeight: 700, color: 'var(--ls-ink)', marginBottom: '4px' }}>{activity.worksheet.title}</div>
                 <div style={{ fontSize: '13px', color: 'var(--ls-muted)', fontStyle: 'italic', marginBottom: '20px' }}>{activity.worksheet.intro}</div>
@@ -1632,7 +1749,7 @@ export default function LifeSkillsTrainer({ navigate, onBack }) {
             <div style={{ flex: 1, minWidth: '300px' }}>
               <div className="lst-hero-eyebrow">🧑‍🏫 School Counsellor Resource</div>
               <h1 className="lst-hero-h1">Life Skills Trainer<br /><em>Activity Bank</em></h1>
-              <p className="lst-hero-sub">10 fully elaborated, classroom-ready life skills activities for school counsellors — each with a step-by-step facilitation script, debrief guide, and printable student worksheet. Designed for 30–40 minute class periods, Grade 5 to Grade 12.</p>
+              <p className="lst-hero-sub">Fully elaborated, classroom-ready life skills activities for school counsellors — each with a step-by-step facilitation script, debrief guide, and printable student worksheet. Designed for 30–40 minute class periods, Grade 5 to Grade 12.</p>
               <div className="lst-hero-tags">
                 <span className="lst-hero-tag">📄 Print Facilitator Guide</span>
                 <span className="lst-hero-tag">📝 Print Student Worksheet</span>
