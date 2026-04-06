@@ -260,8 +260,7 @@ const ACTIVITIES = [
     duration: '35 min',
     formats: ['Individual', 'Pairs', 'Full class'],
     color: '#7C6FA0', colorPale: '#F0EDF8',
-    objective: 'Students will distinguish between surface emotions (what others see) and underlying feelings (what's really happening inside), and begin to map their own emotional landscape beneath the waterline.',
-    materials: ['Whiteboard & marker', 'Iceberg worksheet (one per student)', 'Coloured pencils or pens (optional)', 'Small slips of paper for the "parking lot"'],
+objective: "Students will distinguish between surface emotions (what others see) and underlying feelings (what's really happening inside), and begin to map their own emotional landscape beneath the waterline.",    materials: ['Whiteboard & marker', 'Iceberg worksheet (one per student)', 'Coloured pencils or pens (optional)', 'Small slips of paper for the "parking lot"'],
     phases: [
       {
         time: '0–5 min', phase: 'Hook',
