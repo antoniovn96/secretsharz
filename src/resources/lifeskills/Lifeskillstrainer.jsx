@@ -273,8 +273,7 @@ objective: "Students will distinguish between surface emotions (what others see)
       },
       {
         time: '5–12 min', phase: 'Concept Introduction',
-        steps: [
-          { type: 'do', text: 'Draw a simple iceberg on the board: a small tip above a wavy blue line, a large mass below. Label the tip "What people SEE" and below the line "What's REALLY happening."' },
+        steps: [{ type: 'do', text: 'Draw a simple iceberg on the board: a small tip above a wavy blue line, a large mass below. Label the tip "What people SEE" and below the line "What\'s REALLY happening."' }
           { type: 'say', text: '"An iceberg has a tiny visible tip — maybe 10% — and a massive hidden section below the waterline. Our emotions work exactly the same way."' },
           { type: 'say', text: '"What might be hiding under anger?" Build a word cloud below the waterline as students call out: fear, embarrassment, loneliness, feeling unheard, jealousy, hurt, disappointment, feeling unsafe.' },
           { type: 'say', text: '"What about sadness? What could be under that?" Add more. Under silence? Under nervous laughter?' },
