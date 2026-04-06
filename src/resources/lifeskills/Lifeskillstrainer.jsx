@@ -1684,7 +1684,7 @@ export default function LifeSkillsTrainer({ navigate, onBack }) {
         <div className="lst-grid">
           {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--ls-muted)' }}>
-              <div style={{ fontSize: '48px', margin-bottom: '14px' }}>🌱</div>
+              <div style={{ fontSize: '48px', marginBottom: '14px' }}>🌱</div>
               <p style={{ fontSize: '16px', fontWeight: 600 }}>No activities match this filter. Try another theme.</p>
             </div>
           ) : (
