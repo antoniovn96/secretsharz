@@ -238,9 +238,9 @@ const ALL_THEMES = [
 
 const ACTIVITIES = [
 
-  // ──────────────────────── LOWER SECONDARY (Grade 5-7) ────────────────────────
+// ──────────────────────── LOWER SECONDARY (Grade 5-7) ────────────────────────
   // ============================================================================
-  // 20 NEW LOWER SECONDARY ACTIVITIES (WHO Life Skills)
+  // LOWER SECONDARY ACTIVITIES (WHO Life Skills) - Expanded & Enhanced
   // ============================================================================
   
   // ── WHO Skill 1: Self-Awareness ──
@@ -248,27 +248,27 @@ const ACTIVITIES = [
     id: "l_sa_1", title: "My Strengths Shield", themeShort: ["Self-awareness"], grade: "5–7", gradeKey: "lower", duration: "40 min", formats: ["Individual art activity", "Pairs"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
     objective: "Students will identify their core character strengths and create a visual shield to build self-esteem.", materials: ["Blank shield templates", "Coloured markers", "List of strengths on the board"],
     phases: [
-      { time: "0–10 min", phase: "What is a Strength?", steps: [ { type: "say", text: "Character strengths are who you ARE, not just what you DO." }, { type: "do", text: "Write examples: Kindness, Bravery, Humor, Curiosity." } ] },
-      { time: "10–25 min", phase: "Designing the Shield", steps: [ { type: "do", text: "Hand out templates." }, { type: "say", text: "Draw your greatest strength, a strength others see, a time you used it, and one to grow." } ] },
-      { time: "25–35 min", phase: "Shield Sharing", steps: [ { type: "do", text: "In pairs, share shields." }, { type: "say", text: "Partners, say: 'I can see that strength in you because...'" } ] },
-      { time: "35–40 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss how strengths protect us." } ] }
+      { time: "0–10 min", phase: "What is a Strength?", steps: [ { type: "say", text: "Character strengths are who you ARE, not just what you DO. For example, playing basketball well is a skill, but being a supportive teammate is a character strength." }, { type: "do", text: "Write examples on the board: Kindness, Bravery, Humor, Curiosity, Honesty, Perseverance. Ask students to shout out times they have seen these strengths in action." } ] },
+      { time: "10–25 min", phase: "Designing the Shield", steps: [ { type: "do", text: "Hand out the blank shield templates. Explain that a shield represents what protects and empowers them." }, { type: "say", text: "In the four sections, you will draw or write: 1. Your greatest strength, 2. A strength others see in you, 3. A time you used a strength to help someone, 4. A strength you want to grow." } ] },
+      { time: "25–35 min", phase: "Shield Sharing", steps: [ { type: "do", text: "Have students pair up. Give them 5 minutes to explain their shields to each other." }, { type: "say", text: "Partners, your job is to listen carefully and respond by saying: 'I can see that strength in you because...'" } ] },
+      { time: "35–40 min", phase: "Debrief", steps: [ { type: "do", text: "Bring the class back together and discuss how knowing our internal strengths acts as a protective shield during difficult days." } ] }
     ],
-    debrief: [ { q: "Was it hard to choose a strength for yourself?", note: "Normalise focusing on weaknesses." }, { q: "How can you use your strength this week?", note: "Connect abstract strengths to practical challenges." } ],
-    watchOutFor: [ "Students who say they have no strengths. Offer gentle observations." ],
-    variations: [ { tag: "Art-focused", text: "Provide magazines for a collage." } ],
+    debrief: [ { q: "Was it hard to choose a strength for yourself?", note: "Normalise focusing on weaknesses; humans are wired to notice negatives." }, { q: "How can you use your strength this week?", note: "Connect abstract strengths to practical school challenges." } ],
+    watchOutFor: [ "Students who say they have no strengths. Offer gentle observations like, 'I noticed you helped Maya yesterday, that is a big strength.'" ],
+    variations: [ { tag: "Art-focused", text: "Provide magazines and glue for a collage-style shield instead of drawing." } ],
     worksheet: { title: "My Strengths Shield", intro: "Design your personal crest.", sections: [ { title: "Shield Planning", prompts: [ { label: "My greatest strength is:", lines: 1 }, { label: "A strength others see in me:", lines: 1 }, { label: "A strength I want to grow:", lines: 1 } ] } ] }
   },
   {
     id: "l_sa_2", title: "The Mirror Game", themeShort: ["Self-awareness"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Pairs", "Full class"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
     objective: "Recognize how physical posture reflects and influences internal emotional states.", materials: ["Open floor space"],
     phases: [
-      { time: "0–15 min", phase: "The Setup", steps: [ { type: "do", text: "Pairs face each other and mirror physical movements silently." } ] },
-      { time: "15–25 min", phase: "Emotional Mirror", steps: [ { type: "say", text: "Now mirror an emotion without words. Let the partner guess the emotion." } ] },
-      { time: "25–30 min", phase: "Debrief", steps: [ { type: "say", text: "What did you notice about your own face when mirroring anger?" } ] }
+      { time: "0–15 min", phase: "The Setup", steps: [ { type: "do", text: "Ask students to stand and face their partner. One is the leader, one is the mirror. The mirror must perfectly match the leader's physical movements in complete silence." }, { type: "say", text: "Move slowly and fluidly. Switch roles after 2 minutes so everyone gets a turn leading." } ] },
+      { time: "15–25 min", phase: "Emotional Mirror", steps: [ { type: "say", text: "Now we take it a step further. Leaders, mirror an emotion without using any words. Let your partner guess the emotion based entirely on your posture and facial expression." }, { type: "do", text: "Call out emotions for them to act out: Sadness, Excitement, Nervousness, Pride." } ] },
+      { time: "25–30 min", phase: "Debrief", steps: [ { type: "say", text: "What did you notice about your own face and breathing when you were mirroring an angry posture? Did you actually start to feel a little tense?" } ] }
     ],
-    debrief: [ { q: "How did your body feel mirroring a sad posture?", note: "Connecting physical to emotional." } ],
-    watchOutFor: [ "Silly behavior. Remind them to be precise." ],
-    variations: [ { tag: "Full class", text: "Have one leader mirror for the whole room." } ],
+    debrief: [ { q: "How did your body feel mirroring a sad posture?", note: "Help them connect physical slumping to low emotional energy." }, { q: "Can changing your posture change your mood?", note: "Introduce the idea that standing tall can trick the brain into feeling confident." } ],
+    watchOutFor: [ "Silly behavior. Remind them to be precise and take the mirroring seriously for it to work." ],
+    variations: [ { tag: "Full class", text: "Have one leader mirror for the whole room to practice collective focus." } ],
     worksheet: { title: "Body and Mind", intro: "Your body talks to your brain.", sections: [ { title: "Reflection", prompts: [ { label: "When I stand tall, my brain feels:", lines: 2 }, { label: "When I slump, my energy feels:", lines: 2 } ] } ] }
   },
 
@@ -277,27 +277,27 @@ const ACTIVITIES = [
     id: "l_em_1", title: "The Empathy Glasses", themeShort: ["Empathy"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Small groups"], color: "#E8845A", colorPale: "#FDF0EA", imagePath: "/resources/lifeskills/placeholder.jpg",
     objective: "Practice viewing a common school conflict from multiple perspectives to build empathy.", materials: ["Scenario cards", "Prop glasses (optional)"],
     phases: [
-      { time: "0–10 min", phase: "The Concept", steps: [ { type: "say", text: "When we are upset, we only see through our own glasses. Empathy means borrowing someone else's glasses." } ] },
-      { time: "10–25 min", phase: "Scenario Practice", steps: [ { type: "do", text: "Read a scenario: Two friends fight over a seat. Have groups explain what Friend A sees, then what Friend B sees." } ] },
-      { time: "25–35 min", phase: "Debrief", steps: [ { type: "say", text: "Are both people right in their own minds?" } ] }
+      { time: "0–10 min", phase: "The Concept", steps: [ { type: "say", text: "When we are upset, we only see the world through our own glasses. Our view feels like the only truth. Empathy means intentionally taking off our glasses and borrowing someone else's." }, { type: "do", text: "Pass around a pair of prop glasses if available to anchor the metaphor." } ] },
+      { time: "10–25 min", phase: "Scenario Practice", steps: [ { type: "do", text: "Read a scenario aloud: Two friends, Kabir and Rohan, fight over a seat in the cafeteria. Kabir feels excluded. Rohan feels smothered." }, { type: "say", text: "In your groups, explain the exact situation through Kabir's glasses, and then re-tell the entire story exclusively through Rohan's glasses." } ] },
+      { time: "25–35 min", phase: "Debrief", steps: [ { type: "say", text: "Are both people right in their own minds? Does someone have to be the 'villain' for a conflict to happen?" } ] }
     ],
-    debrief: [ { q: "Is it possible for two people to have totally different views of the same event?", note: "Yes. Perception is reality to them." } ],
-    watchOutFor: [ "Students refusing to see the 'wrong' person's side." ],
-    variations: [ { tag: "Acting", text: "Have them act out the two perspectives." } ],
-    worksheet: { title: "Borrowing Glasses", intro: "See it their way.", sections: [ { title: "Perspective Check", prompts: [ { label: "A time I disagreed with a friend:", lines: 2 }, { label: "How it looked through their glasses:", lines: 2 } ] } ] }
+    debrief: [ { q: "Is it possible for two people to have totally different views of the exact same event?", note: "Yes. Perception is reality to the person experiencing it." } ],
+    watchOutFor: [ "Students refusing to see the 'wrong' person's side. Push them to find the logic in the opposing view." ],
+    variations: [ { tag: "Acting", text: "Have students physically swap chairs when arguing the two different perspectives." } ],
+    worksheet: { title: "Borrowing Glasses", intro: "See it their way.", sections: [ { title: "Perspective Check", prompts: [ { label: "A time I disagreed with a friend:", lines: 2 }, { label: "How the argument looked through their glasses:", lines: 2 } ] } ] }
   },
   {
     id: "l_em_2", title: "The Kindness Boomerang", themeShort: ["Empathy", "Interpersonal relationships"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Full class"], color: "#E8845A", colorPale: "#FDF0EA", imagePath: "/resources/lifeskills/placeholder.jpg",
-    objective: "Demonstrate how empathy creates a ripple effect in a community.", materials: ["A soft ball or yarn"],
+    objective: "Demonstrate how empathy creates a ripple effect in a community.", materials: ["A soft ball or a ball of yarn"],
     phases: [
-      { time: "0–10 min", phase: "The Web", steps: [ { type: "do", text: "Stand in a circle." }, { type: "say", text: "Throw the ball to someone and share one kind thing they did, or one thing you appreciate about them." } ] },
-      { time: "10–20 min", phase: "The Drop", steps: [ { type: "say", text: "Notice how we are all connected. What happens if one person drops the string?" }, { type: "do", text: "Have one person drop it to show the tension slacken." } ] },
-      { time: "20–30 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss how small actions impact everyone." } ] }
+      { time: "0–10 min", phase: "The Web", steps: [ { type: "do", text: "Have all students stand in a large circle." }, { type: "say", text: "Hold onto the string and throw the ball of yarn to someone across the circle. When you throw it, share one kind thing they did for you recently, or one character trait you appreciate about them." } ] },
+      { time: "10–20 min", phase: "The Drop", steps: [ { type: "say", text: "Look at the web we just created. Notice how every single person is connected. What happens to the web if one person drops their string?" }, { type: "do", text: "Have one person drop their string to show how the tension slackens and affects everyone else's grip." } ] },
+      { time: "20–30 min", phase: "Debrief", steps: [ { type: "do", text: "Return to seats and discuss how small, seemingly isolated actions of kindness or cruelty inevitably impact the entire classroom environment." } ] }
     ],
-    debrief: [ { q: "How did it feel to receive a compliment?", note: "Validates positive reinforcement." }, { q: "How does one negative action affect the whole group?", note: "Connect to the dropped string." } ],
-    watchOutFor: [ "Ensure every student receives the ball at least once." ],
-    variations: [ { tag: "Grade 5", text: "Use pre-written compliment cards if they are shy." } ],
-    worksheet: { title: "The Kindness Boomerang", intro: "Reflect on connection.", sections: [ { title: "My Impact", prompts: [ { label: "One kind thing someone did for me:", lines: 2 }, { label: "One kind thing I can do tomorrow:", lines: 2 } ] } ] }
+    debrief: [ { q: "How did it feel to receive a public compliment?", note: "Validates positive reinforcement and builds self-worth." }, { q: "How does one negative action affect the whole group?", note: "Connect this back to the dropped string." } ],
+    watchOutFor: [ "Ensure every single student receives the ball at least once so no one feels excluded." ],
+    variations: [ { tag: "Grade 5", text: "Use pre-written compliment cards if students are too shy to generate their own on the spot." } ],
+    worksheet: { title: "The Kindness Boomerang", intro: "Reflect on connection.", sections: [ { title: "My Impact", prompts: [ { label: "One kind thing someone did for me this week:", lines: 2 }, { label: "One kind action I commit to doing tomorrow:", lines: 2 } ] } ] }
   },
 
   // ── WHO Skill 3: Critical Thinking ──
@@ -305,112 +305,112 @@ const ACTIVITIES = [
     id: "l_ct_1", title: "Fact vs. Fiction Relay", themeShort: ["Critical thinking"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Teams"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
     objective: "Rapidly distinguish between verifiable facts and subjective opinions.", materials: ["Whiteboard", "Pre-written statements"],
     phases: [
-      { time: "0–5 min", phase: "Definitions", steps: [ { type: "say", text: "A fact can be proven with evidence. An opinion is how someone feels about it." } ] },
-      { time: "5–20 min", phase: "The Relay", steps: [ { type: "do", text: "Read a statement (e.g., 'Pizza is the best food' vs 'Pizza contains cheese'). Teams race to hold up a 'FACT' or 'OPINION' card." } ] },
-      { time: "20–35 min", phase: "Tricky Ones", steps: [ { type: "do", text: "Introduce manipulative facts (e.g., '9 out of 10 people say...')." } ] }
+      { time: "0–5 min", phase: "Definitions", steps: [ { type: "say", text: "A fact is a statement that can be proven true or false with evidence. An opinion is how someone feels or what they believe about a fact." } ] },
+      { time: "5–20 min", phase: "The Relay", steps: [ { type: "do", text: "Divide into teams. Read a statement aloud. (e.g., 'Pizza is the best food' vs 'Pizza contains cheese'). Teams race to the board to slap a 'FACT' or 'OPINION' sign." }, { type: "do", text: "Award points for correct answers and briefly explain why." } ] },
+      { time: "20–35 min", phase: "Tricky Ones", steps: [ { type: "do", text: "Introduce manipulative or mixed statements. (e.g., '9 out of 10 people say this movie is terrible'). Have teams debate why this is tricky." } ] }
     ],
-    debrief: [ { q: "Why is it dangerous to mistake an opinion for a fact?", note: "It leads to spreading misinformation." } ],
-    watchOutFor: [ "Statements that are controversial. Keep them light." ],
-    variations: [ { tag: "Digital", text: "Use YouTube video titles." } ],
-    worksheet: { title: "Fact or Opinion?", intro: "Test your brain.", sections: [ { title: "My Audit", prompts: [ { label: "Write a fact about your school:", lines: 1 }, { label: "Write an opinion about your school:", lines: 1 } ] } ] }
+    debrief: [ { q: "Why is it dangerous to mistake an opinion for a fact?", note: "Discuss how this leads to spreading rumors and misinformation." } ],
+    watchOutFor: [ "Statements that touch on sensitive religious or political topics. Keep them strictly light and school-focused." ],
+    variations: [ { tag: "Digital", text: "Use real YouTube video titles and have them spot the exaggeration." } ],
+    worksheet: { title: "Fact or Opinion?", intro: "Test your brain.", sections: [ { title: "My Audit", prompts: [ { label: "Write a verifiable fact about your school:", lines: 1 }, { label: "Write an opinion about your school:", lines: 1 } ] } ] }
   },
   {
     id: "l_ct_2", title: "The 'Why' Chain", themeShort: ["Critical thinking", "Problem solving"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Pairs"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
-    objective: "Ask 'why' repeatedly to find the root cause of a surface-level problem.", materials: ["Whiteboard"],
+    objective: "Ask 'why' repeatedly to strip away surface issues and find the root cause of a problem.", materials: ["Whiteboard"],
     phases: [
-      { time: "0–10 min", phase: "The Toddler Strategy", steps: [ { type: "say", text: "Have you ever met a toddler who keeps asking 'why'? They are actually great problem solvers." }, { type: "do", text: "Model on the board: 'I got a bad grade.' Why? 'I didn't study.' Why? 'I was distracted.' Why? 'My phone was buzzing.'" } ] },
-      { time: "10–20 min", phase: "Pair Practice", steps: [ { type: "do", text: "Give pairs a problem (e.g., 'I am always late to school'). One person asks 'Why?' 5 times." } ] },
-      { time: "20–30 min", phase: "Debrief", steps: [ { type: "say", text: "Did asking why change the problem?" } ] }
+      { time: "0–10 min", phase: "The Toddler Strategy", steps: [ { type: "say", text: "Have you ever met a toddler who keeps asking 'why'? It can be annoying, but they are actually great problem solvers." }, { type: "do", text: "Model on the board: 'I got a bad grade.' Why? 'I didn't study.' Why? 'I was distracted.' Why? 'My phone was buzzing.' Why? 'I did not turn off notifications.'" } ] },
+      { time: "10–20 min", phase: "Pair Practice", steps: [ { type: "do", text: "Give pairs a starting problem (e.g., 'I am always late to school'). One person plays the toddler and asks 'Why?' 5 consecutive times to reach the root cause." } ] },
+      { time: "20–30 min", phase: "Debrief", steps: [ { type: "say", text: "Did asking 'why' change what you thought the original problem was?" } ] }
     ],
-    debrief: [ { q: "How does finding the root cause change the solution?", note: "From 'set an alarm' to 'plug phone in another room'." } ],
-    watchOutFor: [ "Students getting annoyed by the 'why'. Tell them to treat it like a detective game." ],
-    variations: [ { tag: "Grade 7", text: "Apply it to a school-wide issue like cafeteria crowding." } ],
-    worksheet: { title: "The 5 Whys", intro: "Dig down to the root cause.", sections: [ { title: "My Chain", prompts: [ { label: "The Problem:", lines: 1 }, { label: "Why? 1:", lines: 1 }, { label: "Why? 2:", lines: 1 }, { label: "The Real Root Cause:", lines: 2 } ] } ] }
+    debrief: [ { q: "How does finding the root cause change the solution?", note: "It shifts the solution from treating symptoms (setting a louder alarm) to fixing roots (charging the phone in another room)." } ],
+    watchOutFor: [ "Students getting frustrated by the repetitive 'why'. Remind them to treat it like a detective game." ],
+    variations: [ { tag: "Grade 7", text: "Apply this framework to a systemic school-wide issue, like cafeteria crowding." } ],
+    worksheet: { title: "The 5 Whys", intro: "Dig down to the root cause.", sections: [ { title: "My Chain", prompts: [ { label: "The Surface Problem:", lines: 1 }, { label: "Why? 1:", lines: 1 }, { label: "Why? 2:", lines: 1 }, { label: "The Real Root Cause:", lines: 2 } ] } ] }
   },
 
   // ── WHO Skill 4: Creative Thinking ──
   {
     id: "l_crt_1", title: "The Squiggle Challenge", themeShort: ["Creative thinking"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Individual"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
-    objective: "Overcome the fear of a blank page and practice rapid creative generation.", materials: ["Paper with random squiggles drawn on them", "Pens"],
+    objective: "Overcome the fear of a blank page and practice rapid creative generation through constraints.", materials: ["Paper with identical random squiggles drawn on them", "Pens"],
     phases: [
-      { time: "0–5 min", phase: "The Blank Page Fear", steps: [ { type: "say", text: "Perfectionism stops creativity. Today we are making art out of scribbles." } ] },
-      { time: "5–15 min", phase: "The Transformation", steps: [ { type: "do", text: "Give students 3 minutes to turn a random squiggle on their page into a recognizable drawing (a bird, a car, a face)." } ] },
-      { time: "15–25 min", phase: "Gallery", steps: [ { type: "do", text: "Share how the exact same squiggle became 30 different drawings." } ] },
-      { time: "25–30 min", phase: "Debrief", steps: [ { type: "say", text: "Creativity is just connecting things that already exist." } ] }
+      { time: "0–5 min", phase: "The Blank Page Fear", steps: [ { type: "say", text: "Perfectionism is the enemy of creativity. When we stare at a blank page, we freeze. Today we are making art out of pre-made scribbles." } ] },
+      { time: "5–15 min", phase: "The Transformation", steps: [ { type: "do", text: "Hand out the squiggle papers. Give students exactly 3 minutes to turn the random squiggle into a recognizable drawing (a bird, a car, a face)." } ] },
+      { time: "15–25 min", phase: "Gallery", steps: [ { type: "do", text: "Have students walk around the room to look at the drawings. Point out how the exact same squiggle became 30 completely different pieces of art." } ] },
+      { time: "25–30 min", phase: "Debrief", steps: [ { type: "say", text: "Creativity is not about pulling genius out of thin air. It is just about connecting things that already exist." } ] }
     ],
-    debrief: [ { q: "Was it easier to draw starting with a squiggle or a blank page?", note: "Constraints actually help creativity." } ],
-    watchOutFor: [ "Students saying 'I can't draw'. Assure them stick figures are perfect." ],
-    variations: [ { tag: "Pairs", text: "One person draws the squiggle, the other turns it into art." } ],
-    worksheet: { title: "Squiggle Art", intro: "Turn mistakes into masterpieces.", sections: [ { title: "Reflection", prompts: [ { label: "How does this apply to making mistakes in life?", lines: 2 } ] } ] }
+    debrief: [ { q: "Was it easier to draw starting with a squiggle or a blank page?", note: "Constraints actually help eliminate choice paralysis and boost creativity." } ],
+    watchOutFor: [ "Students saying 'I cannot draw'. Assure them stick figures and messy lines are perfect for this." ],
+    variations: [ { tag: "Pairs", text: "One person draws the initial squiggle, the other turns it into art." } ],
+    worksheet: { title: "Squiggle Art", intro: "Turn mistakes into masterpieces.", sections: [ { title: "Reflection", prompts: [ { label: "How does transforming a squiggle apply to making mistakes in real life?", lines: 2 } ] } ] }
   },
   {
     id: "l_crt_2", title: "Brainstorming Bonanza", themeShort: ["Creative thinking"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Small groups"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
-    objective: "Teach the core rule of brainstorming: separate idea generation from idea evaluation.", materials: ["Sticky notes", "Chart paper"],
+    objective: "Teach the core rule of brainstorming: completely separate idea generation from idea evaluation.", materials: ["Sticky notes", "Chart paper"],
     phases: [
-      { time: "0–10 min", phase: "The Rule", steps: [ { type: "say", text: "The biggest killer of creativity is judging an idea too early. Today, every idea is a good idea." } ] },
-      { time: "10–20 min", phase: "The Storm", steps: [ { type: "do", text: "Prompt: 'Design a new school uniform that solves 3 problems.' Students write one idea per sticky note for 5 minutes in silence." } ] },
-      { time: "20–30 min", phase: "The Sort", steps: [ { type: "do", text: "Now they evaluate. Group the stickies by theme and pick the best one." } ] },
-      { time: "30–35 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss the relief of not being judged." } ] }
+      { time: "0–10 min", phase: "The Rule", steps: [ { type: "say", text: "The biggest killer of creativity is judging an idea before it is fully formed. Today, for the first ten minutes, every single idea is a good idea. No judgment allowed." } ] },
+      { time: "10–20 min", phase: "The Storm", steps: [ { type: "do", text: "Give a prompt: 'Design a new school uniform that solves 3 problems.' Students write one wild idea per sticky note for 5 minutes in total silence." } ] },
+      { time: "20–30 min", phase: "The Sort", steps: [ { type: "do", text: "Now the evaluation phase begins. Have groups sort the stickies by theme, combine the good parts, and pick the best overall solution." } ] },
+      { time: "30–35 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss the psychological relief of generating ideas without being judged." } ] }
     ],
-    debrief: [ { q: "Did waiting to judge make it easier to share?", note: "Usually yes, reduces fear of failure." } ],
-    watchOutFor: [ "Students laughing at 'dumb' ideas. Intervene immediately to protect the rule." ],
-    variations: [ { tag: "Fun twist", text: "Prompt: 'Invent a new school subject that doesn't exist yet.'" } ],
+    debrief: [ { q: "Did waiting to judge the ideas make it easier to share them?", note: "Usually yes, it significantly reduces the fear of failure." } ],
+    watchOutFor: [ "Students laughing at 'dumb' ideas during the silent phase. Intervene immediately to protect the rule." ],
+    variations: [ { tag: "Fun twist", text: "Prompt: 'Invent a new school subject that does not exist yet.'" } ],
     worksheet: { title: "Brainstorming Rules", intro: "Separate generation from evaluation.", sections: [ { title: "My Best Idea", prompts: [ { label: "The wild idea I came up with:", lines: 2 }, { label: "How we could actually make it work:", lines: 2 } ] } ] }
   },
 
   // ── WHO Skill 5: Decision Making ──
   {
-    id: "l_dm_1", title: "Stop, Think, Go", themeShort: ["Decision making"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Full class", "Role-play"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
-    objective: "Implement a simple cognitive pause (traffic light model) to prevent impulsive decision-making.", materials: ["Red, Yellow, Green paper circles"],
+    id: "l_dm_1", title: "Stop, Think, Go", themeShort: ["Decision making", "Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Full class", "Role-play"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Implement a simple cognitive pause (traffic light model) to prevent impulsive and emotional decision-making.", materials: ["Red, Yellow, Green paper circles"],
     phases: [
-      { time: "0–10 min", phase: "Traffic Light", steps: [ { type: "say", text: "Impulsive decisions happen when we go straight from feeling to acting. We need a traffic light." }, { type: "do", text: "Red = Stop and breathe. Yellow = Think of two options. Green = Choose the best one." } ] },
-      { time: "10–20 min", phase: "Role-Play", steps: [ { type: "do", text: "Read a scenario: 'Someone bumps you and your books fall.' Hold up Red. 'What do you do?' (Breathe). Hold up Yellow. 'What are two options?' Hold up Green. 'Which do you choose?'" } ] },
-      { time: "20–30 min", phase: "Practice", steps: [ { type: "do", text: "Run 3 more scenarios." } ] }
+      { time: "0–10 min", phase: "Traffic Light", steps: [ { type: "say", text: "Impulsive decisions happen when we go straight from feeling an emotion to acting on it. We need to build a mental traffic light." }, { type: "do", text: "Explain: Red = Stop and breathe. Yellow = Think of two possible options. Green = Choose the best one and go." } ] },
+      { time: "10–20 min", phase: "Role-Play", steps: [ { type: "do", text: "Read a scenario: 'Someone bumps you in the hall and your books fall.' Hold up the Red circle. 'What do you do right now?' (Breathe). Hold up Yellow. 'What are two options?' Hold up Green. 'Which do you choose?'" } ] },
+      { time: "20–30 min", phase: "Practice", steps: [ { type: "do", text: "Run 3 more scenarios, letting the students call out the steps and act them out." } ] }
     ],
-    debrief: [ { q: "Why is the Yellow step the most important?", note: "It creates the pause where logic catches up to emotion." } ],
-    watchOutFor: [ "Students choosing aggressive 'Green' actions. Guide them back to the consequences." ],
-    variations: [ { tag: "Active", text: "Have students physically take a step forward for each light." } ],
+    debrief: [ { q: "Why is the Yellow step the most important one?", note: "It creates the necessary neurological pause where logic catches up to the emotional reaction." } ],
+    watchOutFor: [ "Students choosing aggressive 'Green' actions for a laugh. Guide them back to evaluating the consequences of those choices." ],
+    variations: [ { tag: "Active", text: "Have students physically take a step forward in the room for each light phase." } ],
     worksheet: { title: "Stop, Think, Go", intro: "Slow down your choices.", sections: [ { title: "My Traffic Light", prompts: [ { label: "A time I acted impulsively:", lines: 2 }, { label: "What I should have thought at the Yellow light:", lines: 2 } ] } ] }
   },
   {
     id: "l_dm_2", title: "The Choice Scale", themeShort: ["Decision making", "Critical thinking"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Pairs", "Full class"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
     objective: "Weigh the pros and cons of everyday decisions to understand that every choice has a trade-off.", materials: ["Whiteboard", "Worksheets"],
     phases: [
-      { time: "0–10 min", phase: "The Scale", steps: [ { type: "say", text: "Every choice has a cost. If you choose to play games, the cost is your study time. If you study, the cost is your game time." } ] },
-      { time: "10–25 min", phase: "Weighing It Out", steps: [ { type: "do", text: "Give a scenario: 'Staying up late to watch a movie.' Ask students to list 3 pros and 3 cons on their worksheet." } ] },
-      { time: "25–35 min", phase: "Debrief", steps: [ { type: "say", text: "Does having more 'pros' automatically make it the right choice?" } ] }
+      { time: "0–10 min", phase: "The Scale", steps: [ { type: "say", text: "Every choice has a cost. If you choose to play video games, the cost is your study time. If you study, the cost is your game time. Nothing is free." } ] },
+      { time: "10–25 min", phase: "Weighing It Out", steps: [ { type: "do", text: "Give a common scenario: 'Staying up late to watch a movie on a school night.' Ask students to list 3 specific pros and 3 specific cons on their worksheet." } ] },
+      { time: "25–35 min", phase: "Debrief", steps: [ { type: "say", text: "Does having a higher number of 'pros' automatically make it the right choice?" } ] }
     ],
-    debrief: [ { q: "Can one big 'con' outweigh three small 'pros'?", note: "Yes. Weight matters more than numbers." } ],
-    watchOutFor: [ "Students thinking 'fun' is always the right answer. Guide them to long-term impact." ],
-    variations: [ { tag: "Physical", text: "Use a real balancing scale with blocks to represent pros/cons." } ],
-    worksheet: { title: "The Choice Scale", intro: "Weigh it out.", sections: [ { title: "My Decision", prompts: [ { label: "The Choice:", lines: 1 }, { label: "The Biggest Pro:", lines: 1 }, { label: "The Biggest Con:", lines: 1 } ] } ] }
+    debrief: [ { q: "Can one massive 'con' outweigh three small 'pros'?", note: "Yes. Teach them that the weight of the consequence matters more than the quantity." } ],
+    watchOutFor: [ "Students arguing that 'fun' is always the right answer. Guide them to consider the long-term impact." ],
+    variations: [ { tag: "Physical", text: "Use a real balancing scale with physical blocks to represent the weight of pros/cons." } ],
+    worksheet: { title: "The Choice Scale", intro: "Weigh it out.", sections: [ { title: "My Decision", prompts: [ { label: "The Choice:", lines: 1 }, { label: "The Heaviest Pro:", lines: 1 }, { label: "The Heaviest Con:", lines: 1 } ] } ] }
   },
 
   // ── WHO Skill 6: Problem Solving ──
   {
     id: "l_ps_1", title: "The Human Knot", themeShort: ["Problem solving", "Interpersonal relationships"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Small groups"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
-    objective: "Physically collaborate to solve a complex spatial problem, identifying the importance of clear communication.", materials: ["Open space"],
+    objective: "Physically collaborate to solve a complex spatial problem, identifying the importance of clear communication and emotional regulation.", materials: ["Open space"],
     phases: [
-      { time: "0–5 min", phase: "Setup", steps: [ { type: "do", text: "Divide into groups of 6-8." }, { type: "say", text: "Stand in a circle. Grab the hand of someone NOT next to you. Do the same with the other hand to a different person." } ] },
-      { time: "5–20 min", phase: "Challenge", steps: [ { type: "say", text: "Untangle into a circle WITHOUT letting go." }, { type: "do", text: "Let them struggle. Do not intervene unless unsafe." } ] },
-      { time: "20–30 min", phase: "Debrief", steps: [ { type: "say", text: "Let us talk about what just happened." } ] }
+      { time: "0–5 min", phase: "The Setup", steps: [ { type: "do", text: "Divide the class into groups of 6-8 students." }, { type: "say", text: "Stand in a tight circle. Reach across and grab the hand of someone who is NOT standing right next to you. Now do the same with your other hand." } ] },
+      { time: "5–20 min", phase: "The Challenge", steps: [ { type: "say", text: "You are now a human knot. Your goal is to untangle yourselves into a perfect circle WITHOUT letting go of anyone's hands." }, { type: "do", text: "Let them struggle. Do not intervene unless safety is a concern. Observe who takes charge." } ] },
+      { time: "20–30 min", phase: "Debrief", steps: [ { type: "say", text: "Let us return to our seats and break down what just happened." } ] }
     ],
-    debrief: [ { q: "Who stepped up as a leader? Did they boss or guide?", note: "Highlight facilitative leadership." } ],
-    watchOutFor: [ "Physical safety. Ensure careful stepping over arms." ],
-    variations: [ { tag: "Grade 7", text: "Run a second round in complete silence." } ],
-    worksheet: { title: "Knot Reflection", intro: "Think about how your group handled the problem.", sections: [ { title: "Team Dynamics", prompts: [ { label: "When we got stuck, what helped most was:", lines: 2 }, { label: "One thing I did to help the team was:", lines: 2 } ] } ] }
+    debrief: [ { q: "Who stepped up as a leader? Did they boss people around, or did they guide them?", note: "Highlight the difference between directive and facilitative leadership." } ],
+    watchOutFor: [ "Physical safety. Ensure students step over or duck under arms very carefully." ],
+    variations: [ { tag: "Grade 7", text: "Run a second round in complete silence to force intense non-verbal problem solving." } ],
+    worksheet: { title: "Knot Reflection", intro: "Think about how your group handled the frustration.", sections: [ { title: "Team Dynamics", prompts: [ { label: "When we got stuck, what helped most was:", lines: 2 }, { label: "One thing I did to help the team was:", lines: 2 } ] } ] }
   },
   {
     id: "l_ps_2", title: "Puzzle Solvers", themeShort: ["Problem solving", "Effective communication"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Pairs"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
-    objective: "Solve a puzzle with unequal information to highlight the necessity of pooling resources.", materials: ["A simple printed puzzle cut in half"],
+    objective: "Solve a puzzle with unequal information to highlight the absolute necessity of pooling resources.", materials: ["A simple printed logic puzzle cut in half"],
     phases: [
-      { time: "0–5 min", phase: "Setup", steps: [ { type: "say", text: "You have half the clues, your partner has the other half. You cannot show your paper." } ] },
-      { time: "5–25 min", phase: "The Solve", steps: [ { type: "do", text: "Pairs talk it out to solve the logic grid." } ] },
-      { time: "25–35 min", phase: "Debrief", steps: [ { type: "say", text: "You could only win if you listened." } ] }
+      { time: "0–5 min", phase: "The Setup", steps: [ { type: "do", text: "Give Student A clues 1-3. Give Student B clues 4-6." }, { type: "say", text: "You have half the clues, your partner has the other half. You cannot show your paper to your partner under any circumstances." } ] },
+      { time: "5–25 min", phase: "The Solve", steps: [ { type: "do", text: "Pairs must talk it out to solve the logic grid." }, { type: "tip", text: "Circulate to ensure they are communicating verbally and not just peeking at the papers." } ] },
+      { time: "25–35 min", phase: "Debrief", steps: [ { type: "say", text: "You could only win if you actively listened to what the other person possessed." } ] }
     ],
-    debrief: [ { q: "What happens if one person dominates the conversation?", note: "You miss half the clues." } ],
-    watchOutFor: [ "Students showing their papers. Enforce the verbal-only rule." ],
-    variations: [ { tag: "Easy", text: "Use a simple riddle instead of a logic grid." } ],
+    debrief: [ { q: "What happens to the solution if one person dominates the conversation?", note: "You miss half the necessary clues to solve the problem." } ],
+    watchOutFor: [ "Students cheating and showing their papers. Enforce the verbal-only rule strictly." ],
+    variations: [ { tag: "Easy", text: "Use a simple word riddle instead of a complex logic grid." } ],
     worksheet: { title: "Pooling Resources", intro: "We solve better together.", sections: [ { title: "Reflection", prompts: [ { label: "What was hard about not seeing the whole picture?", lines: 2 } ] } ] }
   },
 
@@ -419,100 +419,139 @@ const ACTIVITIES = [
     id: "l_ec_1", title: "The 'I' Message Maker", themeShort: ["Effective communication"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Pairs"], color: "#8E44AD", colorPale: "#F5EEF8", imagePath: "/resources/lifeskills/placeholder.jpg",
     objective: "Convert 'You' statements into 'I' statements to express feelings without causing defensiveness.", materials: ["Whiteboard", "Worksheet"],
     phases: [
-      { time: "0–10 min", phase: "You vs I", steps: [ { type: "say", text: "When we are mad, we say: 'You always ignore me!' How does the other person react? They fight back." }, { type: "say", text: "An 'I' message works like this: I feel [emotion] when [behavior] happens." } ] },
-      { time: "10–25 min", phase: "Translation", steps: [ { type: "do", text: "Translate 'You stole my seat!' into an 'I' message on your worksheet." } ] },
-      { time: "25–35 min", phase: "Debrief", steps: [ { type: "say", text: "Why do 'I' messages feel less attacking?" } ] }
+      { time: "0–10 min", phase: "You vs I", steps: [ { type: "say", text: "When we are mad, we usually say: 'You always ignore me!' How does the other person react? They fight back." }, { type: "say", text: "An 'I' message diffuses anger. It works like this: I feel [emotion] when [behavior] happens." } ] },
+      { time: "10–25 min", phase: "Translation", steps: [ { type: "do", text: "Write 'You stole my seat!' on the board. Have students translate it into a calm 'I' message on their worksheet." } ] },
+      { time: "25–35 min", phase: "Debrief", steps: [ { type: "say", text: "Why do 'I' messages feel less attacking to the person hearing them?" } ] }
     ],
-    debrief: [ { q: "Why is it harder to use 'I' messages?", note: "Requires vulnerability." } ],
-    watchOutFor: [ "Fake 'I' messages: 'I feel that YOU are a jerk.' Correct this gently." ],
-    variations: [ { tag: "Role-play", text: "Act out the 'You' vs 'I' versions." } ],
+    debrief: [ { q: "Why is it harder to use 'I' messages in the heat of the moment?", note: "It requires vulnerability instead of anger." } ],
+    watchOutFor: [ "Fake 'I' messages: 'I feel that YOU are a jerk.' Correct this gently to focus on the behavior, not the person." ],
+    variations: [ { tag: "Role-play", text: "Have pairs act out the 'You' vs 'I' versions to hear the difference in tone." } ],
     worksheet: { title: "The I Message Maker", intro: "Change the way you complain.", sections: [ { title: "Translation", prompts: [ { label: "Translate: 'You never listen to me!'", lines: 2 } ] } ] }
   },
   {
     id: "l_ec_2", title: "Back-to-Back Drawing", themeShort: ["Effective communication"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Pairs"], color: "#8E44AD", colorPale: "#F5EEF8", imagePath: "/resources/lifeskills/placeholder.jpg",
-    objective: "Demonstrate the importance of clear, precise verbal instructions.", materials: ["Paper", "Pens", "Simple printed shapes"],
+    objective: "Demonstrate the vital importance of clear, precise verbal instructions and active listening.", materials: ["Paper", "Pens", "Simple printed shapes"],
     phases: [
-      { time: "0–5 min", phase: "Setup", steps: [ { type: "do", text: "Pairs sit back-to-back. One gets a drawing, the other gets blank paper." } ] },
-      { time: "5–15 min", phase: "The Draw", steps: [ { type: "say", text: "Describe the drawing using ONLY geometric terms. 'Draw a triangle in the top left.' The drawer cannot speak." } ] },
-      { time: "15–25 min", phase: "The Reveal", steps: [ { type: "do", text: "Compare the drawings. They will be vastly different." } ] },
-      { time: "25–30 min", phase: "Debrief", steps: [ { type: "say", text: "Why is giving instructions so hard?" } ] }
+      { time: "0–5 min", phase: "Setup", steps: [ { type: "do", text: "Have pairs sit back-to-back on the floor. One student gets a printed drawing, the other gets a blank piece of paper." } ] },
+      { time: "5–15 min", phase: "The Draw", steps: [ { type: "say", text: "Describe the drawing using ONLY geometric terms. For example: 'Draw a triangle in the top left.' The person drawing cannot speak." } ] },
+      { time: "15–25 min", phase: "The Reveal", steps: [ { type: "do", text: "Have them turn around and compare the drawings. They will usually be vastly, hilariously different." } ] },
+      { time: "25–30 min", phase: "Debrief", steps: [ { type: "say", text: "Why is giving clear instructions so incredibly difficult?" } ] }
     ],
-    debrief: [ { q: "What happens when we assume someone knows what we mean?", note: "Miscommunication." } ],
-    watchOutFor: [ "Peeking. Ensure they stay back-to-back." ],
-    variations: [ { tag: "Two-way", text: "Let the drawer ask yes/no questions." } ],
-    worksheet: { title: "Clear Communication", intro: "Words matter.", sections: [ { title: "Reflection", prompts: [ { label: "Why did the drawing come out wrong?", lines: 2 }, { label: "How does this apply to texting?", lines: 2 } ] } ] }
+    debrief: [ { q: "What happens when we assume someone knows exactly what we mean?", note: "It leads to total miscommunication." } ],
+    watchOutFor: [ "Peeking. Ensure they stay strictly back-to-back." ],
+    variations: [ { tag: "Two-way", text: "Run a second round where the drawer is allowed to ask yes/no clarifying questions." } ],
+    worksheet: { title: "Clear Communication", intro: "Words matter.", sections: [ { title: "Reflection", prompts: [ { label: "Why did the drawing come out wrong?", lines: 2 }, { label: "How does this lesson apply to texting?", lines: 2 } ] } ] }
   },
 
   // ── WHO Skill 8: Interpersonal Relationships ──
   {
     id: "l_ir_1", title: "The Apology Anatomy", themeShort: ["Interpersonal relationships"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Full class", "Pairs"], color: "#E67E22", colorPale: "#FDEDEC", imagePath: "/resources/lifeskills/placeholder.jpg",
-    objective: "Practice the four steps of a genuine apology to repair relationships.", materials: ["Whiteboard", "Apology Worksheets"],
+    objective: "Practice the four structural steps of a genuine apology to effectively repair damaged relationships.", materials: ["Whiteboard", "Apology Worksheets"],
     phases: [
-      { time: "0–10 min", phase: "Fake Apology", steps: [ { type: "say", text: "Fake apologies sound like 'I am sorry you feel that way'. How do those make you feel?" } ] },
-      { time: "10–20 min", phase: "Four Steps", steps: [ { type: "do", text: "Write: 1. I am sorry for... 2. It was wrong because... 3. Next time I will... 4. Will you forgive me?" } ] },
-      { time: "20–30 min", phase: "Fix It", steps: [ { type: "do", text: "Rewrite fake apologies on the worksheet." } ] },
-      { time: "30–35 min", phase: "Debrief", steps: [ { type: "say", text: "Which step is the hardest to say out loud?" } ] }
+      { time: "0–10 min", phase: "Fake Apology", steps: [ { type: "say", text: "We have all heard fake apologies. They sound like 'I am sorry you feel that way' or 'I am sorry, but...'. How do those make you feel?" } ] },
+      { time: "10–20 min", phase: "Four Steps", steps: [ { type: "do", text: "Write the 4 steps on the board: 1. I am sorry for... 2. It was wrong because... 3. Next time I will... 4. Will you forgive me?" } ] },
+      { time: "20–30 min", phase: "Fix It", steps: [ { type: "do", text: "Have pairs work together to rewrite the 'Fake Apologies' on the worksheet into 'Real Apologies'." } ] },
+      { time: "30–35 min", phase: "Debrief", steps: [ { type: "say", text: "Which of the 4 steps is the hardest to say out loud?" } ] }
     ],
-    debrief: [ { q: "Why do people give fake apologies?", note: "Pride, fear." } ],
-    watchOutFor: [ "Students mocking each other. Keep it structured." ],
-    variations: [ { tag: "Grade 5", text: "Focus heavily on Step 3 to make it actionable." } ],
+    debrief: [ { q: "Why do people give fake apologies?", note: "Usually out of pride, or fear of getting in trouble." } ],
+    watchOutFor: [ "Students using the practice time to mock each other. Keep the scenarios fictional." ],
+    variations: [ { tag: "Grade 5", text: "Focus heavily on Step 3 ('Next time I will...') to make the apology actionable." } ],
     worksheet: { title: "The Apology Anatomy", intro: "Turn fake apologies into real ones.", sections: [ { title: "Fix It", prompts: [ { label: "Fake: 'I am sorry if you got mad.' Write the REAL apology:", lines: 4 } ] } ] }
   },
   {
     id: "l_ir_2", title: "Friendship Fences", themeShort: ["Interpersonal relationships"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Individual", "Full class"], color: "#E67E22", colorPale: "#FDEDEC", imagePath: "/resources/lifeskills/placeholder.jpg",
-    objective: "Define healthy vs unhealthy friendship behaviors and boundaries.", materials: ["Red and Green cards"],
+    objective: "Define healthy vs unhealthy friendship behaviors and establish personal boundaries.", materials: ["Red and Green construction paper cards"],
     phases: [
-      { time: "0–10 min", phase: "Red Flag/Green Flag", steps: [ { type: "do", text: "Hold up Green if healthy, Red if crossing a boundary." }, { type: "say", text: "They make fun of you but say it is a joke. Red or Green?" } ] },
-      { time: "10–25 min", phase: "Defining Fences", steps: [ { type: "say", text: "A boundary is a fence. What are your friendship fences?" }, { type: "do", text: "Students write 3 dealbreakers on their sheet." } ] },
-      { time: "25–35 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss enforcing boundaries." } ] }
+      { time: "0–10 min", phase: "Red Flag/Green Flag", steps: [ { type: "do", text: "Distribute the cards. Hold up Green if the behavior is healthy, Red if it crosses a boundary." }, { type: "say", text: "Scenario: They make fun of you in front of others but say it is just a joke. Red or Green?" } ] },
+      { time: "10–25 min", phase: "Defining Fences", steps: [ { type: "say", text: "A boundary is like a fence. What are your friendship fences?" }, { type: "do", text: "Have students silently write down 3 absolute dealbreakers on their sheet." } ] },
+      { time: "25–35 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss the difficulty of enforcing a boundary with someone you like." } ] }
     ],
-    debrief: [ { q: "Is a 'joke' still a joke if it hurts your feelings?", note: "Impact matters more than intent." } ],
-    watchOutFor: [ "Students pointing fingers at specific classmates." ],
-    variations: [ { tag: "Active", text: "Have them physically move to sides of the room for red/green." } ],
+    debrief: [ { q: "Is a 'joke' still a joke if it consistently hurts your feelings?", note: "Impact matters significantly more than intent." } ],
+    watchOutFor: [ "Students pointing fingers at specific classmates. Keep the discussion general." ],
+    variations: [ { tag: "Active", text: "Have them physically move to opposite sides of the room for red/green instead of holding cards." } ],
     worksheet: { title: "My Friendship Fences", intro: "What is allowed in your yard?", sections: [ { title: "My Rules", prompts: [ { label: "I feel safe with a friend when they:", lines: 2 }, { label: "A dealbreaker for me is if a friend:", lines: 2 } ] } ] }
   },
 
   // ── WHO Skill 9: Coping with Stress ──
   {
     id: "l_cs_1", title: "The Priority Jar", themeShort: ["Coping with stress"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Demonstration", "Individual"], color: "#27AE60", colorPale: "#E9F7EF", imagePath: "/resources/lifeskills/placeholder.jpg",
-    objective: "Categorise tasks into Rocks, Pebbles, and Sand to understand prioritisation and reduce overwhelm.", materials: ["A clear jar, rocks, pebbles, sand (or drawn)", "Worksheets"],
+    objective: "Categorise tasks into Rocks, Pebbles, and Sand to understand prioritisation and reduce feeling overwhelmed.", materials: ["A clear jar, big rocks, small pebbles, sand", "Worksheets"],
     phases: [
-      { time: "0–10 min", phase: "Visual Demo", steps: [ { type: "say", text: "If we fill time with small stuff first, there is no room for big things." }, { type: "do", text: "Show how Rocks first makes everything fit." } ] },
-      { time: "10–20 min", phase: "Defining Rocks", steps: [ { type: "say", text: "Rocks = non-negotiables. Sand = filler." } ] },
-      { time: "20–30 min", phase: "Sorting", steps: [ { type: "do", text: "Students list tasks and sort them into the jars on paper." } ] },
-      { time: "30–35 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss the emotional impact of doing Rocks first." } ] }
+      { time: "0–10 min", phase: "Visual Demo", steps: [ { type: "say", text: "If we fill our time with the small stuff first, there is no room for the big things." }, { type: "do", text: "Show how putting the Rocks in first allows the sand to fill the gaps perfectly." } ] },
+      { time: "10–20 min", phase: "Defining Rocks", steps: [ { type: "say", text: "Rocks are your non-negotiables (sleep, big assignments). Sand is filler (social media scrolling)." } ] },
+      { time: "20–30 min", phase: "Sorting", steps: [ { type: "do", text: "Students list their weekly tasks and sort them into the jars on paper." } ] },
+      { time: "30–35 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss the emotional impact of getting the 'Rocks' done first." } ] }
     ],
-    debrief: [ { q: "What happens when you put Sand in first?", note: "Panic, staying up late." } ],
-    watchOutFor: [ "Students arguing that gaming is a Rock. Clarify priorities." ],
-    variations: [ { tag: "No props", text: "Draw the jar on the board instead." } ],
+    debrief: [ { q: "What happens to your stress levels when you put Sand in first?", note: "Leads to panic and staying up late." } ],
+    watchOutFor: [ "Students arguing that gaming is a Rock. Validate relaxation, but clarify essential priorities." ],
+    variations: [ { tag: "No props", text: "Draw the jar and rocks on the whiteboard instead of using physical items." } ],
     worksheet: { title: "The Priority Jar", intro: "Sort your time.", sections: [ { title: "My Jars", prompts: [ { label: "My Rocks (Must Do):", lines: 2 }, { label: "My Sand (Distractions):", lines: 2 } ] } ] }
   },
   {
     id: "l_cs_2", title: "The Worry Box", themeShort: ["Coping with stress"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Individual"], color: "#27AE60", colorPale: "#E9F7EF", imagePath: "/resources/lifeskills/placeholder.jpg",
     objective: "Externalize anxieties by categorizing them as 'Actionable' or 'Let Go'.", materials: ["A physical cardboard box", "Small slips of paper"],
     phases: [
-      { time: "0–10 min", phase: "Externalizing", steps: [ { type: "say", text: "When worries stay in our head, they grow. Write them down." }, { type: "do", text: "Write 3 worries on 3 slips of paper." } ] },
-      { time: "10–20 min", phase: "Action vs Let Go", steps: [ { type: "say", text: "Put an 'A' for Action if you can fix it today. Put an 'L' for Let Go if you cannot control it." } ] },
-      { time: "20–30 min", phase: "The Box", steps: [ { type: "do", text: "Physically put 'L' slips into a sealed Worry Box at the front." } ] }
+      { time: "0–10 min", phase: "Externalizing", steps: [ { type: "say", text: "When worries stay in our head, they grow. When we put them on paper, they shrink." }, { type: "do", text: "Have students write 3 worries on 3 slips of paper." } ] },
+      { time: "10–20 min", phase: "Action vs Let Go", steps: [ { type: "say", text: "Look at your slips. Put an 'A' for Action if you can fix it today. Put an 'L' for Let Go if you cannot control it." } ] },
+      { time: "20–30 min", phase: "The Box", steps: [ { type: "do", text: "Have students physically walk up and drop their 'L' slips into a sealed Worry Box at the front of the room." } ] }
     ],
     debrief: [ { q: "Did it feel different to put the paper in the box?", note: "Physical action helps mental release." } ],
-    watchOutFor: [ "Students wanting to read others' slips. Keep it strictly private." ],
-    variations: [ { tag: "Shredder", text: "Let them rip up the 'Let Go' slips." } ],
+    watchOutFor: [ "Students wanting to read others' slips. Keep the box strictly private." ],
+    variations: [ { tag: "Shredder", text: "Let them rip up the 'Let Go' slips into a bin." } ],
     worksheet: { title: "Action vs Let Go", intro: "Sort your worries.", sections: [ { title: "My List", prompts: [ { label: "One worry I can take Action on today:", lines: 2 }, { label: "One worry I need to Let Go of into the box:", lines: 2 } ] } ] }
+  },
+  {
+    id: "l_cs_3", title: "The Stress Balloon", themeShort: ["Coping with stress"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Demonstration", "Individual"], color: "#27AE60", colorPale: "#E9F7EF", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Visualize how stress accumulates and practice controlled release.", materials: ["Balloons"],
+    phases: [
+      { time: "0–10 min", phase: "The Build Up", steps: [ { type: "say", text: "Every time something stressful happens, air goes into the balloon." }, { type: "do", text: "Blow a small breath into a balloon for various common stressors (homework, fight with friend)." } ] },
+      { time: "10–20 min", phase: "The Pop vs The Release", steps: [ { type: "say", text: "If we don't let it out, what happens? It pops." }, { type: "do", text: "Demonstrate letting air out slowly by stretching the neck of the balloon." } ] },
+      { time: "20–30 min", phase: "Mapping", steps: [ { type: "do", text: "Students write down what fills their balloon, and what helps them let the air out slowly." } ] }
+    ],
+    debrief: [ { q: "What does 'popping' look like for you?", note: "Yelling, crying, shutting down." } ],
+    watchOutFor: [ "Students popping balloons loudly. Maintain control of the physical props." ],
+    variations: [ { tag: "Drawing", text: "Draw the balloon on the board if physical balloons are unavailable." } ],
+    worksheet: { title: "My Stress Balloon", intro: "Let the air out slowly.", sections: [ { title: "My Triggers", prompts: [ { label: "What fills my balloon:", lines: 2 }, { label: "My controlled release valve:", lines: 2 } ] } ] }
+  },
+  {
+    id: "l_cs_4", title: "5-4-3-2-1 Grounding", themeShort: ["Coping with stress"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Full class practice"], color: "#27AE60", colorPale: "#E9F7EF", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Learn a sensory grounding technique to interrupt anxiety spirals.", materials: ["Whiteboard"],
+    phases: [
+      { time: "0–10 min", phase: "The Spiral", steps: [ { type: "say", text: "When we panic, our brain lives in the future. We need to pull it back to the present." } ] },
+      { time: "10–20 min", phase: "The Senses", steps: [ { type: "do", text: "Guide them: Name 5 things you see, 4 you feel, 3 you hear, 2 you smell, 1 you taste." } ] },
+      { time: "20–30 min", phase: "Practice", steps: [ { type: "do", text: "Run the exercise in complete silence. Have them write their sensory observations." } ] }
+    ],
+    debrief: [ { q: "Did your heart rate change after doing this?", note: "Usually slows down." } ],
+    watchOutFor: [ "Students rushing through it. Force them to take 30 seconds for each sense." ],
+    variations: [ { tag: "Nature", text: "Do this outside in the schoolyard." } ],
+    worksheet: { title: "Grounding", intro: "Come back to the present.", sections: [ { title: "My Senses", prompts: [ { label: "5 things I see right now:", lines: 2 }, { label: "4 things I can physically feel:", lines: 2 } ] } ] }
+  },
+  {
+    id: "l_cs_5", title: "Muscle Squeeze and Release", themeShort: ["Coping with stress"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Full class practice"], color: "#27AE60", colorPale: "#E9F7EF", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Practice Progressive Muscle Relaxation to relieve physical tension caused by stress.", materials: ["Calm music"],
+    phases: [
+      { time: "0–5 min", phase: "Body Check", steps: [ { type: "say", text: "We hold stress in our muscles without realizing it." } ] },
+      { time: "5–20 min", phase: "The Squeeze", steps: [ { type: "do", text: "Guide students to squeeze their toes tightly for 5 seconds, then release. Move up the legs, stomach, fists, shoulders, and face." } ] },
+      { time: "20–30 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss the difference between how their shoulders felt at the start versus the end." } ] }
+    ],
+    debrief: [ { q: "Where were you holding the most tension?", note: "Jaw and shoulders are most common." } ],
+    watchOutFor: [ "Giggling during the face-scrunching phase. Keep the tone relaxed." ],
+    variations: [ { tag: "Quick version", text: "Just do the fists and shoulders before a test." } ],
+    worksheet: { title: "Tension Check", intro: "Release the pressure.", sections: [ { title: "My Body", prompts: [ { label: "I hold my stress in my:", lines: 1 } ] } ] }
   },
 
   // ── WHO Skill 10: Coping with Emotions ──
   {
     id: "l_ce_1", title: "The Emotion Thermometer", themeShort: ["Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Individual", "Full class"], color: "#9B59B6", colorPale: "#F4ECF7", imagePath: "/resources/lifeskills/placeholder.jpg",
-    objective: "Map the intensity of emotions from 1 to 10 and identify coping strategies.", materials: ["Thermometer Worksheets", "Whiteboard"],
+    objective: "Map the intensity of emotions from 1 to 10 and identify specific coping strategies for when the temperature gets too high.", materials: ["Thermometer Worksheets", "Whiteboard"],
     phases: [
-      { time: "0–10 min", phase: "Mapping", steps: [ { type: "do", text: "Draw thermometer 1 to 10." }, { type: "say", text: "We feel 'annoyed' (2) or 'furious' (9)." } ] },
-      { time: "10–25 min", phase: "Personalizing", steps: [ { type: "do", text: "Fill in warning signs for levels 3, 6, and 9." } ] },
-      { time: "25–35 min", phase: "Cooling Down", steps: [ { type: "say", text: "Write one thing to cool down when you hit a 6." } ] }
+      { time: "0–10 min", phase: "Mapping", steps: [ { type: "do", text: "Draw a large thermometer on the board." }, { type: "say", text: "We do not just feel 'angry'. We feel 'annoyed' (2), 'frustrated' (5), or 'furious' (9)." } ] },
+      { time: "10–25 min", phase: "Personalizing", steps: [ { type: "do", text: "Fill in warning signs for levels 3, 6, and 9 on the worksheet." } ] },
+      { time: "25–35 min", phase: "Cooling Down", steps: [ { type: "say", text: "Write one thing to cool down when you hit a 6, before you reach a 9." } ] }
     ],
     debrief: [ { q: "Why notice when you are at a 6?", note: "Easier to cool down before an explosion." } ],
     watchOutFor: [ "Students struggling to identify physical symptoms. Offer examples." ],
-    variations: [ { tag: "Short session", text: "Focus only on anger." } ],
+    variations: [ { tag: "Short session", text: "Focus only on anger, rather than all emotions." } ],
     worksheet: { title: "My Emotion Thermometer", intro: "Map your warning signs.", sections: [ { title: "Temperature Check", prompts: [ { label: "At a 3 (Mild), I notice my body:", lines: 2 }, { label: "At a 9 (High), I usually:", lines: 2 }, { label: "To cool down from a 6, I will:", lines: 2 } ] } ] }
   },
   {
@@ -529,548 +568,323 @@ const ACTIVITIES = [
     worksheet: { title: "Belly Breathing", intro: "Hack your nervous system.", sections: [ { title: "My Plan", prompts: [ { label: "I will use belly breathing when I feel:", lines: 2 } ] } ] }
   },
   {
-    id: 'iceberg',
-    title: 'The Feelings Iceberg',
-    themeShort: ['Self-awareness', 'Coping with emotions'],
-    grade: '5–7', gradeKey: 'lower',
-    duration: '35 min',
-    formats: ['Individual', 'Pairs', 'Full class'],
-    color: '#7C6FA0', colorPale: '#F0EDF8',
-    imagePath: '/resources/lifeskills/thefeelingsiceberg/iceberg-diagram.jpg',
-    guidePdf: '/resources/lifeskills/thefeelingsiceberg/THE FEELINGS ICEBERG_ Exploring Our Emotions (Grade 5–7).pdf',
-    worksheetPdf: '/resources/lifeskills/thefeelingsiceberg/The Feelings Iceberg Worksheet.pdf',
-    objective: "Students will distinguish between surface emotions and underlying feelings, and begin to map their own emotional landscape beneath the waterline.",
-    materials: ["Whiteboard", "Iceberg worksheet", "Coloured pencils"],
+    id: "l_ce_3", title: "The Emotion Log", themeShort: ["Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Individual"], color: "#9B59B6", colorPale: "#F4ECF7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Track emotional states to identify triggers and realize the impermanence of feelings.", materials: ["Emotion Log templates"],
     phases: [
-      {
-        time: '0–5 min', phase: 'Hook',
-        steps: [
-          { type: 'say', text: "Think about the last time you got really angry. What did the other person actually SEE?" },
-          { type: 'do', text: "Write answers on the board: went quiet, shouted, slammed door." },
-          { type: 'say', text: "Now here is my question — was anger the ONLY thing you were feeling? Or was something else going on underneath?" },
-        ]
-      },
-      {
-        time: '5–12 min', phase: 'Concept Introduction',
-        steps: [
-          { type: 'do', text: "Draw an iceberg on the board. Label the tip 'What people SEE' and below the line 'What is REALLY happening.'" },
-          { type: 'say', text: "An iceberg has a tiny visible tip and a massive hidden section. Our emotions work exactly the same way." },
-          { type: 'say', text: "What might be hiding under anger? Fear, embarrassment, loneliness, feeling unheard." },
-        ]
-      },
-      {
-        time: '12–22 min', phase: 'Individual Reflection',
-        steps: [
-          { type: 'do', text: "Distribute iceberg worksheets." },
-          { type: 'say', text: "Think of one recent moment where you felt a strong emotion. Write what you SHOWED in the tip. Then go below the waterline and write what was ACTUALLY happening inside." },
-        ]
-      },
-      {
-        time: '22–30 min', phase: 'Pair Activity — Iceberg Guessing',
-        steps: [
-          { type: 'say', text: "Pair up. Share ONLY your above-waterline with your partner. Do not tell them what is below the line." },
-          { type: 'say', text: "Your partner's job is to GUESS what might be below your waterline." },
-        ]
-      },
-      {
-        time: '30–35 min', phase: 'Full Class Debrief',
-        steps: [
-          { type: 'do', text: "Use the debrief questions below." },
-        ]
-      },
+      { time: "0–10 min", phase: "Myth of Permanence", steps: [ { type: "say", text: "When we are sad, our brain says 'I will feel this forever'. Tracking proves the brain wrong." } ] },
+      { time: "10–20 min", phase: "Setting up the Log", steps: [ { type: "do", text: "Explain how to track morning, afternoon, and evening emotions using simple colours." } ] },
+      { time: "20–30 min", phase: "Reflection", steps: [ { type: "say", text: "Fill out yesterday retrospectively. Did your emotion stay the exact same all day?" } ] }
     ],
-    debrief: [
-      { q: "Was it easy or difficult to look below your waterline? What made it difficult?", note: "Listen for: 'I didn't know what the feeling was'. Validate this." },
-      { q: "Has someone ever responded to just your tip and completely missed what was really going on?", note: "This is usually the question that creates the most resonance." },
-    ],
-    watchOutFor: [
-      "A student who discloses something serious during the below waterline writing. Have your referral process ready.",
-    ],
-    variations: [
-      { tag: 'Grade 5', text: "Use a provided emotion word bank rather than asking students to generate." },
-    ],
-    worksheet: {
-      title: 'The Feelings Iceberg',
-      intro: 'Our emotions are like icebergs — a small visible tip and a huge hidden part. Map your own.',
-      sections: [
-        {
-          title: 'My Iceberg',
-          prompts: [
-            { label: 'The situation I am thinking of:', lines: 2 },
-            { label: 'ABOVE THE WATERLINE — What people saw:', lines: 2 },
-            { label: 'BELOW THE WATERLINE — What I was really feeling inside:', lines: 4 },
-          ]
-        },
-      ]
-    }
+    debrief: [ { q: "Why is it helpful to know emotions change?", note: "It creates hope and endurance." } ],
+    watchOutFor: [ "Making it feel like homework. Make it a 2-minute daily class ritual instead." ],
+    variations: [ { tag: "Grade 7", text: "Add a 'trigger' column to identify causes." } ],
+    worksheet: { title: "Emotion Log", intro: "Emotions are weather. Track the changes.", sections: [ { title: "Tracking", prompts: [ { label: "My biggest shift yesterday was:", lines: 2 } ] } ] }
   },
   {
-    id: 'telephone',
-    title: 'The Telephone Breakdown',
-    themeShort: ['Effective communication'],
-    grade: '5–7', gradeKey: 'lower',
-    duration: '30 min',
-    formats: ['Full class game', 'Pairs'],
-    color: '#5B9EBF', colorPale: '#EAF4FA',
-    objective: "Students will experience how messages distort through communication chains and practise strategies for clearer communication.",
-    materials: ["3 pre-written message cards", "Observation checklist"],
+    id: "l_ce_4", title: "Name It to Tame It", themeShort: ["Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Pairs"], color: "#9B59B6", colorPale: "#F4ECF7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Use precise emotional vocabulary to down-regulate the amygdala during high stress.", materials: ["Emotion Wheel handouts"],
     phases: [
-      {
-        time: '0–5 min', phase: 'First Round (No Rules)',
-        steps: [
-          { type: 'do', text: "Ask 8 students to form a line. Give the first student Message Card 1. Tell them: 'Whisper this once only. No repeats.'" },
-          { type: 'do', text: "Once the message reaches the end, ask the last student to say it aloud. Write it on the board." },
-        ]
-      },
-      {
-        time: '5–10 min', phase: 'Second Round (With Listening Rules)',
-        steps: [
-          { type: 'say', text: "Let us try again with Message Card 2 — but this time, we add three rules: 1. Ask ONE clarifying question. 2. Repeat back what you heard. 3. Flag if you are unsure." },
-          { type: 'do', text: "Run the second round. Observe how the message changes." },
-        ]
-      },
-      {
-        time: '10–18 min', phase: 'Analysis',
-        steps: [
-          { type: 'say', text: "Let us figure out WHY messages change. What were people doing or NOT doing that caused the distortion?" },
-        ]
-      },
-      {
-        time: '18–26 min', phase: 'Pair Practice',
-        steps: [
-          { type: 'do', text: "Pair students. Student A reads a scenario card aloud once. Student B must: clarify, reflect back, then respond." },
-        ]
-      },
-      {
-        time: '26–30 min', phase: 'Debrief',
-        steps: [
-          { type: 'do', text: "Discuss real world applications of these rules." },
-        ]
-      },
+      { time: "0–10 min", phase: "The Neuroscience", steps: [ { type: "say", text: "Brain scans show that putting a precise name to an emotion turns down the alarm center in your brain." } ] },
+      { time: "10–20 min", phase: "The Wheel", steps: [ { type: "do", text: "Hand out Emotion Wheels. Have students trace 'Angry' out to 'Betrayed' or 'Disrespected'." } ] },
+      { time: "20–30 min", phase: "Practice", steps: [ { type: "do", text: "Read scenarios. Have pairs find the hyper-specific emotion word for it." } ] }
     ],
-    debrief: [
-      { q: "Where exactly in the line did the message change most?", note: "Students usually identify a long complex part, or a gap filled with assumption." },
-      { q: "Can you think of a real situation where this breakdown happened?", note: "Fights between friends over 'He said she said' are common examples." },
-    ],
-    watchOutFor: [
-      "Students intentionally corrupting the message for laughs. Redirect warmly.",
-    ],
-    variations: [
-      { tag: 'Grade 5', text: "Use very short, simple messages in Round 1." },
-    ],
-    worksheet: {
-      title: 'The Telephone Breakdown',
-      intro: 'Today we discovered how messages change as they travel.',
-      sections: [
-        {
-          title: 'Observer Checklist',
-          twoCol: true,
-          colTitles: ['Round 1', 'Round 2'],
-          prompts: [
-            { label: 'Where did the message change most?', lines: 2 },
-          ]
-        },
-        {
-          title: 'My Commitment',
-          prompts: [
-            { label: 'One communication situation where a telephone breakdown has happened:', lines: 2 },
-          ]
-        }
-      ]
-    }
+    debrief: [ { q: "Did finding the exact word make you feel more in control?", note: "Shifts brain activity to the prefrontal cortex." } ],
+    watchOutFor: [ "Students feeling overwhelmed by the number of words." ],
+    variations: [ { tag: "Journaling", text: "Have them write a paragraph using 3 specific wheel words." } ],
+    worksheet: { title: "Name It To Tame It", intro: "Precision brings calm.", sections: [ { title: "My Vocabulary", prompts: [ { label: "Instead of 'Mad', I am actually feeling:", lines: 1 } ] } ] }
   },
   {
-    id: 'persona',
-    title: 'Walk a Mile — Persona Cards',
-    themeShort: ['Empathy'],
-    grade: '5–7', gradeKey: 'lower',
-    duration: '40 min',
-    formats: ['Individual reflection', 'Pairs'],
-    color: '#E8845A', colorPale: '#FDF0EA',
-    objective: "Students will practise inhabiting a perspective genuinely different from their own to build empathy.",
-    materials: ["Persona Cards", "Worksheet"],
+    id: "l_ce_5", title: "The Calm Down Toolkit", themeShort: ["Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Individual"], color: "#9B59B6", colorPale: "#F4ECF7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Create a personalized menu of healthy coping mechanisms to use during emotional distress.", materials: ["Worksheet", "Markers"],
     phases: [
-      {
-        time: '0–5 min', phase: 'Set Up',
-        steps: [
-          { type: 'say', text: "Today we are going to try to walk a mile in someone else's shoes. You will each get a persona. For 20 minutes, you are that person." },
-          { type: 'do', text: "Distribute Persona Cards face down. Students flip on your signal." },
-        ]
-      },
-      {
-        time: '5–8 min', phase: 'In-Role Thinking',
-        steps: [
-          { type: 'do', text: "Students read their persona card silently." },
-          { type: 'say', text: "Answer the questions on the worksheet AS that person. Not what YOU would do — what THEY would do." },
-        ]
-      },
-      {
-        time: '8–22 min', phase: 'Individual Reflection',
-        steps: [
-          { type: 'do', text: "Students answer the in-role questions on their worksheet." },
-        ]
-      },
-      {
-        time: '22–33 min', phase: 'Paired Conversation',
-        steps: [
-          { type: 'do', text: "Pair students whose personas are different from each other." },
-          { type: 'say', text: "Have a 5-minute conversation in role. The topic: your school is planning a new policy. Tell each other what that policy should be." },
-        ]
-      },
-      {
-        time: '33–40 min', phase: 'Debrief',
-        steps: [
-          { type: 'say', text: "Come out of role now. Let us talk about what just happened." },
-          { type: 'do', text: "Use the debrief questions." },
-        ]
-      },
+      { time: "0–10 min", phase: "One Size Doesn't Fit All", steps: [ { type: "say", text: "What calms me down might stress you out. You need your own toolkit." } ] },
+      { time: "10–25 min", phase: "Building the Kit", steps: [ { type: "do", text: "Students write down 5 things they can realistically do at school or home when overwhelmed (e.g., drink cold water, draw, listen to a specific song)." } ] },
+      { time: "25–35 min", phase: "Sharing", steps: [ { type: "do", text: "Share toolkits in small groups to gather new ideas." } ] }
     ],
-    debrief: [
-      { q: "What was the hardest part of staying in your persona's perspective?", note: "This is usually: 'I kept thinking what I would do'." },
-      { q: "What did you discover about your persona that you would not have guessed just looking at them?", note: "Listen for the insight that internal experience is rich and complicated." },
-    ],
-    watchOutFor: [
-      "A student who gets a persona very similar to their own difficult situation.",
-    ],
-    variations: [
-      { tag: 'Short session', text: "Skip the paired conversation. Go from individual reflection to group debrief." },
-    ],
-    worksheet: {
-      title: 'Persona Reflection',
-      intro: 'Answer questions 1–2 IN ROLE. Answer questions 3–4 as yourself.',
-      sections: [
-        {
-          title: 'In Role',
-          prompts: [
-            { label: '1. What does a typical school day feel like for you?', lines: 3 },
-            { label: '2. What do you worry about most?', lines: 3 },
-          ]
-        },
-        {
-          title: 'As Yourself',
-          prompts: [
-            { label: '3. What surprised me most about my persona internal experience?', lines: 3 },
-            { label: '4. One assumption I had before this activity that I want to question:', lines: 2 },
-          ]
-        }
-      ]
-    }
-  },
-  {
-    id: 'rumour',
-    title: 'The Rumour Filter',
-    themeShort: ['Critical thinking', 'Empathy'],
-    grade: '5–7', gradeKey: 'lower',
-    duration: '35 min',
-    formats: ['Small groups', 'Full class'],
-    color: '#3498DB', colorPale: '#EBF5FB',
-    objective: "Students will apply the THINK filter to gossip to understand the harm caused by spreading unverified information.",
-    materials: ["Whiteboard", "THINK Filter handouts", "A tube of toothpaste"],
-    phases: [
-      {
-        time: '0–10 min', phase: 'The Toothpaste Demo',
-        steps: [
-          { type: 'do', text: "Squeeze all the toothpaste onto a plate." },
-          { type: 'say', text: "Can I have a volunteer put this toothpaste back in the tube? (They cannot)." },
-          { type: 'say', text: "Rumours are exactly like this. Once the words are out, you can never take them back, and they leave a mess." },
-        ]
-      },
-      {
-        time: '10–20 min', phase: 'The THINK Filter',
-        steps: [
-          { type: 'do', text: "Write THINK on the board. T=True? H=Helpful? I=Inspiring? N=Necessary? K=Kind?" },
-          { type: 'say', text: "Before you repeat something you heard, run it through this filter. If it fails, the rumour stops with you." },
-        ]
-      },
-      {
-        time: '20–30 min', phase: 'Group Scenarios',
-        steps: [
-          { type: 'do', text: "Give groups scenario cards with common school rumours." },
-          { type: 'say', text: "Your group must decide: Does this pass the THINK filter? If not, what is the script you will use to stop the rumour?" },
-        ]
-      },
-      {
-        time: '30–35 min', phase: 'Debrief',
-        steps: [
-          { type: 'do', text: "Discuss the difficulty of standing up to gossip in real life." },
-        ]
-      }
-    ],
-    debrief: [
-      { q: "Why is it so tempting to pass on a rumour?", note: "Listen for: wanting to fit in, wanting attention." },
-      { q: "What is a brave phrase you can use to stop a rumour?", note: "Examples: 'I do not really care about that', or 'Let us not talk about them when they aren't here.'" }
-    ],
-    watchOutFor: [
-      "Students using real current school gossip during the exercise. Shut it down immediately."
-    ],
-    variations: [
-      { tag: 'Grade 7', text: "Apply the THINK filter specifically to WhatsApp forwards and social media comments." }
-    ],
-    worksheet: {
-      title: 'The Rumour Filter',
-      intro: 'Before you speak or type, run it through the filter.',
-      sections: [
-        {
-          title: 'The Filter',
-          prompts: [
-            { label: 'T - Is it True? (Do I have proof?)', lines: 1 },
-            { label: 'H - Is it Helpful?', lines: 1 },
-            { label: 'K - Is it Kind?', lines: 1 }
-          ]
-        },
-        {
-          title: 'My Script',
-          prompts: [
-            { label: 'When someone tries to tell me gossip, I will say:', lines: 2 }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    id: 'shield',
-    title: 'My Strengths Shield',
-    themeShort: ['Self-awareness'],
-    grade: '5–7', gradeKey: 'lower',
-    duration: '40 min',
-    formats: ['Individual art activity', 'Pairs'],
-    color: '#F1C40F', colorPale: '#FEF9E7',
-    objective: "Students will identify their core character strengths and create a visual shield to build self-esteem and resilience.",
-    materials: ["Blank shield templates", "Coloured markers/crayons", "List of character strengths on the board"],
-    phases: [
-      {
-        time: '0–10 min', phase: 'What is a Strength?',
-        steps: [
-          { type: 'say', text: "When we talk about strengths, we often think of being good at math or fast at running. But character strengths are different. They are who you ARE, not just what you DO." },
-          { type: 'do', text: "Write examples on the board: Kindness, Bravery, Humor, Curiosity, Honesty, Teamwork, Perseverance." },
-          { type: 'say', text: "Every single person in this room has at least three of these super powers." }
-        ]
-      },
-      {
-        time: '10–25 min', phase: 'Designing the Shield',
-        steps: [
-          { type: 'do', text: "Hand out the shield templates divided into 4 quadrants." },
-          { type: 'say', text: "Quadrant 1: Draw your greatest strength. Quadrant 2: A strength someone else sees in you. Quadrant 3: A time you used a strength to help. Quadrant 4: A strength you want to grow." },
-        ]
-      },
-      {
-        time: '25–35 min', phase: 'Shield Sharing',
-        steps: [
-          { type: 'do', text: "In pairs, students share their shields." },
-          { type: 'say', text: "Partners, your job is to listen and say: 'I can definitely see that strength in you because...'" }
-        ]
-      },
-      {
-        time: '35–40 min', phase: 'Debrief',
-        steps: [
-          { type: 'do', text: "Conclude by discussing how knowing our strengths acts as a shield against hard days." }
-        ]
-      }
-    ],
-    debrief: [
-      { q: "Was it hard to choose a strength for yourself?", note: "Normalise that human brains are wired to see the negative." },
-      { q: "How can you use your strength to help you get through a difficult exam week?", note: "Connect abstract strengths to practical school challenges." }
-    ],
-    watchOutFor: [
-      "Students who say 'I do not have any strengths'. Sit with them and offer observations: 'I noticed you helped Maya yesterday. That shows kindness.'"
-    ],
-    variations: [
-      { tag: 'Art-focused class', text: "Provide magazines for a collage-style shield instead of drawing." }
-    ],
-    worksheet: {
-      title: 'My Strengths Shield',
-      intro: 'Design your personal crest based on who you are inside.',
-      sections: [
-        {
-          title: 'Shield Planning',
-          prompts: [
-            { label: 'My greatest strength is:', lines: 1 },
-            { label: 'A strength others see in me:', lines: 1 },
-            { label: 'A time I used my strength to help:', lines: 2 },
-            { label: 'A strength I want to grow this year:', lines: 1 }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    id: 'humanknot',
-    title: 'The Human Knot',
-    themeShort: ['Problem solving', 'Interpersonal relationships'],
-    grade: '5–7', gradeKey: 'lower',
-    duration: '30 min',
-    formats: ['Small groups'],
-    color: '#8E44AD', colorPale: '#F5EEF8',
-    objective: "Students will physically collaborate to solve a complex spatial problem, identifying the importance of clear communication and emotional regulation under frustration.",
-    materials: ["Open floor space"],
-    phases: [
-      {
-        time: '0–5 min', phase: 'The Setup',
-        steps: [
-          { type: 'do', text: "Divide the class into groups of 6-8 students." },
-          { type: 'say', text: "Stand in a tight circle. Reach across and grab the hand of someone who is NOT standing right next to you. Now do the same with your other hand to a different person." },
-        ]
-      },
-      {
-        time: '5–20 min', phase: 'The Challenge',
-        steps: [
-          { type: 'say', text: "You are now a human knot. Your goal is to untangle yourselves into a perfect circle WITHOUT letting go of anyone's hands." },
-          { type: 'do', text: "Let them struggle. Do not intervene unless safety is a concern. Observe who takes charge and who gets frustrated." },
-        ]
-      },
-      {
-        time: '20–30 min', phase: 'Debrief',
-        steps: [
-          { type: 'do', text: "Once groups finish (or the time runs out), sit everyone down." },
-          { type: 'say', text: "Let us talk about what just happened." },
-        ]
-      }
-    ],
-    debrief: [
-      { q: "What was the most frustrating part of the challenge?", note: "Often it is when people pull in different directions or do not listen." },
-      { q: "Who stepped up as a leader? Did they tell people what to do, or did they ask for ideas?", note: "Highlight the difference between bossing and guiding." },
-    ],
-    watchOutFor: [
-      "Physical safety. Ensure students step over or duck under arms carefully."
-    ],
-    variations: [
-      { tag: 'Grade 7', text: "Run a second round in complete silence to force non-verbal problem solving." }
-    ],
-    worksheet: {
-      title: 'Problem Solving Reflection',
-      intro: 'Think about how your group handled the Human Knot.',
-      sections: [
-        {
-          title: 'Team Dynamics',
-          prompts: [
-            { label: 'When we got stuck, the thing that helped us most was:', lines: 2 },
-            { label: 'One thing I did to help the team was:', lines: 2 },
-          ]
-        }
-      ]
-    }
-  },
-  {
-    id: 'thermometer',
-    title: 'The Emotion Thermometer',
-    themeShort: ['Coping with emotions'],
-    grade: '5–7', gradeKey: 'lower',
-    duration: '35 min',
-    formats: ['Individual', 'Full class'],
-    color: '#E74C3C', colorPale: '#FDEDEC',
-    objective: "Students will map the intensity of their emotions from 1 to 10 and identify specific coping strategies for when the temperature gets too high.",
-    materials: ["Emotion Thermometer Worksheets", "Whiteboard"],
-    phases: [
-      {
-        time: '0–10 min', phase: 'Mapping Intensity',
-        steps: [
-          { type: 'do', text: "Draw a large thermometer on the board, numbered 1 to 10." },
-          { type: 'say', text: "We do not just feel 'angry'. We feel 'annoyed' (a 2), 'frustrated' (a 5), or 'furious' (a 9). Today we are going to map our own emotional temperature." },
-        ]
-      },
-      {
-        time: '10–25 min', phase: 'Personal Thermometers',
-        steps: [
-          { type: 'do', text: "Distribute worksheets. Students fill in their own warning signs for levels 3, 6, and 9." },
-          { type: 'say', text: "What does your body feel like at a 3? What does it do at a 9? Write it down." },
-        ]
-      },
-      {
-        time: '25–35 min', phase: 'Cooling Down',
-        steps: [
-          { type: 'say', text: "Now, write one specific thing you can do to cool down when you hit a 6, before you reach a 9." },
-          { type: 'do', text: "Share strategies as a class." },
-        ]
-      }
-    ],
-    debrief: [
-      { q: "Why is it important to notice when you are at a 6 instead of waiting until you are a 9?", note: "It is easier to cool down before a full explosion." },
-      { q: "What is one physical warning sign your body gives you when your temperature is rising?", note: "Clenched fists, hot face, breathing fast." },
-    ],
-    watchOutFor: [
-      "Students struggling to identify physical symptoms. Offer examples."
-    ],
-    variations: [
-      { tag: 'Short session', text: "Focus only on anger, rather than all emotions." }
-    ],
-    worksheet: {
-      title: 'My Emotion Thermometer',
-      intro: 'Map your warning signs and your cool-down strategies.',
-      sections: [
-        {
-          title: 'Temperature Check',
-          prompts: [
-            { label: 'At a 3 (Mild), I notice my body:', lines: 2 },
-            { label: 'At a 6 (Medium), I start to:', lines: 2 },
-            { label: 'At a 9 (High), I usually:', lines: 2 },
-          ]
-        },
-        {
-          title: 'Cool Down Plan',
-          prompts: [
-            { label: 'When I hit a 6, I will cool down by:', lines: 2 },
-          ]
-        }
-      ]
-    }
-  },
-  {
-    id: 'whatifmap',
-    title: 'The What-If Map',
-    themeShort: ['Decision making', 'Creative thinking'],
-    grade: '5–7', gradeKey: 'lower',
-    duration: '35 min',
-    formats: ['Small groups'],
-    color: '#F39C12', colorPale: '#FEF9E7',
-    objective: "Students will practice tracing the short and long-term consequences of a single decision using a branching mind map.",
-    materials: ["Large chart paper", "Markers", "Scenario Cards"],
-    phases: [
-      {
-        time: '0–10 min', phase: 'The Ripple Effect',
-        steps: [
-          { type: 'say', text: "Every decision is like dropping a stone in a pond. It creates ripples. Today we are going to draw the ripples." },
-          { type: 'do', text: "Demonstrate on the board with a simple choice: 'I decide not to study for the math test.' Draw branches for what happens the next day, the next week, and the next month." },
-        ]
-      },
-      {
-        time: '10–25 min', phase: 'Group Mapping',
-        steps: [
-          { type: 'do', text: "Give groups a scenario card (e.g., 'You find a lost phone in the cafeteria')." },
-          { type: 'say', text: "Draw the What-If map. If you keep it, what happens? If you turn it in, what happens? Trace each path out to at least three consequences." },
-        ]
-      },
-      {
-        time: '25–35 min', phase: 'Gallery Walk',
-        steps: [
-          { type: 'do', text: "Groups present their maps to the class." },
-        ]
-      }
-    ],
-    debrief: [
-      { q: "Did tracing the 'What-Ifs' make the right choice clearer?", note: "Visualizing consequences often removes impulsivity." },
-    ],
-    watchOutFor: [
-      "Groups getting stuck on unrealistic extreme consequences. Keep them grounded."
-    ],
-    variations: [
-      { tag: 'Grade 5', text: "Do the mapping as a full class activity on the main whiteboard." }
-    ],
-    worksheet: {
-      title: 'The What-If Map',
-      intro: 'Trace the ripples of your choices.',
-      sections: [
-        {
-          title: 'My Map',
-          prompts: [
-            { label: 'The Decision:', lines: 2 },
-            { label: 'Path A leads to:', lines: 2 },
-            { label: 'Path B leads to:', lines: 2 },
-          ]
-        }
-      ]
-    }
+    debrief: [ { q: "Why do we need more than one tool in the kit?", note: "Because you can't always listen to music during class." } ],
+    watchOutFor: [ "Unhealthy coping mechanisms like 'punch a wall'. Guide them to safe alternatives." ],
+    variations: [ { tag: "Physical Kit", text: "Have them actually build a small box with physical items (stress ball, mints)." } ],
+    worksheet: { title: "My Toolkit", intro: "Your personal menu.", sections: [ { title: "My Tools", prompts: [ { label: "Tool 1 (At School):", lines: 1 }, { label: "Tool 2 (At Home):", lines: 1 } ] } ] }
   },
 
+  // ──────────────────────── MIDDLE SECONDARY (Grade 8-10) ────────────────────────
+  // ============================================================================
+  // MIDDLE SECONDARY ACTIVITIES (WHO Life Skills)
+  // ============================================================================
+  {
+    id: "m_sa_1", title: "The Core Values Audit", themeShort: ["Self-awareness", "Decision making"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Individual", "Pairs"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Students will narrow down a list of values to their top 3 core values, and use them to evaluate a recent decision.", materials: ["List of 50 Values", "Worksheet"],
+    phases: [
+      { time: "0–10 min", phase: "The 50 to 5 Challenge", steps: [ { type: "do", text: "Hand out the list of values." }, { type: "say", text: "Circle your top 10. Then cross out 5. You can only have 5." } ] },
+      { time: "10–20 min", phase: "The Final 3", steps: [ { type: "say", text: "Cross out 2 more. These are your Core Values." }, { type: "do", text: "Give them time to struggle. It should be hard." } ] },
+      { time: "20–35 min", phase: "Value Alignment", steps: [ { type: "say", text: "Think of a recent decision that felt wrong or stressful. Did it violate one of your top 3 values?" } ] },
+      { time: "35–40 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss how knowing our values acts as a compass." } ] }
+    ],
+    debrief: [ { q: "Was it hard to eliminate 'Success' to keep 'Integrity'?", note: "Forces definition of success." } ],
+    watchOutFor: [ "Students picking values they think sound 'good' to teachers. Encourage honesty." ],
+    variations: [ { tag: "Grade 10", text: "Apply top 3 to upcoming subject/stream choices." } ],
+    worksheet: { title: "My Core Values", intro: "Your values are your compass.", sections: [ { title: "The Final 3", prompts: [ { label: "Value 1, 2, 3:", lines: 2 }, { label: "A decision that conflicted with my values:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_sa_2", title: "The Identity Mask", themeShort: ["Self-awareness", "Coping with emotions"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Individual art activity"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Explore how students present themselves vs how they feel inside.", materials: ["Paper mask templates", "Markers"],
+    phases: [
+      { time: "0–10 min", phase: "The Concept", steps: [ { type: "say", text: "We all wear masks at school to fit in." } ] },
+      { time: "10–25 min", phase: "Front and Back", steps: [ { type: "do", text: "Front: how I act. Inside: what I actually feel but hide." } ] },
+      { time: "25–35 min", phase: "Reflection", steps: [ { type: "say", text: "Is wearing the mask exhausting?" } ] },
+      { time: "35–40 min", phase: "Debrief", steps: [ { type: "do", text: "Reassure them that having a private self is normal, but total hiding is heavy." } ] }
+    ],
+    debrief: [ { q: "Who is one person you can take the mask off around?", note: "Identifies safe support systems." } ],
+    watchOutFor: [ "Do not force students to share the inside of their masks. It is private." ],
+    variations: [ { tag: "Digital", text: "Compare Instagram profile (front) to real life (inside)." } ],
+    worksheet: { title: "The Identity Mask", intro: "Front vs Back.", sections: [ { title: "Reflection", prompts: [ { label: "Why do I wear the mask I wear?", lines: 2 }, { label: "One person who sees the real me:", lines: 1 } ] } ] }
+  },
+  {
+    id: "m_em_1", title: "The Echo Chamber", themeShort: ["Empathy", "Critical thinking"], grade: "8–10", gradeKey: "middle", duration: "35 min", formats: ["Small groups"], color: "#E8845A", colorPale: "#FDF0EA", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Understand algorithms and practice finding empathy for opposing views.", materials: ["Whiteboard"],
+    phases: [
+      { time: "0–10 min", phase: "Algorithm", steps: [ { type: "say", text: "Social media shows what you already agree with. This is an echo chamber." } ] },
+      { time: "10–25 min", phase: "Steel-manning", steps: [ { type: "say", text: "Today we 'steel-man' — make the strongest possible argument for the OTHER side." }, { type: "do", text: "Give a topic. If a group agrees, they MUST argue why they should be against it." } ] },
+      { time: "25–35 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss how understanding reduces anger." } ] }
+    ],
+    debrief: [ { q: "Does understanding an argument mean you agree with it?", note: "No. Empathy does not equal agreement." } ],
+    watchOutFor: [ "Keep topics to school/lifestyle issues to avoid highly polarized political fights." ],
+    variations: [ { tag: "Grade 10", text: "Use real articles from opposing news sources." } ],
+    worksheet: { title: "Steel-Manning", intro: "Make the strongest argument for the side you disagree with.", sections: [ { title: "The Other Side", prompts: [ { label: "The issue:", lines: 1 }, { label: "My view:", lines: 1 }, { label: "The best argument for the OPPOSITE view is:", lines: 3 } ] } ] }
+  },
+  {
+    id: "m_em_2", title: "The Step Forward", themeShort: ["Empathy", "Interpersonal relationships"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Physical movement", "Full class"], color: "#E8845A", colorPale: "#FDF0EA", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Visualize hidden advantages and disadvantages.", materials: ["Open floor space", "List of statements"],
+    phases: [
+      { time: "0–5 min", phase: "Line Up", steps: [ { type: "do", text: "Stand in a single line across the room." } ] },
+      { time: "5–20 min", phase: "Statements", steps: [ { type: "say", text: "Take a step forward if you have your own bedroom. Step back if you worry about fees." } ] },
+      { time: "20–35 min", phase: "Look Around", steps: [ { type: "say", text: "Look where you are compared to where you started." } ] },
+      { time: "35–40 min", phase: "Debrief", steps: [ { type: "do", text: "Sit where you ended up and debrief." } ] }
+    ],
+    debrief: [ { q: "How did it feel when the gap grew wide?", note: "Metaphor for social division." } ],
+    watchOutFor: [ "Do not use statements that expose deeply traumatic secrets." ],
+    variations: [ { tag: "Closed eyes", text: "Have them keep their eyes closed until the end." } ],
+    worksheet: { title: "The Step Forward", intro: "Reflect on where we stand.", sections: [ { title: "My Position", prompts: [ { label: "One advantage I have that I rarely think about:", lines: 2 }, { label: "How can I use my position to support someone further back?", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_ct_1", title: "Media Manipulation Detective", themeShort: ["Critical thinking"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Pairs"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Identify common logical fallacies and manipulation tactics in media.", materials: ["Printed examples of clickbait/ads", "Worksheet"],
+    phases: [
+      { time: "0–10 min", phase: "Tactics", steps: [ { type: "do", text: "Introduce Fear-mongering, Bandwagon, False Urgency." } ] },
+      { time: "10–25 min", phase: "Investigation", steps: [ { type: "do", text: "Pairs review ads and label the tactics used." } ] },
+      { time: "25–35 min", phase: "Creation", steps: [ { type: "say", text: "Create a highly manipulative ad for a pencil." } ] },
+      { time: "35–40 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss how recognizing the trick removes its power." } ] }
+    ],
+    debrief: [ { q: "Why do these tactics work on our brains?", note: "They trigger emotion before logic." } ],
+    watchOutFor: [ "Ensure examples are age-appropriate." ],
+    variations: [ { tag: "Tech-enabled", text: "Have them find live examples on their phones." } ],
+    worksheet: { title: "Media Detective", intro: "Spot the trick.", sections: [ { title: "Tactics", prompts: [ { label: "An example of False Urgency I found:", lines: 2 }, { label: "How I will question this online:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_ct_2", title: "The Fact-Checker", themeShort: ["Critical thinking", "Effective communication"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Small groups"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Differentiate between objective facts, subjective opinions, and manipulative language.", materials: ["Printed articles", "Highlighters"],
+    phases: [
+      { time: "0–10 min", phase: "Fact vs Opinion", steps: [ { type: "say", text: "An opinion disguised as a fact is manipulative." } ] },
+      { time: "10–25 min", phase: "Audit", steps: [ { type: "do", text: "Highlight facts yellow, opinions pink." } ] },
+      { time: "25–35 min", phase: "Presenting", steps: [ { type: "do", text: "Groups share the most manipulative sentence they found." } ] },
+      { time: "35–40 min", phase: "Debrief", steps: [ { type: "do", text: "Apply this to social media feeds." } ] }
+    ],
+    debrief: [ { q: "How often do you read an opinion and accept it as a fact?", note: "Encourage self-reflection." } ],
+    watchOutFor: [ "Controversial political articles." ],
+    variations: [ { tag: "Grade 10", text: "Use real social media influencer posts." } ],
+    worksheet: { title: "Fact-Checker Audit", intro: "Highlight the truth.", sections: [ { title: "Analysis", prompts: [ { label: "One opinion disguised as a fact:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_crt_1", title: "Design a Utopia", themeShort: ["Creative thinking", "Decision making"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Small groups"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Collaboratively design a perfect society, forcing trade-offs.", materials: ["Chart paper", "Markers"],
+    phases: [
+      { time: "0–10 min", phase: "Blank Slate", steps: [ { type: "say", text: "You are designing a society on Mars. Write 5 core laws." } ] },
+      { time: "10–20 min", phase: "Trade-offs", steps: [ { type: "do", text: "Decide the main goal: Happiness? Progress? Equality?" } ] },
+      { time: "20–30 min", phase: "The Curveball", steps: [ { type: "say", text: "A food shortage hits. Do your rules change?" } ] },
+      { time: "30–40 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss the trade-offs they had to make." } ] }
+    ],
+    debrief: [ { q: "Did you prioritize freedom or security?", note: "Classic sociological trade-off." } ],
+    watchOutFor: [ "Groups making violent rules. Keep it constructive." ],
+    variations: [ { tag: "Quick", text: "Design a perfect school instead of a planet." } ],
+    worksheet: { title: "Utopia Design", intro: "You make the rules.", sections: [ { title: "The Foundation", prompts: [ { label: "The hardest trade-off we made was:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_crt_2", title: "The Worst Idea First", themeShort: ["Creative thinking", "Problem solving"], grade: "8–10", gradeKey: "middle", duration: "30 min", formats: ["Small groups"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Lower the barrier to brainstorming by explicitly asking for terrible ideas.", materials: ["Whiteboard"],
+    phases: [
+      { time: "0–10 min", phase: "Anti-Brainstorm", steps: [ { type: "say", text: "Give me the absolute WORST ideas to solve this school issue." }, { type: "do", text: "Write them on the board." } ] },
+      { time: "10–20 min", phase: "The Flip", steps: [ { type: "say", text: "Now, how could we tweak that terrible idea to make it brilliant?" } ] },
+      { time: "20–30 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss why starting bad unlocks creativity." } ] }
+    ],
+    debrief: [ { q: "Why was it easier to come up with bad ideas?", note: "No fear of judgment." } ],
+    watchOutFor: [ "Inappropriate ideas. Set boundaries." ],
+    variations: [ { tag: "Pairs", text: "Do this for personal problems." } ],
+    worksheet: { title: "The Worst Idea First", intro: "Bad ideas are bridges.", sections: [ { title: "The Flip", prompts: [ { label: "The terrible idea:", lines: 1 }, { label: "The flipped, brilliant version:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_dm_1", title: "The 10-10-10 Rule", themeShort: ["Decision making", "Coping with stress"], grade: "8–10", gradeKey: "middle", duration: "30 min", formats: ["Individual"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Apply a time-travel framework to gain long-term perspective on decisions.", materials: ["Worksheet"],
+    phases: [
+      { time: "0–10 min", phase: "Framework", steps: [ { type: "say", text: "Ask: How will I feel about this choice in 10 minutes? 10 months? 10 years?" } ] },
+      { time: "10–20 min", phase: "Application", steps: [ { type: "do", text: "Run a current stressor through the 3 timeframes." } ] },
+      { time: "20–30 min", phase: "Debrief", steps: [ { type: "say", text: "Notice how the 10-year box shifts perspective." } ] }
+    ],
+    debrief: [ { q: "Did your stress shrink when you looked at the 10-month mark?", note: "Perspective shifts reality." } ],
+    watchOutFor: [ "Dismissing valid current feelings. Acknowledge the 10-minute pain is real." ],
+    variations: [ { tag: "Grade 8", text: "Use 10 minutes, 10 days, 10 weeks." } ],
+    worksheet: { title: "The 10-10-10 Rule", intro: "Zoom out.", sections: [ { title: "Time Travel", prompts: [ { label: "The Choice:", lines: 1 }, { label: "In 10 years, I will feel:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_dm_2", title: "The Choice Crossroads", themeShort: ["Decision making", "Critical thinking"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Physical movement", "Pairs", "Full class"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Practise structured decision-making by arguing opposite sides.", materials: ["4 corner labels: A, B, C, D", "Scenario Cards", "Worksheet"],
+    phases: [
+      { time: "0–5 min", phase: "Setup", steps: [ { type: "do", text: "Place A/B/C/D labels in the four corners of the room." }, { type: "say", text: "When I read a scenario, you move to the corner that matches your choice." } ] },
+      { time: "5–20 min", phase: "Rounds 1 & 2", steps: [ { type: "say", text: "Scenario 1. Move to your corner." }, { type: "do", text: "Give corners 60 seconds to discuss: 'Why did you choose this?'" }, { type: "say", text: "Now — switch. Move to the corner that is the OPPOSITE of what you just argued." } ] },
+      { time: "20–30 min", phase: "Values Mapping", steps: [ { type: "do", text: "Students complete the Decision Framework worksheet." } ] },
+      { time: "30–40 min", phase: "Debrief", steps: [ { type: "do", text: "Use debrief questions." } ] }
+    ],
+    debrief: [ { q: "What was it like to have to argue for the OPPOSITE of what you actually believe?", note: "This builds cognitive flexibility." } ],
+    watchOutFor: [ "Students clustering because friends are there." ],
+    variations: [ { tag: "Short session", text: "Run only one scenario with the switch." } ],
+    worksheet: { title: "The Choice Crossroads", intro: "Use this framework to slow down.", sections: [ { title: "My Decision Framework", prompts: [ { label: "The scenario I am working with:", lines: 2 }, { label: "The strongest argument AGAINST my choice:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_ps_1", title: "The Escape Room Logic", themeShort: ["Problem solving", "Effective communication"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Small groups"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Solve sequential logic puzzles emphasizing role division under pressure.", materials: ["Printed puzzle packets (3 sequential puzzles)"],
+    phases: [
+      { time: "0–5 min", phase: "The Brief", steps: [ { type: "say", text: "You have 25 minutes. Puzzle 1 opens Puzzle 2. You must work together." } ] },
+      { time: "5–30 min", phase: "Escape", steps: [ { type: "do", text: "Groups work frantically. Observe time management." } ] },
+      { time: "30–40 min", phase: "Debrief", steps: [ { type: "say", text: "When stuck, did your group get louder or quieter?" } ] }
+    ],
+    debrief: [ { q: "Did you divide roles or all try to do the same thing?", note: "Division of labor is key." } ],
+    watchOutFor: [ "One highly dominant student doing it all. Require taking turns." ],
+    variations: [ { tag: "Tech-enabled", text: "Use Google Forms with password-protected sections." } ],
+    worksheet: { title: "Escape Reflection", intro: "How did you handle the pressure?", sections: [ { title: "Teamwork", prompts: [ { label: "My specific role in the group was:", lines: 1 }, { label: "When we were stuck, I reacted by:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_ps_2", title: "The Community Fix", themeShort: ["Problem solving", "Interpersonal relationships"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Small groups"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Design a zero-budget intervention to solve a school social issue.", materials: ["Whiteboard", "Worksheet"],
+    phases: [
+      { time: "0–10 min", phase: "Constraint", steps: [ { type: "say", text: "Fix the littering problem with zero money and no punishments." } ] },
+      { time: "10–25 min", phase: "Design", steps: [ { type: "do", text: "Use behavioral nudges (e.g., painting footprints to the bin)." } ] },
+      { time: "25–35 min", phase: "Pitch", steps: [ { type: "do", text: "Present the zero-budget fixes." } ] },
+      { time: "35–40 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss how constraints force better problem solving." } ] }
+    ],
+    debrief: [ { q: "Why is a nudge better than a punishment?", note: "Changes motivation, not just fear." } ],
+    watchOutFor: [ "Ideas that secretly require money." ],
+    variations: [ { tag: "Real Action", text: "Actually implement the winning idea in the school." } ],
+    worksheet: { title: "Zero Budget Fix", intro: "Solve problems with psychology.", sections: [ { title: "The Plan", prompts: [ { label: "The Problem:", lines: 1 }, { label: "Our behavioral nudge:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_ec_1", title: "The Push & Stand", themeShort: ["Effective communication", "Interpersonal relationships"], grade: "8–10", gradeKey: "middle", duration: "35 min", formats: ["Physical pairs activity", "Role-play"], color: "#8E44AD", colorPale: "#F5EEF8", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Experience the three responses to peer pressure: give in, push back, step aside.", materials: ["Open space", "Worksheet"],
+    phases: [
+      { time: "0–10 min", phase: "Physical Push", steps: [ { type: "do", text: "Push palms gently. Stand still. Step aside." }, { type: "say", text: "This is Force, Surrender, and Deflection." } ] },
+      { time: "10–20 min", phase: "Verbal Practice", steps: [ { type: "do", text: "Practice the 3 responses to: 'Skip class with us.'" } ] },
+      { time: "20–30 min", phase: "Scripting", steps: [ { type: "do", text: "Write boundary scripts on the worksheet." } ] },
+      { time: "30–35 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss default responses." } ] }
+    ],
+    debrief: [ { q: "Which response is your default?", note: "Create awareness." } ],
+    watchOutFor: [ "Physical activity getting too rough." ],
+    variations: [ { tag: "Grade 8", text: "Focus only on social peer pressure." } ],
+    worksheet: { title: "My Boundary Scripts", intro: "Have a script ready.", sections: [ { title: "My Scripts", prompts: [ { label: "My Push Back script:", lines: 2 }, { label: "My Step Aside script:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_ec_2", title: "Debate vs Dialogue", themeShort: ["Effective communication", "Empathy"], grade: "8–10", gradeKey: "middle", duration: "35 min", formats: ["Pairs"], color: "#8E44AD", colorPale: "#F5EEF8", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Experience the difference between listening to win and listening to understand.", materials: ["Controversial prompts"],
+    phases: [
+      { time: "0–5 min", phase: "Setup", steps: [ { type: "say", text: "In a debate, you listen for flaws. In dialogue, you listen for truth." } ] },
+      { time: "5–15 min", phase: "Debate", steps: [ { type: "do", text: "Argue to WIN for 3 minutes." } ] },
+      { time: "15–25 min", phase: "Dialogue", steps: [ { type: "say", text: "Now you must summarize what the other said before you can speak." } ] },
+      { time: "25–35 min", phase: "Debrief", steps: [ { type: "do", text: "Compare the feeling in your body." } ] }
+    ],
+    debrief: [ { q: "How did your body feel in Round 1 vs 2?", note: "Tense vs Relaxed." } ],
+    watchOutFor: [ "Round 1 getting too heated. Keep topics light." ],
+    variations: [ { tag: "Grade 10", text: "Use real school issues." } ],
+    worksheet: { title: "Dialogue Rules", intro: "Listen to understand.", sections: [ { title: "Reflection", prompts: [ { label: "Why is dialogue harder than debate?", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_ir_1", title: "The Two-Story House", themeShort: ["Interpersonal relationships", "Problem solving"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Pairs", "Trio (with observer)"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Distinguish between positions (what I want) and interests (what I need).", materials: ["Conflict scenario cards", "Worksheet"],
+    phases: [
+      { time: "0–10 min", phase: "Metaphor", steps: [ { type: "say", text: "Positions are what we say. Interests are why we say it." } ] },
+      { time: "10–25 min", phase: "Trio Practice", steps: [ { type: "do", text: "A and B argue. Observer listens for the underlying interest." } ] },
+      { time: "25–35 min", phase: "Mapping", steps: [ { type: "do", text: "Map a real personal conflict on the worksheet." } ] },
+      { time: "35–40 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss empathy." } ] }
+    ],
+    debrief: [ { q: "Did hearing their interest change your anger?", note: "Empathy moment." } ],
+    watchOutFor: [ "Reopening real conflicts in class." ],
+    variations: [ { tag: "Pairs only", text: "Remove the Observer role." } ],
+    worksheet: { title: "Positions & Interests", intro: "Look underneath.", sections: [ { title: "My Conflict", prompts: [ { label: "My Position vs Theirs:", lines: 2 }, { label: "My Interest vs Theirs:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_ir_2", title: "Toxic vs Healthy Tracker", themeShort: ["Interpersonal relationships", "Self-awareness"], grade: "8–10", gradeKey: "middle", duration: "35 min", formats: ["Individual"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Audit relationships to identify energy drains and healthy boundaries.", materials: ["Worksheets"],
+    phases: [
+      { time: "0–10 min", phase: "Battery Metaphor", steps: [ { type: "say", text: "Some relationships charge your battery. Some drain it." } ] },
+      { time: "10–20 min", phase: "Audit", steps: [ { type: "do", text: "Rate 5 close people as chargers, neutral, or drains." } ] },
+      { time: "20–30 min", phase: "Boundaries", steps: [ { type: "say", text: "For one drain, write one boundary to set this week." } ] },
+      { time: "30–35 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss the guilt of setting boundaries." } ] }
+    ],
+    debrief: [ { q: "Why do we feel guilty setting boundaries?", note: "Fear of being mean." } ],
+    watchOutFor: [ "Privacy. Ensure no one sees anyone else's audit." ],
+    variations: [ { tag: "Anonymous", text: "Collect examples of 'drains' on folded paper." } ],
+    worksheet: { title: "The Battery Audit", intro: "Protect your energy.", sections: [ { title: "Action Plan", prompts: [ { label: "One boundary I need to set:", lines: 2 }, { label: "Exactly what I will say:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_cs_1", title: "The Reverse Calendar", themeShort: ["Coping with stress", "Decision making"], grade: "8–10", gradeKey: "middle", duration: "35 min", formats: ["Individual", "Pairs"], color: "#27AE60", colorPale: "#D5F5E3", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Apply backward planning to a goal to reduce deadline-induced panic.", materials: ["Blank Calendar"],
+    phases: [
+      { time: "0–10 min", phase: "Why Goals Fail", steps: [ { type: "say", text: "We plan forward and get overwhelmed. Planners work backwards." } ] },
+      { time: "10–25 min", phase: "Mapping", steps: [ { type: "do", text: "Write end date. Map back to 1 month, 1 week, and tomorrow." } ] },
+      { time: "25–30 min", phase: "Accountability", steps: [ { type: "do", text: "Share 'Tomorrow's step' with a partner." } ] },
+      { time: "30–35 min", phase: "Debrief", steps: [ { type: "do", text: "Discuss the relief of seeing the steps." } ] }
+    ],
+    debrief: [ { q: "Is your first step ACTUALLY doable in 15 minutes?", note: "Force them to make it smaller." } ],
+    watchOutFor: [ "Vague goals like 'Study harder'." ],
+    variations: [ { tag: "Grade 10", text: "Extend to one year timeline." } ],
+    worksheet: { title: "Reverse Calendar", intro: "Start at the end.", sections: [ { title: "The Plan", prompts: [ { label: "End Date:", lines: 1 }, { label: "TOMORROW's 15-minute step:", lines: 1 } ] } ] }
+  },
+  {
+    id: "m_cs_2", title: "The Stress Mindset Reframe", themeShort: ["Coping with stress", "Coping with emotions"], grade: "8–10", gradeKey: "middle", duration: "35 min", formats: ["Full class"], color: "#27AE60", colorPale: "#D5F5E3", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Shift from viewing stress as a threat to viewing it as a performance enhancer.", materials: ["Whiteboard"],
+    phases: [
+      { time: "0–10 min", phase: "The Science", steps: [ { type: "say", text: "Heart racing is your body pumping oxygen to perform better." } ] },
+      { time: "10–20 min", phase: "Reframe", steps: [ { type: "do", text: "Flip 'I am stressed' to 'My body is preparing me for a challenge.'" } ] },
+      { time: "20–30 min", phase: "Application", steps: [ { type: "do", text: "Apply the reframe to the biggest current stressor." } ] },
+      { time: "30–35 min", phase: "Debrief", steps: [ { type: "say", text: "How does changing the story change the feeling?" } ] }
+    ],
+    debrief: [ { q: "Can stress ever be a good thing?", note: "Creates focus and drive." } ],
+    watchOutFor: [ "Invalidating chronic, toxic stress. Acknowledge the difference." ],
+    variations: [ { tag: "Athletics", text: "Apply it to sports performance anxiety." } ],
+    worksheet: { title: "Stress Reframing", intro: "Change the story.", sections: [ { title: "The Flip", prompts: [ { label: "My stressful thought:", lines: 2 }, { label: "The performance reframe:", lines: 2 } ] } ] }
+  },
+  {
+    id: "m_ce_1", title: "The Pressure Bottle", themeShort: ["Coping with emotions", "Coping with stress"], grade: "8–10", gradeKey: "middle", duration: "35 min", formats: ["Demonstration", "Individual"], color: "#C0392B", colorPale: "#FADBD8", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Map your personal stress cycle and release valves.", materials: ["One plastic bottle with cap (shaken up)", "Worksheet"],
+    phases: [
+      { time: "0–10 min", phase: "Demo", steps: [ { type: "say", text: "If we open a shaken bottle suddenly, it explodes. We need slow release." } ] },
+      { time: "10–25 min", phase: "Mapping", steps: [ { type: "do", text: "Map Warning Signs and Release Valves on the worksheet." } ] },
+      { time: "25–35 min", phase: "Pair Share", steps: [ { type: "say", text: "Share ONE warning sign so your partner can look out for you." } ] }
+    ],
+    debrief: [ { q: "Which part of your bottle was hardest to identify?", note: "Usually release valves." } ],
+    watchOutFor: [ "A student whose explosion pattern involves self-harm. Follow up privately." ],
+    variations: [ { tag: "Grade 8", text: "Focus on physical release valves only." } ],
+    worksheet: { title: "My Pressure Bottle", intro: "Map your own stress cycle.", sections: [ { title: "My Release Valves", prompts: [ { label: "Things that help me release pressure BEFORE explosion:", lines: 3 } ] } ] }
+  },
+  {
+    id: "m_ce_2", title: "Name It to Tame It", themeShort: ["Coping with emotions", "Self-awareness"], grade: "8–10", gradeKey: "middle", duration: "30 min", formats: ["Pairs"], color: "#9B59B6", colorPale: "#F4ECF7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    objective: "Use precise emotional vocabulary to down-regulate the amygdala.", materials: ["Emotion Wheel handouts"],
+    phases: [
+      { time: "0–10 min", phase: "Neuroscience", steps: [ { type: "say", text: "Putting a precise name to an emotion turns down the alarm center." } ] },
+      { time: "10–20 min", phase: "The Wheel", steps: [ { type: "do", text: "Use Emotion Wheel to trace 'Angry' to 'Betrayed'." } ] },
+      { time: "20–30 min", phase: "Practice", steps: [ { type: "do", text: "Read scenarios and find the hyper-specific emotion word." } ] }
+    ],
+    debrief: [ { q: "Did finding the exact word make you feel more in control?", note: "Shifts brain to prefrontal cortex." } ],
+    watchOutFor: [ "Students feeling overwhelmed by the number of words." ],
+    variations: [ { tag: "Journaling", text: "Have them write a paragraph using 3 specific wheel words." } ],
+    worksheet: { title: "Name It To Tame It", intro: "Precision brings calm.", sections: [ { title: "My Vocabulary", prompts: [ { label: "Instead of 'Mad', I am actually feeling:", lines: 1 } ] } ] }
+  },
   // ──────────────────────── MIDDLE SECONDARY (Grade 8-10) ────────────────────────
   // ============================================================================
   // 20 NEW MIDDLE SECONDARY ACTIVITIES (WHO Life Skills)
