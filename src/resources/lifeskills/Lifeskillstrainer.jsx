@@ -267,8 +267,7 @@ objective: "Students will distinguish between surface emotions (what others see)
         steps: [
           { type: 'do', text: 'Ask students to close their eyes briefly.' },
           { type: 'say', text: '"Think about the last time you got really angry — at a friend, a sibling, anyone. Picture it. Now: what did the other person actually SEE? What did your anger look like from the outside?"' },
-          { type: 'do', text: 'Take 3–4 answers. Write them on the board: "went quiet", "shouted", "face went red", "slammed door".' },
-          { type: 'say', text: '"Interesting. Now here's my question — was anger the ONLY thing you were feeling? Or was something else going on underneath?"' },
+          { type: 'do', text: 'Take 3–4 answers. Write them on the board: "went quiet", "shouted", "face went red", "slammed door".' },{ type: 'say', text: '"Interesting. Now here\'s my question — was anger the ONLY thing you were feeling? Or was something else going on underneath?"' },
           { type: 'tip', text: 'Keep this light and curious. Don\'t push for specific answers yet — just plant the question.' },
         ]
       },
