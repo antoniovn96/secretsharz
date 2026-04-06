@@ -1,6 +1,6 @@
 /**
  * Life Skills Trainer — School Counsellor Activity Bank
- * src/resources/lifeskills/LifeSkillsTrainer.jsx
+ * src/resources/lifeskills/Lifeskillstrainer.jsx
  *
  * 10 classroom-ready activities for Grade 5–12 life skills sessions.
  * Each activity includes: objective, materials, full facilitation script,
@@ -260,20 +260,23 @@ const ACTIVITIES = [
     duration: '35 min',
     formats: ['Individual', 'Pairs', 'Full class'],
     color: '#7C6FA0', colorPale: '#F0EDF8',
-objective: "Students will distinguish between surface emotions (what others see) and underlying feelings (what's really happening inside), and begin to map their own emotional landscape beneath the waterline.",    materials: ['Whiteboard & marker', 'Iceberg worksheet (one per student)', 'Coloured pencils or pens (optional)', 'Small slips of paper for the "parking lot"'],
+    objective: "Students will distinguish between surface emotions (what others see) and underlying feelings (what's really happening inside), and begin to map their own emotional landscape beneath the waterline.",
+    materials: ['Whiteboard & marker', 'Iceberg worksheet (one per student)', 'Coloured pencils or pens (optional)', 'Small slips of paper for the "parking lot"'],
     phases: [
       {
         time: '0–5 min', phase: 'Hook',
         steps: [
           { type: 'do', text: 'Ask students to close their eyes briefly.' },
           { type: 'say', text: '"Think about the last time you got really angry — at a friend, a sibling, anyone. Picture it. Now: what did the other person actually SEE? What did your anger look like from the outside?"' },
-          { type: 'do', text: 'Take 3–4 answers. Write them on the board: "went quiet", "shouted", "face went red", "slammed door".' },{ type: 'say', text: '"Interesting. Now here\'s my question — was anger the ONLY thing you were feeling? Or was something else going on underneath?"' },
+          { type: 'do', text: 'Take 3–4 answers. Write them on the board: "went quiet", "shouted", "face went red", "slammed door".' },
+          { type: 'say', text: '"Interesting. Now here\'s my question — was anger the ONLY thing you were feeling? Or was something else going on underneath?"' },
           { type: 'tip', text: 'Keep this light and curious. Don\'t push for specific answers yet — just plant the question.' },
         ]
       },
       {
         time: '5–12 min', phase: 'Concept Introduction',
-        steps: [{ type: 'do', text: 'Draw a simple iceberg on the board: a small tip above a wavy blue line, a large mass below. Label the tip "What people SEE" and below the line "What\'s REALLY happening."' }
+        steps: [
+          { type: 'do', text: 'Draw a simple iceberg on the board: a small tip above a wavy blue line, a large mass below. Label the tip "What people SEE" and below the line "What\'s REALLY happening."' },
           { type: 'say', text: '"An iceberg has a tiny visible tip — maybe 10% — and a massive hidden section below the waterline. Our emotions work exactly the same way."' },
           { type: 'say', text: '"What might be hiding under anger?" Build a word cloud below the waterline as students call out: fear, embarrassment, loneliness, feeling unheard, jealousy, hurt, disappointment, feeling unsafe.' },
           { type: 'say', text: '"What about sadness? What could be under that?" Add more. Under silence? Under nervous laughter?' },
@@ -501,7 +504,7 @@ objective: "Students will distinguish between surface emotions (what others see)
           { type: 'do', text: 'Pair students whose personas are different from each other.' },
           { type: 'say', text: '"You are going to have a 5-minute conversation — in role. The topic: your school is planning a new policy. Tell each other what that policy should be and why — from your persona\'s perspective."' },
           { type: 'say', text: '"You can disagree — in fact, try to. But really listen to what the other person needs and why. You\'re practising empathy, not debate."' },
-          { type: 'do', text: 'After 5 minutes, stop the in-role conversation. Give 3 minutes for each student to write: "What surprised me about my partner\'s perspective? What assumption of mine did it challenge?"' },
+          { type: 'do', text: 'After 5 minutes, stop the in-role conversation. Give 3 minutes for each student to write: "What surprised me about my partner\'s perspective? What assumption of mine did it challenged?"' },
         ]
       },
       {
@@ -1681,7 +1684,7 @@ export default function LifeSkillsTrainer({ navigate, onBack }) {
         <div className="lst-grid">
           {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--ls-muted)' }}>
-              <div style={{ fontSize: '48px', marginBottom: '14px' }}>🌱</div>
+              <div style={{ fontSize: '48px', margin-bottom: '14px' }}>🌱</div>
               <p style={{ fontSize: '16px', fontWeight: 600 }}>No activities match this filter. Try another theme.</p>
             </div>
           ) : (
