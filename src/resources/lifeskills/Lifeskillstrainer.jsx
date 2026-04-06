@@ -2,12 +2,8 @@
  * Life Skills Trainer — School Counsellor Activity Bank
  * src/resources/lifeskills/Lifeskillstrainer.jsx
  *
- * 10 classroom-ready activities for Grade 5–12 life skills sessions.
- * Each activity includes: objective, materials, full facilitation script,
- * debrief questions, watch-out notes, variations, and a printable
- * student worksheet.
- *
- * Print: Facilitator Guide OR Student Worksheet — browser-native PDF via @media print
+ * 30 classroom-ready activities for Grade 5–12 life skills sessions.
+ * Mapped to the 10 WHO Life Skills.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -26,17 +22,14 @@ const PAGE_CSS = `
   --ls-r:18px;
 }
 
-/* ── Shell ── */
 .lst-page { min-height:100vh; background:var(--ls-cream); padding-bottom:100px; font-family:'Plus Jakarta Sans',sans-serif; }
 
-/* ── Top Bar ── */
 .lst-topbar { background:var(--ls-ink); color:white; height:56px; padding:0 40px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:300; border-bottom:3px solid var(--ls-amber); }
 .lst-back { display:flex; align-items:center; gap:6px; color:rgba(255,255,255,0.7); font-size:13px; font-weight:700; background:none; border:none; cursor:pointer; font-family:inherit; padding:0; transition:color .2s; }
 .lst-back:hover { color:white; }
 .lst-topbar-title { font-family:'Fraunces',serif; font-size:16px; color:white; }
 .lst-topbar-right { display:flex; align-items:center; gap:8px; font-size:12px; color:rgba(255,255,255,.45); font-weight:600; }
 
-/* ── Hero ── */
 .lst-hero { background:linear-gradient(135deg,var(--ls-ink) 0%,#2C1F05 55%,#3D2D0A 100%); padding:64px 48px 56px; position:relative; overflow:hidden; }
 .lst-hero-blob { position:absolute; pointer-events:none; border-radius:50%; }
 .lst-hero-blob-1 { width:480px; height:480px; background:radial-gradient(circle,rgba(200,134,10,.14),transparent 70%); top:-160px; right:-80px; }
@@ -53,7 +46,6 @@ const PAGE_CSS = `
 .lst-stat-num { font-family:'Fraunces',serif; font-size:36px; font-weight:700; color:#FFCE6B; line-height:1; }
 .lst-stat-label { font-size:11px; color:rgba(255,255,255,.45); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
 
-/* ── Grade Band Tabs ── */
 .lst-tabs-wrap { background:white; border-bottom:2px solid var(--ls-border); position:sticky; top:56px; z-index:200; box-shadow:var(--ls-shadow-sm); }
 .lst-tabs { max-width:1100px; margin:0 auto; padding:0 48px; display:flex; }
 .lst-tab { padding:18px 28px; font-size:14px; font-weight:700; cursor:pointer; border:none; background:none; font-family:inherit; color:var(--ls-muted); border-bottom:3px solid transparent; transition:all .2s; display:flex; flex-direction:column; align-items:flex-start; gap:2px; white-space:nowrap; }
@@ -62,7 +54,6 @@ const PAGE_CSS = `
 .lst-tab-sub { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--ls-muted); }
 .lst-tab.active .lst-tab-sub { color:var(--ls-amber); }
 
-/* ── Filter Chips ── */
 .lst-filter-wrap { max-width:1100px; margin:28px auto 0; padding:0 48px; }
 .lst-filter-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .lst-filter-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--ls-muted); margin-right:4px; }
@@ -71,19 +62,16 @@ const PAGE_CSS = `
 .lst-chip.active { background:var(--ls-amber); border-color:var(--ls-amber); color:white; }
 .lst-result-meta { font-size:12px; color:var(--ls-muted); margin-left:auto; font-weight:600; }
 
-/* ── Activity Cards Grid ── */
 .lst-grid { max-width:1100px; margin:24px auto 0; padding:0 48px 40px; display:flex; flex-direction:column; gap:20px; }
 
-/* ── Activity Card ── */
 .lst-card { background:white; border-radius:var(--ls-r); border:1.5px solid var(--ls-border); box-shadow:var(--ls-shadow-sm); overflow:hidden; transition:box-shadow .25s,border-color .25s; }
 .lst-card:hover { box-shadow:var(--ls-shadow-md); }
 .lst-card.expanded { border-color:var(--ls-amber); box-shadow:var(--ls-shadow-md); }
-.lst-card-accent { height:5px; }
+.lst-card-accent { height:5px; width: 100%; }
 
 .lst-card-header { padding:22px 26px; display:flex; align-items:flex-start; gap:16px; cursor:pointer; user-select:none; }
 .lst-card-header:hover { background:rgba(30,40,32,.015); }
 .lst-card-num { width:42px; height:42px; border-radius:12px; background:var(--ls-sand); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:18px; font-weight:700; color:var(--ls-amber); flex-shrink:0; border:1px solid var(--ls-border); }
-.lst-card-icon { font-size:22px; flex-shrink:0; margin-top:1px; }
 .lst-card-meta-block { flex:1; }
 .lst-card-title { font-family:'Fraunces',serif; font-size:20px; font-weight:700; color:var(--ls-ink); margin-bottom:5px; line-height:1.25; }
 .lst-card-badges { display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
@@ -93,7 +81,7 @@ const PAGE_CSS = `
 .lst-badge-time { background:rgba(30,40,32,.05); color:var(--ls-muted); }
 .lst-badge-format { background:#EAF4FA; color:#2980B9; }
 .lst-card-obj { font-size:13px; color:var(--ls-muted); margin-top:7px; line-height:1.6; max-width:640px; }
-.lst-card-chevron { font-size:14px; color:var(--ls-muted); transition:transform .25s; flex-shrink:0; margin-top:3px; }
+.lst-card-chevron { font-size:14px; color:var(--ls-muted); transition:transform .25s; flex-shrink:0; margin-top:3px; font-weight: bold; }
 .lst-card.expanded .lst-card-chevron { transform:rotate(90deg); }
 .lst-card-print-btns { display:flex; gap:6px; align-items:center; flex-shrink:0; }
 .lst-print-btn { display:flex; align-items:center; gap:5px; padding:7px 13px; border-radius:50px; font-size:11px; font-weight:700; cursor:pointer; border:none; font-family:inherit; transition:all .2s; white-space:nowrap; text-decoration:none; }
@@ -102,22 +90,21 @@ const PAGE_CSS = `
 .lst-print-btn.ws { background:rgba(41,128,185,.08); color:#2980B9; border:1px solid rgba(41,128,185,.2); }
 .lst-print-btn.ws:hover { background:#2980B9; color:white; }
 
-/* ── Expanded Body ── */
 .lst-card-body { border-top:1px solid var(--ls-border); padding:28px 30px 32px; animation:lstFadeIn .3s ease; }
 @keyframes lstFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
-/* Section tabs inside card */
 .lst-inner-tabs { display:flex; gap:0; border-bottom:1px solid var(--ls-border); margin-bottom:24px; overflow-x:auto; scrollbar-width:none; }
 .lst-inner-tabs::-webkit-scrollbar { display:none; }
 .lst-inner-tab { padding:10px 18px; font-size:13px; font-weight:700; cursor:pointer; border:none; background:none; font-family:inherit; color:var(--ls-muted); border-bottom:2px solid transparent; transition:all .18s; white-space:nowrap; }
 .lst-inner-tab:hover { color:var(--ls-ink); }
 .lst-inner-tab.active { color:var(--ls-amber); border-bottom-color:var(--ls-amber); }
 
-/* Materials */
 .lst-materials { display:flex; flex-wrap:wrap; gap:8px; }
 .lst-material-tag { background:var(--ls-sand); border:1px solid var(--ls-border); padding:6px 13px; border-radius:20px; font-size:13px; color:var(--ls-ink-soft); font-weight:500; display:flex; align-items:center; gap:5px; }
 
-/* Facilitation Steps */
+.lst-image-wrapper { margin: 24px 0; text-align: center; background: #F8F9FA; padding: 16px; border-radius: 12px; border: 1px solid #E5E7EB; }
+.lst-content-img { max-width: 100%; height: auto; border-radius: 8px; display: block; margin: 0 auto; max-height: 400px; object-fit: contain; }
+
 .lst-phase { margin-bottom:22px; }
 .lst-phase-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
 .lst-phase-time { background:var(--ls-amber); color:white; padding:3px 11px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; }
@@ -127,8 +114,7 @@ const PAGE_CSS = `
 .lst-step.do  { background:var(--ls-sand); border-left:3px solid var(--ls-muted); }
 .lst-step.tip { background:var(--ls-amber-pale); border-left:3px solid var(--ls-amber); }
 .lst-step.pause { background:var(--ls-sage-pale); border-left:3px solid var(--ls-sage); }
-.lst-step-icon { font-size:15px; flex-shrink:0; margin-top:1px; }
-.lst-step-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; width:38px; flex-shrink:0; margin-top:3px; }
+.lst-step-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; width:45px; flex-shrink:0; margin-top:3px; }
 .lst-step.say .lst-step-label  { color:#2980B9; }
 .lst-step.do  .lst-step-label  { color:var(--ls-muted); }
 .lst-step.tip .lst-step-label  { color:var(--ls-amber); }
@@ -136,21 +122,14 @@ const PAGE_CSS = `
 .lst-step-text { flex:1; color:var(--ls-ink-soft); }
 .lst-step.say .lst-step-text { font-style:italic; color:var(--ls-ink); }
 
-/* Debrief */
 .lst-debrief-item { border:1px solid var(--ls-border); border-radius:12px; padding:16px 18px; margin-bottom:10px; }
 .lst-debrief-q { font-size:15px; font-weight:700; color:var(--ls-ink); margin-bottom:6px; }
 .lst-debrief-note { font-size:13px; color:var(--ls-muted); line-height:1.65; display:flex; gap:8px; }
-.lst-debrief-note::before { content:'💡'; flex-shrink:0; }
 
-/* Watch out for */
 .lst-watch-item { display:flex; gap:12px; padding:13px 16px; background:#FDF0EA; border-radius:10px; margin-bottom:8px; font-size:14px; color:var(--ls-ink-soft); line-height:1.6; border-left:3px solid #E8845A; }
-.lst-watch-item::before { content:'⚠️'; flex-shrink:0; }
-
-/* Variations */
 .lst-variation-item { display:flex; gap:12px; padding:12px 15px; background:var(--ls-sage-pale); border-radius:10px; margin-bottom:7px; font-size:14px; color:var(--ls-ink-soft); line-height:1.6; }
 .lst-variation-tag { font-size:11px; font-weight:700; color:var(--ls-forest); text-transform:uppercase; letter-spacing:.8px; white-space:nowrap; margin-top:2px; }
 
-/* Worksheet (screen preview) */
 .lst-ws-preview { background:var(--ls-sand); border-radius:14px; padding:28px; }
 .lst-ws-section { background:white; border-radius:12px; padding:20px 22px; margin-bottom:14px; border:1px solid var(--ls-border); }
 .lst-ws-section-title { font-family:'Fraunces',serif; font-size:16px; font-weight:700; color:var(--ls-ink); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
@@ -158,7 +137,6 @@ const PAGE_CSS = `
 .lst-ws-lines { border-bottom:1.5px dotted rgba(30,40,32,.2); height:28px; margin-bottom:6px; width:100%; }
 .lst-ws-box { border:1.5px dotted rgba(30,40,32,.2); border-radius:8px; min-height:70px; width:100%; margin-bottom:8px; }
 
-/* ── PRINT OVERLAY ── */
 .lst-print-overlay { position:fixed; inset:0; background:white; z-index:9999; overflow-y:auto; padding:0; display:none; }
 .lst-print-overlay.visible { display:block; }
 .lst-print-overlay-topbar { background:var(--ls-ink); padding:14px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; }
@@ -170,7 +148,6 @@ const PAGE_CSS = `
 .lst-po-btn:hover { opacity:.88; }
 .lst-print-doc { max-width:760px; margin:32px auto; padding:0 32px 60px; font-family:'Plus Jakarta Sans',sans-serif; }
 
-/* FACILITATOR GUIDE print doc styles */
 .lstp-header { border-bottom:4px solid var(--ls-amber); padding-bottom:20px; margin-bottom:28px; }
 .lstp-header h1 { font-family:'Fraunces',serif; font-size:28px; color:var(--ls-ink); margin:0 0 6px; }
 .lstp-header-meta { display:flex; gap:16px; flex-wrap:wrap; font-size:13px; color:var(--ls-muted); font-weight:600; }
@@ -187,7 +164,7 @@ const PAGE_CSS = `
 .lstp-step.do  { background:var(--ls-sand); }
 .lstp-step.tip { background:var(--ls-amber-pale); }
 .lstp-step.pause { background:var(--ls-sage-pale); }
-.lstp-step-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; width:34px; flex-shrink:0; margin-top:3px; }
+.lstp-step-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; width:45px; flex-shrink:0; margin-top:3px; }
 .lstp-step.say .lstp-step-lbl { color:#2980B9; }
 .lstp-step.do  .lstp-step-lbl { color:var(--ls-muted); }
 .lstp-step.tip .lstp-step-lbl { color:var(--ls-amber); }
@@ -202,7 +179,6 @@ const PAGE_CSS = `
 .lstp-var-tag { font-size:10px; font-weight:700; color:var(--ls-forest); text-transform:uppercase; white-space:nowrap; margin-top:2px; }
 .lstp-footer { margin-top:40px; border-top:1px solid var(--ls-border); padding-top:16px; font-size:11px; color:var(--ls-muted); text-align:center; }
 
-/* STUDENT WORKSHEET print doc styles */
 .lstw-header { text-align:center; border-bottom:3px solid var(--ls-amber); padding-bottom:18px; margin-bottom:24px; }
 .lstw-header h1 { font-family:'Fraunces',serif; font-size:24px; color:var(--ls-ink); margin-bottom:4px; }
 .lstw-header p { font-size:13px; color:var(--ls-muted); margin:0; }
@@ -218,7 +194,6 @@ const PAGE_CSS = `
 .lstw-col-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--ls-muted); margin-bottom:8px; }
 .lstw-footer { margin-top:32px; border-top:1px solid var(--ls-border); padding-top:14px; font-size:11px; color:var(--ls-muted); text-align:center; }
 
-/* ── @media print ── */
 @media print {
   @page { size:A4; margin:18mm 18mm 22mm; }
   body { background:white !important; }
@@ -244,550 +219,297 @@ const PAGE_CSS = `
 }
 `;
 
+// ─── 10 WHO LIFE SKILLS ───────────────────────────────────────────────────────
+const ALL_THEMES = [
+  'All',
+  'Self-awareness',
+  'Empathy',
+  'Critical thinking',
+  'Creative thinking',
+  'Decision making',
+  'Problem solving',
+  'Effective communication',
+  'Interpersonal relationships',
+  'Coping with stress',
+  'Coping with emotions'
+];
+
 // ─── ACTIVITY DATA ────────────────────────────────────────────────────────────
 
 const ACTIVITIES = [
 
-  // ── 1. The Feelings Iceberg ──────────────────────────────────────────────
+  // ──────────────────────── LOWER SECONDARY (Grade 5-7) ────────────────────────
   {
-    id: 'iceberg', number: 1, icon: '🧊',
+    id: 'iceberg',
     title: 'The Feelings Iceberg',
-    theme: 'Self-Awareness & Emotional Intelligence',
-    themeShort: 'Self-Awareness',
+    themeShort: ['Self-awareness', 'Coping with emotions'],
     grade: '5–7', gradeKey: 'lower',
     duration: '35 min',
     formats: ['Individual', 'Pairs', 'Full class'],
     color: '#7C6FA0', colorPale: '#F0EDF8',
+    imagePath: '/resources/lifeskills/thefeelingsiceberg/iceberg-diagram.jpg',
     guidePdf: '/resources/lifeskills/thefeelingsiceberg/THE FEELINGS ICEBERG_ Exploring Our Emotions (Grade 5–7).pdf',
     worksheetPdf: '/resources/lifeskills/thefeelingsiceberg/The Feelings Iceberg Worksheet.pdf',
-    objective: "Students will distinguish between surface emotions (what others see) and underlying feelings (what's really happening inside), and begin to map their own emotional landscape beneath the waterline.",
-    materials: ["Whiteboard & marker", "Iceberg worksheet (one per student)", "Coloured pencils or pens", "Small slips of paper"],
+    objective: "Students will distinguish between surface emotions and underlying feelings, and begin to map their own emotional landscape beneath the waterline.",
+    materials: ["Whiteboard", "Iceberg worksheet", "Coloured pencils"],
     phases: [
       {
         time: '0–5 min', phase: 'Hook',
         steps: [
-          { type: 'do', text: "Ask students to close their eyes briefly." },
-          { type: 'say', text: "\"Think about the last time you got really angry — at a friend, a sibling, anyone. Picture it. Now: what did the other person actually SEE? What did your anger look like from the outside?\"" },
-          { type: 'do', text: "Take 3–4 answers. Write them on the board: went quiet, shouted, face went red, slammed door." },
-          { type: 'say', text: "\"Interesting. Now here is my question — was anger the ONLY thing you were feeling? Or was something else going on underneath?\"" },
-          { type: 'tip', text: "Keep this light and curious. Do not push for specific answers yet — just plant the question." },
+          { type: 'say', text: "Think about the last time you got really angry. What did the other person actually SEE?" },
+          { type: 'do', text: "Write answers on the board: went quiet, shouted, slammed door." },
+          { type: 'say', text: "Now here is my question — was anger the ONLY thing you were feeling? Or was something else going on underneath?" },
         ]
       },
       {
         time: '5–12 min', phase: 'Concept Introduction',
         steps: [
-          { type: 'do', text: "Draw a simple iceberg on the board: a small tip above a wavy blue line, a large mass below. Label the tip 'What people SEE' and below the line 'What is REALLY happening.'" },
-          { type: 'say', text: "\"An iceberg has a tiny visible tip — maybe 10% — and a massive hidden section below the waterline. Our emotions work exactly the same way.\"" },
-          { type: 'say', text: "\"What might be hiding under anger?\" Build a word cloud below the waterline as students call out: fear, embarrassment, loneliness, feeling unheard, jealousy, hurt." },
-          { type: 'say', text: "\"What about sadness? What could be under that?\" Add more. Under silence? Under nervous laughter?" },
+          { type: 'do', text: "Draw an iceberg on the board. Label the tip 'What people SEE' and below the line 'What is REALLY happening.'" },
+          { type: 'say', text: "An iceberg has a tiny visible tip and a massive hidden section. Our emotions work exactly the same way." },
+          { type: 'say', text: "What might be hiding under anger? Fear, embarrassment, loneliness, feeling unheard." },
         ]
       },
       {
         time: '12–22 min', phase: 'Individual Reflection',
         steps: [
-          { type: 'do', text: "Distribute iceberg worksheets. Ask students to draw their own if no worksheet is available." },
-          { type: 'say', text: "\"Think of one recent moment where you felt a strong emotion. Write what you SHOWED in the tip. Then go below the waterline and write what was ACTUALLY happening inside. Be honest — this is just for you.\"" },
-          { type: 'tip', text: "Have a parking lot — a jar or envelope where they can write privately and pass to you. Acknowledge it aloud: 'If something comes up that feels too big for today, write it down and give it to me privately.'" },
+          { type: 'do', text: "Distribute iceberg worksheets." },
+          { type: 'say', text: "Think of one recent moment where you felt a strong emotion. Write what you SHOWED in the tip. Then go below the waterline and write what was ACTUALLY happening inside." },
         ]
       },
       {
         time: '22–30 min', phase: 'Pair Activity — Iceberg Guessing',
         steps: [
-          { type: 'say', text: "\"Now I want you to pair up. Share ONLY your above-waterline with your partner — just tell them the situation and what you showed. Do not tell them what is below the line yet.\"" },
-          { type: 'say', text: "\"Your partner's job is to GUESS what might be below your waterline. Then you tell them how close they were.\"" },
-          { type: 'do', text: "Give pairs 5 minutes. Each person shares once." },
+          { type: 'say', text: "Pair up. Share ONLY your above-waterline with your partner. Do not tell them what is below the line." },
+          { type: 'say', text: "Your partner's job is to GUESS what might be below your waterline." },
         ]
       },
       {
         time: '30–35 min', phase: 'Full Class Debrief',
         steps: [
-          { type: 'say', text: "\"Let's come back together. I have a few questions for the whole group.\"" },
-          { type: 'do', text: "Use the debrief questions below. Aim for at least 3 of the 5." },
+          { type: 'do', text: "Use the debrief questions below." },
         ]
       },
     ],
     debrief: [
-      { q: "\"Was it easy or difficult to look below your waterline? What made it difficult?\"", note: "Listen for: 'I didn't know what the feeling was', 'I was embarrassed'. Validate all of these." },
-      { q: "\"Has someone ever responded to just your tip and completely missed what was really going on? How did that feel?\"", note: "This is usually the question that creates the most resonance." },
-      { q: "\"When your partner guessed your below-waterline feeling correctly, what happened inside you?\"", note: "Listen for: 'I felt understood', 'surprised', 'relieved'. Connect this to empathy." },
+      { q: "Was it easy or difficult to look below your waterline? What made it difficult?", note: "Listen for: 'I didn't know what the feeling was'. Validate this." },
+      { q: "Has someone ever responded to just your tip and completely missed what was really going on?", note: "This is usually the question that creates the most resonance." },
     ],
     watchOutFor: [
-      "A student who discloses something serious during the below waterline writing — abuse, family crisis, self-harm ideation. Have your referral process ready.",
-      "Students who write nothing. Do not force participation. Let them observe.",
+      "A student who discloses something serious during the below waterline writing. Have your referral process ready.",
     ],
     variations: [
-      { tag: 'Grade 5', text: "Use a provided emotion word bank (20–25 words) rather than asking students to generate." },
-      { tag: 'Grade 7', text: "Add a second iceberg for a character from a film, book, or real situation they know." },
+      { tag: 'Grade 5', text: "Use a provided emotion word bank rather than asking students to generate." },
     ],
     worksheet: {
       title: 'The Feelings Iceberg',
-      intro: 'Our emotions are like icebergs — a small visible tip and a huge hidden part below the waterline. Today, map your own.',
+      intro: 'Our emotions are like icebergs — a small visible tip and a huge hidden part. Map your own.',
       sections: [
         {
-          title: '🧊 My Iceberg',
+          title: 'My Iceberg',
           prompts: [
             { label: 'The situation I am thinking of:', lines: 2 },
             { label: 'ABOVE THE WATERLINE — What people saw:', lines: 2 },
-            { label: 'BELOW THE WATERLINE — What I was really feeling inside:', lines: 4, note: 'This is just for you. Go as deep as you can.' },
+            { label: 'BELOW THE WATERLINE — What I was really feeling inside:', lines: 4 },
           ]
         },
-        {
-          title: '🤔 Reflection Questions',
-          prompts: [
-            { label: 'Was it easy or hard to look below the waterline? What made it difficult?', lines: 3 },
-            { label: 'One thing I want others to understand about my below-waterline feelings:', lines: 2 },
-          ]
-        }
       ]
     }
   },
-
-  // ── 2. The Telephone Breakdown ──────────────────────────────────────────
   {
-    id: 'telephone', number: 2, icon: '📞',
+    id: 'telephone',
     title: 'The Telephone Breakdown',
-    theme: 'Communication & Active Listening',
-    themeShort: 'Communication',
+    themeShort: ['Effective communication'],
     grade: '5–7', gradeKey: 'lower',
     duration: '30 min',
-    formats: ['Full class game', 'Small groups', 'Pairs'],
+    formats: ['Full class game', 'Pairs'],
     color: '#5B9EBF', colorPale: '#EAF4FA',
-    objective: "Students will experience how messages distort through communication chains, identify WHY distortion happens, and practise two concrete strategies for clearer communication.",
-    materials: ["3 pre-written message cards", "Observation checklist", "Whiteboard to record Original vs Final messages"],
+    objective: "Students will experience how messages distort through communication chains and practise strategies for clearer communication.",
+    materials: ["3 pre-written message cards", "Observation checklist"],
     phases: [
       {
-        time: '0–5 min', phase: 'Setup & First Round (No Rules)',
+        time: '0–5 min', phase: 'First Round (No Rules)',
         steps: [
-          { type: 'do', text: "Ask 8 students to form a line facing sideways. Give the first student Message Card 1. Tell them: 'Whisper this once only. No repeats.'" },
-          { type: 'do', text: "While the line plays, give remaining students the Observation Checklist." },
+          { type: 'do', text: "Ask 8 students to form a line. Give the first student Message Card 1. Tell them: 'Whisper this once only. No repeats.'" },
           { type: 'do', text: "Once the message reaches the end, ask the last student to say it aloud. Write it on the board." },
         ]
       },
       {
         time: '5–10 min', phase: 'Second Round (With Listening Rules)',
         steps: [
-          { type: 'say', text: "\"Let's try again with Message Card 2 — but this time, we add three rules: 1. Ask ONE clarifying question. 2. Repeat back what you heard. 3. Flag if you are unsure.\"" },
-          { type: 'do', text: "Run the second round. Observe how the message changes. Write the final message on the board." },
+          { type: 'say', text: "Let us try again with Message Card 2 — but this time, we add three rules: 1. Ask ONE clarifying question. 2. Repeat back what you heard. 3. Flag if you are unsure." },
+          { type: 'do', text: "Run the second round. Observe how the message changes." },
         ]
       },
       {
         time: '10–18 min', phase: 'Analysis',
         steps: [
-          { type: 'say', text: "\"Let's figure out WHY messages change. What were people doing — or NOT doing — that caused the distortion?\"" },
-          { type: 'do', text: "Take answers and write them in two columns: What broke it and What fixed it." },
+          { type: 'say', text: "Let us figure out WHY messages change. What were people doing or NOT doing that caused the distortion?" },
         ]
       },
       {
         time: '18–26 min', phase: 'Pair Practice',
         steps: [
           { type: 'do', text: "Pair students. Student A reads a scenario card aloud once. Student B must: clarify, reflect back, then respond." },
-          { type: 'do', text: "Swap roles. Run twice each." },
         ]
       },
       {
         time: '26–30 min', phase: 'Debrief',
         steps: [
-          { type: 'do', text: "Use the debrief questions." },
+          { type: 'do', text: "Discuss real world applications of these rules." },
         ]
       },
     ],
     debrief: [
-      { q: "\"Where exactly in the line did the message change most? What was happening at that point?\"", note: "Students usually identify: a long complex part, or a gap filled with assumption." },
-      { q: "\"Can you think of a real situation — at home or with friends — where this breakdown happened?\"", note: "Fights between friends over 'He said she said' are common examples." },
+      { q: "Where exactly in the line did the message change most?", note: "Students usually identify a long complex part, or a gap filled with assumption." },
+      { q: "Can you think of a real situation where this breakdown happened?", note: "Fights between friends over 'He said she said' are common examples." },
     ],
     watchOutFor: [
       "Students intentionally corrupting the message for laughs. Redirect warmly.",
-      "Pairs who just chat instead of following the structured practice.",
     ],
     variations: [
       { tag: 'Grade 5', text: "Use very short, simple messages in Round 1." },
-      { tag: 'Large class', text: "Run two parallel lines of 8 simultaneously. The rest observe." },
     ],
     worksheet: {
       title: 'The Telephone Breakdown',
       intro: 'Today we discovered how messages change as they travel.',
       sections: [
         {
-          title: '👁️ Observer Checklist',
+          title: 'Observer Checklist',
           twoCol: true,
-          colTitles: ['Round 1 — What I noticed', 'Round 2 — What changed'],
+          colTitles: ['Round 1', 'Round 2'],
           prompts: [
             { label: 'Where did the message change most?', lines: 2 },
           ]
         },
         {
-          title: '💬 My Commitment',
+          title: 'My Commitment',
           prompts: [
-            { label: 'One communication situation in my life where a telephone breakdown has happened:', lines: 2 },
-            { label: 'Which of the three skills would help most in that situation, and why?', lines: 2 },
+            { label: 'One communication situation where a telephone breakdown has happened:', lines: 2 },
           ]
         }
       ]
     }
   },
-
-  // ── 3. Walk a Mile — Persona Cards ──────────────────────────────────────
   {
-    id: 'persona', number: 3, icon: '👟',
+    id: 'persona',
     title: 'Walk a Mile — Persona Cards',
-    theme: 'Empathy & Perspective Taking',
-    themeShort: 'Empathy',
-    grade: '6–8', gradeKey: 'lower',
+    themeShort: ['Empathy'],
+    grade: '5–7', gradeKey: 'lower',
     duration: '40 min',
-    formats: ['Individual reflection', 'Pairs', 'Full class'],
+    formats: ['Individual reflection', 'Pairs'],
     color: '#E8845A', colorPale: '#FDF0EA',
-    objective: "Students will practise inhabiting a perspective genuinely different from their own, articulate what that person might feel and need, and identify one bias or assumption they held.",
+    objective: "Students will practise inhabiting a perspective genuinely different from their own to build empathy.",
     materials: ["Persona Cards", "Worksheet"],
     phases: [
       {
         time: '0–5 min', phase: 'Set Up',
         steps: [
-          { type: 'say', text: "\"Today we are going to try to walk a mile in someone else's shoes. You will each get a persona — a real type of student. For 20 minutes, you are that person.\"" },
-          { type: 'do', text: "Shuffle and distribute Persona Cards face down. Students flip on your signal." },
+          { type: 'say', text: "Today we are going to try to walk a mile in someone else's shoes. You will each get a persona. For 20 minutes, you are that person." },
+          { type: 'do', text: "Distribute Persona Cards face down. Students flip on your signal." },
         ]
       },
       {
-        time: '5–8 min', phase: 'Reading and In-Role Thinking',
+        time: '5–8 min', phase: 'In-Role Thinking',
         steps: [
-          { type: 'do', text: "Students read their persona card silently. Give them 3 minutes." },
-          { type: 'say', text: "\"Now answer the questions on the back of the card AS that person. Not what YOU would do — what THEY would do.\"" },
+          { type: 'do', text: "Students read their persona card silently." },
+          { type: 'say', text: "Answer the questions on the worksheet AS that person. Not what YOU would do — what THEY would do." },
         ]
       },
       {
-        time: '8–22 min', phase: 'Individual In-Role Reflection',
+        time: '8–22 min', phase: 'Individual Reflection',
         steps: [
           { type: 'do', text: "Students answer the in-role questions on their worksheet." },
-          { type: 'do', text: "Circulate. Prompt with: 'Go deeper — what is the emotional experience?'" },
         ]
       },
       {
-        time: '22–33 min', phase: 'Paired Conversation In-Role',
+        time: '22–33 min', phase: 'Paired Conversation',
         steps: [
           { type: 'do', text: "Pair students whose personas are different from each other." },
-          { type: 'say', text: "\"You are going to have a 5-minute conversation in role. The topic: your school is planning a new policy. Tell each other what that policy should be.\"" },
+          { type: 'say', text: "Have a 5-minute conversation in role. The topic: your school is planning a new policy. Tell each other what that policy should be." },
         ]
       },
       {
-        time: '33–40 min', phase: 'Full Class Debrief — Out of Role',
+        time: '33–40 min', phase: 'Debrief',
         steps: [
-          { type: 'say', text: "\"Come out of role now. You are yourselves again. Let's talk about what just happened.\"" },
+          { type: 'say', text: "Come out of role now. Let us talk about what just happened." },
           { type: 'do', text: "Use the debrief questions." },
         ]
       },
     ],
     debrief: [
-      { q: "\"What was the hardest part of staying in your persona's perspective?\"", note: "This is usually: 'I kept thinking what I would do'." },
-      { q: "\"What did you discover about your persona that you would not have guessed just looking at them from the outside?\"", note: "Listen for the insight that internal experience is rich and complicated." },
+      { q: "What was the hardest part of staying in your persona's perspective?", note: "This is usually: 'I kept thinking what I would do'." },
+      { q: "What did you discover about your persona that you would not have guessed just looking at them?", note: "Listen for the insight that internal experience is rich and complicated." },
     ],
     watchOutFor: [
       "A student who gets a persona very similar to their own difficult situation.",
-      "Students who play the persona superficially or with mockery. Redirect: 'We are trying to genuinely understand, not perform.'",
     ],
     variations: [
-      { tag: 'Grade 6', text: "Reduce the in-role questions to 3. Skip the paired in-role conversation." },
-      { tag: 'Short session (30 min)', text: "Skip the paired conversation. Go from individual reflection to group debrief." },
+      { tag: 'Short session', text: "Skip the paired conversation. Go from individual reflection to group debrief." },
     ],
     worksheet: {
-      title: 'Walk a Mile — Persona Reflection',
-      intro: 'Answer questions 1–5 IN ROLE. Answer questions 6–8 as yourself.',
+      title: 'Persona Reflection',
+      intro: 'Answer questions 1–2 IN ROLE. Answer questions 3–4 as yourself.',
       sections: [
         {
-          title: '👟 In Role',
+          title: 'In Role',
           prompts: [
             { label: '1. What does a typical school day feel like for you?', lines: 3 },
             { label: '2. What do you worry about most?', lines: 3 },
           ]
         },
         {
-          title: '🪞 As Yourself',
+          title: 'As Yourself',
           prompts: [
-            { label: '3. What surprised me most about my persona\'s inner experience?', lines: 3 },
+            { label: '3. What surprised me most about my persona internal experience?', lines: 3 },
             { label: '4. One assumption I had before this activity that I want to question:', lines: 2 },
           ]
         }
       ]
     }
   },
-
-  // ── 4. The Pressure Bottle ───────────────────────────────────────────────
   {
-    id: 'pressure', number: 4, icon: '🧴',
-    title: 'The Pressure Bottle',
-    theme: 'Stress & Anger Management',
-    themeShort: 'Stress & Anger',
-    grade: '7–9', gradeKey: 'lower',
-    duration: '35 min',
-    formats: ['Demonstration', 'Individual', 'Pairs'],
-    color: '#C0392B', colorPale: '#FADBD8',
-    objective: "Students will map their own personal stress cycle — triggers, build-up signs, explosion patterns, and release valves.",
-    materials: ["One plastic bottle with cap (shaken up)", "Worksheet", "Whiteboard"],
-    phases: [
-      {
-        time: '0–5 min', phase: 'The Demonstration',
-        steps: [
-          { type: 'do', text: "Secretly shake the bottle vigorously. Hold it behind your back." },
-          { type: 'do', text: "Begin to slowly open the cap. The pressure releases gradually. Nothing spills." },
-          { type: 'say', text: "\"Our stress works exactly the same way. The question isn't whether the pressure builds — it always does. The question is whether we release it slowly, or suddenly all at once.\"" },
-        ]
-      },
-      {
-        time: '5–13 min', phase: 'Mapping the Stress Cycle',
-        steps: [
-          { type: 'do', text: "Draw a simple diagram on the board: A bottle." },
-          { type: 'say', text: "\"Let's think about what fills up our bottle. What are the WARNING SIGNS that your bottle is getting full?\"" },
-          { type: 'say', text: "\"And what does YOUR explosion look like? What happens when the cap blows?\"" },
-        ]
-      },
-      {
-        time: '13–23 min', phase: 'Individual Mapping',
-        steps: [
-          { type: 'do', text: "Distribute the worksheet. Students map their own pressure bottle." },
-          { type: 'say', text: "\"The bottom section — release valves — is the most important one. Write down things that actually help YOU let off pressure gradually.\"" },
-        ]
-      },
-      {
-        time: '23–30 min', phase: 'Pair Share',
-        steps: [
-          { type: 'say', text: "\"Pair up. Share ONE of your warning signs and ONE of your release valves.\"" },
-          { type: 'do', text: "Give 5 minutes. Each person shares once." },
-        ]
-      },
-      {
-        time: '30–35 min', phase: 'Debrief',
-        steps: [
-          { type: 'do', text: "Use debrief questions. End with the commitment." },
-        ]
-      },
-    ],
-    debrief: [
-      { q: "\"Which part of your bottle was easiest to identify? Which was hardest, and why?\"", note: "Most students find release valves hardest — because they haven't been taught them." },
-      { q: "\"What makes it hard to use your release valves when you are actually in the high-pressure moment?\"", note: "Listen for: 'I forget', 'It feels fake'. Validate this." },
-    ],
-    watchOutFor: [
-      "A student whose explosion pattern involves self-harm. Follow up privately.",
-      "Students who say nothing is a stressor — they may be performing stoicism.",
-    ],
-    variations: [
-      { tag: 'Grade 7', text: "Focus on physical release valves only: breathing, movement." },
-      { tag: 'Short session', text: "Cut the pair share. Go from individual mapping straight to debrief." },
-    ],
-    worksheet: {
-      title: 'My Pressure Bottle',
-      intro: 'Map your own stress cycle below. Be honest — this is a tool for YOU.',
-      sections: [
-        {
-          title: '🔧 My Shakers (What fills my bottle)',
-          prompts: [{ label: 'Write the things that build pressure for you:', lines: 3 }]
-        },
-        {
-          title: '⚠️ My Warning Signs',
-          twoCol: true,
-          colTitles: ['In my BODY I notice:', 'In my BEHAVIOUR I notice:'],
-          prompts: []
-        },
-        {
-          title: '🌿 My Release Valves',
-          prompts: [
-            { label: 'Things that help me release pressure BEFORE the explosion:', lines: 3 },
-            { label: 'The release valve I will commit to using this week:', lines: 1 },
-          ]
-        }
-      ]
-    }
-  },
-
-  // ── 11. The Apology Anatomy ─────────────────────────────────────────────
-  {
-    id: 'apology', number: 11, icon: '🩹',
-    title: 'The Apology Anatomy',
-    theme: 'Relationship Skills & Empathy',
-    themeShort: 'Relationship Skills',
-    grade: '5–7', gradeKey: 'lower',
-    duration: '35 min',
-    formats: ['Full class', 'Pairs'],
-    color: '#E67E22', colorPale: '#FDEDEC',
-    objective: "Students will identify the difference between a fake apology and a real apology, and practice the four steps of a genuine apology to repair relationships.",
-    materials: ["Whiteboard", "Apology Anatomy worksheets"],
-    phases: [
-      {
-        time: '0–5 min', phase: 'The Fake Apology',
-        steps: [
-          { type: 'say', text: "\"We have all heard fake apologies. Things like 'I am sorry you feel that way' or 'I am sorry, but you started it'. How do those make you feel?\"" },
-          { type: 'do', text: "Collect answers on the board: angry, ignored, frustrated." },
-          { type: 'say', text: "\"A real apology is hard. It takes courage. Today we will learn the 4 parts of a real apology that actually fixes a broken relationship.\"" }
-        ]
-      },
-      {
-        time: '5–15 min', phase: 'The Four Steps',
-        steps: [
-          { type: 'do', text: "Write the 4 steps on the board: 1. I am sorry for... 2. It was wrong because... 3. Next time I will... 4. Will you forgive me?" },
-          { type: 'say', text: "\"Step 2 is the magic step. If you can explain WHY it was wrong, the other person knows you actually understand the harm you caused.\"" },
-          { type: 'do', text: "Give an example: 'I am sorry for breaking your pen. It was wrong because I was careless with your things. Next time I will ask before borrowing. Will you forgive me?'" }
-        ]
-      },
-      {
-        time: '15–25 min', phase: 'Pair Practice',
-        steps: [
-          { type: 'do', text: "Distribute worksheets. Have students work in pairs to rewrite the 'Fake Apologies' on the sheet into 'Real Apologies' using the 4 steps." },
-          { type: 'tip', text: "Walk around and help pairs struggling with Step 2 (the 'Why')." }
-        ]
-      },
-      {
-        time: '25–35 min', phase: 'Debrief',
-        steps: [
-          { type: 'say', text: "\"Which of the 4 steps is the hardest to say out loud?\"" },
-          { type: 'say', text: "\"Does saying 'Will you forgive me' mean the person HAS to forgive you right away?\" (No, forgiveness takes time)." }
-        ]
-      }
-    ],
-    debrief: [
-      { q: "\"Why do you think people give fake apologies instead of real ones?\"", note: "Listen for: pride, fear of getting in trouble, not wanting to admit fault." },
-      { q: "\"How does it feel when someone gives you a full, real 4-step apology?\"", note: "Listen for: respected, valued, ready to move on." }
-    ],
-    watchOutFor: [
-      "Students using the pair practice to mock each other. Ensure the scenarios are fictional and structured."
-    ],
-    variations: [
-      { tag: 'Grade 5', text: "Focus heavily on Step 3 (Next time I will...) to make it actionable for younger kids." },
-    ],
-    worksheet: {
-      title: 'The Apology Anatomy',
-      intro: 'A real apology has four parts. Practice turning fake apologies into real ones.',
-      sections: [
-        {
-          title: '🩹 The 4 Steps',
-          prompts: [
-            { label: '1. I am sorry for...', lines: 0 },
-            { label: '2. It was wrong because...', lines: 0 },
-            { label: '3. Next time I will...', lines: 0 },
-            { label: '4. Will you forgive me?', lines: 0 }
-          ]
-        },
-        {
-          title: '🛠️ Fix the Fake Apology',
-          prompts: [
-            { label: 'Fake: "I am sorry if you got mad when I laughed at you."', lines: 0 },
-            { label: 'Write the REAL apology:', lines: 4 }
-          ]
-        }
-      ]
-    }
-  },
-
-  // ── 12. Circle of Control ───────────────────────────────────────────────
-  {
-    id: 'control', number: 12, icon: '⭕',
-    title: 'Circle of Control',
-    theme: 'Anxiety Management',
-    themeShort: 'Anxiety',
-    grade: '6–8', gradeKey: 'lower',
-    duration: '35 min',
-    formats: ['Individual', 'Full class'],
-    color: '#9B59B6', colorPale: '#F4ECF7',
-    objective: "Students will map their worries into 'Control', 'Influence', and 'Concern' categories to reduce feelings of overwhelm and anxiety.",
-    materials: ["Whiteboard", "Circle of Control Worksheets", "Sticky notes"],
-    phases: [
-      {
-        time: '0–10 min', phase: 'The Worry Brain Dump',
-        steps: [
-          { type: 'do', text: "Hand out sticky notes. Ask students to write down 3 things they are currently worried or stressed about (one per note)." },
-          { type: 'say', text: "\"Anxiety happens when our brain tries to control things it actually cannot control. Today, we are going to sort our worries to calm our brains down.\"" }
-        ]
-      },
-      {
-        time: '10–20 min', phase: 'Drawing the Circles',
-        steps: [
-          { type: 'do', text: "Draw three concentric circles on the board. Inner = Control. Middle = Influence. Outer = Concern (Cannot Control)." },
-          { type: 'say', text: "\"Inner circle: What I can 100% control (my words, my effort). Middle: What I can influence but not control (my grades, my friendships). Outer: What I cannot control at all (the weather, what other people think of me).\"" },
-          { type: 'do', text: "Take a few anonymous sticky notes and ask the class where to place them on the board." }
-        ]
-      },
-      {
-        time: '20–30 min', phase: 'Personal Mapping',
-        steps: [
-          { type: 'do', text: "Students use their worksheets to map their own sticky notes into their personal circles." },
-          { type: 'say', text: "\"Look at the worries in your outer circle. Your job is to practice letting those go, because worrying about them will not change them.\"" }
-        ]
-      },
-      {
-        time: '30–35 min', phase: 'Debrief',
-        steps: [
-          { type: 'do', text: "Use the debrief questions to close the session." }
-        ]
-      }
-    ],
-    debrief: [
-      { q: "\"Which circle had the most items in it for you?\"", note: "Often students find most of their worries are in the outer circle." },
-      { q: "\"How does it feel to physically move a worry into the 'Cannot Control' circle?\"", note: "Many report a sense of relief or release." }
-    ],
-    watchOutFor: [
-      "Students confusing 'Influence' with 'Control'. Remind them that if it involves another person's reaction, it is only Influence."
-    ],
-    variations: [
-      { tag: 'High Anxiety Groups', text: "Do a deep breathing exercise immediately after the mapping to physically release the outer circle worries." }
-    ],
-    worksheet: {
-      title: 'My Circle of Control',
-      intro: 'Sort your worries to help your brain focus on what actually matters.',
-      sections: [
-        {
-          title: '⭕ My Circles',
-          prompts: [
-            { label: 'What I CAN Control (Inner Circle):', lines: 3 },
-            { label: 'What I can INFLUENCE (Middle Circle):', lines: 3 },
-            { label: 'What I CANNOT Control (Outer Circle - Let it go):', lines: 3 }
-          ]
-        }
-      ]
-    }
-  },
-
-  // ── 13. The Rumour Filter ───────────────────────────────────────────────
-  {
-    id: 'rumour', number: 13, icon: '🗣️',
+    id: 'rumour',
     title: 'The Rumour Filter',
-    theme: 'Social Awareness & Empathy',
-    themeShort: 'Social Awareness',
+    themeShort: ['Critical thinking', 'Empathy'],
     grade: '5–7', gradeKey: 'lower',
     duration: '35 min',
     formats: ['Small groups', 'Full class'],
     color: '#3498DB', colorPale: '#EBF5FB',
-    objective: "Students will apply the 'THINK' filter to gossip and rumours to understand the harm caused by spreading unverified information.",
-    materials: ["Whiteboard", "THINK Filter handouts"],
+    objective: "Students will apply the THINK filter to gossip to understand the harm caused by spreading unverified information.",
+    materials: ["Whiteboard", "THINK Filter handouts", "A tube of toothpaste"],
     phases: [
       {
         time: '0–10 min', phase: 'The Toothpaste Demo',
         steps: [
-          { type: 'do', text: "Bring a tube of toothpaste and a paper plate. Squeeze all the toothpaste onto the plate." },
-          { type: 'say', text: "\"Can I have a volunteer put this toothpaste back in the tube?\" (They cannot)." },
-          { type: 'say', text: "\"Rumours are exactly like this. Once the words are out, you can never take them back, and they leave a mess. Today we learn how to stop the squeeze.\"" }
+          { type: 'do', text: "Squeeze all the toothpaste onto a plate." },
+          { type: 'say', text: "Can I have a volunteer put this toothpaste back in the tube? (They cannot)." },
+          { type: 'say', text: "Rumours are exactly like this. Once the words are out, you can never take them back, and they leave a mess." },
         ]
       },
       {
         time: '10–20 min', phase: 'The THINK Filter',
         steps: [
           { type: 'do', text: "Write THINK on the board. T=True? H=Helpful? I=Inspiring? N=Necessary? K=Kind?" },
-          { type: 'say', text: "\"Before you repeat something you heard, run it through this filter. If it fails the filter, the rumour stops with you.\"" },
-          { type: 'do', text: "Read a scenario: 'You heard Maya failed her math test because she was crying in the bathroom.' Run it through THINK." }
+          { type: 'say', text: "Before you repeat something you heard, run it through this filter. If it fails, the rumour stops with you." },
         ]
       },
       {
         time: '20–30 min', phase: 'Group Scenarios',
         steps: [
-          { type: 'do', text: "Put students in groups of 4. Give them scenario cards with common school rumours." },
-          { type: 'say', text: "\"Your group must decide: Does this pass the THINK filter? If not, what is the exact script you will use to stop the rumour when someone tells you?\"" }
+          { type: 'do', text: "Give groups scenario cards with common school rumours." },
+          { type: 'say', text: "Your group must decide: Does this pass the THINK filter? If not, what is the script you will use to stop the rumour?" },
         ]
       },
       {
         time: '30–35 min', phase: 'Debrief',
         steps: [
-          { type: 'do', text: "Discuss the difficulty of standing up to gossip in real life." }
+          { type: 'do', text: "Discuss the difficulty of standing up to gossip in real life." },
         ]
       }
     ],
     debrief: [
-      { q: "\"Why is it so tempting to pass on a rumour?\"", note: "Listen for: wanting to fit in, wanting attention, it feels exciting." },
-      { q: "\"What is a brave, simple phrase you can use to stop a rumour without sounding like a teacher?\"", note: "Examples: 'I don't really care about that', or 'Let's not talk about them when they aren't here.'" }
+      { q: "Why is it so tempting to pass on a rumour?", note: "Listen for: wanting to fit in, wanting attention." },
+      { q: "What is a brave phrase you can use to stop a rumour?", note: "Examples: 'I do not really care about that', or 'Let us not talk about them when they aren't here.'" }
     ],
     watchOutFor: [
       "Students using real current school gossip during the exercise. Shut it down immediately."
@@ -796,21 +518,19 @@ const ACTIVITIES = [
       { tag: 'Grade 7', text: "Apply the THINK filter specifically to WhatsApp forwards and social media comments." }
     ],
     worksheet: {
-      title: 'The Rumour Filter (THINK)',
+      title: 'The Rumour Filter',
       intro: 'Before you speak or type, run it through the filter.',
       sections: [
         {
-          title: '🔍 The Filter',
+          title: 'The Filter',
           prompts: [
             { label: 'T - Is it True? (Do I have proof?)', lines: 1 },
             { label: 'H - Is it Helpful?', lines: 1 },
-            { label: 'I - Is it Inspiring?', lines: 1 },
-            { label: 'N - Is it Necessary?', lines: 1 },
             { label: 'K - Is it Kind?', lines: 1 }
           ]
         },
         {
-          title: '🛡️ My Script',
+          title: 'My Script',
           prompts: [
             { label: 'When someone tries to tell me gossip, I will say:', lines: 2 }
           ]
@@ -818,13 +538,10 @@ const ACTIVITIES = [
       ]
     }
   },
-
-  // ── 14. My Strengths Shield ───────────────────────────────────────────────
   {
-    id: 'shield', number: 14, icon: '🛡️',
+    id: 'shield',
     title: 'My Strengths Shield',
-    theme: 'Self-Awareness & Confidence',
-    themeShort: 'Self-Awareness',
+    themeShort: ['Self-awareness'],
     grade: '5–7', gradeKey: 'lower',
     duration: '40 min',
     formats: ['Individual art activity', 'Pairs'],
@@ -835,24 +552,23 @@ const ACTIVITIES = [
       {
         time: '0–10 min', phase: 'What is a Strength?',
         steps: [
-          { type: 'say', text: "\"When we talk about strengths, we often think of being good at math or fast at running. But character strengths are different. They are who you ARE, not just what you DO.\"" },
+          { type: 'say', text: "When we talk about strengths, we often think of being good at math or fast at running. But character strengths are different. They are who you ARE, not just what you DO." },
           { type: 'do', text: "Write examples on the board: Kindness, Bravery, Humor, Curiosity, Honesty, Teamwork, Perseverance." },
-          { type: 'say', text: "\"Every single person in this room has at least three of these super powers.\"" }
+          { type: 'say', text: "Every single person in this room has at least three of these super powers." }
         ]
       },
       {
         time: '10–25 min', phase: 'Designing the Shield',
         steps: [
           { type: 'do', text: "Hand out the shield templates divided into 4 quadrants." },
-          { type: 'say', text: "\"Quadrant 1: Draw or write your greatest character strength. Quadrant 2: A strength someone else sees in you. Quadrant 3: A time you used a strength to help someone. Quadrant 4: A strength you want to grow.\"" },
-          { type: 'do', text: "Play music and give them time to draw and write." }
+          { type: 'say', text: "Quadrant 1: Draw your greatest strength. Quadrant 2: A strength someone else sees in you. Quadrant 3: A time you used a strength to help. Quadrant 4: A strength you want to grow." },
         ]
       },
       {
         time: '25–35 min', phase: 'Shield Sharing',
         steps: [
           { type: 'do', text: "In pairs, students share their shields." },
-          { type: 'say', text: "\"Partners, your job is to listen and say: 'I can definitely see that strength in you because...'\"" }
+          { type: 'say', text: "Partners, your job is to listen and say: 'I can definitely see that strength in you because...'" }
         ]
       },
       {
@@ -863,11 +579,11 @@ const ACTIVITIES = [
       }
     ],
     debrief: [
-      { q: "\"Was it hard to choose a strength for yourself? Why do we focus more on our weaknesses?\"", note: "Normalise that human brains are wired to see the negative." },
-      { q: "\"How can you use the strength in Quadrant 1 to help you get through a difficult exam week?\"", note: "Connect abstract strengths to practical school challenges." }
+      { q: "Was it hard to choose a strength for yourself?", note: "Normalise that human brains are wired to see the negative." },
+      { q: "How can you use your strength to help you get through a difficult exam week?", note: "Connect abstract strengths to practical school challenges." }
     ],
     watchOutFor: [
-      "Students who say 'I don't have any strengths'. Sit with them and offer observations: 'I noticed you helped Maya yesterday. That shows kindness.'"
+      "Students who say 'I do not have any strengths'. Sit with them and offer observations: 'I noticed you helped Maya yesterday. That shows kindness.'"
     ],
     variations: [
       { tag: 'Art-focused class', text: "Provide magazines for a collage-style shield instead of drawing." }
@@ -877,7 +593,7 @@ const ACTIVITIES = [
       intro: 'Design your personal crest based on who you are inside.',
       sections: [
         {
-          title: '🛡️ Shield Planning',
+          title: 'Shield Planning',
           prompts: [
             { label: 'My greatest strength is:', lines: 1 },
             { label: 'A strength others see in me:', lines: 1 },
@@ -888,93 +604,263 @@ const ACTIVITIES = [
       ]
     }
   },
-
-  // ── 15. The Priority Jar ───────────────────────────────────────────────
   {
-    id: 'priority', number: 15, icon: '⏳',
-    title: 'The Priority Jar',
-    theme: 'Time Management',
-    themeShort: 'Time Management',
-    grade: '6–8', gradeKey: 'lower',
-    duration: '35 min',
-    formats: ['Demonstration', 'Individual'],
-    color: '#27AE60', colorPale: '#E9F7EF',
-    objective: "Students will categorise their daily tasks into Rocks, Pebbles, and Sand to understand prioritisation and reduce feeling overwhelmed.",
-    materials: ["A clear jar, big rocks, small pebbles, sand (or a video of the experiment)", "Priority Jar Worksheets"],
+    id: 'humanknot',
+    title: 'The Human Knot',
+    themeShort: ['Problem solving', 'Interpersonal relationships'],
+    grade: '5–7', gradeKey: 'lower',
+    duration: '30 min',
+    formats: ['Small groups'],
+    color: '#8E44AD', colorPale: '#F5EEF8',
+    objective: "Students will physically collaborate to solve a complex spatial problem, identifying the importance of clear communication and emotional regulation under frustration.",
+    materials: ["Open floor space"],
     phases: [
       {
-        time: '0–10 min', phase: 'The Visual Demo',
+        time: '0–5 min', phase: 'The Setup',
         steps: [
-          { type: 'do', text: "If you have the physical items, try to fill the jar with sand first, then pebbles, then rocks. The rocks won't fit." },
-          { type: 'say', text: "\"If we fill our time with the small stuff first, there is no room for the big, important things.\"" },
-          { type: 'do', text: "Empty the jar. Put the Rocks in first, then Pebbles, then pour the Sand. It all fits." },
-          { type: 'say', text: "\"When we put the big things first, the small things naturally fit around them.\"" }
+          { type: 'do', text: "Divide the class into groups of 6-8 students." },
+          { type: 'say', text: "Stand in a tight circle. Reach across and grab the hand of someone who is NOT standing right next to you. Now do the same with your other hand to a different person." },
         ]
       },
       {
-        time: '10–20 min', phase: 'Defining Our Rocks',
+        time: '5–20 min', phase: 'The Challenge',
         steps: [
-          { type: 'say', text: "\"Rocks are your non-negotiables: sleep, family, major assignments, health. Pebbles are important but flexible: hobbies, seeing friends. Sand is the filler: scrolling social media, watching TV.\"" },
-          { type: 'do', text: "Ask students to call out daily activities and categorize them as a class." }
+          { type: 'say', text: "You are now a human knot. Your goal is to untangle yourselves into a perfect circle WITHOUT letting go of anyone's hands." },
+          { type: 'do', text: "Let them struggle. Do not intervene unless safety is a concern. Observe who takes charge and who gets frustrated." },
         ]
       },
       {
-        time: '20–30 min', phase: 'Personal Sorting',
+        time: '20–30 min', phase: 'Debrief',
         steps: [
-          { type: 'do', text: "Distribute worksheets. Students list everything they do in a week, then sort them into Rocks, Pebbles, and Sand." },
-          { type: 'say', text: "\"Be honest. If you are currently putting 4 hours of Sand in your jar before doing 1 hour of Rocks, write that down.\"" }
-        ]
-      },
-      {
-        time: '30–35 min', phase: 'Debrief',
-        steps: [
-          { type: 'do', text: "Discuss the emotional impact of doing Rocks first." }
+          { type: 'do', text: "Once groups finish (or the time runs out), sit everyone down." },
+          { type: 'say', text: "Let us talk about what just happened." },
         ]
       }
     ],
     debrief: [
-      { q: "\"What happens to your stress levels when you put Sand in the jar first?\"", note: "Listen for: panic, staying up late, feeling guilty." },
-      { q: "\"What is one 'Rock' you have been treating like 'Sand' lately?\"", note: "Often sleep or studying." }
+      { q: "What was the most frustrating part of the challenge?", note: "Often it is when people pull in different directions or do not listen." },
+      { q: "Who stepped up as a leader? Did they tell people what to do, or did they ask for ideas?", note: "Highlight the difference between bossing and guiding." },
     ],
     watchOutFor: [
-      "Students arguing that gaming is a Rock. Validate that relaxation is important, but a Rock is something essential for long-term growth and health."
+      "Physical safety. Ensure students step over or duck under arms carefully."
     ],
     variations: [
-      { tag: 'Grade 8', text: "Add an 'Energy' component. Some tasks are Rocks but drain energy; some are Pebbles but give energy." }
+      { tag: 'Grade 7', text: "Run a second round in complete silence to force non-verbal problem solving." }
     ],
     worksheet: {
-      title: 'The Priority Jar',
-      intro: 'Sort your time so the important things fit.',
+      title: 'Problem Solving Reflection',
+      intro: 'Think about how your group handled the Human Knot.',
       sections: [
         {
-          title: '🪨 Rocks (Must Do / Essential)',
+          title: 'Team Dynamics',
           prompts: [
-            { label: 'List 3 Rocks for this week:', lines: 3 }
+            { label: 'When we got stuck, the thing that helped us most was:', lines: 2 },
+            { label: 'One thing I did to help the team was:', lines: 2 },
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 'thermometer',
+    title: 'The Emotion Thermometer',
+    themeShort: ['Coping with emotions'],
+    grade: '5–7', gradeKey: 'lower',
+    duration: '35 min',
+    formats: ['Individual', 'Full class'],
+    color: '#E74C3C', colorPale: '#FDEDEC',
+    objective: "Students will map the intensity of their emotions from 1 to 10 and identify specific coping strategies for when the temperature gets too high.",
+    materials: ["Emotion Thermometer Worksheets", "Whiteboard"],
+    phases: [
+      {
+        time: '0–10 min', phase: 'Mapping Intensity',
+        steps: [
+          { type: 'do', text: "Draw a large thermometer on the board, numbered 1 to 10." },
+          { type: 'say', text: "We do not just feel 'angry'. We feel 'annoyed' (a 2), 'frustrated' (a 5), or 'furious' (a 9). Today we are going to map our own emotional temperature." },
+        ]
+      },
+      {
+        time: '10–25 min', phase: 'Personal Thermometers',
+        steps: [
+          { type: 'do', text: "Distribute worksheets. Students fill in their own warning signs for levels 3, 6, and 9." },
+          { type: 'say', text: "What does your body feel like at a 3? What does it do at a 9? Write it down." },
+        ]
+      },
+      {
+        time: '25–35 min', phase: 'Cooling Down',
+        steps: [
+          { type: 'say', text: "Now, write one specific thing you can do to cool down when you hit a 6, before you reach a 9." },
+          { type: 'do', text: "Share strategies as a class." },
+        ]
+      }
+    ],
+    debrief: [
+      { q: "Why is it important to notice when you are at a 6 instead of waiting until you are a 9?", note: "It is easier to cool down before a full explosion." },
+      { q: "What is one physical warning sign your body gives you when your temperature is rising?", note: "Clenched fists, hot face, breathing fast." },
+    ],
+    watchOutFor: [
+      "Students struggling to identify physical symptoms. Offer examples."
+    ],
+    variations: [
+      { tag: 'Short session', text: "Focus only on anger, rather than all emotions." }
+    ],
+    worksheet: {
+      title: 'My Emotion Thermometer',
+      intro: 'Map your warning signs and your cool-down strategies.',
+      sections: [
+        {
+          title: 'Temperature Check',
+          prompts: [
+            { label: 'At a 3 (Mild), I notice my body:', lines: 2 },
+            { label: 'At a 6 (Medium), I start to:', lines: 2 },
+            { label: 'At a 9 (High), I usually:', lines: 2 },
           ]
         },
         {
-          title: '🪨 Pebbles (Important but Flexible)',
+          title: 'Cool Down Plan',
           prompts: [
-            { label: 'List 3 Pebbles:', lines: 3 }
+            { label: 'When I hit a 6, I will cool down by:', lines: 2 },
           ]
-        },
+        }
+      ]
+    }
+  },
+  {
+    id: 'whatifmap',
+    title: 'The What-If Map',
+    themeShort: ['Decision making', 'Creative thinking'],
+    grade: '5–7', gradeKey: 'lower',
+    duration: '35 min',
+    formats: ['Small groups'],
+    color: '#F39C12', colorPale: '#FEF9E7',
+    objective: "Students will practice tracing the short and long-term consequences of a single decision using a branching mind map.",
+    materials: ["Large chart paper", "Markers", "Scenario Cards"],
+    phases: [
+      {
+        time: '0–10 min', phase: 'The Ripple Effect',
+        steps: [
+          { type: 'say', text: "Every decision is like dropping a stone in a pond. It creates ripples. Today we are going to draw the ripples." },
+          { type: 'do', text: "Demonstrate on the board with a simple choice: 'I decide not to study for the math test.' Draw branches for what happens the next day, the next week, and the next month." },
+        ]
+      },
+      {
+        time: '10–25 min', phase: 'Group Mapping',
+        steps: [
+          { type: 'do', text: "Give groups a scenario card (e.g., 'You find a lost phone in the cafeteria')." },
+          { type: 'say', text: "Draw the What-If map. If you keep it, what happens? If you turn it in, what happens? Trace each path out to at least three consequences." },
+        ]
+      },
+      {
+        time: '25–35 min', phase: 'Gallery Walk',
+        steps: [
+          { type: 'do', text: "Groups present their maps to the class." },
+        ]
+      }
+    ],
+    debrief: [
+      { q: "Did tracing the 'What-Ifs' make the right choice clearer?", note: "Visualizing consequences often removes impulsivity." },
+    ],
+    watchOutFor: [
+      "Groups getting stuck on unrealistic extreme consequences. Keep them grounded."
+    ],
+    variations: [
+      { tag: 'Grade 5', text: "Do the mapping as a full class activity on the main whiteboard." }
+    ],
+    worksheet: {
+      title: 'The What-If Map',
+      intro: 'Trace the ripples of your choices.',
+      sections: [
         {
-          title: '⏳ Sand (Filler / Distractions)',
+          title: 'My Map',
           prompts: [
-            { label: 'My biggest Sand traps are:', lines: 2 }
+            { label: 'The Decision:', lines: 2 },
+            { label: 'Path A leads to:', lines: 2 },
+            { label: 'Path B leads to:', lines: 2 },
           ]
         }
       ]
     }
   },
 
-  // ── 5. The Choice Crossroads ────────────────────────────────────────────
-  // (Remaining activities kept safely identical as requested)
+  // ──────────────────────── MIDDLE SECONDARY (Grade 8-10) ────────────────────────
   {
-    id: 'crossroads', number: 5, icon: '🔀',
+    id: 'pressure',
+    title: 'The Pressure Bottle',
+    themeShort: ['Coping with stress', 'Coping with emotions'],
+    grade: '8–10', gradeKey: 'middle',
+    duration: '35 min',
+    formats: ['Demonstration', 'Individual'],
+    color: '#C0392B', colorPale: '#FADBD8',
+    objective: "Students will map their own personal stress cycle — triggers, build-up signs, explosion patterns, and release valves.",
+    materials: ["One plastic bottle with cap (shaken up)", "Worksheet"],
+    phases: [
+      {
+        time: '0–5 min', phase: 'The Demonstration',
+        steps: [
+          { type: 'do', text: "Secretly shake the bottle vigorously. Hold it behind your back." },
+          { type: 'do', text: "Begin to slowly open the cap. The pressure releases gradually. Nothing spills." },
+          { type: 'say', text: "Our stress works exactly the same way. The question is not whether the pressure builds — it always does. The question is whether we release it slowly, or suddenly all at once." },
+        ]
+      },
+      {
+        time: '5–15 min', phase: 'Mapping the Stress Cycle',
+        steps: [
+          { type: 'do', text: "Draw a simple diagram on the board: A bottle." },
+          { type: 'say', text: "Let's think about what fills up our bottle. What are the WARNING SIGNS that your bottle is getting full?" },
+          { type: 'say', text: "And what does YOUR explosion look like? What happens when the cap blows?" },
+        ]
+      },
+      {
+        time: '15–25 min', phase: 'Individual Mapping',
+        steps: [
+          { type: 'do', text: "Distribute the worksheet. Students map their own pressure bottle." },
+          { type: 'say', text: "The bottom section — release valves — is the most important one. Write down things that actually help YOU let off pressure gradually." },
+        ]
+      },
+      {
+        time: '25–35 min', phase: 'Debrief',
+        steps: [
+          { type: 'do', text: "Use debrief questions. End with the commitment." },
+        ]
+      },
+    ],
+    debrief: [
+      { q: "Which part of your bottle was easiest to identify? Which was hardest, and why?", note: "Most students find release valves hardest — because they haven't been taught them." },
+      { q: "What makes it hard to use your release valves when you are actually in the high-pressure moment?", note: "Listen for: 'I forget', 'It feels fake'. Validate this." },
+    ],
+    watchOutFor: [
+      "A student whose explosion pattern involves self-harm. Follow up privately.",
+    ],
+    variations: [
+      { tag: 'Grade 8', text: "Focus on physical release valves only: breathing, movement." },
+    ],
+    worksheet: {
+      title: 'My Pressure Bottle',
+      intro: 'Map your own stress cycle below. Be honest — this is a tool for YOU.',
+      sections: [
+        {
+          title: 'My Shakers',
+          prompts: [{ label: 'Write the things that build pressure for you:', lines: 3 }]
+        },
+        {
+          title: 'My Warning Signs',
+          twoCol: true,
+          colTitles: ['In my BODY', 'In my BEHAVIOUR'],
+          prompts: []
+        },
+        {
+          title: 'My Release Valves',
+          prompts: [
+            { label: 'Things that help me release pressure BEFORE the explosion:', lines: 3 },
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 'crossroads',
     title: 'The Choice Crossroads',
-    theme: 'Decision Making & Critical Thinking',
-    themeShort: 'Decision Making',
+    themeShort: ['Decision making', 'Critical thinking'],
     grade: '8–10', gradeKey: 'middle',
     duration: '40 min',
     formats: ['Physical movement', 'Pairs', 'Full class'],
@@ -986,21 +872,21 @@ const ACTIVITIES = [
         time: '0–5 min', phase: 'Setup',
         steps: [
           { type: 'do', text: "Place A/B/C/D labels in the four corners of the room." },
-          { type: 'say', text: "\"Today we're going to make some difficult decisions. When I read a scenario, you move to the corner that matches your choice.\"" },
+          { type: 'say', text: "Today we are going to make some difficult decisions. When I read a scenario, you move to the corner that matches your choice." },
         ]
       },
       {
         time: '5–20 min', phase: 'Rounds 1 & 2',
         steps: [
-          { type: 'say', text: "\"Scenario 1.\" Read scenario. \"Move to your corner.\"" },
+          { type: 'say', text: "Scenario 1. Read scenario. Move to your corner." },
           { type: 'do', text: "Give corners 60 seconds to discuss: 'Why did you choose this?'" },
-          { type: 'say', text: "\"Now — switch. Move to the corner that is the OPPOSITE of what you just argued. Prepare arguments for this position.\"" },
+          { type: 'say', text: "Now — switch. Move to the corner that is the OPPOSITE of what you just argued. Prepare arguments for this position." },
         ]
       },
       {
         time: '20–30 min', phase: 'Values Mapping',
         steps: [
-          { type: 'say', text: "\"Let's slow down and look underneath our choices.\"" },
+          { type: 'say', text: "Let us slow down and look underneath our choices." },
           { type: 'do', text: "Students pick ONE scenario and complete the Decision Framework worksheet." },
         ]
       },
@@ -1012,8 +898,8 @@ const ACTIVITIES = [
       },
     ],
     debrief: [
-      { q: "\"What was it like to have to argue for the OPPOSITE of what you actually believe?\"", note: "This builds cognitive flexibility." },
-      { q: "\"Think of a real decision you're currently facing. Which framework step do you skip?\"", note: "Bridge from classroom to real life." },
+      { q: "What was it like to have to argue for the OPPOSITE of what you actually believe?", note: "This builds cognitive flexibility." },
+      { q: "Think of a real decision you are currently facing. Which framework step do you skip?", note: "Bridge from classroom to real life." },
     ],
     watchOutFor: [
       "Students clustering because friends are there.",
@@ -1026,41 +912,39 @@ const ACTIVITIES = [
       intro: 'Use this framework to slow down and really examine ONE decision.',
       sections: [
         {
-          title: '🔀 My Decision Framework',
+          title: 'My Decision Framework',
           prompts: [
             { label: 'The scenario I am working with:', lines: 2 },
             { label: 'The values driving my choice:', lines: 2 },
+            { label: 'The strongest argument AGAINST my choice:', lines: 2 },
           ]
         }
       ]
     }
   },
-
-  // ── 6. The Push & Stand ──────────────────────────────────────────────────
   {
-    id: 'pushstand', number: 6, icon: '🧱',
+    id: 'pushstand',
     title: 'The Push & Stand',
-    theme: 'Peer Pressure & Boundary Setting',
-    themeShort: 'Peer Pressure',
+    themeShort: ['Effective communication', 'Interpersonal relationships'],
     grade: '8–10', gradeKey: 'middle',
     duration: '35 min',
-    formats: ['Physical pairs activity', 'Role-play', 'Full class'],
+    formats: ['Physical pairs activity', 'Role-play'],
     color: '#8E44AD', colorPale: '#F5EEF8',
     objective: "Students will physically and verbally experience the three responses to peer pressure.",
-    materials: ["Open floor space", "Scenario Cards", "Worksheet"],
+    materials: ["Open floor space", "Worksheet"],
     phases: [
       {
         time: '0–5 min', phase: 'Physical Warm-Up',
         steps: [
-          { type: 'say', text: "\"Stand up and find a partner. Push gently. Now stop and let the push happen. Now step to the side when they push.\"" },
-          { type: 'say', text: "\"You just experienced three responses: push back, give in, step aside.\"" },
+          { type: 'say', text: "Stand up and find a partner. Push gently. Now stop and let the push happen. Now step to the side when they push." },
+          { type: 'say', text: "You just experienced three responses: push back, give in, step aside." },
         ]
       },
       {
         time: '5–12 min', phase: 'Concept',
         steps: [
           { type: 'do', text: "Draw a table: GIVE IN | PUSH BACK | STEP ASIDE" },
-          { type: 'say', text: "\"GIVE IN: peace now, resentment later. PUSH BACK: confrontation now, clarity later. STEP ASIDE: redirect without conflict.\"" },
+          { type: 'say', text: "GIVE IN: peace now, resentment later. PUSH BACK: confrontation now, clarity later. STEP ASIDE: redirect without conflict." },
         ]
       },
       {
@@ -1083,7 +967,8 @@ const ACTIVITIES = [
       },
     ],
     debrief: [
-      { q: "\"Which response is your default?\"", note: "Create awareness." },
+      { q: "Which response is your default?", note: "Create awareness." },
+      { q: "Was there a scenario today where the 'give in' response actually seemed reasonable?", note: "Sometimes giving in is a strategic or kind choice." },
     ],
     watchOutFor: [
       "Physical activity getting too rough.",
@@ -1096,7 +981,7 @@ const ACTIVITIES = [
       intro: 'Write your scripts here.',
       sections: [
         {
-          title: '📝 My Scripts',
+          title: 'My Scripts',
           prompts: [
             { label: 'My PUSH BACK script:', lines: 2 },
             { label: 'My STEP ASIDE script:', lines: 2 },
@@ -1105,16 +990,13 @@ const ACTIVITIES = [
       ]
     }
   },
-
-  // ── 7. The Two-Story House ───────────────────────────────────────────────
   {
-    id: 'twohouse', number: 7, icon: '🏠',
+    id: 'twohouse',
     title: 'The Two-Story House',
-    theme: 'Conflict Resolution',
-    themeShort: 'Conflict Resolution',
-    grade: '9–11', gradeKey: 'middle',
+    themeShort: ['Interpersonal relationships', 'Problem solving'],
+    grade: '8–10', gradeKey: 'middle',
     duration: '40 min',
-    formats: ['Pairs', 'Trio (with observer)', 'Full class'],
+    formats: ['Pairs', 'Trio (with observer)'],
     color: '#16A085', colorPale: '#D5F5F0',
     objective: "Students will distinguish between positions and interests in negotiation.",
     materials: ["Conflict scenario cards", "Worksheet"],
@@ -1122,13 +1004,13 @@ const ACTIVITIES = [
       {
         time: '0–5 min', phase: 'The Metaphor',
         steps: [
-          { type: 'say', text: "\"Imagine a house with two floors. Conflict works like this. Two people look at the same situation and see different things.\"" },
+          { type: 'say', text: "Imagine a house with two floors. Conflict works like this. Two people look at the same situation and see different things." },
         ]
       },
       {
         time: '5–12 min', phase: 'Positions vs Interests',
         steps: [
-          { type: 'say', text: "\"POSITION is what I SAY I want. INTEREST is what I ACTUALLY need.\"" },
+          { type: 'say', text: "POSITION is what I SAY I want. INTEREST is what I ACTUALLY need." },
         ]
       },
       {
@@ -1151,7 +1033,7 @@ const ACTIVITIES = [
       },
     ],
     debrief: [
-      { q: "\"Has your experience changed after hearing the other person's interest?\"", note: "Empathy moment." },
+      { q: "Has your experience changed after hearing the other person's interest?", note: "Empathy moment." },
     ],
     watchOutFor: [
       "Reopening real conflicts in class.",
@@ -1164,7 +1046,7 @@ const ACTIVITIES = [
       intro: 'Underneath every position is an INTEREST.',
       sections: [
         {
-          title: '🏠 My Conflict',
+          title: 'My Conflict',
           twoCol: true,
           colTitles: ['MY FLOOR', 'THEIR FLOOR'],
           prompts: [
@@ -1175,16 +1057,13 @@ const ACTIVITIES = [
       ]
     }
   },
-
-  // ── 8. The Reverse Calendar ──────────────────────────────────────────────
   {
-    id: 'calendar', number: 8, icon: '📅',
+    id: 'calendar',
     title: 'The Reverse Calendar',
-    theme: 'Goal Setting & Time Management',
-    themeShort: 'Goal Setting',
-    grade: '9–11', gradeKey: 'middle',
+    themeShort: ['Problem solving', 'Decision making'],
+    grade: '8–10', gradeKey: 'middle',
     duration: '35 min',
-    formats: ['Individual', 'Pairs', 'Full class'],
+    formats: ['Individual', 'Pairs'],
     color: '#27AE60', colorPale: '#D5F5E3',
     objective: "Students will apply backward planning to one goal.",
     materials: ["Blank Reverse Calendar template", "Coloured pens", "Whiteboard"],
@@ -1192,7 +1071,7 @@ const ACTIVITIES = [
       {
         time: '0–5 min', phase: 'Why Goals Fail',
         steps: [
-          { type: 'say', text: "\"Most people plan forward. The most effective planners work backwards.\"" },
+          { type: 'say', text: "Most people plan forward. The most effective planners work backwards." },
         ]
       },
       {
@@ -1221,20 +1100,20 @@ const ACTIVITIES = [
       },
     ],
     debrief: [
-      { q: "\"Look at your first step for tomorrow. Is it ACTUALLY doable in 15 minutes?\"", note: "Practical intervention." },
+      { q: "Look at your first step for tomorrow. Is it ACTUALLY doable in 15 minutes?", note: "Practical intervention." },
     ],
     watchOutFor: [
       "Goals that are too vague.",
     ],
     variations: [
-      { tag: 'Grade 11', text: "Extend to one year timeline." },
+      { tag: 'Grade 10', text: "Extend to one year timeline." },
     ],
     worksheet: {
       title: 'My Reverse Calendar',
       intro: 'Start at the END.',
       sections: [
         {
-          title: '📅 Working Backwards',
+          title: 'Working Backwards',
           prompts: [
             { label: 'End Date:', lines: 1 },
             { label: 'TOMORROW — my first step:', lines: 1 },
@@ -1243,16 +1122,201 @@ const ACTIVITIES = [
       ]
     }
   },
-
-  // ── 9. The Online Footprint Trial ────────────────────────────────────────
   {
-    id: 'footprint', number: 9, icon: '🌐',
-    title: 'The Online Footprint Trial',
-    theme: 'Digital Citizenship & Online Safety',
-    themeShort: 'Digital Citizenship',
-    grade: '10–12', gradeKey: 'upper',
+    id: 'innovationpitch',
+    title: 'The Innovation Pitch',
+    themeShort: ['Creative thinking', 'Problem solving'],
+    grade: '8–10', gradeKey: 'middle',
     duration: '40 min',
-    formats: ['Mock trial simulation', 'Small groups', 'Full class'],
+    formats: ['Small groups'],
+    color: '#D35400', colorPale: '#FDEBD0',
+    objective: "Students will identify a common school problem and collaboratively design a creative solution, practicing ideation and presentation skills.",
+    materials: ["Large chart paper", "Markers"],
+    phases: [
+      {
+        time: '0–5 min', phase: 'Identifying the Problem',
+        steps: [
+          { type: 'say', text: "Think of one thing about our school day that is annoying, inefficient, or stressful. It could be the cafeteria line, carrying heavy bags, or studying for finals." },
+        ]
+      },
+      {
+        time: '5–15 min', phase: 'Brainstorming Solutions',
+        steps: [
+          { type: 'do', text: "In groups of 4, students pick ONE problem and brainstorm the wildest, most creative solutions possible without judging them yet." },
+        ]
+      },
+      {
+        time: '15–25 min', phase: 'Refining the Pitch',
+        steps: [
+          { type: 'say', text: "Now pick your best idea. You have 10 minutes to design a 'Pitch' to sell this idea to the Principal. Create a poster showing how it works." },
+        ]
+      },
+      {
+        time: '25–35 min', phase: 'The Pitches',
+        steps: [
+          { type: 'do', text: "Groups present their 2-minute pitches to the class." },
+        ]
+      },
+      {
+        time: '35–40 min', phase: 'Debrief',
+        steps: [
+          { type: 'do', text: "Discuss the creative process." }
+        ]
+      }
+    ],
+    debrief: [
+      { q: "Was it hard to stop judging your ideas during the brainstorm phase?", note: "Creativity requires turning off the inner critic." },
+    ],
+    watchOutFor: [
+      "Groups focusing entirely on complaints rather than solutions. Redirect them to the 'fix'."
+    ],
+    variations: [
+      { tag: 'Grade 8', text: "Provide a list of 3 pre-selected problems to choose from." }
+    ],
+    worksheet: {
+      title: 'The Innovation Pitch',
+      intro: 'Turn complaints into creative solutions.',
+      sections: [
+        {
+          title: 'The Plan',
+          prompts: [
+            { label: 'The Problem we chose:', lines: 2 },
+            { label: 'Our wildest idea:', lines: 2 },
+            { label: 'Our final solution:', lines: 3 },
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 'emotionlog',
+    title: 'The Emotion Log',
+    themeShort: ['Coping with emotions', 'Self-awareness'],
+    grade: '8–10', gradeKey: 'middle',
+    duration: '35 min',
+    formats: ['Individual'],
+    color: '#8E44AD', colorPale: '#F5EEF8',
+    objective: "Students will track their emotional state over a week to identify patterns, triggers, and the impermanence of feelings.",
+    materials: ["Emotion Log templates"],
+    phases: [
+      {
+        time: '0–10 min', phase: 'The Myth of Permanence',
+        steps: [
+          { type: 'say', text: "When we are very sad or angry, our brain tricks us into believing we will feel that way forever. But emotions are like weather. They always change." },
+        ]
+      },
+      {
+        time: '10–20 min', phase: 'Setting up the Log',
+        steps: [
+          { type: 'do', text: "Distribute the logs. Explain how to track morning, afternoon, and evening emotions using simple words or colours." },
+        ]
+      },
+      {
+        time: '20–30 min', phase: 'Reflecting on the Past',
+        steps: [
+          { type: 'say', text: "Think about yesterday. Fill out the log retrospectively. Did your emotion stay the exact same all day?" },
+        ]
+      },
+      {
+        time: '30–35 min', phase: 'Debrief',
+        steps: [
+          { type: 'do', text: "Commit to filling it out for the next 5 days." }
+        ]
+      }
+    ],
+    debrief: [
+      { q: "Why is it helpful to realize that an emotion will not last forever?", note: "It creates hope and endurance." },
+    ],
+    watchOutFor: [
+      "Students finding the task tedious. Keep the log very simple (e.g., just coloring a box)."
+    ],
+    variations: [
+      { tag: 'Grade 10', text: "Add a 'trigger' column to identify what caused the emotion shift." }
+    ],
+    worksheet: {
+      title: 'My Emotion Log',
+      intro: 'Emotions are weather. Track the changes.',
+      sections: [
+        {
+          title: 'Daily Tracking',
+          prompts: [
+            { label: 'Morning feeling:', lines: 1 },
+            { label: 'Afternoon feeling:', lines: 1 },
+            { label: 'Evening feeling:', lines: 1 },
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 'factchecker',
+    title: 'The Fact-Checker',
+    themeShort: ['Critical thinking'],
+    grade: '8–10', gradeKey: 'middle',
+    duration: '40 min',
+    formats: ['Small groups'],
+    color: '#2C3E50', colorPale: '#EAF0FB',
+    objective: "Students will analyze a piece of media to differentiate between objective facts, subjective opinions, and manipulative language.",
+    materials: ["Printed short articles or advertisements", "Highlighters"],
+    phases: [
+      {
+        time: '0–10 min', phase: 'Fact vs Opinion',
+        steps: [
+          { type: 'say', text: "A fact can be proven. An opinion is a belief. Manipulative language is an opinion disguised as a fact." },
+          { type: 'do', text: "Give quick examples on the board." },
+        ]
+      },
+      {
+        time: '10–25 min', phase: 'The Audit',
+        steps: [
+          { type: 'do', text: "Give groups the printed articles. Ask them to highlight facts in yellow, opinions in pink, and manipulative words in green." },
+        ]
+      },
+      {
+        time: '25–35 min', phase: 'Presenting Findings',
+        steps: [
+          { type: 'do', text: "Groups share the most manipulative sentence they found." },
+        ]
+      },
+      {
+        time: '35–40 min', phase: 'Debrief',
+        steps: [
+          { type: 'do', text: "Discuss how this applies to social media." }
+        ]
+      }
+    ],
+    debrief: [
+      { q: "How often do you read an opinion online and accept it as a fact?", note: "Encourage self-reflection on media consumption." },
+    ],
+    watchOutFor: [
+      "Choosing highly controversial political articles. Keep the articles focused on benign but persuasive topics (like advertising)."
+    ],
+    variations: [
+      { tag: 'Grade 10', text: "Use real social media influencer posts promoting a product." }
+    ],
+    worksheet: {
+      title: 'The Fact-Checker Audit',
+      intro: 'Don\'t believe everything you read. Highlight the truth.',
+      sections: [
+        {
+          title: 'Article Analysis',
+          prompts: [
+            { label: 'One proven fact I found:', lines: 2 },
+            { label: 'One opinion disguised as a fact:', lines: 2 },
+          ]
+        }
+      ]
+    }
+  },
+
+  // ──────────────────────── SENIOR SECONDARY (Grade 11-12) ────────────────────────
+  {
+    id: 'footprint',
+    title: 'The Online Footprint Trial',
+    themeShort: ['Critical thinking', 'Decision making'],
+    grade: '11–12', gradeKey: 'upper',
+    duration: '40 min',
+    formats: ['Mock trial simulation', 'Full class'],
     color: '#2C3E50', colorPale: '#EAF0FB',
     objective: "Students will experience how digital content persists and affects futures.",
     materials: ["Role cards", "Evidence Packet", "Verdict slips"],
@@ -1260,7 +1324,7 @@ const ACTIVITIES = [
       {
         time: '0–5 min', phase: 'Setup',
         steps: [
-          { type: 'say', text: "\"Today we are running a trial. A 14-year-old's post has resurfaced at age 17.\"" },
+          { type: 'say', text: "Today we are running a trial. A 14-year-old's post has resurfaced at age 17." },
           { type: 'do', text: "Distribute roles and evidence." },
         ]
       },
@@ -1273,7 +1337,7 @@ const ACTIVITIES = [
       {
         time: '20–30 min', phase: 'Real Discussion',
         steps: [
-          { type: 'say', text: "\"Step out of role. What does this mean for how YOU operate online?\"" },
+          { type: 'say', text: "Step out of role. What does this mean for how YOU operate online?" },
           { type: 'do', text: "Students complete Digital Standards worksheet." },
         ]
       },
@@ -1285,7 +1349,7 @@ const ACTIVITIES = [
       },
     ],
     debrief: [
-      { q: "\"Was the trial fair?\"", note: "Listen for: 'It is not fair but it is reality'." },
+      { q: "Was the trial fair?", note: "Listen for: 'It is not fair but it is reality'." },
     ],
     watchOutFor: [
       "Students taking arguments too personally.",
@@ -1298,7 +1362,7 @@ const ACTIVITIES = [
       intro: 'Set rules for your digital life.',
       sections: [
         {
-          title: '📋 Three Digital Rules',
+          title: 'Three Digital Rules',
           prompts: [
             { label: '1.', lines: 1 },
             { label: '2.', lines: 1 },
@@ -1307,16 +1371,13 @@ const ACTIVITIES = [
       ]
     }
   },
-
-  // ── 10. The Blind Architect ──────────────────────────────────────────────
   {
-    id: 'architect', number: 10, icon: '🏗️',
+    id: 'architect',
     title: 'The Blind Architect',
-    theme: 'Leadership & Teamwork',
-    themeShort: 'Leadership',
-    grade: '10–12', gradeKey: 'upper',
+    themeShort: ['Effective communication', 'Interpersonal relationships'],
+    grade: '11–12', gradeKey: 'upper',
     duration: '35 min',
-    formats: ['Teams of 4–5', 'Observation pairs', 'Full class'],
+    formats: ['Teams of 4–5', 'Observation pairs'],
     color: '#C8860A', colorPale: '#FFF8E8',
     objective: "Students will articulate the difference between directive and facilitative leadership.",
     materials: ["Pre-built structure", "Identical materials for teams", "Screen"],
@@ -1330,14 +1391,14 @@ const ACTIVITIES = [
       {
         time: '5–15 min', phase: 'Directive Leadership',
         steps: [
-          { type: 'say', text: "\"Round 1: Architect TELLS builders exactly what to do.\"" },
+          { type: 'say', text: "Round 1: Architect TELLS builders exactly what to do." },
           { type: 'do', text: "Run 10 mins. Compare results." },
         ]
       },
       {
         time: '15–25 min', phase: 'Facilitative Leadership',
         steps: [
-          { type: 'say', text: "\"Round 2: Architect INVITES ideas with a new structure.\"" },
+          { type: 'say', text: "Round 2: Architect INVITES ideas with a new structure." },
           { type: 'do', text: "Run 8 mins. Compare results and team feeling." },
         ]
       },
@@ -1349,7 +1410,7 @@ const ACTIVITIES = [
       },
     ],
     debrief: [
-      { q: "\"Which leadership style produced a BETTER result?\"", note: "Answers vary. Both have a place." },
+      { q: "Which leadership style produced a BETTER result?", note: "Answers vary. Both have a place." },
     ],
     watchOutFor: [
       "Architects giving up.",
@@ -1362,7 +1423,7 @@ const ACTIVITIES = [
       intro: 'Reflect on both rounds.',
       sections: [
         {
-          title: '🪞 Reflection',
+          title: 'Reflection',
           prompts: [
             { label: 'My default leadership style is:', lines: 1 },
           ]
@@ -1370,15 +1431,255 @@ const ACTIVITIES = [
       ]
     }
   },
+  {
+    id: 'corevalues',
+    title: 'The Core Values Audit',
+    themeShort: ['Self-awareness', 'Decision making'],
+    grade: '11–12', gradeKey: 'upper',
+    duration: '40 min',
+    formats: ['Individual', 'Pairs'],
+    color: '#16A085', colorPale: '#D5F5F0',
+    objective: "Students will narrow down a broad list of values to their top 3 core values, and use them to evaluate a recent difficult decision.",
+    materials: ["List of 50 Values", "Worksheet"],
+    phases: [
+      {
+        time: '0–10 min', phase: 'The 50 to 5 Challenge',
+        steps: [
+          { type: 'do', text: "Hand out the list of 50 values (e.g., Wealth, Family, Honesty, Freedom, Adventure, Security)." },
+          { type: 'say', text: "Circle your top 10. Then cross out 5. You can only have 5." },
+        ]
+      },
+      {
+        time: '10–20 min', phase: 'The Final 3',
+        steps: [
+          { type: 'say', text: "Now cross out 2 more. You are left with your top 3 Core Values. These are the things that drive your biggest decisions." },
+          { type: 'do', text: "Give them time to struggle with this. It should be hard." },
+        ]
+      },
+      {
+        time: '20–30 min', phase: 'Value Alignment',
+        steps: [
+          { type: 'say', text: "Think of a recent decision that felt wrong or stressful. Did it violate one of your top 3 values? Write it down." },
+        ]
+      },
+      {
+        time: '30–40 min', phase: 'Debrief',
+        steps: [
+          { type: 'do', text: "Discuss how knowing our values acts as a compass for life after school." },
+        ]
+      }
+    ],
+    debrief: [
+      { q: "Was it hard to eliminate values like 'Success' or 'Wealth' to keep things like 'Family' or 'Integrity'?", note: "Forces them to define what success actually means to them." },
+    ],
+    watchOutFor: [
+      "Students picking values they think sound 'good' to the teacher. Encourage brutal honesty."
+    ],
+    variations: [
+      { tag: 'Grade 12', text: "Apply the top 3 values to their upcoming college or career choices." }
+    ],
+    worksheet: {
+      title: 'My Core Values',
+      intro: 'Your values are your compass.',
+      sections: [
+        {
+          title: 'The Final 3',
+          prompts: [
+            { label: 'Value 1:', lines: 1 },
+            { label: 'Value 2:', lines: 1 },
+            { label: 'Value 3:', lines: 1 },
+          ]
+        },
+        {
+          title: 'Alignment Check',
+          prompts: [
+            { label: 'A recent decision that conflicted with my values:', lines: 2 },
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 'ethicaldilemma',
+    title: 'The Ethical Dilemma',
+    themeShort: ['Critical thinking', 'Decision making'],
+    grade: '11–12', gradeKey: 'upper',
+    duration: '40 min',
+    formats: ['Small groups', 'Full class debate'],
+    color: '#D35400', colorPale: '#FDEBD0',
+    objective: "Students will analyze a complex moral scenario, separate emotion from logic, and articulate a defensible decision.",
+    materials: ["Dilemma Case Studies"],
+    phases: [
+      {
+        time: '0–10 min', phase: 'The Scenario',
+        steps: [
+          { type: 'do', text: "Read the dilemma: 'You discover your best friend cheated on the final exam to keep their scholarship. If you tell, they lose everything. If you do not, the grading curve penalizes honest students.'" },
+        ]
+      },
+      {
+        time: '10–25 min', phase: 'Group Deliberation',
+        steps: [
+          { type: 'say', text: "In your groups, you must reach a consensus. You cannot 'abstain'. You must decide what to do." },
+          { type: 'do', text: "Groups debate." },
+        ]
+      },
+      {
+        time: '25–35 min', phase: 'The Justification',
+        steps: [
+          { type: 'do', text: "Each group presents their decision and the exact logic behind it." },
+        ]
+      },
+      {
+        time: '35–40 min', phase: 'Debrief',
+        steps: [
+          { type: 'do', text: "Discuss the difference between doing what is 'easy' and what is 'right'." },
+        ]
+      }
+    ],
+    debrief: [
+      { q: "What was the most compelling argument that almost changed your mind?", note: "Builds respect for opposing viewpoints." },
+    ],
+    watchOutFor: [
+      "Groups completely disregarding the rules of the dilemma to find a 'loophole'. Force them to make the hard choice."
+    ],
+    variations: [
+      { tag: 'Grade 12', text: "Use workplace ethics scenarios instead of school-based ones." }
+    ],
+    worksheet: {
+      title: 'Ethical Reasoning',
+      intro: 'Break down the hard choices.',
+      sections: [
+        {
+          title: 'The Analysis',
+          prompts: [
+            { label: 'Who gets hurt if I take Action A?', lines: 2 },
+            { label: 'Who gets hurt if I take Action B?', lines: 2 },
+            { label: 'My final decision and why:', lines: 3 },
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 'futureself',
+    title: 'The Future Self Letter',
+    themeShort: ['Coping with emotions', 'Self-awareness'],
+    grade: '11–12', gradeKey: 'upper',
+    duration: '35 min',
+    formats: ['Individual reflection'],
+    color: '#8E44AD', colorPale: '#F5EEF8',
+    objective: "Students will engage in temporal distancing by writing a letter from their future self to their present self, reducing immediate academic anxiety.",
+    materials: ["Lined paper", "Envelopes"],
+    phases: [
+      {
+        time: '0–10 min', phase: 'Temporal Distancing',
+        steps: [
+          { type: 'say', text: "When we are stressed about exams or college, our brain thinks the danger is right now. But think back to a massive stress you had in 8th grade. Does it matter now?" },
+        ]
+      },
+      {
+        time: '10–25 min', phase: 'Writing the Letter',
+        steps: [
+          { type: 'say', text: "Imagine you are 25 years old. You survived the board exams, college admissions, and all the current drama. Write a letter back to your 17-year-old self giving them advice and reassurance." },
+          { type: 'do', text: "Play calming music while they write." },
+        ]
+      },
+      {
+        time: '25–35 min', phase: 'Sealing the Letter',
+        steps: [
+          { type: 'do', text: "Have them seal it in an envelope and write 'Open on the day before board exams' on the front." },
+        ]
+      }
+    ],
+    debrief: [
+      { q: "Did writing from the perspective of an older you make your current problems feel smaller?", note: "This technique is proven to reduce cortisol levels." },
+    ],
+    watchOutFor: [
+      "Students writing joke letters. Encourage sincerity by keeping the environment extremely quiet and focused."
+    ],
+    variations: [
+      { tag: 'End of Year', text: "Actually collect the envelopes and mail them to the students right before their final exams." }
+    ],
+    worksheet: {
+      title: 'Letter from the Future',
+      intro: 'Write to yourself from 10 years in the future.',
+      sections: [
+        {
+          title: 'The Letter',
+          prompts: [
+            { label: 'Dear 17-year-old me, here is what you need to know:', lines: 6 },
+          ]
+        }
+      ]
+    }
+  },
+  {
+    id: 'altuses',
+    title: 'The Alternate Uses Test',
+    themeShort: ['Creative thinking', 'Problem solving'],
+    grade: '11–12', gradeKey: 'upper',
+    duration: '30 min',
+    formats: ['Small groups', 'Competition'],
+    color: '#F1C40F', colorPale: '#FEF9E7',
+    objective: "Students will practice divergent thinking to break functional fixedness and generate rapid, innovative ideas.",
+    materials: ["A simple object (e.g., a paperclip, a brick, a hanger)", "Whiteboard"],
+    phases: [
+      {
+        time: '0–5 min', phase: 'Functional Fixedness',
+        steps: [
+          { type: 'say', text: "Our brains are lazy. When we see a paperclip, we only think of it holding paper. That is functional fixedness. Today we break it." },
+        ]
+      },
+      {
+        time: '5–15 min', phase: 'The Sprint',
+        steps: [
+          { type: 'do', text: "Hold up the object (e.g., a brick). Give groups exactly 3 minutes to list as many non-traditional uses for a brick as possible." },
+          { type: 'say', text: "Quantity over quality. Go!" },
+        ]
+      },
+      {
+        time: '15–25 min', phase: 'The Evaluation',
+        steps: [
+          { type: 'do', text: "Have groups share their lists. Award points for the most unique, viable ideas." },
+        ]
+      },
+      {
+        time: '25–30 min', phase: 'Debrief',
+        steps: [
+          { type: 'do', text: "Connect this to solving life problems when resources are limited." },
+        ]
+      }
+    ],
+    debrief: [
+      { q: "Why do we struggle to see new uses for common things?", note: "Habit and cognitive shortcuts." },
+      { q: "How does this apply to career paths?", note: "A degree in one thing can be used for many unconventional careers." }
+    ],
+    watchOutFor: [
+      "Students self-censoring during the sprint. Remind them that bad ideas lead to good ones."
+    ],
+    variations: [
+      { tag: 'Grade 12', text: "Do it with a 'failed' exam or 'rejected' application — list alternate uses for that failure." }
+    ],
+    worksheet: {
+      title: 'Divergent Thinking',
+      intro: 'Break the rules of what things are supposed to be.',
+      sections: [
+        {
+          title: 'The Sprint',
+          prompts: [
+            { label: 'List as many uses as possible:', lines: 6 },
+          ]
+        }
+      ]
+    }
+  }
 ];
 
 // ─── HELPER COMPONENTS ────────────────────────────────────────────────────────
 function Step({ s }) {
-  const icons = { say: '💬', do: '✅', tip: '💡', pause: '⏸️' };
   const labels = { say: 'Say', do: 'Do', tip: 'Tip', pause: 'Pause' };
   return (
     <div className={`lst-step ${s.type}`}>
-      <span className="lst-step-icon">{icons[s.type]}</span>
       <span className="lst-step-label">{labels[s.type]}</span>
       <span className="lst-step-text">{s.text}</span>
     </div>
@@ -1404,32 +1705,32 @@ function PrintView({ activity, mode, onClose }) {
   if (mode === 'guide') return (
     <div className={`lst-print-overlay ${activity ? 'visible' : ''}`}>
       <div className="lst-print-overlay-topbar no-print">
-        <h3>📄 Facilitator Guide — {activity.title}</h3>
+        <h3>Facilitator Guide — {activity.title}</h3>
         <div className="lst-print-overlay-actions">
-          <button className="lst-po-btn print" onClick={() => window.print()}>🖨️ Print / Save PDF</button>
-          <button className="lst-po-btn close" onClick={onClose}>✕ Close</button>
+          <button className="lst-po-btn print" onClick={() => window.print()}>Print / Save PDF</button>
+          <button className="lst-po-btn close" onClick={onClose}>Close</button>
         </div>
       </div>
       <div className="lst-print-doc">
         <div className="lstp-header">
-          <h1>{activity.icon} {activity.title}</h1>
+          <h1>{activity.title}</h1>
           <div className="lstp-header-meta">
-            <span>📚 {activity.theme}</span>
-            <span>🎓 Grade {activity.grade}</span>
-            <span>⏱ {activity.duration}</span>
-            <span>👥 {activity.formats.join(' · ')}</span>
+            <span>{activity.themeShort.join(' & ')}</span>
+            <span>Grade {activity.grade}</span>
+            <span>{activity.duration}</span>
+            <span>{activity.formats.join(' | ')}</span>
           </div>
         </div>
 
-        <div className="lstp-section-h">🎯 Learning Objective</div>
+        <div className="lstp-section-h">Learning Objective</div>
         <div className="lstp-objective-box">{activity.objective}</div>
 
-        <div className="lstp-section-h">🛒 Materials Needed</div>
+        <div className="lstp-section-h">Materials Needed</div>
         <div className="lstp-materials-list">
-          {activity.materials.map((m, i) => <span key={i} className="lstp-material">• {m}</span>)}
+          {activity.materials.map((m, i) => <span key={i} className="lstp-material">{m}</span>)}
         </div>
 
-        <div className="lstp-section-h">📋 Facilitation Guide (Step by Step)</div>
+        <div className="lstp-section-h">Facilitation Guide</div>
         {activity.phases.map((phase, pi) => (
           <div key={pi} className="lstp-phase-block">
             <div className="lstp-phase-title">
@@ -1440,7 +1741,7 @@ function PrintView({ activity, mode, onClose }) {
           </div>
         ))}
 
-        <div className="lstp-section-h">💬 Debrief Questions</div>
+        <div className="lstp-section-h">Debrief Questions</div>
         {activity.debrief.map((d, i) => (
           <div key={i} className="lstp-debrief-item">
             <div className="lstp-debrief-q">Q{i + 1}: {d.q}</div>
@@ -1448,10 +1749,10 @@ function PrintView({ activity, mode, onClose }) {
           </div>
         ))}
 
-        <div className="lstp-section-h">⚠️ Watch Out For</div>
+        <div className="lstp-section-h">Watch Out For</div>
         {activity.watchOutFor.map((w, i) => <div key={i} className="lstp-watch">{w}</div>)}
 
-        <div className="lstp-section-h">🔄 Variations</div>
+        <div className="lstp-section-h">Variations</div>
         {activity.variations.map((v, i) => (
           <div key={i} className="lstp-variation">
             <span className="lstp-var-tag">{v.tag}</span>
@@ -1460,7 +1761,7 @@ function PrintView({ activity, mode, onClose }) {
         ))}
 
         <div className="lstp-footer">
-          SecretSharz Life Skills Resource Library · Grade {activity.grade} · Free to reproduce for educational use · secretsharz.com
+          SecretSharz Life Skills Resource Library · Grade {activity.grade} · Free to reproduce for educational use
         </div>
       </div>
     </div>
@@ -1469,16 +1770,16 @@ function PrintView({ activity, mode, onClose }) {
   if (mode === 'worksheet') return (
     <div className={`lst-print-overlay ${activity ? 'visible' : ''}`}>
       <div className="lst-print-overlay-topbar no-print">
-        <h3>📝 Student Worksheet — {activity.title}</h3>
+        <h3>Student Worksheet — {activity.title}</h3>
         <div className="lst-print-overlay-actions">
-          <button className="lst-po-btn print" onClick={() => window.print()}>🖨️ Print / Save PDF</button>
-          <button className="lst-po-btn close" onClick={onClose}>✕ Close</button>
+          <button className="lst-po-btn print" onClick={() => window.print()}>Print / Save PDF</button>
+          <button className="lst-po-btn close" onClick={onClose}>Close</button>
         </div>
       </div>
       <div className="lst-print-doc">
         <div className="lstw-header">
-          <h1>{activity.icon} {activity.worksheet.title}</h1>
-          <p>Life Skills Worksheet · Grade {activity.grade} · {activity.theme}</p>
+          <h1>{activity.worksheet.title}</h1>
+          <p>Life Skills Worksheet · Grade {activity.grade} · {activity.themeShort.join(' & ')}</p>
         </div>
         <div className="lstw-name-row">
           <div className="lstw-name-field">Name: _____________________________</div>
@@ -1513,7 +1814,7 @@ function PrintView({ activity, mode, onClose }) {
           </div>
         ))}
         <div className="lstw-footer">
-          SecretSharz Life Skills Resource Library · {activity.theme} · Grade {activity.grade} · secretsharz.com
+          SecretSharz Life Skills Resource Library
         </div>
       </div>
     </div>
@@ -1523,15 +1824,15 @@ function PrintView({ activity, mode, onClose }) {
 }
 
 // ─── ACTIVITY CARD ────────────────────────────────────────────────────────────
-function ActivityCard({ activity, isExpanded, onToggle, onPrint }) {
+function ActivityCard({ activity, displayNumber, isExpanded, onToggle, onPrint }) {
   const [innerTab, setInnerTab] = useState('guide');
 
   const innerTabs = [
-    { id: 'guide',    label: '📋 Facilitation Guide' },
-    { id: 'debrief',  label: '💬 Debrief' },
-    { id: 'watch',    label: '⚠️ Watch Out For' },
-    { id: 'vars',     label: '🔄 Variations' },
-    { id: 'worksheet', label: '📝 Worksheet Preview' },
+    { id: 'guide',    label: 'Facilitation Guide' },
+    { id: 'debrief',  label: 'Debrief' },
+    { id: 'watch',    label: 'Watch Out For' },
+    { id: 'vars',     label: 'Variations' },
+    { id: 'worksheet', label: 'Worksheet Preview' },
   ];
 
   return (
@@ -1539,15 +1840,15 @@ function ActivityCard({ activity, isExpanded, onToggle, onPrint }) {
       <div className="lst-card-accent" style={{ background: `linear-gradient(90deg,${activity.color},${activity.color}88)` }} />
 
       <div className="lst-card-header" onClick={onToggle}>
-        <div className="lst-card-num">{activity.number}</div>
-        <div className="lst-card-icon">{activity.icon}</div>
+        <div className="lst-card-num">{displayNumber}</div>
         <div className="lst-card-meta-block">
           <div className="lst-card-title">{activity.title}</div>
           <div className="lst-card-badges">
-            <span className="lst-badge lst-badge-theme" style={{ background: `${activity.color}18`, color: activity.color }}>{activity.themeShort}</span>
+            {activity.themeShort.map(t => (
+               <span key={t} className="lst-badge lst-badge-theme" style={{ background: `${activity.color}18`, color: activity.color }}>{t}</span>
+            ))}
             <span className="lst-badge lst-badge-grade">Grade {activity.grade}</span>
-            <span className="lst-badge lst-badge-time">⏱ {activity.duration}</span>
-            {activity.formats.map(f => <span key={f} className="lst-badge lst-badge-format">{f}</span>)}
+            <span className="lst-badge lst-badge-time">{activity.duration}</span>
           </div>
           <div className="lst-card-obj">{activity.objective}</div>
         </div>
@@ -1556,21 +1857,21 @@ function ActivityCard({ activity, isExpanded, onToggle, onPrint }) {
         <div className="lst-card-print-btns no-print" onClick={e => e.stopPropagation()}>
           {activity.guidePdf ? (
             <a href={activity.guidePdf} download target="_blank" rel="noreferrer" className="lst-print-btn guide" style={{ textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-              📄 Facilitator PDF
+              Facilitator PDF
             </a>
           ) : (
             <button className="lst-print-btn guide" onClick={() => onPrint(activity, 'guide')}>
-              📄 Facilitator PDF
+              Facilitator PDF
             </button>
           )}
 
           {activity.worksheetPdf ? (
             <a href={activity.worksheetPdf} download target="_blank" rel="noreferrer" className="lst-print-btn ws" style={{ textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-              📝 Student Worksheet
+              Student Worksheet
             </a>
           ) : (
             <button className="lst-print-btn ws" onClick={() => onPrint(activity, 'worksheet')}>
-              📝 Student Worksheet
+              Student Worksheet
             </button>
           )}
         </div>
@@ -1580,22 +1881,27 @@ function ActivityCard({ activity, isExpanded, onToggle, onPrint }) {
 
       {isExpanded && (
         <div className="lst-card-body">
-          {/* Materials always visible */}
+
+          {/* Picture rendering if the activity has one */}
+          {activity.imagePath && (
+             <div className="lst-image-wrapper">
+               <img src={activity.imagePath} alt={activity.title} className="lst-content-img" />
+             </div>
+          )}
+
           <div style={{ marginBottom: '20px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--ls-muted)', marginBottom: '10px' }}>🛒 Materials</div>
+            <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--ls-muted)', marginBottom: '10px' }}>Materials</div>
             <div className="lst-materials">
-              {activity.materials.map((m, i) => <span key={i} className="lst-material-tag">📌 {m}</span>)}
+              {activity.materials.map((m, i) => <span key={i} className="lst-material-tag">{m}</span>)}
             </div>
           </div>
 
-          {/* Inner tabs */}
           <div className="lst-inner-tabs">
             {innerTabs.map(t => (
               <button key={t.id} className={`lst-inner-tab ${innerTab === t.id ? 'active' : ''}`} onClick={() => setInnerTab(t.id)}>{t.label}</button>
             ))}
           </div>
 
-          {/* Guide */}
           {innerTab === 'guide' && (
             <div>
               {activity.phases.map((phase, pi) => (
@@ -1610,31 +1916,28 @@ function ActivityCard({ activity, isExpanded, onToggle, onPrint }) {
             </div>
           )}
 
-          {/* Debrief */}
           {innerTab === 'debrief' && (
             <div>
-              <p style={{ fontSize: '13px', color: 'var(--ls-muted)', marginBottom: '16px', lineHeight: 1.6 }}>Use at least 3 of these questions. Start with #1 (surface) and work toward the deeper ones. Don't rush.</p>
+              <p style={{ fontSize: '13px', color: 'var(--ls-muted)', marginBottom: '16px', lineHeight: 1.6 }}>Use at least 3 of these questions. Start with the surface questions and work toward the deeper ones.</p>
               {activity.debrief.map((d, i) => (
                 <div key={i} className="lst-debrief-item">
                   <div className="lst-debrief-q">Q{i + 1}: {d.q}</div>
-                  <div className="lst-debrief-note">{d.note}</div>
+                  <div className="lst-debrief-note">Facilitator Note: {d.note}</div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Watch out for */}
           {innerTab === 'watch' && (
             <div>
-              <p style={{ fontSize: '13px', color: 'var(--ls-muted)', marginBottom: '14px', lineHeight: 1.6 }}>These are common issues that arise with this activity. Knowing them in advance helps you facilitate with confidence.</p>
+              <p style={{ fontSize: '13px', color: 'var(--ls-muted)', marginBottom: '14px', lineHeight: 1.6 }}>These are common issues that arise with this activity.</p>
               {activity.watchOutFor.map((w, i) => <div key={i} className="lst-watch-item">{w}</div>)}
             </div>
           )}
 
-          {/* Variations */}
           {innerTab === 'vars' && (
             <div>
-              <p style={{ fontSize: '13px', color: 'var(--ls-muted)', marginBottom: '14px', lineHeight: 1.6 }}>Adapt the activity to your specific group. Each variation is designed to fit a different context without losing the core learning.</p>
+              <p style={{ fontSize: '13px', color: 'var(--ls-muted)', marginBottom: '14px', lineHeight: 1.6 }}>Adapt the activity to your specific group.</p>
               {activity.variations.map((v, i) => (
                 <div key={i} className="lst-variation-item">
                   <span className="lst-variation-tag">{v.tag}</span>
@@ -1644,10 +1947,9 @@ function ActivityCard({ activity, isExpanded, onToggle, onPrint }) {
             </div>
           )}
 
-          {/* Worksheet preview */}
           {innerTab === 'worksheet' && (
             <div>
-              <p style={{ fontSize: '13px', color: 'var(--ls-muted)', marginBottom: '16px', lineHeight: 1.6 }}>Preview of the student worksheet. Click "Student Worksheet" above to download or print.</p>
+              <p style={{ fontSize: '13px', color: 'var(--ls-muted)', marginBottom: '16px', lineHeight: 1.6 }}>Preview of the student worksheet.</p>
               <div className="lst-ws-preview">
                 <div style={{ fontFamily: "'Fraunces', serif", fontSize: '18px', fontWeight: 700, color: 'var(--ls-ink)', marginBottom: '4px' }}>{activity.worksheet.title}</div>
                 <div style={{ fontSize: '13px', color: 'var(--ls-muted)', fontStyle: 'italic', marginBottom: '20px' }}>{activity.worksheet.intro}</div>
@@ -1684,18 +1986,16 @@ function ActivityCard({ activity, isExpanded, onToggle, onPrint }) {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 const GRADE_TABS = [
-  { key: 'lower',  label: 'Lower Secondary', sub: 'Grade 5–7',  emoji: '🌱' },
-  { key: 'middle', label: 'Middle Secondary', sub: 'Grade 8–10', emoji: '🌿' },
-  { key: 'upper',  label: 'Senior Secondary', sub: 'Grade 11–12',emoji: '🌳' },
+  { key: 'lower',  label: 'Lower Secondary', sub: 'Grade 5–7' },
+  { key: 'middle', label: 'Middle Secondary', sub: 'Grade 8–10' },
+  { key: 'upper',  label: 'Senior Secondary', sub: 'Grade 11–12' },
 ];
-
-const ALL_THEMES = ['All', ...Array.from(new Set(ACTIVITIES.map(a => a.themeShort)))];
 
 export default function LifeSkillsTrainer({ navigate, onBack }) {
   const [activeTab,    setActiveTab]    = useState('lower');
   const [themeFilter,  setThemeFilter]  = useState('All');
   const [expandedId,   setExpandedId]   = useState(null);
-  const [printData,    setPrintData]    = useState(null); // { activity, mode }
+  const [printData,    setPrintData]    = useState(null); 
 
   useEffect(() => {
     const s = document.createElement('style');
@@ -1720,7 +2020,7 @@ export default function LifeSkillsTrainer({ navigate, onBack }) {
 
   const filtered = ACTIVITIES.filter(a => {
     const matchTab   = a.gradeKey === activeTab;
-    const matchTheme = themeFilter === 'All' || a.themeShort === themeFilter;
+    const matchTheme = themeFilter === 'All' || a.themeShort.includes(themeFilter);
     return matchTab && matchTheme;
   });
 
@@ -1728,43 +2028,39 @@ export default function LifeSkillsTrainer({ navigate, onBack }) {
 
   return (
     <>
-      {/* Print overlay (outside main page so print media query works cleanly) */}
       {printData && (
         <PrintView activity={printData.activity} mode={printData.mode} onClose={closePrint} />
       )}
 
       <div className="lst-page">
-        {/* TOP BAR */}
         <div className="lst-topbar">
           <button className="lst-back" onClick={onBack || (() => navigate && navigate('/resources'))}>← Back to Resources</button>
           <div className="lst-topbar-title">Life Skills Trainer — Activity Bank</div>
-          <div className="lst-topbar-right">10 Activities · Grade 5–12</div>
+          <div className="lst-topbar-right">30 Activities · Grade 5–12</div>
         </div>
 
-        {/* HERO */}
         <div className="lst-hero">
           <div className="lst-hero-blob lst-hero-blob-1" />
           <div className="lst-hero-blob lst-hero-blob-2" />
           <div className="lst-hero-inner">
             <div style={{ flex: 1, minWidth: '300px' }}>
-              <div className="lst-hero-eyebrow">🧑‍🏫 School Counsellor Resource</div>
+              <div className="lst-hero-eyebrow">School Counsellor Resource</div>
               <h1 className="lst-hero-h1">Life Skills Trainer<br /><em>Activity Bank</em></h1>
-              <p className="lst-hero-sub">Fully elaborated, classroom-ready life skills activities for school counsellors — each with a step-by-step facilitation script, debrief guide, and printable student worksheet. Designed for 30–40 minute class periods, Grade 5 to Grade 12.</p>
+              <p className="lst-hero-sub">30 fully elaborated, classroom-ready life skills activities mapped to the WHO 10 Core Life Skills. Each includes a facilitation script, debrief guide, and printable student worksheet.</p>
               <div className="lst-hero-tags">
-                <span className="lst-hero-tag">📄 Print Facilitator Guide</span>
-                <span className="lst-hero-tag">📝 Print Student Worksheet</span>
-                <span className="lst-hero-tag">🔓 Free to reproduce</span>
-                <span className="lst-hero-tag">🇮🇳 India-relevant scenarios</span>
+                <span className="lst-hero-tag">Print Facilitator Guide</span>
+                <span className="lst-hero-tag">Print Student Worksheet</span>
+                <span className="lst-hero-tag">Free to reproduce</span>
               </div>
             </div>
             <div className="lst-hero-right">
               <div className="lst-stat-card">
-                <div className="lst-stat-num">10</div>
+                <div className="lst-stat-num">30</div>
                 <div className="lst-stat-label">Activities</div>
               </div>
               <div className="lst-stat-card">
                 <div className="lst-stat-num">10</div>
-                <div className="lst-stat-label">Life Skill Themes</div>
+                <div className="lst-stat-label">WHO Life Skills</div>
               </div>
               <div className="lst-stat-card">
                 <div className="lst-stat-num">30–40</div>
@@ -1774,41 +2070,40 @@ export default function LifeSkillsTrainer({ navigate, onBack }) {
           </div>
         </div>
 
-        {/* GRADE BAND TABS */}
         <div className="lst-tabs-wrap">
           <div className="lst-tabs">
             {GRADE_TABS.map(t => (
               <button key={t.key} className={`lst-tab ${activeTab === t.key ? 'active' : ''}`} onClick={() => { setActiveTab(t.key); setExpandedId(null); setThemeFilter('All'); }}>
-                {t.emoji} {t.label}
+                {t.label}
                 <span className="lst-tab-sub">{t.sub} · {ACTIVITIES.filter(a => a.gradeKey === t.key).length} activities</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* FILTER CHIPS */}
         <div className="lst-filter-wrap">
           <div className="lst-filter-row">
-            <span className="lst-filter-label">Theme</span>
-            {ALL_THEMES.filter(t => t === 'All' || ACTIVITIES.some(a => a.gradeKey === activeTab && a.themeShort === t)).map(t => (
+            <span className="lst-filter-label">Filter by WHO Skill:</span>
+            {ALL_THEMES.map(t => (
               <button key={t} className={`lst-chip ${themeFilter === t ? 'active' : ''}`} onClick={() => setThemeFilter(t)}>{t}</button>
             ))}
-            <span className="lst-result-meta">{filtered.length} activit{filtered.length !== 1 ? 'ies' : 'y'} for {currentTabInfo?.sub}</span>
+          </div>
+          <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--ls-muted)', fontWeight: 600 }}>
+             Showing {filtered.length} activit{filtered.length !== 1 ? 'ies' : 'y'}
           </div>
         </div>
 
-        {/* ACTIVITY CARDS */}
         <div className="lst-grid">
           {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--ls-muted)' }}>
-              <div style={{ fontSize: '48px', marginBottom: '14px' }}>🌱</div>
               <p style={{ fontSize: '16px', fontWeight: 600 }}>No activities match this filter. Try another theme.</p>
             </div>
           ) : (
-            filtered.map(activity => (
+            filtered.map((activity, index) => (
               <ActivityCard
                 key={activity.id}
                 activity={activity}
+                displayNumber={index + 1}
                 isExpanded={expandedId === activity.id}
                 onToggle={() => handleToggle(activity.id)}
                 onPrint={handlePrint}
@@ -1816,15 +2111,14 @@ export default function LifeSkillsTrainer({ navigate, onBack }) {
             ))
           )}
 
-          {/* How to use this resource */}
           <div style={{ background: 'linear-gradient(135deg,#1E2820,#2D3A24)', borderRadius: '18px', padding: '32px 36px', color: 'white', marginTop: '8px' }}>
-            <div style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', marginBottom: '12px' }}>📌 How to Use This Resource</div>
+            <div style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', marginBottom: '12px' }}>How to Use This Resource</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginTop: '16px' }}>
               {[
-                { n: '1', title: 'Choose your grade band', desc: 'Use the tabs above to find activities designed for your class level. Each activity is calibrated for the cognitive and social development of that grade range.' },
-                { n: '2', title: 'Read before class', desc: 'Open the activity card and review the full facilitation guide. Read through the SAY prompts — these are not scripts you must follow exactly, but anchors for the session.' },
-                { n: '3', title: 'Print what you need', desc: 'Click "Facilitator PDF" for your session notes and "Student Worksheet" for handouts. Both are print-optimised for A4 paper.' },
-                { n: '4', title: 'Follow up', desc: 'Each activity ends with a commitment or reflection. Check in with students a week later — even 5 minutes builds continuity and shows the work matters.' },
+                { n: '1', title: 'Choose your grade band', desc: 'Use the tabs above to find activities calibrated for the cognitive and social development of that age group.' },
+                { n: '2', title: 'Read before class', desc: 'Open the activity card and review the full facilitation guide. The SAY prompts are anchors for the session.' },
+                { n: '3', title: 'Print what you need', desc: 'Click "Facilitator PDF" for your session notes and "Student Worksheet" for handouts.' },
+                { n: '4', title: 'Follow up', desc: 'Each activity ends with a commitment. Check in with students a week later to build continuity.' },
               ].map(item => (
                 <div key={item.n} style={{ background: 'rgba(255,255,255,.06)', borderRadius: '12px', padding: '18px 20px' }}>
                   <div style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', color: '#FFCE6B', lineHeight: 1, marginBottom: '8px' }}>{item.n}</div>
