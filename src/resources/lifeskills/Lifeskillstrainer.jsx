@@ -1350,3 +1350,457 @@ worksheet: { title: "Name It To Tame It", intro: "Precision brings calm.", secti
     worksheet: { title: "Radical Acceptance", intro: "Drop the suffering.", sections: [ { title: "Step 1", prompts: [ { label: "The reality I am fighting:", lines: 2 }, { label: "My next constructive step now that I accept it:", lines: 2 } ] } ] }
   }
 ];
+// ─── HELPER COMPONENTS ────────────────────────────────────────────────────────
+function Step({ s }) {
+  const labels = { say: "Say", do: "Do", tip: "Tip", pause: "Pause" };
+  return (
+    <div className={`lst-step ${s.type}`}>
+      <span className="lst-step-label">{labels[s.type] || "Step"}</span>
+      <span className="lst-step-text">{s.text}</span>
+    </div>
+  );
+}
+
+function PrintStep({ s }) {
+  const labels = { say: "SAY", do: "DO", tip: "TIP", pause: "PAUSE" };
+  return (
+    <div className={`lstp-step ${s.type}`}>
+      <span className="lstp-step-lbl">{labels[s.type] || "STEP"}</span>
+      <p>{s.text}</p>
+    </div>
+  );
+}
+
+// ─── PRINT VIEW (Facilitator Guide + Worksheet) ───────────────────────────────
+function PrintView({ activity, mode, onClose }) {
+  useEffect(() => { if (activity) setTimeout(() => window.print(), 400); }, [activity]);
+
+  if (!activity) return null;
+
+  if (mode === "guide") return (
+    <div className={`lst-print-overlay ${activity ? 'visible' : ''}`}>
+      <div className="lst-print-overlay-topbar no-print">
+        <h3>Facilitator Guide — {activity.title}</h3>
+        <div className="lst-print-overlay-actions">
+          <button className="lst-po-btn print" onClick={() => window.print()}>Print / Save PDF</button>
+          <button className="lst-po-btn close" onClick={onClose}>Close</button>
+        </div>
+      </div>
+      <div className="lst-print-doc">
+        <div className="lstp-header">
+          <h1>{activity.title}</h1>
+          <div className="lstp-header-meta">
+            <span>{activity.themeShort.join(" & ")}</span>
+            <span>Grade {activity.grade}</span>
+            <span>{activity.duration}</span>
+            <span>{activity.formats.join(" | ")}</span>
+          </div>
+        </div>
+
+        <div className="lstp-section-h">Learning Objective</div>
+        <div className="lstp-objective-box">{activity.objective}</div>
+
+        <div className="lstp-section-h">Materials Needed</div>
+        <div className="lstp-materials-list">
+          {activity.materials.map((m, i) => <span key={i} className="lstp-material">{m}</span>)}
+        </div>
+
+        <div className="lstp-section-h">Facilitation Guide</div>
+        {activity.phases.map((phase, pi) => (
+          <div key={pi} className="lstp-phase-block">
+            <div className="lstp-phase-title">
+              <span className="lstp-phase-time">{phase.time}</span>
+              <span className="lstp-phase-name">{phase.phase}</span>
+            </div>
+            {phase.steps.map((s, si) => <PrintStep key={si} s={s} />)}
+          </div>
+        ))}
+
+        <div className="lstp-section-h">Debrief Questions</div>
+        {activity.debrief.map((d, i) => (
+          <div key={i} className="lstp-debrief-item">
+            <div className="lstp-debrief-q">Q{i + 1}: {d.q}</div>
+            <div className="lstp-debrief-note">Facilitator Note: {d.note}</div>
+          </div>
+        ))}
+
+        <div className="lstp-section-h">Watch Out For</div>
+        {activity.watchOutFor && activity.watchOutFor.map((w, i) => <div key={i} className="lstp-watch">{w}</div>)}
+
+        <div className="lstp-section-h">Variations</div>
+        {activity.variations && activity.variations.map((v, i) => (
+          <div key={i} className="lstp-variation">
+            <span className="lstp-var-tag">{v.tag}</span>
+            <span>{v.text}</span>
+          </div>
+        ))}
+
+        <div className="lstp-footer">
+          SecretSharz Life Skills Resource Library · Grade {activity.grade} · Free to reproduce for educational use
+        </div>
+      </div>
+    </div>
+  );
+
+  if (mode === "worksheet") return (
+    <div className={`lst-print-overlay ${activity ? 'visible' : ''}`}>
+      <div className="lst-print-overlay-topbar no-print">
+        <h3>Student Worksheet — {activity.title}</h3>
+        <div className="lst-print-overlay-actions">
+          <button className="lst-po-btn print" onClick={() => window.print()}>Print / Save PDF</button>
+          <button className="lst-po-btn close" onClick={onClose}>Close</button>
+        </div>
+      </div>
+      <div className="lst-print-doc">
+        <div className="lstw-header">
+          <h1>{activity.worksheet.title}</h1>
+          <p>Life Skills Worksheet · Grade {activity.grade} · {activity.themeShort.join(" & ")}</p>
+        </div>
+        <div className="lstw-name-row">
+          <div className="lstw-name-field">Name: _____________________________</div>
+          <div className="lstw-name-field">Class: __________</div>
+          <div className="lstw-name-field">Date: __________</div>
+        </div>
+        <p style={{ fontSize: "13px", color: "#7A8A7D", marginBottom: "20px", fontStyle: "italic" }}>{activity.worksheet.intro}</p>
+
+        {activity.worksheet.sections.map((sec, si) => (
+          <div key={si} className="lstw-section">
+            <div className="lstw-section-title">{sec.title}</div>
+            {sec.twoCol && (
+              <div className="lstw-two-col">
+                {sec.colTitles.map((ct, ci) => (
+                  <div key={ci} className="lstw-col-box">
+                    <div className="lstw-col-title">{ct}</div>
+                    <div className="lstw-box" style={{ minHeight: "80px" }} />
+                  </div>
+                ))}
+              </div>
+            )}
+            {sec.prompts.map((p, pi) => (
+              <div key={pi} className="lstw-prompt-block" style={{ marginBottom: "12px" }}>
+                {p.label && <div className="lstw-prompt">{p.label}</div>}
+                {p.note && <div style={{ fontSize: "11px", color: "#7A8A7D", marginBottom: "4px", fontStyle: "italic" }}>{p.note}</div>}
+                {p.lines > 0 && Array.from({ length: p.lines }).map((_, li) => (
+                  <div key={li} className="lstw-line" />
+                ))}
+                {p.lines === 0 && <div style={{ height: "10px" }} />}
+              </div>
+            ))}
+          </div>
+        ))}
+        <div className="lstw-footer">
+          SecretSharz Life Skills Resource Library
+        </div>
+      </div>
+    </div>
+  );
+
+  return null;
+}
+
+// ─── ACTIVITY CARD ────────────────────────────────────────────────────────────
+function ActivityCard({ activity, displayNumber, isExpanded, onToggle, onPrint }) {
+  const [innerTab, setInnerTab] = useState("guide");
+
+  const innerTabs = [
+    { id: "guide",    label: "Facilitation Guide" },
+    { id: "debrief",  label: "Debrief" },
+    { id: "watch",    label: "Watch Out For" },
+    { id: "vars",     label: "Variations" },
+    { id: "worksheet", label: "Worksheet Preview" },
+  ];
+
+  return (
+    <div className={`lst-card ${isExpanded ? "expanded" : ""}`}>
+      <div className="lst-card-accent" style={{ background: `linear-gradient(90deg,${activity.color},${activity.color}88)` }} />
+
+      <div className="lst-card-header" onClick={onToggle}>
+        <div className="lst-card-num">{displayNumber}</div>
+        <div className="lst-card-meta-block">
+          <div className="lst-card-title">{activity.title}</div>
+          <div className="lst-card-badges">
+            {activity.themeShort.map(t => (
+               <span key={t} className="lst-badge lst-badge-theme" style={{ background: `${activity.color}18`, color: activity.color }}>{t}</span>
+            ))}
+            <span className="lst-badge lst-badge-grade">Grade {activity.grade}</span>
+            <span className="lst-badge lst-badge-time">{activity.duration}</span>
+          </div>
+          <div className="lst-card-obj">{activity.objective}</div>
+        </div>
+        
+        <div className="lst-card-print-btns no-print" onClick={e => e.stopPropagation()}>
+          {activity.guidePdf ? (
+            <a href={activity.guidePdf} download target="_blank" rel="noreferrer" className="lst-print-btn guide" style={{ textDecoration: "none" }} onClick={e => e.stopPropagation()}>
+              Facilitator PDF
+            </a>
+          ) : (
+            <button className="lst-print-btn guide" onClick={() => onPrint(activity, "guide")}>
+              Facilitator PDF
+            </button>
+          )}
+
+          {activity.worksheetPdf ? (
+            <a href={activity.worksheetPdf} download target="_blank" rel="noreferrer" className="lst-print-btn ws" style={{ textDecoration: "none" }} onClick={e => e.stopPropagation()}>
+              Student Worksheet
+            </a>
+          ) : (
+            <button className="lst-print-btn ws" onClick={() => onPrint(activity, "worksheet")}>
+              Student Worksheet
+            </button>
+          )}
+        </div>
+        
+        <div className="lst-card-chevron">▶</div>
+      </div>
+
+      {isExpanded && (
+        <div className="lst-card-body">
+
+          {activity.imagePath && (
+             <div className="lst-image-wrapper">
+               <img src={activity.imagePath} alt={activity.title} className="lst-content-img" />
+             </div>
+          )}
+
+          <div style={{ marginBottom: "20px" }}>
+            <div style={{ fontSize: "12px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", color: "var(--ls-muted)", marginBottom: "10px" }}>Materials</div>
+            <div className="lst-materials">
+              {activity.materials.map((m, i) => <span key={i} className="lst-material-tag">{m}</span>)}
+            </div>
+          </div>
+
+          <div className="lst-inner-tabs">
+            {innerTabs.map(t => (
+              <button key={t.id} className={`lst-inner-tab ${innerTab === t.id ? "active" : ""}`} onClick={() => setInnerTab(t.id)}>{t.label}</button>
+            ))}
+          </div>
+
+          {innerTab === "guide" && (
+            <div>
+              {activity.phases.map((phase, pi) => (
+                <div key={pi} className="lst-phase">
+                  <div className="lst-phase-header">
+                    <span className="lst-phase-time">{phase.time}</span>
+                    <span className="lst-phase-name">{phase.phase}</span>
+                  </div>
+                  {phase.steps.map((s, si) => <Step key={si} s={s} />)}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {innerTab === "debrief" && (
+            <div>
+              <p style={{ fontSize: "13px", color: "var(--ls-muted)", marginBottom: "16px", lineHeight: 1.6 }}>Use at least 3 of these questions. Start with the surface questions and work toward the deeper ones.</p>
+              {activity.debrief.map((d, i) => (
+                <div key={i} className="lst-debrief-item">
+                  <div className="lst-debrief-q">Q{i + 1}: {d.q}</div>
+                  <div className="lst-debrief-note">Facilitator Note: {d.note}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {innerTab === "watch" && (
+            <div>
+              <p style={{ fontSize: "13px", color: "var(--ls-muted)", marginBottom: "14px", lineHeight: 1.6 }}>These are common issues that arise with this activity.</p>
+              {activity.watchOutFor && activity.watchOutFor.map((w, i) => <div key={i} className="lst-watch-item">{w}</div>)}
+            </div>
+          )}
+
+          {innerTab === "vars" && (
+            <div>
+              <p style={{ fontSize: "13px", color: "var(--ls-muted)", marginBottom: "14px", lineHeight: 1.6 }}>Adapt the activity to your specific group.</p>
+              {activity.variations && activity.variations.map((v, i) => (
+                <div key={i} className="lst-variation-item">
+                  <span className="lst-variation-tag">{v.tag}</span>
+                  <span style={{ fontSize: "14px", color: "var(--ls-ink-soft)" }}>{v.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {innerTab === "worksheet" && (
+            <div>
+              <p style={{ fontSize: "13px", color: "var(--ls-muted)", marginBottom: "16px", lineHeight: 1.6 }}>Preview of the student worksheet.</p>
+              <div className="lst-ws-preview">
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: "18px", fontWeight: 700, color: "var(--ls-ink)", marginBottom: "4px" }}>{activity.worksheet.title}</div>
+                <div style={{ fontSize: "13px", color: "var(--ls-muted)", fontStyle: "italic", marginBottom: "20px" }}>{activity.worksheet.intro}</div>
+                {activity.worksheet.sections.map((sec, si) => (
+                  <div key={si} className="lst-ws-section">
+                    <div className="lst-ws-section-title">{sec.title}</div>
+                    {sec.twoCol && (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                        {sec.colTitles.map((ct, ci) => (
+                          <div key={ci} style={{ background: "rgba(30,40,32,.03)", borderRadius: "8px", padding: "10px 12px" }}>
+                            <div style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--ls-muted)", marginBottom: "6px" }}>{ct}</div>
+                            <div className="lst-ws-box" style={{ minHeight: "50px" }} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {sec.prompts.map((p, pi) => (
+                      <div key={pi} style={{ marginBottom: "10px" }}>
+                        {p.label && <div className="lst-ws-prompt">{p.label}</div>}
+                        {p.note && <div style={{ fontSize: "11px", color: "var(--ls-muted)", marginBottom: "4px", fontStyle: "italic" }}>{p.note}</div>}
+                        {p.lines > 0 && Array.from({ length: Math.min(p.lines, 2) }).map((_, li) => <div key={li} className="lst-ws-lines" />)}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+const GRADE_TABS = [
+  { key: "lower",  label: "Lower Secondary", sub: "Grade 5–7" },
+  { key: "middle", label: "Middle Secondary", sub: "Grade 8–10" },
+  { key: "upper",  label: "Senior Secondary", sub: "Grade 11–12" },
+];
+
+export default function LifeSkillsTrainer({ navigate, onBack }) {
+  const [activeTab,    setActiveTab]    = useState("lower");
+  const [themeFilter,  setThemeFilter]  = useState("All");
+  const [expandedId,   setExpandedId]   = useState(null);
+  const [printData,    setPrintData]    = useState(null); 
+
+  useEffect(() => {
+    const s = document.createElement("style");
+    s.textContent = PAGE_CSS;
+    document.head.appendChild(s);
+    return () => document.head.removeChild(s);
+  }, []);
+
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, []);
+
+  const handlePrint = useCallback((activity, mode) => {
+    setPrintData({ activity, mode });
+  }, []);
+
+  const closePrint = useCallback(() => {
+    setPrintData(null);
+  }, []);
+
+  const handleToggle = useCallback((id) => {
+    setExpandedId(prev => prev === id ? null : id);
+  }, []);
+
+  const filtered = ACTIVITIES.filter(a => {
+    const matchTab   = a.gradeKey === activeTab;
+    const matchTheme = themeFilter === "All" || a.themeShort.includes(themeFilter);
+    return matchTab && matchTheme;
+  });
+
+  return (
+    <>
+      {printData && (
+        <PrintView activity={printData.activity} mode={printData.mode} onClose={closePrint} />
+      )}
+
+      <div className="lst-page">
+        <div className="lst-topbar">
+          <button className="lst-back" onClick={onBack || (() => navigate && navigate("/resources"))}>← Back to Resources</button>
+          <div className="lst-topbar-title">Life Skills Trainer — Activity Bank</div>
+          <div className="lst-topbar-right">60 Activities · Grade 5–12</div>
+        </div>
+
+        <div className="lst-hero">
+          <div className="lst-hero-blob lst-hero-blob-1" />
+          <div className="lst-hero-blob lst-hero-blob-2" />
+          <div className="lst-hero-inner">
+            <div style={{ flex: 1, minWidth: "300px" }}>
+              <div className="lst-hero-eyebrow">School Counsellor Resource</div>
+              <h1 className="lst-hero-h1">Life Skills Trainer<br /><em>Activity Bank</em></h1>
+              <p className="lst-hero-sub">60 fully elaborated, classroom-ready life skills activities mapped to the WHO 10 Core Life Skills. Each includes a facilitation script, debrief guide, and printable student worksheet.</p>
+              <div className="lst-hero-tags">
+                <span className="lst-hero-tag">Print Facilitator Guide</span>
+                <span className="lst-hero-tag">Print Student Worksheet</span>
+                <span className="lst-hero-tag">Free to reproduce</span>
+              </div>
+            </div>
+            <div className="lst-hero-right">
+              <div className="lst-stat-card">
+                <div className="lst-stat-num">60</div>
+                <div className="lst-stat-label">Activities</div>
+              </div>
+              <div className="lst-stat-card">
+                <div className="lst-stat-num">10</div>
+                <div className="lst-stat-label">WHO Life Skills</div>
+              </div>
+              <div className="lst-stat-card">
+                <div className="lst-stat-num">30–40</div>
+                <div className="lst-stat-label">Minutes Per Session</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="lst-tabs-wrap">
+          <div className="lst-tabs">
+            {GRADE_TABS.map(t => (
+              <button key={t.key} className={`lst-tab ${activeTab === t.key ? "active" : ""}`} onClick={() => { setActiveTab(t.key); setExpandedId(null); setThemeFilter("All"); }}>
+                {t.label}
+                <span className="lst-tab-sub">{t.sub} · {ACTIVITIES.filter(a => a.gradeKey === t.key).length} activities</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="lst-filter-wrap">
+          <div className="lst-filter-row">
+            <span className="lst-filter-label">Filter by WHO Skill:</span>
+            {ALL_THEMES.map(t => (
+              <button key={t} className={`lst-chip ${themeFilter === t ? "active" : ""}`} onClick={() => setThemeFilter(t)}>{t}</button>
+            ))}
+          </div>
+          <div style={{ marginTop: "12px", fontSize: "12px", color: "var(--ls-muted)", fontWeight: 600 }}>
+             Showing {filtered.length} activit{filtered.length !== 1 ? "ies" : "y"}
+          </div>
+        </div>
+
+        <div className="lst-grid">
+          {filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--ls-muted)" }}>
+              <p style={{ fontSize: "16px", fontWeight: 600 }}>No activities match this filter. Try another theme.</p>
+            </div>
+          ) : (
+            filtered.map((activity, index) => (
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                displayNumber={index + 1}
+                isExpanded={expandedId === activity.id}
+                onToggle={() => handleToggle(activity.id)}
+                onPrint={handlePrint}
+              />
+            ))
+          )}
+
+          <div style={{ background: "linear-gradient(135deg,#1E2820,#2D3A24)", borderRadius: "18px", padding: "32px 36px", color: "white", marginTop: "8px" }}>
+            <div style={{ fontFamily: "'Fraunces', serif", fontSize: "20px", marginBottom: "12px" }}>How to Use This Resource</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginTop: "16px" }}>
+              {[
+                { n: "1", title: "Choose your grade band", desc: "Use the tabs above to find activities calibrated for the cognitive and social development of that age group." },
+                { n: "2", title: "Read before class", desc: "Open the activity card and review the full facilitation guide. The SAY prompts are anchors for the session." },
+                { n: "3", title: "Print what you need", desc: "Click 'Facilitator PDF' for your session notes and 'Student Worksheet' for handouts." },
+                { n: "4", title: "Follow up", desc: "Each activity ends with a commitment. Check in with students a week later to build continuity." },
+              ].map(item => (
+                <div key={item.n} style={{ background: "rgba(255,255,255,.06)", borderRadius: "12px", padding: "18px 20px" }}>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: "28px", color: "#FFCE6B", lineHeight: 1, marginBottom: "8px" }}>{item.n}</div>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "white", marginBottom: "5px" }}>{item.title}</div>
+                  <div style={{ fontSize: "13px", color: "rgba(255,255,255,.6)", lineHeight: 1.65 }}>{item.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
