@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 
-// ── FIXED IMPORT PATH ──────────────────────────────
+// ── FIXED IMPORT PATHS ─────────────────────────────
 import POCSORStudents from './resources/pocso/POCSORStudents';
 import Lifeskillstrainer from './resources/lifeskills/Lifeskillstrainer';
-import poshresources from './resources/posh/poshresources';
+import PoshResources from './resources/posh/poshresources';
 
 // ── RESOURCE LIBRARY CSS ──────────────────────────────────────────────────
 const RESOURCE_CSS = `
@@ -172,7 +172,6 @@ const RESOURCE_LIST = [
     component: Lifeskillstrainer,
     pdfLink: null 
   },
-  // ── NEW POSH RESOURCE ──
   {
     id: 'posh-resources',
     slug: 'posh-resources',
@@ -190,7 +189,7 @@ const RESOURCE_LIST = [
     description: 'A dedicated toolkit detailing the Prevention of Sexual Harassment (POSH) at Workplace Act. Includes guidelines, reporting structures, and compliance protocols for educational institutions.',
     lastUpdated: 'April 2026',
     isNew: true,
-    component: poshresources,
+    component: PoshResources,
     pdfLink: null 
   }
 ];
