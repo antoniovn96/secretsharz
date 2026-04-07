@@ -153,8 +153,8 @@ const RESOURCE_LIST = [
     pdfLink: '/POCSO Guidelines-flat.pdf'
   },
   {
-    id: 'lifeskills-trainer',
-    slug: 'lifeskills-trainer',
+    id: 'lifeskillstrainer',
+    slug: 'lifeskillstrainer',
     title: 'Life Skills Training Module',
     subtitle: 'Comprehensive Guide for Educators',
     topic: 'Life Skills',
