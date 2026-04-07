@@ -1059,8 +1059,10 @@ const ACTIVITIES = [
     debrief: [ { q: "Did finding the exact word make you feel more in control?", note: "Shifts brain processing to the logical prefrontal cortex." } ],
     watchOutFor: [ "Students feeling overwhelmed by the number of words on the wheel. Start them in the center." ],
     variations: [ { tag: "Journaling", text: "Have them write a paragraph using 3 specific wheel words." } ],
-    worksheet: { title: "Name It To Tame It", intro: "Precision brings calm.", sections: [ { title: "My Vocabulary", prompts: [ { label: "Instead of 'Mad', I am actually feeling:", lines: 1 } ] } ] }
+worksheet: { title: "Name It To Tame It", intro: "Precision brings calm.", sections: [ { title: "My Vocabulary", prompts: [ { label: "Instead of 'Mad', I am actually feeling:", lines: 1 } ] } ] }
   },
+  // ──────────────────────── SENIOR SECONDARY (Grade 11-12) ────────────────────────
+  // ============================================================================
   // ──────────────────────── SENIOR SECONDARY (Grade 11-12) ────────────────────────
   // ============================================================================
   // 20 NEW SENIOR SECONDARY ACTIVITIES (WHO Life Skills)
