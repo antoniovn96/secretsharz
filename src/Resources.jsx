@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 // ── FIXED IMPORT PATH ──────────────────────────────
 import POCSORStudents from './resources/pocso/POCSORStudents';
 import Lifeskillstrainer from './resources/lifeskills/Lifeskillstrainer';
+import poshresources from './resources/posh/poshresources';
 
 // ── RESOURCE LIBRARY CSS ──────────────────────────────────────────────────
 const RESOURCE_CSS = `
@@ -50,6 +51,7 @@ const RESOURCE_CSS = `
   .res-chip.audience-Counsellors.active { background: #E8845A; border-color: #E8845A; }
   .res-chip.topic-POCSO.active          { background: #2D5240; border-color: #2D5240; }
   .res-chip.topic-Mental-Health.active  { background: #7C6FA0; border-color: #7C6FA0; }
+  .res-chip.topic-POSH.active           { background: #8E44AD; border-color: #8E44AD; }
   .res-chip.format-PDF.active           { background: #C0392B; border-color: #C0392B; }
   .res-chip.format-PPT.active           { background: #E67E22; border-color: #E67E22; }
   .res-result-count { font-size: 12px; color: var(--muted, #7A8A7D); font-weight: 600; margin-left: auto; white-space: nowrap; }
@@ -150,7 +152,6 @@ const RESOURCE_LIST = [
     component: POCSORStudents,
     pdfLink: '/POCSO Guidelines-flat.pdf'
   },
-  // ── NEW LIFE SKILLS RESOURCE ──
   {
     id: 'lifeskills-trainer',
     slug: 'lifeskills-trainer',
@@ -162,20 +163,41 @@ const RESOURCE_LIST = [
     formats: ['Interactive'],
     languages: ['English'],
     icon: '🌱',
-    color: '#E8845A', // Peach/Orange theme
+    color: '#E8845A', 
     colorPale: '#FDF0EA',
     accentColor: '#C0392B',
     description: 'A comprehensive interactive module designed for educators and counsellors to effectively teach core life skills, build resilience, and foster emotional intelligence in students.',
     lastUpdated: 'April 2026',
     isNew: true,
     component: Lifeskillstrainer,
-    pdfLink: null // Add a path here if you have a downloadable PDF for this one too
+    pdfLink: null 
+  },
+  // ── NEW POSH RESOURCE ──
+  {
+    id: 'posh-resources',
+    slug: 'posh-resources',
+    title: 'POSH Act Toolkit',
+    subtitle: 'Prevention of Sexual Harassment Guidelines',
+    topic: 'POSH',
+    audience: ['Teachers', 'Staff', 'Administration'],
+    ageGroups: ['Adults'],
+    formats: ['Interactive', 'PDF'],
+    languages: ['English'],
+    icon: '⚖️',
+    color: '#8E44AD', 
+    colorPale: '#F5EEF8',
+    accentColor: '#9B59B6',
+    description: 'A dedicated toolkit detailing the Prevention of Sexual Harassment (POSH) at Workplace Act. Includes guidelines, reporting structures, and compliance protocols for educational institutions.',
+    lastUpdated: 'April 2026',
+    isNew: true,
+    component: poshresources,
+    pdfLink: null 
   }
 ];
 
-const ALL_AUDIENCES = ['Students', 'Parents', 'Teachers', 'Counsellors', 'NGO Workers'];
-const ALL_TOPICS    = ['POCSO', 'Mental Health', 'Life Skills', 'Career Guidance'];
-const ALL_FORMATS   = ['PDF', 'PPT'];
+const ALL_AUDIENCES = ['Students', 'Parents', 'Teachers', 'Counsellors', 'NGO Workers', 'Staff', 'Administration'];
+const ALL_TOPICS    = ['POCSO', 'Mental Health', 'Life Skills', 'Career Guidance', 'POSH'];
+const ALL_FORMATS   = ['PDF', 'PPT', 'Interactive'];
 
 // ── RESOURCE CARD COMPONENT ───────────────────────────────────────────────────
 function ResourceCard({ resource, onClick, searchQuery, animDelay }) {
