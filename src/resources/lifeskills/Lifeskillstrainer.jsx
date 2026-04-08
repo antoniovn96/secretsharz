@@ -313,11 +313,10 @@ function LiveSessionMode({ activity, onClose }) {
 
   const phase = activity.phases[currentPhaseIdx];
 
-  // Simple parser to extract max minutes
   useEffect(() => {
     if (phase && phase.time) {
       const match = phase.time.match(/(\d+)\s*min/i) || phase.time.match(/-(\d+)\s*min/i);
-      let mins = 5; // fallback
+      let mins = 5; 
       if (match && match[1]) {
         mins = parseInt(match[1], 10);
         const rangeMatch = phase.time.match(/(\d+)-(\d+)/);
@@ -401,140 +400,122 @@ function LiveSessionMode({ activity, onClose }) {
 
 // ─── CONSTANTS & DATA ─────────────────────────────────────────────────────────
 const ALL_THEMES = [
-  "All", 
-  "Self-awareness", 
-  "Empathy", 
-  "Critical thinking", 
-  "Creative thinking", 
-  "Decision making", 
-  "Coping with emotions", 
-  "Coping with stress", 
-  "Effective communication", 
-  "Interpersonal relationships", 
-  "Problem solving"
+  "All", "Self-awareness", "Empathy", "Critical thinking", "Creative thinking", 
+  "Decision making", "Coping with emotions", "Coping with stress", 
+  "Effective communication", "Interpersonal relationships", "Problem solving"
 ];
 
-// Complete array of activities
+// Total 60 Activities
 const ACTIVITIES = [
-  // ──────────────────────── LOWER SECONDARY (Grade 5-7) ────────────────────────
+  // ── LOWER SECONDARY (Grade 5-7) ── (25 Activities)
   {
-    id: "l_sa_1", 
-    title: "The Feelings Iceberg", 
-    themeShort: ["Self-awareness", "Coping with emotions"], 
-    grade: "5–7", gradeKey: "lower", duration: "35 min", 
-    formats: ["Individual", "Pairs", "Full class"], 
-    color: "#7C6FA0", colorPale: "#F0EDF8", 
+    id: "l_sa_1", title: "The Feelings Iceberg", themeShort: ["Self-awareness", "Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Individual", "Pairs", "Full class"], color: "#7C6FA0", colorPale: "#F0EDF8", 
     imagePath: "/resources/lifeskills/thefeelingsiceberg/thefeelingsiceberg.jpg",
     guidePdf: "/resources/lifeskills/thefeelingsiceberg/THE FEELINGS ICEBERG_ Exploring Our Emotions (Grade 5–7).pdf",
     worksheetPdf: "/resources/lifeskills/thefeelingsiceberg/The Feelings Iceberg Worksheet.pdf",
     energyLevel: "Low", complexity: "Moderate", rating: 4.8, usedBy: 342,
     bestUsedWhen: "Students are exhibiting unexplained anger or classroom conflicts are rising over 'small' things.",
-    studentOutcomes: ["Identify the physiological markers of primary emotions.", "Distinguish between reactive anger and vulnerable sadness.", "Articulate hidden feelings safely to a peer."],
-    proTip: "If students write 'nothing' below the waterline, do not force them. Suggest they draw a question mark. It takes time to build the vocabulary.",
-    whyItWorks: "This activity works because it externalizes emotions, reducing shame and improving emotional vocabulary by separating the reactive behavior from the vulnerable root cause.",
+    studentOutcomes: ["Identify physiological markers of emotions.", "Distinguish between reactive anger and vulnerable sadness.", "Articulate hidden feelings."],
+    proTip: "If students write 'nothing' below the waterline, do not force them. Suggest they draw a question mark.",
+    whyItWorks: "Externalizes emotions, reducing shame and improving emotional vocabulary by separating reactive behavior from the root cause.",
     tags: ["ADHD-friendly", "Visual Learners", "Introvert-friendly"],
-    nextSession: "l_em_1", // Suggest empathy next
-    objective: "Students will distinguish between surface emotions (what others see) and underlying feelings (what's really happening inside), mapping their own emotional landscape.", 
-    materials: ["Whiteboard & marker", "Iceberg worksheet", "Coloured pencils"],
+    nextSession: "l_em_1",
+    objective: "Students will distinguish between surface emotions and underlying feelings.", materials: ["Whiteboard", "Iceberg worksheet", "Coloured pencils"],
     phases: [
-      { time: "0–5 min", phase: "Hook", steps: [ { type: "say", text: "Think about the last time you got really angry. Picture it. What did the other person actually SEE? What did your anger look like from the outside?" }, { type: "do", text: "Take 3-4 answers. Write them on the board: went quiet, shouted, face went red, slammed door." }, { type: "say", text: "Interesting. Now here is my question: was anger the ONLY thing you were feeling? Or was something else going on underneath?" }, { type: "tip", text: "Keep this light and curious. Do not push for specific answers yet—just plant the question." } ] },
-      { time: "5–12 min", phase: "Concept Introduction", steps: [ { type: "do", text: "Draw a simple iceberg on the board: a small tip above a wavy line, a large mass below. Label the tip 'What people SEE' and below the line 'What is REALLY happening.'" }, { type: "say", text: "An iceberg has a tiny visible tip and a massive hidden section. Our emotions work exactly the same way." }, { type: "say", text: "What might be hiding under anger? Build a word cloud below the waterline as students call out: fear, embarrassment, loneliness, feeling unheard." } ] },
-      { time: "12–22 min", phase: "Individual Reflection", steps: [ { type: "do", text: "Distribute iceberg worksheets." }, { type: "say", text: "Think of one recent moment where you felt a strong emotion. Write what you SHOWED in the tip. Then go below the waterline and write what was ACTUALLY happening inside. Be honest—this is just for you." } ] },
-      { time: "22–30 min", phase: "Pair Activity", steps: [ { type: "say", text: "Pair up. Share ONLY your above-waterline with your partner. Do not tell them what is below the line yet." }, { type: "say", text: "Your partner's job is to GUESS what might be below your waterline. Then tell them how close they were." }, { type: "do", text: "Give pairs 5 minutes. Each person shares once." } ] },
-      { time: "30–35 min", phase: "Debrief", steps: [ { type: "say", text: "Let us come back together. I have a few questions for the whole group." } ] }
+      { time: "0–5 min", phase: "Hook", steps: [ { type: "say", text: "Think of anger. What does it look like outside?" }, { type: "do", text: "Write answers on board." } ] },
+      { time: "5–12 min", phase: "Concept Intro", steps: [ { type: "do", text: "Draw iceberg." }, { type: "say", text: "What might be hiding under anger?" } ] },
+      { time: "12–22 min", phase: "Reflection", steps: [ { type: "do", text: "Distribute worksheets." }, { type: "say", text: "Write what you showed and what was actually happening inside." } ] },
+      { time: "22–30 min", phase: "Pair Activity", steps: [ { type: "say", text: "Share ONLY above-waterline. Partner guesses below." } ] },
+      { time: "30–35 min", phase: "Debrief", steps: [ { type: "say", text: "Let's come back together." } ] }
     ],
-    debrief: [ { q: "Was it easy or difficult to look below your waterline? What made it difficult?", note: "Listen for: 'I didn't know what the feeling was'. Validate this." }, { q: "Has someone ever responded to just your tip and completely missed what was really going on?", note: "This is usually the question that creates the most resonance." } ],
-    watchOutFor: [ "A student who discloses something serious during the writing. Have your referral process ready." ],
-    variations: [ { tag: "Grade 5", text: "Use a provided emotion word bank rather than asking students to generate words." } ]
+    debrief: [ { q: "Was it easy or difficult to look below your waterline?", note: "Validate difficulty." }, { q: "Has someone responded to just your tip?", note: "Creates resonance." } ],
+    watchOutFor: [ "Student disclosing something serious. Have referral process ready." ]
   },
   {
     id: "l_sa_2", title: "My Strengths Shield", themeShort: ["Self-awareness"], grade: "5–7", gradeKey: "lower", duration: "40 min", formats: ["Art activity", "Pairs"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "Medium", complexity: "Easy", rating: 4.6, usedBy: 289,
-    bestUsedWhen: "Post-exams or during periods of low class morale and high self-criticism.",
-    whyItWorks: "Art-based reflection bypasses the analytical brain, allowing students who struggle with verbal expression to communicate complex self-concepts.",
+    bestUsedWhen: "Post-exams or during periods of low class morale.",
+    whyItWorks: "Art-based reflection bypasses the analytical brain, allowing expression without verbal pressure.",
     tags: ["Low verbal ability", "Art-focused"],
-    studentOutcomes: ["Differentiate between 'skills' (doing) and 'character strengths' (being).", "Accept a compliment from a peer gracefully.", "Identify one personal area for growth without shame."],
-    objective: "Students will identify their core character strengths and create a visual shield to build self-esteem.", materials: ["Blank shield templates", "Coloured markers"],
+    studentOutcomes: ["Differentiate skills and character.", "Accept a compliment.", "Identify personal growth area."],
+    objective: "Identify core character strengths.", materials: ["Blank shield templates", "Markers"],
     phases: [
-      { time: "0–10 min", phase: "What is a Strength?", steps: [ { type: "say", text: "Character strengths are who you ARE, not just what you DO." }, { type: "do", text: "Write examples on the board: Kindness, Bravery, Humor, Curiosity." } ] },
-      { time: "10–25 min", phase: "Designing", steps: [ { type: "do", text: "Hand out blank shield templates." }, { type: "say", text: "Draw: 1. Your greatest strength, 2. A strength others see in you, 3. A time you helped someone." } ] },
-      { time: "25–35 min", phase: "Sharing", steps: [ { type: "do", text: "Have students pair up." }, { type: "say", text: "Partners, listen and say: 'I can see that strength in you because...'" } ] }
+      { time: "0–10 min", phase: "What is a Strength?", steps: [ { type: "say", text: "Strengths are who you ARE, not what you DO." } ] },
+      { time: "10–25 min", phase: "Designing", steps: [ { type: "do", text: "Draw: 1. Greatest strength, 2. A strength others see in you." } ] },
+      { time: "25–35 min", phase: "Sharing", steps: [ { type: "say", text: "Partners, listen and say: 'I can see that strength in you because...'" } ] }
     ],
     debrief: [ { q: "Was it hard to choose a strength?", note: "Normalise focusing on weaknesses." } ]
   },
   {
     id: "l_sa_3", title: "The Mirror Game", themeShort: ["Self-awareness"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Pairs", "Physical"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
-    energyLevel: "High", complexity: "Easy", rating: 4.9, usedBy: 412,
-    materials: [], // Empty array enables Material-Free mode
-    bestUsedWhen: "Students are sluggish (e.g., first period or directly after lunch) and need a physical reset.",
-    whyItWorks: "Physical embodiment of emotion creates a somatic link, proving to students that changing posture literally alters brain chemistry.",
+    energyLevel: "High", complexity: "Easy", rating: 4.9, usedBy: 412, materials: [],
+    bestUsedWhen: "Students are sluggish and need a physical reset.",
+    whyItWorks: "Physical embodiment creates a somatic link to emotion.",
     tags: ["ADHD-friendly", "Kinesthetic"],
-    objective: "Recognize how physical posture reflects and influences internal emotional states.",
+    objective: "Recognize how physical posture influences internal states.",
     phases: [
-      { time: "0–15 min", phase: "The Setup", steps: [ { type: "do", text: "Ask students to stand and face their partner. Mirror perfectly." } ] },
-      { time: "15–25 min", phase: "Emotional Mirror", steps: [ { type: "say", text: "Mirror an emotion without using words. Let your partner guess." } ] },
-      { time: "25–30 min", phase: "Debrief", steps: [ { type: "say", text: "Did your face and breathing change when mirroring anger?" } ] }
+      { time: "0–15 min", phase: "The Setup", steps: [ { type: "do", text: "Stand and face partner. Mirror perfectly." } ] },
+      { time: "15–25 min", phase: "Emotional Mirror", steps: [ { type: "say", text: "Mirror an emotion without words. Partner guesses." } ] }
     ],
-    debrief: [ { q: "Can changing your posture change your mood?", note: "Introduce the idea of 'power posing'." } ]
+    debrief: [ { q: "Can changing posture change mood?", note: "Introduce 'power posing'." } ]
   },
   {
     id: "l_sa_4", title: "The Values Auction", themeShort: ["Self-awareness", "Decision making"], grade: "5–7", gradeKey: "lower", duration: "40 min", formats: ["Full class game"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "High", complexity: "Moderate", rating: 4.7, usedBy: 215,
-    objective: "Students will identify their personal values by deciding how to 'spend' limited resources in a simulated auction.", materials: ["Fake money"],
+    objective: "Identify personal values by 'spending' limited resources.", materials: ["Fake money"],
     phases: [
-      { time: "0–10 min", phase: "The Bank", steps: [ { type: "say", text: "Everyone has $1000 in their bank. I am going to auction off some items." } ] },
-      { time: "10–25 min", phase: "The Auction", steps: [ { type: "do", text: "Run the auction. Be a lively auctioneer." } ] },
-      { time: "25–35 min", phase: "Reflection", steps: [ { type: "say", text: "Look at what you bought. That item represents what you value most." } ] }
+      { time: "0–10 min", phase: "The Bank", steps: [ { type: "say", text: "You have $1000. I am auctioning items like 'Perfect Grades'." } ] },
+      { time: "10–25 min", phase: "The Auction", steps: [ { type: "do", text: "Run the auction." } ] },
+      { time: "25–35 min", phase: "Reflection", steps: [ { type: "say", text: "What you bought represents what you value." } ] }
     ],
-    debrief: [ { q: "Did you get caught up in bidding just to beat someone else?", note: "Great self-awareness moment about competitiveness." } ]
+    debrief: [ { q: "Did you bid just to beat someone else?", note: "Self-awareness moment." } ]
   },
   {
     id: "l_sa_5", title: "The 'I Am' Poem", themeShort: ["Self-awareness", "Creative thinking"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Individual"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "Low", complexity: "Easy", rating: 4.5, usedBy: 180,
-    objective: "Use a structured poetic template to explore hidden traits, fears, and hopes.", materials: ["Poem templates"],
+    objective: "Explore hidden traits using a structured poetic template.", materials: ["Poem templates"],
     phases: [
-      { time: "0–10 min", phase: "Template", steps: [ { type: "do", text: "Write structure: I am... I wonder... I hear... I want... I pretend... I cry..." } ] },
+      { time: "0–10 min", phase: "Template", steps: [ { type: "do", text: "Write structure: I am... I wonder... I hear... I want..." } ] },
       { time: "10–25 min", phase: "Writing", steps: [ { type: "do", text: "15 minutes of silent writing." } ] }
     ],
-    debrief: [ { q: "Which line was the hardest to write?", note: "Usually 'I pretend' or 'I cry'." } ]
+    debrief: [ { q: "Which line was hardest to write?", note: "Usually 'I pretend' or 'I cry'." } ]
   },
   {
     id: "l_em_1", title: "The Empathy Glasses", themeShort: ["Empathy"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Small groups"], color: "#E8845A", colorPale: "#FDF0EA", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "Medium", complexity: "Moderate", rating: 4.9, usedBy: 512,
-    objective: "Practice viewing a common school conflict from multiple perspectives.", materials: ["Scenario cards", "Prop glasses"],
+    objective: "View a common conflict from multiple perspectives.", materials: ["Scenario cards", "Prop glasses"],
     phases: [
-      { time: "0–10 min", phase: "Concept", steps: [ { type: "say", text: "Empathy means intentionally taking off our glasses and borrowing someone else's." } ] },
-      { time: "10–25 min", phase: "Practice", steps: [ { type: "do", text: "Read conflict. Have groups argue both sides while wearing the glasses." } ] }
+      { time: "0–10 min", phase: "Concept", steps: [ { type: "say", text: "Empathy means borrowing someone else's glasses." } ] },
+      { time: "10–25 min", phase: "Practice", steps: [ { type: "do", text: "Groups argue both sides while wearing the glasses." } ] }
     ],
     debrief: [ { q: "Are both people right in their own minds?", note: "Perception is reality." } ]
   },
   {
     id: "l_em_2", title: "Walk a Mile — Persona Cards", themeShort: ["Empathy"], grade: "5–7", gradeKey: "lower", duration: "40 min", formats: ["Pairs"], color: "#E8845A", colorPale: "#FDF0EA", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "Medium", complexity: "Advanced", rating: 4.7, usedBy: 290,
-    objective: "Inhabit a perspective genuinely different from their own.", materials: ["Persona Cards"],
+    objective: "Inhabit a perspective genuinely different from your own.", materials: ["Persona Cards"],
     phases: [
-      { time: "0–8 min", phase: "In-Role Thinking", steps: [ { type: "do", text: "Distribute cards. Students answer questions AS that person." } ] },
-      { time: "8–33 min", phase: "Conversation", steps: [ { type: "say", text: "Have a 5-minute conversation in role about a school policy." } ] }
+      { time: "0–8 min", phase: "In-Role Thinking", steps: [ { type: "do", text: "Students answer questions AS that person." } ] },
+      { time: "8–33 min", phase: "Conversation", steps: [ { type: "say", text: "Have a 5-minute conversation in role." } ] }
     ],
-    debrief: [ { q: "What was the hardest part?", note: "Usually slipping back to own self." } ]
+    debrief: [ { q: "What was the hardest part?", note: "Slipping back to own self." } ]
   },
   {
     id: "l_em_3", title: "The Kindness Boomerang", themeShort: ["Empathy", "Interpersonal relationships"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Full class"], color: "#E8845A", colorPale: "#FDF0EA", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "High", complexity: "Easy", rating: 4.8, usedBy: 605,
     objective: "Demonstrate how empathy creates a ripple effect.", materials: ["Ball of yarn"],
     phases: [
-      { time: "0–10 min", phase: "The Web", steps: [ { type: "do", text: "Stand in circle. Throw yarn and share a compliment." } ] },
-      { time: "10–20 min", phase: "The Drop", steps: [ { type: "say", text: "What happens if one person drops their string? The tension slackens." } ] }
+      { time: "0–10 min", phase: "The Web", steps: [ { type: "do", text: "Throw yarn and share a compliment." } ] },
+      { time: "10–20 min", phase: "The Drop", steps: [ { type: "say", text: "What happens if one person drops their string?" } ] }
     ],
     debrief: [ { q: "How does one negative action affect the whole group?", note: "Ripple effect." } ]
   },
   {
     id: "l_em_4", title: "The Silent Interviewer", themeShort: ["Empathy", "Effective communication"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Pairs"], color: "#E8845A", colorPale: "#FDF0EA", imagePath: "/resources/lifeskills/placeholder.jpg",
-    energyLevel: "Low", complexity: "Moderate", rating: 4.4, usedBy: 180,
-    materials: [], // Material free
+    energyLevel: "Low", complexity: "Moderate", rating: 4.4, usedBy: 180, materials: [],
     objective: "Build empathy by focusing exclusively on non-verbal emotional cues.", 
     phases: [
-      { time: "0–15 min", phase: "Interview", steps: [ { type: "say", text: "Interview your partner without speaking a single word. Use only body language." } ] },
+      { time: "0–15 min", phase: "Interview", steps: [ { type: "say", text: "Interview partner without speaking a single word." } ] },
       { time: "15–25 min", phase: "Switch", steps: [ { type: "do", text: "Switch roles." } ] }
     ],
     debrief: [ { q: "How did you know they were listening?", note: "Body language speaks volumes." } ]
@@ -544,7 +525,7 @@ const ACTIVITIES = [
     energyLevel: "Medium", complexity: "Moderate", rating: 4.6, usedBy: 210,
     objective: "Recognize how quickly we make assumptions.", materials: ["Photos of strangers"],
     phases: [
-      { time: "0–10 min", phase: "Snap Judgment", steps: [ { type: "do", text: "Show photo. Shout out assumptions about their job/life." } ] },
+      { time: "0–10 min", phase: "Snap Judgment", steps: [ { type: "do", text: "Show photo. Shout out assumptions." } ] },
       { time: "10–20 min", phase: "Reveal", steps: [ { type: "do", text: "Reveal the truth. Repeat." } ] }
     ],
     debrief: [ { q: "Why did our brains guess wrong?", note: "Danger of snap judgments." } ]
@@ -552,17 +533,36 @@ const ACTIVITIES = [
   {
     id: "l_ct_1", title: "Fact vs. Fiction Relay", themeShort: ["Critical thinking"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Teams"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "High", complexity: "Easy", rating: 4.8, usedBy: 390,
-    objective: "Distinguish between verifiable facts and subjective opinions under pressure.", materials: ["Whiteboard", "Pre-written statements"],
+    objective: "Distinguish between verifiable facts and subjective opinions under pressure.", materials: ["Pre-written statements"],
     phases: [
-      { time: "0–20 min", phase: "Relay", steps: [ { type: "do", text: "Teams race to board to slap 'FACT' or 'OPINION' sign." } ] },
+      { time: "0–20 min", phase: "Relay", steps: [ { type: "do", text: "Teams race to slap 'FACT' or 'OPINION' sign." } ] },
       { time: "20–35 min", phase: "Tricky Ones", steps: [ { type: "do", text: "Introduce manipulative statements." } ] }
     ],
-    debrief: [ { q: "Why is it dangerous to mistake opinion for fact?", note: "Rumors/Misinfo." } ]
+    debrief: [ { q: "Why is it dangerous to mistake opinion for fact?", note: "Misinformation." } ]
+  },
+  {
+    id: "l_ct_2", title: "The 'Why' Chain", themeShort: ["Critical thinking", "Problem solving"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Pairs"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Low", complexity: "Moderate", rating: 4.5, usedBy: 250,
+    objective: "Ask 'why' repeatedly to strip away surface issues and find the root cause.", materials: ["Whiteboard"],
+    phases: [
+      { time: "0–10 min", phase: "The Toddler Strategy", steps: [ { type: "do", text: "Model asking why 5 times." } ] },
+      { time: "10–20 min", phase: "Pair Practice", steps: [ { type: "do", text: "One person asks 'Why?' 5 consecutive times." } ] }
+    ],
+    debrief: [ { q: "How does finding the root cause change the solution?", note: "Fixing roots." } ]
+  },
+  {
+    id: "l_ct_3", title: "The Fact-Checker", themeShort: ["Critical thinking"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Small groups"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Easy", rating: 4.6, usedBy: 210,
+    objective: "Identify manipulative language in simple advertising and media.", materials: ["Printed advertisements", "Highlighters"],
+    phases: [
+      { time: "0–10 min", phase: "Setup", steps: [ { type: "say", text: "Advertisers use words to make you feel you NEED something." } ] },
+      { time: "10–25 min", phase: "Audit", steps: [ { type: "do", text: "Highlight facts yellow, manipulative words pink." } ] }
+    ],
+    debrief: [ { q: "What happens if you remove all the pink words?", note: "Removes false excitement." } ]
   },
   {
     id: "l_ct_4", title: "Would You Rather? (Logic Edition)", themeShort: ["Critical thinking", "Decision making"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Full class"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
-    energyLevel: "High", complexity: "Moderate", rating: 4.8, usedBy: 315,
-    materials: [], // Material free
+    energyLevel: "High", complexity: "Moderate", rating: 4.8, usedBy: 315, materials: [],
     objective: "Defend a choice using logical reasons rather than 'just because'.",
     phases: [
       { time: "0–5 min", phase: "Rule", steps: [ { type: "say", text: "Choose a side, but you MUST provide a logical reason." } ] },
@@ -570,10 +570,122 @@ const ACTIVITIES = [
     ],
     debrief: [ { q: "Was it hard to separate feelings from logic?", note: "Core critical thinking." } ]
   },
-
-  // ──────────────────────── MIDDLE SECONDARY (Grade 8-10) ────────────────────────
   {
-    id: "m_sa_1", title: "The Core Values Audit", themeShort: ["Self-awareness", "Decision making"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Individual", "Pairs"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    id: "l_ct_5", title: "The Alien Anthropologist", themeShort: ["Critical thinking"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Pairs"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Moderate", rating: 4.5, usedBy: 160,
+    objective: "Deconstruct everyday social norms by explaining them to an 'alien'.", materials: ["Common objects"],
+    phases: [
+      { time: "0–10 min", phase: "Persona", steps: [ { type: "say", text: "Imagine you are an alien who just landed." } ] },
+      { time: "10–25 min", phase: "Explanation", steps: [ { type: "do", text: "Logically explain a human rule like 'Homework' without saying 'because we have to'." } ] }
+    ],
+    debrief: [ { q: "Did explaining the logic make the rule seem silly?", note: "Outdated habits." } ]
+  },
+  {
+    id: "l_crt_1", title: "The Squiggle Challenge", themeShort: ["Creative thinking"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Individual"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Low", complexity: "Easy", rating: 4.8, usedBy: 450,
+    objective: "Overcome the fear of a blank page through constraints.", materials: ["Paper with squiggles", "Pens"],
+    phases: [
+      { time: "0–5 min", phase: "Fear", steps: [ { type: "say", text: "Perfectionism is the enemy of creativity." } ] },
+      { time: "5–15 min", phase: "Transformation", steps: [ { type: "do", text: "Turn random squiggle into recognizable drawing." } ] }
+    ],
+    debrief: [ { q: "Was it easier to draw starting with a squiggle?", note: "Constraints boost creativity." } ]
+  },
+  {
+    id: "l_crt_2", title: "Brainstorming Bonanza", themeShort: ["Creative thinking"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Small groups"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "High", complexity: "Moderate", rating: 4.6, usedBy: 310,
+    objective: "Separate idea generation from idea evaluation.", materials: ["Sticky notes"],
+    phases: [
+      { time: "0–10 min", phase: "Rule", steps: [ { type: "say", text: "No judgment allowed for 10 minutes." } ] },
+      { time: "10–20 min", phase: "Storm", steps: [ { type: "do", text: "Write one wild idea per sticky note in total silence." } ] },
+      { time: "20–30 min", phase: "Sort", steps: [ { type: "do", text: "Sort and evaluate." } ] }
+    ],
+    debrief: [ { q: "Did waiting to judge make it easier to share?", note: "Reduces fear of failure." } ]
+  },
+  {
+    id: "l_crt_3", title: "The Alternate Uses Test", themeShort: ["Creative thinking", "Problem solving"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Small groups"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Easy", rating: 4.4, usedBy: 220,
+    objective: "Practice divergent thinking to break functional fixedness.", materials: ["A paperclip"],
+    phases: [
+      { time: "0–5 min", phase: "Fixedness", steps: [ { type: "say", text: "We only think of a paperclip holding paper. Let's break that." } ] },
+      { time: "5–15 min", phase: "Sprint", steps: [ { type: "do", text: "List non-traditional uses in 3 minutes." } ] }
+    ],
+    debrief: [ { q: "How does this apply to solving problems?", note: "Resourcefulness." } ]
+  },
+  {
+    id: "l_crt_4", title: "The Finish the Story Game", themeShort: ["Creative thinking"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Full class circle"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "High", complexity: "Moderate", rating: 4.7, usedBy: 340, materials: [],
+    objective: "Practice spontaneous creativity and collaborative storytelling.",
+    phases: [
+      { time: "0–5 min", phase: "Setup", steps: [ { type: "say", text: "Tell a story adding one sentence at a time." } ] },
+      { time: "5–20 min", phase: "Story", steps: [ { type: "do", text: "Go around the circle." } ] }
+    ],
+    debrief: [ { q: "What happens when someone adds an unexpected twist?", note: "Forces adaptation." } ]
+  },
+  {
+    id: "l_crt_5", title: "The 'Bad' Invention Pitch", themeShort: ["Creative thinking", "Effective communication"], grade: "5–7", gradeKey: "lower", duration: "40 min", formats: ["Small groups"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "High", complexity: "Advanced", rating: 4.9, usedBy: 280,
+    objective: "Find creative ways to market and sell an objectively terrible invention.", materials: ["Whiteboard", "Markers"],
+    phases: [
+      { time: "0–10 min", phase: "Bad Ideas", steps: [ { type: "do", text: "Assign terrible inventions (e.g., a glass hammer)." } ] },
+      { time: "10–25 min", phase: "Pitch", steps: [ { type: "say", text: "Figure out how to sell this to me." } ] },
+      { time: "25–35 min", phase: "Presentations", steps: [ { type: "do", text: "Deliver 2-minute pitches." } ] }
+    ],
+    debrief: [ { q: "Did you start believing your own pitch?", note: "Power of framing." } ]
+  },
+  {
+    id: "l_dm_1", title: "Stop, Think, Go", themeShort: ["Decision making", "Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Full class", "Role-play"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Easy", rating: 4.8, usedBy: 610,
+    objective: "Implement a cognitive pause (traffic light model) to prevent impulsive decision-making.", materials: ["Red, Yellow, Green paper circles"],
+    phases: [
+      { time: "0–10 min", phase: "Traffic Light", steps: [ { type: "say", text: "Red = Stop. Yellow = Think of 2 options. Green = Choose best." } ] },
+      { time: "10–30 min", phase: "Practice", steps: [ { type: "do", text: "Run scenarios and have students call out steps." } ] }
+    ],
+    debrief: [ { q: "Why is Yellow the most important?", note: "Neurological pause." } ]
+  },
+  {
+    id: "l_dm_2", title: "The Choice Scale", themeShort: ["Decision making", "Critical thinking"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Pairs"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Low", complexity: "Moderate", rating: 4.6, usedBy: 340,
+    objective: "Weigh the pros and cons of everyday decisions.", materials: ["Worksheets"],
+    phases: [
+      { time: "0–10 min", phase: "Scale", steps: [ { type: "say", text: "Every choice has a cost." } ] },
+      { time: "10–25 min", phase: "Weighing", steps: [ { type: "do", text: "List 3 pros and 3 cons for a given scenario." } ] }
+    ],
+    debrief: [ { q: "Can one massive 'con' outweigh three 'pros'?", note: "Weight matters." } ]
+  },
+  {
+    id: "l_dm_3", title: "The What-If Map", themeShort: ["Decision making", "Creative thinking"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Small groups"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Moderate", rating: 4.7, usedBy: 420,
+    objective: "Practice tracing the short and long-term consequences of a single decision.", materials: ["Chart paper", "Markers"],
+    phases: [
+      { time: "0–10 min", phase: "Ripple Effect", steps: [ { type: "do", text: "Draw branches for what happens next day, week, month." } ] },
+      { time: "10–25 min", phase: "Mapping", steps: [ { type: "do", text: "Trace paths out to at least three consequences." } ] }
+    ],
+    debrief: [ { q: "Did tracing 'What-Ifs' make the right choice clearer?", note: "Visualizing removes impulsivity." } ]
+  },
+  {
+    id: "l_dm_4", title: "Gut Check", themeShort: ["Decision making", "Self-awareness"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Individual"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Low", complexity: "Easy", rating: 4.5, usedBy: 190,
+    objective: "Recognize physiological signals as an intuitive decision-making tool.", materials: ["Worksheet"],
+    phases: [
+      { time: "0–10 min", phase: "Gut Feeling", steps: [ { type: "say", text: "Sometimes your stomach knows a decision is bad before your brain does." } ] },
+      { time: "10–20 min", phase: "Memory", steps: [ { type: "do", text: "Write about a time you ignored a bad gut feeling." } ] }
+    ],
+    debrief: [ { q: "What does a 'bad idea' feel like in your body?", note: "Butterflies, heavy stomach." } ]
+  },
+  {
+    id: "l_dm_5", title: "The Reversal Rule", themeShort: ["Decision making", "Empathy"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Pairs"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Moderate", rating: 4.6, usedBy: 210,
+    objective: "Use role-reversal to test the fairness and emotional impact of a difficult decision.", materials: ["Scenario cards"],
+    phases: [
+      { time: "0–5 min", phase: "Rule", steps: [ { type: "say", text: "If you aren't sure, reverse the roles." } ] },
+      { time: "5–20 min", phase: "Role-Play", steps: [ { type: "do", text: "Instantly make them play the person on the receiving end." } ] }
+    ],
+    debrief: [ { q: "How quickly did your opinion change?", note: "Empathy shift." } ]
+  },
+
+  // ──────────────────────── MIDDLE SECONDARY (Grade 8-10) ──────────────────────── (18 Activities)
+  {
+    id: "m_sa_1", title: "The Core Values Audit", themeShort: ["Self-awareness", "Decision making"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Individual"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "Low", complexity: "Moderate", rating: 4.8, usedBy: 842,
     objective: "Narrow down a list of values to top 3 core foundations.", materials: ["List of 50 Values"],
     phases: [
@@ -601,6 +713,86 @@ const ACTIVITIES = [
     debrief: [ { q: "Does understanding equal agreement?", note: "No. Empathy is not agreement." } ]
   },
   {
+    id: "m_em_2", title: "The Privilege Walk", themeShort: ["Empathy", "Self-awareness"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Physical", "Full class"], color: "#E8845A", colorPale: "#FDF0EA", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "High", complexity: "Advanced", rating: 4.8, usedBy: 345, materials: [],
+    objective: "Visually represent structural inequality to build deep empathy for diverse backgrounds.",
+    phases: [
+      { time: "0–15 min", phase: "The Walk", steps: [ { type: "do", text: "Read statements. Students step forward or backward based on life experiences." } ] },
+      { time: "15–40 min", phase: "Circle Debrief", steps: [ { type: "say", text: "Look around. How does it feel to be in the front? The back?" } ] }
+    ],
+    debrief: [ { q: "Did anything surprise you?", note: "Handle with extreme care and clinical safety." } ]
+  },
+  {
+    id: "m_ct_2", title: "Logical Fallacy Bingo", themeShort: ["Critical thinking", "Effective communication"], grade: "8–10", gradeKey: "middle", duration: "35 min", formats: ["Small groups"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Moderate", rating: 4.5, usedBy: 212,
+    objective: "Identify common logical fallacies in political speeches and advertisements.", materials: ["Bingo Cards", "Video clips"],
+    phases: [
+      { time: "0–15 min", phase: "Definitions", steps: [ { type: "say", text: "Define Ad Hominem, Strawman, Slippery Slope." } ] },
+      { time: "15–35 min", phase: "Bingo", steps: [ { type: "do", text: "Play clips. Students mark fallacies." } ] }
+    ],
+    debrief: [ { q: "Why are fallacies so convincing?", note: "They appeal to emotion." } ]
+  },
+  {
+    id: "m_crt_1", title: "100 Bad Ideas", themeShort: ["Creative thinking"], grade: "8–10", gradeKey: "middle", duration: "30 min", formats: ["Small groups"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "High", complexity: "Easy", rating: 4.9, usedBy: 405,
+    objective: "Bypass perfectionism by intentionally brainstorming terrible solutions.", materials: ["Whiteboard"],
+    phases: [
+      { time: "0–20 min", phase: "Sprint", steps: [ { type: "do", text: "Generate 100 terrible ways to solve a school problem." } ] },
+      { time: "20–30 min", phase: "Flip", steps: [ { type: "say", text: "Which terrible idea actually has a core of genius?" } ] }
+    ],
+    debrief: [ { q: "Did removing the pressure to be 'good' help?", note: "Quantity yields quality." } ]
+  },
+  {
+    id: "m_crt_2", title: "The SCAMPER Technique", themeShort: ["Creative thinking", "Problem solving"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Pairs"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Advanced", rating: 4.6, usedBy: 180,
+    objective: "Systematically innovate an existing object using the SCAMPER framework.", materials: ["Worksheet"],
+    phases: [
+      { time: "0–15 min", phase: "Framework", steps: [ { type: "say", text: "Substitute, Combine, Adapt, Modify, Put to another use, Eliminate, Reverse." } ] },
+      { time: "15–40 min", phase: "Application", steps: [ { type: "do", text: "Redesign the school desk using all 7 steps." } ] }
+    ],
+    debrief: [ { q: "Which step sparked the best idea?", note: "Innovation is iteration." } ]
+  },
+  {
+    id: "m_dm_1", title: "Six Thinking Hats", themeShort: ["Decision making", "Problem solving"], grade: "8–10", gradeKey: "middle", duration: "45 min", formats: ["Small groups"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Advanced", rating: 4.8, usedBy: 310,
+    objective: "Evaluate a complex decision by adopting six distinct modes of thinking.", materials: ["Colored Hats/Cards"],
+    phases: [
+      { time: "0–10 min", phase: "The Hats", steps: [ { type: "say", text: "White=Facts, Red=Emotion, Black=Caution, Yellow=Optimism, Green=Creativity, Blue=Process." } ] },
+      { time: "10–35 min", phase: "Analysis", steps: [ { type: "do", text: "Force groups to look at a choice through each hat sequentially." } ] }
+    ],
+    debrief: [ { q: "Which hat was hardest to wear?", note: "Identifies personal blind spots." } ]
+  },
+  {
+    id: "m_dm_2", title: "The Eisenhower Matrix", themeShort: ["Decision making", "Coping with stress"], grade: "8–10", gradeKey: "middle", duration: "35 min", formats: ["Individual"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Low", complexity: "Moderate", rating: 4.9, usedBy: 890,
+    objective: "Categorize tasks by urgency and importance to prevent burnout.", materials: ["Matrix Handout"],
+    phases: [
+      { time: "0–15 min", phase: "Sort", steps: [ { type: "do", text: "List all stressors. Sort into 4 quadrants (Urgent/Important)." } ] },
+      { time: "15–35 min", phase: "Action", steps: [ { type: "say", text: "Do Q1, Schedule Q2, Delegate Q3, Delete Q4." } ] }
+    ],
+    debrief: [ { q: "Are you spending too much time in Q3 (Urgent but Not Important)?", note: "Social media trap." } ]
+  },
+  {
+    id: "m_ce_1", title: "Emotion Wheel Expansion", themeShort: ["Coping with emotions", "Self-awareness"], grade: "8–10", gradeKey: "middle", duration: "30 min", formats: ["Individual"], color: "#9B59B6", colorPale: "#F4ECF7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Low", complexity: "Moderate", rating: 4.7, usedBy: 405,
+    objective: "Expand emotional vocabulary from basic to highly nuanced states.", materials: ["Plutchik's Wheel"],
+    phases: [
+      { time: "0–15 min", phase: "Mapping", steps: [ { type: "do", text: "Trace 'Angry' to 'Frustrated' to 'Resentful'." } ] },
+      { time: "15–30 min", phase: "Journaling", steps: [ { type: "do", text: "Describe a time you felt a tertiary emotion." } ] }
+    ],
+    debrief: [ { q: "Does finding the exact word help calm the feeling?", note: "Name it to tame it." } ]
+  },
+  {
+    id: "m_ce_2", title: "The Window of Tolerance", themeShort: ["Coping with emotions", "Coping with stress"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Individual"], color: "#9B59B6", colorPale: "#F4ECF7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Low", complexity: "Advanced", rating: 4.9, usedBy: 610,
+    objective: "Identify signs of hyper-arousal and hypo-arousal in the nervous system.", materials: ["Window Diagram"],
+    phases: [
+      { time: "0–20 min", phase: "Theory", steps: [ { type: "say", text: "When pushed out of our window, we fight/flight (hyper) or freeze (hypo)." } ] },
+      { time: "20–40 min", phase: "Mapping", steps: [ { type: "do", text: "Map personal triggers that push you out of the window." } ] }
+    ],
+    debrief: [ { q: "What brings you back into your window?", note: "Grounding strategies." } ]
+  },
+  {
     id: "m_cs_1", title: "The Reverse Calendar", themeShort: ["Coping with stress", "Decision making"], grade: "8–10", gradeKey: "middle", duration: "35 min", formats: ["Individual", "Pairs"], color: "#27AE60", colorPale: "#D5F5E3", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "Medium", complexity: "Moderate", rating: 4.8, usedBy: 950,
     objective: "Apply backward planning to significantly reduce deadline panic.", materials: ["Blank Calendars"],
@@ -609,8 +801,68 @@ const ACTIVITIES = [
     ],
     debrief: [ { q: "Is your first step actually doable in 15 mins?", note: "Micro-habits." } ]
   },
+  {
+    id: "m_cs_2", title: "Box Breathing Basics", themeShort: ["Coping with stress", "Coping with emotions"], grade: "8–10", gradeKey: "middle", duration: "20 min", formats: ["Full class"], color: "#27AE60", colorPale: "#D5F5E3", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Low", complexity: "Easy", rating: 4.7, usedBy: 1200, materials: [],
+    objective: "Learn a clinical tactical breathing technique to down-regulate the nervous system.",
+    phases: [
+      { time: "0–10 min", phase: "Practice", steps: [ { type: "do", text: "Inhale 4, Hold 4, Exhale 4, Hold 4." } ] },
+      { time: "10–20 min", phase: "Application", steps: [ { type: "say", text: "When can you use this discreetly?" } ] }
+    ],
+    debrief: [ { q: "Did you feel your heart rate drop?", note: "Physiological proof." } ]
+  },
+  {
+    id: "m_ec_1", title: "I-Statements vs You-Statements", themeShort: ["Effective communication", "Interpersonal relationships"], grade: "8–10", gradeKey: "middle", duration: "35 min", formats: ["Pairs"], color: "#34495E", colorPale: "#EAECEE", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Moderate", rating: 4.6, usedBy: 450,
+    objective: "Transform accusatory communication into vulnerable expression.", materials: ["Worksheet"],
+    phases: [
+      { time: "0–15 min", phase: "Transformation", steps: [ { type: "do", text: "Convert 'You always ignore me' to 'I feel hurt when...'" } ] },
+      { time: "15–35 min", phase: "Roleplay", steps: [ { type: "do", text: "Practice delivering the new statements." } ] }
+    ],
+    debrief: [ { q: "Does the I-Statement feel more vulnerable?", note: "Yes, which is why it prevents defensive reactions." } ]
+  },
+  {
+    id: "m_ec_2", title: "Active Listening Triads", themeShort: ["Effective communication"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Small groups"], color: "#34495E", colorPale: "#EAECEE", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Advanced", rating: 4.5, usedBy: 310, materials: [],
+    objective: "Practice reflective listening with an objective observer.",
+    phases: [
+      { time: "0–30 min", phase: "Triads", steps: [ { type: "do", text: "Speaker, Listener, Observer. Rotate every 10 mins." } ] },
+      { time: "30–40 min", phase: "Feedback", steps: [ { type: "do", text: "Observer gives feedback on body language." } ] }
+    ],
+    debrief: [ { q: "Did the listener actually hear you, or just wait to speak?", note: "Core communication flaw." } ]
+  },
+  {
+    id: "m_ir_1", title: "Boundary Setting Scenarios", themeShort: ["Interpersonal relationships", "Effective communication"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Role-play"], color: "#D35400", colorPale: "#F9EBE0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "High", complexity: "Advanced", rating: 4.8, usedBy: 530,
+    objective: "Practice saying 'no' clearly and without over-apologizing.", materials: ["Scenario Cards"],
+    phases: [
+      { time: "0–10 min", phase: "The Formula", steps: [ { type: "say", text: "Acknowledge + Clear No + Alternative (Optional)." } ] },
+      { time: "10–30 min", phase: "Practice", steps: [ { type: "do", text: "Roleplay peer pressure scenarios." } ] }
+    ],
+    debrief: [ { q: "Why do we feel the need to invent excuses?", note: "Fear of rejection." } ]
+  },
+  {
+    id: "m_ps_1", title: "The Fishbone Diagram", themeShort: ["Problem solving", "Critical thinking"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Small groups"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Moderate", rating: 4.4, usedBy: 220,
+    objective: "Visually map causes and effects of a systemic problem.", materials: ["Chart paper"],
+    phases: [
+      { time: "0–20 min", phase: "Mapping", steps: [ { type: "do", text: "Head = Problem. Ribs = Categories (People, Environment, Process)." } ] },
+      { time: "20–40 min", phase: "Analysis", steps: [ { type: "do", text: "Identify the root cause." } ] }
+    ],
+    debrief: [ { q: "Did seeing it mapped out change your proposed solution?", note: "Systemic thinking." } ]
+  },
+  {
+    id: "m_ps_2", title: "Worst Possible Idea", themeShort: ["Problem solving", "Creative thinking"], grade: "8–10", gradeKey: "middle", duration: "30 min", formats: ["Pairs"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "High", complexity: "Easy", rating: 4.7, usedBy: 310, materials: [],
+    objective: "Solve a problem by inverting it completely.",
+    phases: [
+      { time: "0–15 min", phase: "Inversion", steps: [ { type: "do", text: "How can we make this problem significantly worse?" } ] },
+      { time: "15–30 min", phase: "Re-inversion", steps: [ { type: "say", text: "Now, do the exact opposite of your terrible idea." } ] }
+    ],
+    debrief: [ { q: "Why is it easier to think of bad ideas?", note: "Lower stakes." } ]
+  },
 
-  // ──────────────────────── SENIOR SECONDARY (Grade 11-12) ────────────────────────
+  // ──────────────────────── SENIOR SECONDARY (Grade 11-12) ──────────────────────── (17 Activities)
   {
     id: "s_sa_1", title: "The Future Self Letter", themeShort: ["Self-awareness", "Coping with stress"], grade: "11–12", gradeKey: "upper", duration: "35 min", formats: ["Individual"], color: "#8E44AD", colorPale: "#F5EEF8", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "Low", complexity: "Moderate", rating: 4.9, usedBy: 1120,
@@ -623,6 +875,66 @@ const ACTIVITIES = [
     debrief: [ { q: "What was the most compassionate thing your future self said?", note: "Self-compassion." } ]
   },
   {
+    id: "s_sa_2", title: "The Johari Window", themeShort: ["Self-awareness", "Interpersonal relationships"], grade: "11–12", gradeKey: "upper", duration: "45 min", formats: ["Individual", "Pairs"], color: "#8E44AD", colorPale: "#F5EEF8", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Advanced", rating: 4.8, usedBy: 540,
+    objective: "Discover personal blind spots through structured peer feedback.", materials: ["Johari Worksheets"],
+    phases: [
+      { time: "0–20 min", phase: "Self-Assessment", steps: [ { type: "do", text: "Fill out the Open and Hidden quadrants." } ] },
+      { time: "20–45 min", phase: "Feedback", steps: [ { type: "do", text: "Peers fill out your Blind quadrant safely." } ] }
+    ],
+    debrief: [ { q: "Was the blind spot feedback surprising?", note: "Requires high clinical safety." } ]
+  },
+  {
+    id: "s_em_1", title: "Active Constructive Responding", themeShort: ["Empathy", "Interpersonal relationships"], grade: "11–12", gradeKey: "upper", duration: "35 min", formats: ["Role-play"], color: "#E8845A", colorPale: "#FDF0EA", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Moderate", rating: 4.7, usedBy: 410,
+    objective: "Learn to respond to others' good news in a way that builds connection.", materials: ["Response Matrix"],
+    phases: [
+      { time: "0–15 min", phase: "Theory", steps: [ { type: "say", text: "How you respond to good news matters more than bad news." } ] },
+      { time: "15–35 min", phase: "Practice", steps: [ { type: "do", text: "Roleplay the 4 styles (Active/Passive, Constructive/Destructive)." } ] }
+    ],
+    debrief: [ { q: "Are you a 'Joy Thief' without realizing it?", note: "Passive-destructive awareness." } ]
+  },
+  {
+    id: "s_em_2", title: "Conflict Mediation Roleplay", themeShort: ["Empathy", "Problem solving"], grade: "11–12", gradeKey: "upper", duration: "45 min", formats: ["Small groups"], color: "#E8845A", colorPale: "#FDF0EA", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "High", complexity: "Advanced", rating: 4.8, usedBy: 320,
+    objective: "Act as a neutral third party to resolve complex peer conflicts.", materials: ["Briefs"],
+    phases: [
+      { time: "0–30 min", phase: "Mediation", steps: [ { type: "do", text: "Two disputants, one mediator. Practice active listening." } ] },
+      { time: "30–45 min", phase: "Debrief", steps: [ { type: "say", text: "Mediators, how hard was it to stay neutral?" } ] }
+    ],
+    debrief: [ { q: "Did the disputants feel heard?", note: "Mediation relies on feeling validated." } ]
+  },
+  {
+    id: "s_ct_1", title: "Bias Check: Confirmation Bias", themeShort: ["Critical thinking", "Self-awareness"], grade: "11–12", gradeKey: "upper", duration: "40 min", formats: ["Individual"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Low", complexity: "Advanced", rating: 4.9, usedBy: 670,
+    objective: "Identify personal confirmation bias when evaluating news sources.", materials: ["Articles"],
+    phases: [
+      { time: "0–20 min", phase: "Reading", steps: [ { type: "do", text: "Read an article that attacks a deeply held personal belief." } ] },
+      { time: "20–40 min", phase: "Analysis", steps: [ { type: "do", text: "Highlight logical points the author made, even if you hate them." } ] }
+    ],
+    debrief: [ { q: "Did your brain physically reject the information?", note: "Cognitive dissonance." } ]
+  },
+  {
+    id: "s_ct_2", title: "The Socratic Seminar", themeShort: ["Critical thinking", "Effective communication"], grade: "11–12", gradeKey: "upper", duration: "50 min", formats: ["Full class"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Advanced", rating: 4.8, usedBy: 510, materials: [],
+    objective: "Engage in rigorous, question-driven dialogue to explore complex ethics.",
+    phases: [
+      { time: "0–40 min", phase: "Dialogue", steps: [ { type: "say", text: "You must respond to a point with a clarifying question, not a statement." } ] },
+      { time: "40–50 min", phase: "Meta-Debrief", steps: [ { type: "do", text: "Evaluate the quality of the questions asked." } ] }
+    ],
+    debrief: [ { q: "Did asking questions change your original stance?", note: "Intellectual humility." } ]
+  },
+  {
+    id: "s_crt_1", title: "Reverse Engineering", themeShort: ["Creative thinking", "Problem solving"], grade: "11–12", gradeKey: "upper", duration: "40 min", formats: ["Small groups"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "High", complexity: "Advanced", rating: 4.6, usedBy: 290,
+    objective: "Deconstruct a successful product/idea to understand its core components.", materials: ["Case studies"],
+    phases: [
+      { time: "0–25 min", phase: "Teardown", steps: [ { type: "do", text: "Break down why a specific app or trend went viral." } ] },
+      { time: "25–40 min", phase: "Rebuild", steps: [ { type: "say", text: "Apply those core psychological triggers to a boring school task." } ] }
+    ],
+    debrief: [ { q: "Are all new ideas just remixed old ideas?", note: "Combinatorial creativity." } ]
+  },
+  {
     id: "s_dm_1", title: "Regret Minimization Framework", themeShort: ["Decision making"], grade: "11–12", gradeKey: "upper", duration: "35 min", formats: ["Individual"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "Medium", complexity: "Advanced", rating: 4.8, usedBy: 870,
     objective: "Project forward to age 80 to gain perspective on a high-stakes choice.", materials: ["Worksheet"],
@@ -630,6 +942,16 @@ const ACTIVITIES = [
       { time: "10–25 min", phase: "Writing", steps: [ { type: "say", text: "At 80, will I regret NOT doing this? Write from 80-yr-old view." } ] }
     ],
     debrief: [ { q: "Did this shift your leaning to the braver choice?", note: "De-risks short-term failure." } ]
+  },
+  {
+    id: "s_dm_2", title: "Cost-Benefit Analysis Matrix", themeShort: ["Decision making", "Critical thinking"], grade: "11–12", gradeKey: "upper", duration: "40 min", formats: ["Individual"], color: "#2980B9", colorPale: "#EBF5FB", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Advanced", rating: 4.7, usedBy: 510,
+    objective: "Quantify abstract choices to make data-driven life decisions.", materials: ["Matrix Sheet"],
+    phases: [
+      { time: "0–20 min", phase: "Variables", steps: [ { type: "do", text: "Assign numeric weight (1-10) to pros and cons of a college choice." } ] },
+      { time: "20–40 min", phase: "Calculation", steps: [ { type: "say", text: "Do the math. Does the numeric winner match your gut feeling?" } ] }
+    ],
+    debrief: [ { q: "What if the math contradicts your gut?", note: "Reveals hidden values." } ]
   },
   {
     id: "s_ce_1", title: "Cognitive Distortion Trap", themeShort: ["Coping with emotions", "Critical thinking"], grade: "11–12", gradeKey: "upper", duration: "40 min", formats: ["Pairs"], color: "#9B59B6", colorPale: "#F4ECF7", imagePath: "/resources/lifeskills/placeholder.jpg",
@@ -640,6 +962,76 @@ const ACTIVITIES = [
       { time: "25–40 min", phase: "Dispute", steps: [ { type: "say", text: "Write your negative thought. Label it. Write the factual dispute." } ] }
     ],
     debrief: [ { q: "Why is it powerful to give the thought a label?", note: "Creates distance." } ]
+  },
+  {
+    id: "s_ce_2", title: "Radical Acceptance", themeShort: ["Coping with emotions", "Coping with stress"], grade: "11–12", gradeKey: "upper", duration: "35 min", formats: ["Individual"], color: "#9B59B6", colorPale: "#F4ECF7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Low", complexity: "Advanced", rating: 4.8, usedBy: 720, materials: [],
+    objective: "Differentiate between passive resignation and active, radical acceptance of reality.",
+    phases: [
+      { time: "0–15 min", phase: "Theory", steps: [ { type: "say", text: "Pain is inevitable. Suffering is optional. Acceptance stops suffering." } ] },
+      { time: "15–35 min", phase: "Application", steps: [ { type: "do", text: "Identify an unchangeable stressor. Write an acceptance statement." } ] }
+    ],
+    debrief: [ { q: "Does acceptance mean you like the situation?", note: "No, it just means you stop fighting reality." } ]
+  },
+  {
+    id: "s_cs_1", title: "Progressive Muscle Relaxation", themeShort: ["Coping with stress", "Self-awareness"], grade: "11–12", gradeKey: "upper", duration: "25 min", formats: ["Full class"], color: "#27AE60", colorPale: "#D5F5E3", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Low", complexity: "Easy", rating: 4.8, usedBy: 1100, materials: [],
+    objective: "Relieve somatic tension through active contract/relax cycles.",
+    phases: [
+      { time: "0–20 min", phase: "Guided PMR", steps: [ { type: "do", text: "Guide class to tense and release muscle groups from toes to head." } ] },
+      { time: "20–25 min", phase: "Debrief", steps: [ { type: "say", text: "Notice the difference in your baseline tension." } ] }
+    ],
+    debrief: [ { q: "Where do you hold the most stress?", note: "Usually jaw or shoulders." } ]
+  },
+  {
+    id: "s_cs_2", title: "The Circle of Control", themeShort: ["Coping with stress", "Decision making"], grade: "11–12", gradeKey: "upper", duration: "35 min", formats: ["Individual"], color: "#27AE60", colorPale: "#D5F5E3", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Moderate", rating: 4.9, usedBy: 980,
+    objective: "Mitigate anxiety by visually separating controllable actions from uncontrollable outcomes.", materials: ["Circle Worksheets"],
+    phases: [
+      { time: "0–15 min", phase: "Mapping", steps: [ { type: "do", text: "Draw two circles. Inside = what I control. Outside = what I don't." } ] },
+      { time: "15–35 min", phase: "Purge", steps: [ { type: "say", text: "Cross out everything in the outside circle. Stop spending energy there." } ] }
+    ],
+    debrief: [ { q: "Are college decisions inside or outside the circle?", note: "Effort is inside, outcome is outside." } ]
+  },
+  {
+    id: "s_ec_1", title: "Crucial Conversations", themeShort: ["Effective communication", "Interpersonal relationships"], grade: "11–12", gradeKey: "upper", duration: "45 min", formats: ["Role-play"], color: "#34495E", colorPale: "#EAECEE", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "High", complexity: "Advanced", rating: 4.8, usedBy: 550,
+    objective: "Navigate high-stakes conversations without triggering defensiveness.", materials: ["Case Studies"],
+    phases: [
+      { time: "0–20 min", phase: "State My Path", steps: [ { type: "say", text: "Share facts, tell your story, ask for their path." } ] },
+      { time: "20–45 min", phase: "Roleplay", steps: [ { type: "do", text: "Practice confronting a friend about a betrayal." } ] }
+    ],
+    debrief: [ { q: "Why start with facts instead of feelings?", note: "Facts are less debatable." } ]
+  },
+  {
+    id: "s_ir_1", title: "Apology Anatomy", themeShort: ["Interpersonal relationships", "Self-awareness"], grade: "11–12", gradeKey: "upper", duration: "35 min", formats: ["Individual"], color: "#D35400", colorPale: "#F9EBE0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Low", complexity: "Moderate", rating: 4.7, usedBy: 420, materials: [],
+    objective: "Deconstruct the elements of a genuine apology versus a non-apology.",
+    phases: [
+      { time: "0–15 min", phase: "Audit", steps: [ { type: "do", text: "Analyze celebrity 'notes app' apologies for blame-shifting." } ] },
+      { time: "15–35 min", phase: "Draft", steps: [ { type: "do", text: "Write a 4-part true apology: Regret, Responsibility, Remedy, Repentance." } ] }
+    ],
+    debrief: [ { q: "Why is 'I am sorry you felt that way' toxic?", note: "Shifts blame." } ]
+  },
+  {
+    id: "s_ps_1", title: "SWOT Analysis for Life", themeShort: ["Problem solving", "Decision making"], grade: "11–12", gradeKey: "upper", duration: "40 min", formats: ["Individual"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "Medium", complexity: "Moderate", rating: 4.6, usedBy: 590,
+    objective: "Apply business strategy frameworks to personal post-school planning.", materials: ["SWOT Grids"],
+    phases: [
+      { time: "0–20 min", phase: "Grid Work", steps: [ { type: "do", text: "Map Strengths, Weaknesses, Opportunities, Threats for a career choice." } ] },
+      { time: "20–40 min", phase: "Strategy", steps: [ { type: "say", text: "How can your strengths mitigate your threats?" } ] }
+    ],
+    debrief: [ { q: "Are weaknesses permanent?", note: "Growth mindset." } ]
+  },
+  {
+    id: "s_ps_2", title: "Scenario Planning", themeShort: ["Problem solving", "Coping with stress"], grade: "11–12", gradeKey: "upper", duration: "45 min", formats: ["Small groups"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
+    energyLevel: "High", complexity: "Advanced", rating: 4.9, usedBy: 460,
+    objective: "Build resilience by mapping out 'Plan B' and 'Plan C' for major failures.", materials: ["Whiteboard"],
+    phases: [
+      { time: "0–20 min", phase: "The Disaster", steps: [ { type: "do", text: "Imagine you fail your primary entrance exam. What is the immediate pivot?" } ] },
+      { time: "20–45 min", phase: "The Pivot", steps: [ { type: "say", text: "Map a 1-year alternative path that still leads to success." } ] }
+    ],
+    debrief: [ { q: "Does having a Plan B make failure less scary?", note: "Reduces catastrophic thinking." } ]
   }
 ];
 
@@ -690,7 +1082,7 @@ function PrintView({ activity, mode, onClose }) {
               <span className="lstp-phase-time">{phase.time}</span>
               <span className="lstp-phase-name">{phase.phase}</span>
             </div>
-            {phase.steps.map((s, si) => <PrintStep key={si} s={s} />)}
+            {phase.steps.map((s, si) => <Step key={si} s={s} />)}
           </div>
         ))}
 
