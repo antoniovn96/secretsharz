@@ -245,7 +245,7 @@ const ACTIVITIES = [
   
   // ── WHO Skill 1: Self-Awareness ──
   {
-    id: "l_sa_1", title: "The Feelings Iceberg", themeShort: ["Self-awareness", "Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Individual", "Pairs", "Full class"], color: "#7C6FA0", colorPale: "#F0EDF8", imagePath: "/resources/lifeskills/thefeelingsiceberg/iceberg-diagram.jpg",
+    id: "l_sa_1", title: "The Feelings Iceberg", themeShort: ["Self-awareness", "Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Individual", "Pairs", "Full class"], color: "#7C6FA0", colorPale: "#F0EDF8", imagePath: "/resources/lifeskills/thefeelingsiceberg/thefeelingsiceberg.jpg",
     guidePdf: "/resources/lifeskills/thefeelingsiceberg/THE FEELINGS ICEBERG_ Exploring Our Emotions (Grade 5–7).pdf", worksheetPdf: "/resources/lifeskills/thefeelingsiceberg/The Feelings Iceberg Worksheet.pdf",
     objective: "Students will distinguish between surface emotions (what others see) and underlying feelings (what's really happening inside), and begin to map their own emotional landscape beneath the waterline.", materials: ["Whiteboard & marker", "Iceberg worksheet", "Coloured pencils"],
     phases: [
