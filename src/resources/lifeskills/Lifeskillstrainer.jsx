@@ -180,8 +180,7 @@ function SessionLoggerModal({ activity, onClose, onSave }) {
       </div>
     </div>
   );
-}
-
+},
 // ─── ACTIVITY DATA BATCH 1 (Lower Secondary: Grades 5-7) ──────────────────────
 // Completely expanded with New Productivity Metadata
 const ACTIVITIES = [
@@ -604,7 +603,7 @@ const ACTIVITIES = [
     debrief: [ { q: "Does the 'Reversal Rule' make decision making harder or easier?", note: "Harder in the short term, but much clearer in the long term." } ],
     watchOutFor: [ "Students lacking the empathy to truly inhabit the reversed role. Guide them through the feelings." ],
     variations: [ { tag: "Writing", text: "Have them write a letter to themselves from the perspective of the person affected by their choice." } ]
-  }
+  },
 ];
 // ──────────────────────── MIDDLE SECONDARY (Grade 8-10) ────────────────────────
   
