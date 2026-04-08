@@ -6,7 +6,7 @@
  * Upgraded to a Full Counsellor Productivity Tool.
  */
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const PAGE_CSS = `
@@ -24,13 +24,15 @@ const PAGE_CSS = `
 
 * { box-sizing: border-box; }
 
-.lst-page { min-height:100vh; background:var(--ls-cream); padding-bottom:100px; font-family:'Plus Jakarta Sans',sans-serif; }
+.lst-page { min-height:100vh; background:var(--ls-cream); padding-bottom:100px; font-family:'Plus Jakarta Sans',sans-serif; overflow-x: hidden; }
 
-/* Topbar & Hero remain similar but refined */
+/* Topbar & Hero */
 .lst-topbar { background:var(--ls-ink); color:white; height:56px; padding:0 40px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:300; border-bottom:3px solid var(--ls-amber); }
 .lst-back { display:flex; align-items:center; gap:6px; color:rgba(255,255,255,0.7); font-size:13px; font-weight:700; background:none; border:none; cursor:pointer; font-family:inherit; padding:0; transition:color .2s; }
 .lst-back:hover { color:white; }
-.lst-topbar-title { font-family:'Fraunces',serif; font-size:16px; color:white; }
+.lst-topbar-title { font-family:'Fraunces',serif; font-size:16px; color:white; display:none; }
+@media(min-width: 768px) { .lst-topbar-title { display:block; } }
+.lst-topbar-actions { display:flex; gap:16px; align-items:center; }
 
 .lst-hero { background:linear-gradient(135deg,var(--ls-ink) 0%,#2C1F05 55%,#3D2D0A 100%); padding:64px 48px 56px; position:relative; overflow:hidden; }
 .lst-hero-blob { position:absolute; pointer-events:none; border-radius:50%; }
@@ -39,7 +41,11 @@ const PAGE_CSS = `
 .lst-hero-h1 { font-family:'Fraunces',serif; font-size:clamp(30px,4.5vw,48px); font-weight:700; color:white; line-height:1.1; letter-spacing:-1px; margin-bottom:16px; }
 .lst-hero-sub { font-size:16px; color:rgba(255,255,255,.65); line-height:1.75; max-width:550px; margin-bottom:28px; font-weight:300; }
 
-/* ─── NEW SMART DISCOVERABILITY CONTROLS ─── */
+/* Dashboard Button */
+.lst-dash-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 50px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display:flex; align-items:center; gap:6px;}
+.lst-dash-btn:hover { background: var(--ls-amber); border-color: var(--ls-amber); }
+
+/* Smart Controls */
 .lst-toolbar { background:white; border-bottom:1px solid var(--ls-border); position:sticky; top:56px; z-index:200; box-shadow:var(--ls-shadow-sm); padding:16px 48px; display:flex; flex-direction:column; gap:16px; align-items:center; }
 .lst-toolbar-inner { max-width:1200px; width:100%; margin:0 auto; display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
 .lst-search-wrap { flex:1; min-width:280px; position:relative; }
@@ -51,7 +57,7 @@ const PAGE_CSS = `
 .lst-qf-btn:hover { background:var(--ls-amber-pale); border-color:var(--ls-amber); color:var(--ls-amber); }
 .lst-qf-btn.active { background:var(--ls-amber); border-color:var(--ls-amber); color:white; }
 
-/* ─── NEW CARD UI ─── */
+/* Grid & Cards */
 .lst-grid { max-width:1200px; margin:32px auto 0; padding:0 48px 60px; display:flex; flex-direction:column; gap:24px; }
 .lst-card { background:white; border-radius:var(--ls-r); border:1px solid var(--ls-border); box-shadow:var(--ls-shadow-sm); overflow:hidden; transition:all .3s cubic-bezier(0.25, 0.8, 0.25, 1); position:relative; }
 .lst-card:hover { box-shadow:var(--ls-shadow-md); transform:translateY(-4px); }
@@ -61,16 +67,19 @@ const PAGE_CSS = `
 .lst-card-header { padding:24px 32px; display:flex; align-items:flex-start; gap:20px; cursor:pointer; user-select:none; }
 .lst-card-num { width:48px; height:48px; border-radius:14px; background:var(--ls-sand); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:20px; font-weight:700; color:var(--ls-amber); flex-shrink:0; border:1px solid var(--ls-border); }
 .lst-card-meta-block { flex:1; }
-.lst-card-title { font-family:'Fraunces',serif; font-size:22px; font-weight:700; color:var(--ls-ink); margin-bottom:8px; line-height:1.2; display:flex; align-items:center; gap:12px; }
+.lst-card-title { font-family:'Fraunces',serif; font-size:22px; font-weight:700; color:var(--ls-ink); margin-bottom:8px; line-height:1.2; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
 
-/* New Bookmarking / Favorite System */
-.lst-bookmark-btn { background:none; border:none; font-size:22px; cursor:pointer; color:var(--ls-border); transition:color .2s; margin-top:-4px; }
+/* Tooltips */
+[data-tooltip] { position: relative; cursor: help; }
+[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--ls-ink); color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; z-index: 10; pointer-events: none; font-family: 'Plus Jakarta Sans', sans-serif; margin-bottom: 8px; box-shadow: var(--ls-shadow-sm); }
+
+.lst-bookmark-btn { background:none; border:none; font-size:22px; cursor:pointer; color:var(--ls-border); transition:all .2s; margin-top:-4px; padding:0;}
 .lst-bookmark-btn.saved { color:#E74C3C; }
-.lst-bookmark-btn:hover { transform:scale(1.1); }
+.lst-bookmark-btn:hover { transform:scale(1.2); }
 
-/* New Analytics Badges */
 .lst-analytics-row { display:flex; gap:16px; align-items:center; margin-bottom:12px; font-size:12px; color:var(--ls-muted); font-weight:600; }
-.lst-stat-item { display:flex; align-items:center; gap:4px; }
+.lst-stat-item { display:flex; align-items:center; gap:4px; cursor:pointer; transition:color 0.2s;}
+.lst-stat-item:hover { color:var(--ls-amber); }
 .lst-stat-star { color:#F1C40F; }
 
 .lst-card-badges { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
@@ -78,14 +87,21 @@ const PAGE_CSS = `
 .lst-badge-theme { background:var(--ls-amber-pale); color:var(--ls-amber); }
 .lst-badge-energy { background:#FDF0EA; color:#E8845A; border:1px solid rgba(232,132,90,0.3); }
 .lst-badge-complex { background:#EBF5FB; color:#2980B9; border:1px solid rgba(41,128,185,0.3); }
+.lst-badge-tag { background:#F4ECF7; color:#8E44AD; border:1px solid rgba(142,68,173,0.3); }
+
 .lst-card-obj { font-size:14px; color:var(--ls-ink-soft); line-height:1.6; max-width:800px; }
-
 .lst-card-body { border-top:1px solid var(--ls-border); padding:32px; animation:lstFadeIn .3s ease; background:var(--ls-cream); }
-
-/* Grid Layout for Expanded Card */
 .lst-expanded-grid { display:grid; grid-template-columns:2fr 1fr; gap:32px; }
 
-/* Right Sidebar in Card (Context & Tools) */
+/* Custom Native Accordions for Reduced Cognitive Load */
+details.lst-accordion { background:white; border:1px solid var(--ls-border); border-radius:12px; margin-bottom:12px; overflow:hidden; }
+details.lst-accordion summary { padding:16px 20px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:space-between; user-select:none; background:var(--ls-cream); transition:background 0.2s; }
+details.lst-accordion summary:hover { background:var(--ls-sand); }
+details.lst-accordion summary::after { content: '▼'; font-size:10px; color:var(--ls-muted); transition:transform 0.3s; }
+details.lst-accordion[open] summary::after { transform:rotate(180deg); }
+details.lst-accordion[open] summary { border-bottom:1px solid var(--ls-border); }
+.lst-accordion-content { padding:20px; }
+
 .lst-sidebar-box { background:white; border:1px solid var(--ls-border); border-radius:16px; padding:20px; margin-bottom:16px; }
 .lst-sb-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--ls-muted); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
 .lst-sb-text { font-size:13px; color:var(--ls-ink-soft); line-height:1.6; }
@@ -93,12 +109,9 @@ const PAGE_CSS = `
 .lst-outcome-list li { margin-bottom:6px; }
 
 .lst-protip { background:#FFFBEA; border-left:4px solid #F1C40F; padding:12px 16px; border-radius:0 8px 8px 0; font-size:13px; color:var(--ls-ink-soft); line-height:1.6; margin-top:16px; }
+.lst-psych-box { background:#F0F8FF; border-left:4px solid #3498DB; padding:12px 16px; border-radius:0 8px 8px 0; font-size:13px; color:var(--ls-ink-soft); line-height:1.6; margin-top:16px; }
 
 /* Interactive Phase Steps */
-.lst-phase { background:white; border:1px solid var(--ls-border); border-radius:12px; padding:20px; margin-bottom:16px; }
-.lst-phase-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid var(--ls-border); padding-bottom:12px; }
-.lst-phase-time { background:var(--ls-amber); color:white; padding:4px 12px; border-radius:50px; font-size:12px; font-weight:700; }
-.lst-phase-name { font-family:'Fraunces',serif; font-size:18px; font-weight:700; color:var(--ls-ink); }
 .lst-step { display:flex; gap:12px; padding:12px 16px; border-radius:10px; margin-bottom:8px; font-size:14px; line-height:1.65; }
 .lst-step.say { background:#EAF4FA; border-left:4px solid #5B9EBF; }
 .lst-step.do  { background:var(--ls-sand); border-left:4px solid var(--ls-muted); }
@@ -112,44 +125,85 @@ const PAGE_CSS = `
 .lst-sugg-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
 .lst-sugg-card { padding:16px; border:1px solid var(--ls-border); border-radius:12px; background:white; cursor:pointer; transition:border-color .2s; }
 .lst-sugg-card:hover { border-color:var(--ls-amber); }
-.lst-sugg-title { font-weight:700; font-size:14px; color:var(--ls-ink); }
+.lst-sugg-title { font-weight:700; font-size:14px; color:var(--ls-ink); margin-bottom:8px;}
 
-/* Action Footer */
-.lst-card-actions { display:flex; gap:12px; margin-top:24px; padding-top:24px; border-top:1px dashed var(--ls-border); }
-.lst-action-btn { padding:12px 24px; border-radius:50px; font-size:13px; font-weight:700; cursor:pointer; border:none; transition:all .2s; display:flex; align-items:center; gap:8px; }
+/* Actions */
+.lst-card-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; padding-top:24px; border-top:1px dashed var(--ls-border); }
+.lst-action-btn { padding:12px 24px; border-radius:50px; font-size:13px; font-weight:700; cursor:pointer; border:none; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; }
 .lst-action-btn.primary { background:var(--ls-forest); color:white; }
 .lst-action-btn.primary:hover { background:var(--ls-ink); }
 .lst-action-btn.secondary { background:white; border:1px solid var(--ls-border); color:var(--ls-ink); }
 .lst-action-btn.secondary:hover { border-color:var(--ls-amber); color:var(--ls-amber); }
+.lst-action-btn.live { background:#E74C3C; color:white; animation: pulse 2s infinite; }
+.lst-action-btn.live:hover { background:#C0392B; animation:none; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
-/* Modals */
-.lst-modal-overlay { position:fixed; inset:0; background:rgba(30,40,32,0.6); backdrop-filter:blur(4px); z-index:1000; display:flex; align-items:center; justify-content:center; }
-.lst-modal { background:white; width:100%; max-width:500px; border-radius:24px; padding:32px; box-shadow:var(--ls-shadow-md); animation:lstSlideUp .3s ease; }
+/* Modals & Overlays */
+.lst-modal-overlay { position:fixed; inset:0; background:rgba(30,40,32,0.8); backdrop-filter:blur(4px); z-index:1000; display:flex; align-items:center; justify-content:center; }
+.lst-modal { background:white; width:100%; max-width:600px; border-radius:24px; padding:32px; box-shadow:var(--ls-shadow-md); animation:lstSlideUp .3s ease; max-height:90vh; overflow-y:auto; }
 @keyframes lstSlideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 .lst-modal h2 { font-family:'Fraunces',serif; margin:0 0 8px; font-size:24px; }
-.lst-modal p { color:var(--ls-muted); font-size:14px; margin-bottom:24px; }
+.lst-modal p { color:var(--ls-muted); font-size:14px; margin-bottom:24px; line-height:1.6; }
+
 .lst-rating-group { display:flex; gap:12px; margin-bottom:24px; }
 .lst-rate-btn { flex:1; padding:12px; border:1px solid var(--ls-border); border-radius:12px; background:white; cursor:pointer; font-weight:700; color:var(--ls-muted); transition:all .2s; }
 .lst-rate-btn:hover { border-color:var(--ls-amber); }
 .lst-rate-btn.active { background:var(--ls-amber-pale); border-color:var(--ls-amber); color:var(--ls-amber); }
 textarea.lst-input { width:100%; padding:16px; border:1px solid var(--ls-border); border-radius:12px; font-family:inherit; min-height:120px; margin-bottom:24px; resize:vertical; }
 
+/* Tabs & Filters */
 .lst-tabs-wrap { background:white; border-bottom:1px solid var(--ls-border); }
-.lst-tabs { max-width:1200px; margin:0 auto; display:flex; }
-.lst-tab { flex:1; padding:20px; border:none; background:none; cursor:pointer; border-bottom:3px solid transparent; transition:all .2s; text-align:center; }
+.lst-tabs { max-width:1200px; margin:0 auto; display:flex; overflow-x:auto; }
+.lst-tab { flex:1; padding:20px; border:none; background:none; cursor:pointer; border-bottom:3px solid transparent; transition:all .2s; text-align:center; min-width:150px; }
 .lst-tab.active { border-bottom-color:var(--ls-amber); background:var(--ls-amber-pale); }
 .lst-tab-sub { display:block; font-size:11px; color:var(--ls-muted); margin-top:4px; }
 
 .lst-chip { padding:6px 14px; border-radius:50px; background:var(--ls-sand); border:1px solid var(--ls-border); font-size:12px; cursor:pointer; white-space:nowrap; }
 .lst-chip.active { background:var(--ls-forest); color:white; border-color:var(--ls-forest); }
 .lst-filter-row { display:flex; gap:8px; align-items:center; }
-
 .lst-material-tag { padding:4px 10px; background:var(--ls-sand); border-radius:6px; font-size:11px; margin-right:6px; margin-bottom:6px; display:inline-block; }
+
+/* --- SESSION PLANNER SIDEBAR --- */
+.lst-sidebar { position: fixed; right: 0; top: 0; bottom: 0; width: 380px; background: var(--ls-cream); box-shadow: -10px 0 30px rgba(0,0,0,0.1); z-index: 400; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; border-left:1px solid var(--ls-border); }
+.lst-sidebar.open { transform: translateX(0); }
+.lst-sb-header { padding: 24px; background: var(--ls-ink); color: white; display: flex; justify-content: space-between; align-items: center; }
+.lst-sb-content { padding: 24px; flex: 1; overflow-y: auto; }
+.lst-sb-footer { padding: 24px; background: white; border-top: 1px solid var(--ls-border); }
+.lst-plan-item { background: white; border: 1px solid var(--ls-border); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--ls-shadow-sm); }
+.lst-plan-item h4 { margin: 0 0 4px 0; font-size: 14px; }
+.lst-plan-item p { margin: 0; font-size: 12px; color: var(--ls-muted); }
+.lst-remove-btn { background: none; border: none; color: #E74C3C; cursor: pointer; font-size: 18px; padding: 4px; }
+
+/* --- REAL-TIME LIVE MODE --- */
+.lst-live-mode { position: fixed; inset: 0; background: var(--ls-ink); color: white; z-index: 1000; display: flex; flex-direction: column; }
+.lst-live-top { padding: 24px 40px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+.lst-live-body { flex: 1; display: flex; padding: 40px; gap: 60px; max-width: 1400px; margin: 0 auto; width: 100%; }
+.lst-live-timer-section { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255,255,255,0.03); border-radius: 24px; padding: 40px; }
+.lst-live-timer-display { font-size: 120px; font-family: 'Fraunces', serif; font-weight: 700; color: var(--ls-amber); line-height: 1; font-variant-numeric: tabular-nums; }
+.lst-live-steps { flex: 1.5; overflow-y: auto; padding-right: 20px; }
+.lst-live-step-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; margin-bottom: 16px; font-size: 18px; line-height: 1.6; }
+.lst-live-step-card.say { border-left: 6px solid #5B9EBF; }
+.lst-live-step-card.do { border-left: 6px solid var(--ls-amber); }
+.lst-live-controls { display: flex; gap: 16px; margin-top: 32px; }
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .lst-expanded-grid { grid-template-columns: 1fr; gap:20px; }
+  .lst-hero-inner { flex-direction: column; gap:32px; }
+  .lst-sidebar { width: 100%; }
+  .lst-grid { padding: 0 20px 60px; }
+  .lst-toolbar { padding: 16px 20px; }
+  .lst-card-header { flex-direction: column; }
+  .lst-card-num { margin-bottom: 12px; }
+  .lst-live-body { flex-direction: column; gap: 20px; padding: 20px; }
+  .lst-live-timer-display { font-size: 80px; }
+}
 
 /* Print styles */
 @media print {
   .no-print { display: none !important; }
   .lst-page { background: white !important; }
+  .lst-card { box-shadow:none; border:1px solid #ccc; break-inside: avoid; }
 }
 `;
 
@@ -200,6 +254,138 @@ function SessionLoggerModal({ activity, onClose, onSave }) {
   );
 }
 
+function DashboardModal({ onClose, activities }) {
+  const topRated = [...activities].sort((a,b) => (b.rating || 0) - (a.rating || 0)).slice(0,3);
+  const mostUsed = [...activities].sort((a,b) => (b.usedBy || 0) - (a.usedBy || 0)).slice(0,3);
+
+  return (
+    <div className="lst-modal-overlay" onClick={onClose}>
+      <div className="lst-modal" onClick={e => e.stopPropagation()} style={{maxWidth: '800px'}}>
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: '24px'}}>
+          <h2 style={{margin:0}}>📊 Counsellor Intelligence</h2>
+          <button onClick={onClose} style={{background:'none', border:'none', fontSize:'24px', cursor:'pointer'}}>×</button>
+        </div>
+        
+        <div className="lst-expanded-grid" style={{gap:'24px'}}>
+          <div style={{background:'var(--ls-sand)', padding:'24px', borderRadius:'16px'}}>
+            <h4 style={{margin:'0 0 16px 0', color:'var(--ls-forest)'}}>🔥 Top Rated Activities</h4>
+            {topRated.map(a => (
+              <div key={a.id} style={{background:'white', padding:'12px', borderRadius:'8px', marginBottom:'8px', display:'flex', justifyContent:'space-between'}}>
+                <span style={{fontWeight:600, fontSize:'14px'}}>{a.title}</span>
+                <span style={{color:'#F1C40F', fontWeight:700}}>★ {a.rating}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{background:'var(--ls-sage-pale)', padding:'24px', borderRadius:'16px'}}>
+            <h4 style={{margin:'0 0 16px 0', color:'var(--ls-sage)'}}>📈 Most Used</h4>
+            {mostUsed.map(a => (
+              <div key={a.id} style={{background:'white', padding:'12px', borderRadius:'8px', marginBottom:'8px', display:'flex', justifyContent:'space-between'}}>
+                <span style={{fontWeight:600, fontSize:'14px'}}>{a.title}</span>
+                <span style={{color:'var(--ls-muted)', fontWeight:700}}>{a.usedBy}x</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <p style={{marginTop:'24px', fontSize:'13px', color:'var(--ls-muted)', textAlign:'center'}}>Data aggregated from your local session logs.</p>
+      </div>
+    </div>
+  );
+}
+
+function LiveSessionMode({ activity, onClose }) {
+  const [currentPhaseIdx, setCurrentPhaseIdx] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+
+  const phase = activity.phases[currentPhaseIdx];
+
+  // Simple parser to extract max minutes from strings like "5-12 min" or "0-5 min"
+  useEffect(() => {
+    if (phase && phase.time) {
+      const match = phase.time.match(/(\d+)\s*min/i) || phase.time.match(/-(\d+)\s*min/i);
+      let mins = 5; // fallback
+      if (match && match[1]) {
+        mins = parseInt(match[1], 10);
+        // If it's a range like 5-12, the duration is 12-5 = 7 mins
+        const rangeMatch = phase.time.match(/(\d+)-(\d+)/);
+        if (rangeMatch) mins = parseInt(rangeMatch[2], 10) - parseInt(rangeMatch[1], 10);
+      }
+      setTimeLeft(mins * 60);
+      setIsRunning(false);
+    }
+  }, [currentPhaseIdx, phase]);
+
+  useEffect(() => {
+    let interval;
+    if (isRunning && timeLeft > 0) {
+      interval = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    } else if (timeLeft === 0) {
+      setIsRunning(false);
+    }
+    return () => clearInterval(interval);
+  }, [isRunning, timeLeft]);
+
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  if (!activity || !phase) return null;
+
+  return (
+    <div className="lst-live-mode">
+      <div className="lst-live-top">
+        <div>
+          <div style={{fontSize:'12px', textTransform:'uppercase', letterSpacing:'1px', color:'var(--ls-amber)', marginBottom:'4px', fontWeight:700}}>🔴 Live Session</div>
+          <div style={{fontSize:'24px', fontFamily:"'Fraunces', serif", fontWeight:700}}>{activity.title}</div>
+        </div>
+        <button className="lst-action-btn secondary" onClick={onClose} style={{background:'rgba(255,255,255,0.1)', color:'white', border:'none'}}>End Session ✕</button>
+      </div>
+
+      <div className="lst-live-body">
+        <div className="lst-live-timer-section">
+          <h3 style={{margin:'0 0 16px 0', fontSize:'24px', fontWeight:300, color:'rgba(255,255,255,0.7)'}}>Phase {currentPhaseIdx + 1}: {phase.phase}</h3>
+          <div className="lst-live-timer-display">{formatTime(timeLeft)}</div>
+          
+          <div className="lst-live-controls">
+            <button className="lst-action-btn primary" style={{fontSize:'16px', padding:'16px 32px'}} onClick={() => setIsRunning(!isRunning)}>
+              {isRunning ? '⏸ Pause Timer' : '▶ Start Timer'}
+            </button>
+          </div>
+
+          <div style={{display:'flex', gap:'12px', marginTop:'40px', width:'100%'}}>
+            <button 
+              className="lst-action-btn secondary" 
+              style={{flex:1, background:'rgba(255,255,255,0.05)', color:'white', border:'1px solid rgba(255,255,255,0.2)'}}
+              disabled={currentPhaseIdx === 0}
+              onClick={() => setCurrentPhaseIdx(prev => prev - 1)}
+            >← Previous Phase</button>
+            <button 
+              className="lst-action-btn secondary" 
+              style={{flex:1, background:'rgba(255,255,255,0.05)', color:'white', border:'1px solid rgba(255,255,255,0.2)'}}
+              disabled={currentPhaseIdx === activity.phases.length - 1}
+              onClick={() => setCurrentPhaseIdx(prev => prev + 1)}
+            >Next Phase →</button>
+          </div>
+        </div>
+
+        <div className="lst-live-steps">
+          <h3 style={{margin:'0 0 24px 0', fontSize:'20px', borderBottom:'1px solid rgba(255,255,255,0.1)', paddingBottom:'16px'}}>Instructions</h3>
+          {phase.steps.map((s, si) => (
+            <div key={si} className={`lst-live-step-card ${s.type}`}>
+              <div style={{fontSize:'11px', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', marginBottom:'8px', color: s.type === 'say' ? '#5B9EBF' : 'var(--ls-amber)'}}>
+                {s.type === 'say' ? '🗣️ Say to Class' : '🛠️ Facilitator Action'}
+              </div>
+              <div style={{color: s.type==='say'?'white':'rgba(255,255,255,0.8)'}}>{s.text}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── CONSTANTS & DATA ─────────────────────────────────────────────────────────
 const ALL_THEMES = [
   "All", 
@@ -215,17 +401,28 @@ const ALL_THEMES = [
   "Problem solving"
 ];
 
-// Completely expanded with New Productivity Metadata
 const ACTIVITIES = [
   // ──────────────────────── LOWER SECONDARY (Grade 5-7) ────────────────────────
   // ── WHO Skill 1: Self-Awareness ──
   {
-    id: "l_sa_1", title: "The Feelings Iceberg", themeShort: ["Self-awareness", "Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Individual", "Pairs", "Full class"], color: "#7C6FA0", colorPale: "#F0EDF8", imagePath: "/resources/lifeskills/thefeelingsiceberg/thefeelingsiceberg.jpg",
+    id: "l_sa_1", 
+    title: "The Feelings Iceberg", 
+    themeShort: ["Self-awareness", "Coping with emotions"], 
+    grade: "5–7", gradeKey: "lower", duration: "35 min", 
+    formats: ["Individual", "Pairs", "Full class"], 
+    color: "#7C6FA0", colorPale: "#F0EDF8", 
+    imagePath: "public/resources/lifeskills/thefeelingsiceberg/thefeelingsiceberg.jpg",
+    guidePdf: "public/resources/lifeskills/thefeelingsiceberg/THE FEELINGS ICEBERG_ Exploring Our Emotions (Grade 5–7).pdf",
+    worksheetPdf: "public/resources/lifeskills/thefeelingsiceberg/The Feelings Iceberg Worksheet.pdf",
     energyLevel: "Low", complexity: "Moderate", rating: 4.8, usedBy: 342,
     bestUsedWhen: "Students are exhibiting unexplained anger or classroom conflicts are rising over 'small' things.",
     studentOutcomes: ["Identify the physiological markers of primary emotions.", "Distinguish between reactive anger and vulnerable sadness.", "Articulate hidden feelings safely to a peer."],
     proTip: "If students write 'nothing' below the waterline, do not force them. Suggest they draw a question mark. It takes time to build the vocabulary.",
-    objective: "Students will distinguish between surface emotions (what others see) and underlying feelings (what's really happening inside), mapping their own emotional landscape.", materials: ["Whiteboard & marker", "Iceberg worksheet", "Coloured pencils"],
+    whyItWorks: "This activity works because it externalizes emotions, reducing shame and improving emotional vocabulary by separating the reactive behavior from the vulnerable root cause.",
+    tags: ["ADHD-friendly", "Visual Learners", "Introvert-friendly"],
+    nextSession: "l_em_1", // Suggest empathy next
+    objective: "Students will distinguish between surface emotions (what others see) and underlying feelings (what's really happening inside), mapping their own emotional landscape.", 
+    materials: ["Whiteboard & marker", "Iceberg worksheet", "Coloured pencils"],
     phases: [
       { time: "0–5 min", phase: "Hook", steps: [ { type: "say", text: "Think about the last time you got really angry. Picture it. What did the other person actually SEE? What did your anger look like from the outside?" }, { type: "do", text: "Take 3-4 answers. Write them on the board: went quiet, shouted, face went red, slammed door." }, { type: "say", text: "Interesting. Now here is my question: was anger the ONLY thing you were feeling? Or was something else going on underneath?" }, { type: "tip", text: "Keep this light and curious. Do not push for specific answers yet—just plant the question." } ] },
       { time: "5–12 min", phase: "Concept Introduction", steps: [ { type: "do", text: "Draw a simple iceberg on the board: a small tip above a wavy line, a large mass below. Label the tip 'What people SEE' and below the line 'What is REALLY happening.'" }, { type: "say", text: "An iceberg has a tiny visible tip and a massive hidden section. Our emotions work exactly the same way." }, { type: "say", text: "What might be hiding under anger? Build a word cloud below the waterline as students call out: fear, embarrassment, loneliness, feeling unheard." } ] },
@@ -257,10 +454,11 @@ const ACTIVITIES = [
   {
     id: "l_sa_3", title: "The Mirror Game", themeShort: ["Self-awareness"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Pairs", "Physical"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "High", complexity: "Easy", rating: 4.9, usedBy: 412,
+    materials: [],
     bestUsedWhen: "Students are sluggish (e.g., first period or directly after lunch) and need a physical reset.",
     studentOutcomes: ["Recognize the brain-body connection.", "Sustain non-verbal focus for extended periods.", "Identify how posture dictates mood."],
     proTip: "If a pair is giggling uncontrollably, stand near them and model the seriousness of the exercise. Do not scold, just project calm focus.",
-    objective: "Recognize how physical posture reflects and influences internal emotional states.", materials: ["Open floor space"],
+    objective: "Recognize how physical posture reflects and influences internal emotional states.",
     phases: [
       { time: "0–15 min", phase: "The Setup", steps: [ { type: "do", text: "Ask students to stand and face their partner. One is the leader, one is the mirror. The mirror must perfectly match the leader's physical movements in complete silence." }, { type: "say", text: "Move slowly and fluidly. Switch roles after 2 minutes so everyone gets a turn leading." } ] },
       { time: "15–25 min", phase: "Emotional Mirror", steps: [ { type: "say", text: "Now we take it a step further. Leaders, mirror an emotion without using any words. Let your partner guess the emotion based entirely on your posture and facial expression." }, { type: "do", text: "Call out emotions for them to act out: Sadness, Excitement, Nervousness, Pride." } ] },
@@ -358,10 +556,11 @@ const ACTIVITIES = [
   {
     id: "l_em_4", title: "The Silent Interviewer", themeShort: ["Empathy", "Effective communication"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Pairs"], color: "#E8845A", colorPale: "#FDF0EA", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "Low", complexity: "Moderate", rating: 4.4, usedBy: 180,
+    materials: [],
     bestUsedWhen: "Students are struggling to listen to each other during group work.",
     studentOutcomes: ["Demonstrate active listening using only body language.", "Read non-verbal emotional cues.", "Resist the urge to interrupt."],
     proTip: "Remind listeners that blinking, nodding, and mirroring facial expressions are their only tools.",
-    objective: "Build empathy by focusing exclusively on non-verbal emotional cues.", materials: ["None"],
+    objective: "Build empathy by focusing exclusively on non-verbal emotional cues.",
     phases: [
       { time: "0–5 min", phase: "The Rule", steps: [ { type: "say", text: "Today you will interview your partner, but the interviewer is not allowed to speak a single word." } ] },
       { time: "5–15 min", phase: "The Interview", steps: [ { type: "do", text: "Student A tells a story about a time they felt proud. Student B must show they are listening using only eye contact and facial expressions." } ] },
@@ -441,10 +640,11 @@ const ACTIVITIES = [
   {
     id: "l_ct_4", title: "Would You Rather? (Logic Edition)", themeShort: ["Critical thinking", "Decision making"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Full class movement"], color: "#2C3E50", colorPale: "#EAF0FB", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "High", complexity: "Moderate", rating: 4.8, usedBy: 315,
+    materials: [],
     bestUsedWhen: "Students need a brain-break that still involves cognitive lifting.",
     studentOutcomes: ["Defend a position using logic, not emotion.", "Evaluate competing trade-offs.", "Speak publicly with confidence."],
     proTip: "If a student gives a weak 'just because' reason, ask the class: 'Who can help them build a logical bridge for that answer?'",
-    objective: "Defend a choice using logical reasons rather than 'just because'.", materials: ["None"],
+    objective: "Defend a choice using logical reasons rather than 'just because'.",
     phases: [
       { time: "0–5 min", phase: "The Rule", steps: [ { type: "say", text: "You must choose a side, but you can only stay there if you can provide a logical reason. 'Because it is cool' is not allowed." } ] },
       { time: "5–20 min", phase: "The Movement", steps: [ { type: "do", text: "Ask: 'Would you rather have the ability to fly or be invisible?' Have them move to sides of the room." } ] },
@@ -526,10 +726,11 @@ const ACTIVITIES = [
   {
     id: "l_crt_4", title: "The Finish the Story Game", themeShort: ["Creative thinking"], grade: "5–7", gradeKey: "lower", duration: "30 min", formats: ["Full class circle"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
     energyLevel: "High", complexity: "Moderate", rating: 4.7, usedBy: 340,
+    materials: [],
     bestUsedWhen: "Building classroom cohesion and breaking the ice early in the year.",
     studentOutcomes: ["Practice spontaneous ideation.", "Build upon the ideas of others (Yes, and...).", "Adapt to unexpected changes in narrative."],
     proTip: "If a student freezes, give them a lifeline: 'Does something jump out, or does someone say something?'",
-    objective: "Practice spontaneous creativity and collaborative storytelling.", materials: ["None"],
+    objective: "Practice spontaneous creativity and collaborative storytelling.",
     phases: [
       { time: "0–5 min", phase: "The Setup", steps: [ { type: "say", text: "We are going to tell a story, but you only get to add one sentence at a time." } ] },
       { time: "5–20 min", phase: "The Story", steps: [ { type: "do", text: "Start with a prompt: 'The door was locked, but then...'. Go around the circle." } ] },
@@ -833,7 +1034,7 @@ function PrintView({ activity, mode, onClose }) {
 
         <div className="lstp-section-h">Materials Needed</div>
         <div className="lstp-materials-list">
-          {activity.materials.map((m, i) => <span key={i} className="lstp-material">{m}</span>)}
+          {activity.materials && activity.materials.map((m, i) => <span key={i} className="lstp-material">{m}</span>)}
         </div>
 
         <div className="lstp-section-h">Facilitation Guide</div>
@@ -843,7 +1044,7 @@ function PrintView({ activity, mode, onClose }) {
               <span className="lstp-phase-time">{phase.time}</span>
               <span className="lstp-phase-name">{phase.phase}</span>
             </div>
-            {phase.steps.map((s, si) => <Step key={si} s={s} />)}
+            {phase.steps.map((s, si) => <PrintStep key={si} s={s} />)}
           </div>
         ))}
 
@@ -855,8 +1056,12 @@ function PrintView({ activity, mode, onClose }) {
           </div>
         ))}
 
-        <div className="lstp-section-h">Watch Out For</div>
-        {activity.watchOutFor && activity.watchOutFor.map((w, i) => <div key={i} className="lstp-watch">{w}</div>)}
+        {activity.watchOutFor && (
+          <>
+            <div className="lstp-section-h">Watch Out For</div>
+            {activity.watchOutFor.map((w, i) => <div key={i} className="lstp-watch">{w}</div>)}
+          </>
+        )}
 
         <div className="lstp-footer">
           SecretSharz Life Skills Resource Library · Grade {activity.grade}
@@ -876,7 +1081,7 @@ function PrintView({ activity, mode, onClose }) {
       </div>
       <div className="lst-print-doc">
         <div className="lstw-header">
-          <h1>{activity.worksheet.title}</h1>
+          <h1>{activity.worksheet ? activity.worksheet.title : activity.title}</h1>
           <p>Life Skills Worksheet · Grade {activity.grade} · {activity.themeShort.join(" & ")}</p>
         </div>
         <div className="lstw-name-row">
@@ -884,9 +1089,9 @@ function PrintView({ activity, mode, onClose }) {
           <div className="lstw-name-field">Class: __________</div>
           <div className="lstw-name-field">Date: __________</div>
         </div>
-        <p style={{ fontSize: "13px", color: "#7A8A7D", marginBottom: "20px", fontStyle: "italic" }}>{activity.worksheet.intro}</p>
+        {activity.worksheet && <p style={{ fontSize: "13px", color: "#7A8A7D", marginBottom: "20px", fontStyle: "italic" }}>{activity.worksheet.intro}</p>}
 
-        {activity.worksheet.sections.map((sec, si) => (
+        {activity.worksheet && activity.worksheet.sections.map((sec, si) => (
           <div key={si} className="lstw-section">
             <div className="lstw-section-title">{sec.title}</div>
             {sec.prompts.map((p, pi) => (
@@ -902,352 +1107,4 @@ function PrintView({ activity, mode, onClose }) {
   );
 
   return null;
-}
-
-// ─── ACTIVITY CARD (Upgraded UI) ───────────────────────────────────────────────
-function ActivityCard({ activity, displayNumber, isExpanded, onToggle, onPrint, onLogSession }) {
-  const [isSaved, setIsSaved] = useState(false);
-
-  return (
-    <div className={`lst-card ${isExpanded ? "expanded" : ""}`}>
-      <div className="lst-card-accent" style={{ background: `linear-gradient(90deg,${activity.color},${activity.color}88)` }} />
-
-      <div className="lst-card-header" onClick={onToggle}>
-        <div className="lst-card-num">{displayNumber}</div>
-        <div className="lst-card-meta-block">
-          <div className="lst-card-title">
-            {activity.title}
-            <button 
-              className={`lst-bookmark-btn ${isSaved ? 'saved' : ''} no-print`} 
-              onClick={(e) => { e.stopPropagation(); setIsSaved(!isSaved); }}
-              title={isSaved ? "Remove Bookmark" : "Save Activity"}
-            >
-              {isSaved ? '★' : '☆'}
-            </button>
-          </div>
-
-          <div className="lst-analytics-row no-print">
-            {activity.rating && (
-              <span className="lst-stat-item"><span className="lst-stat-star">★</span> {activity.rating}</span>
-            )}
-            {activity.usedBy && (
-              <span className="lst-stat-item">👥 Used {activity.usedBy} times</span>
-            )}
-          </div>
-
-          <div className="lst-card-badges">
-            {activity.themeShort.map(t => (
-               <span key={t} className="lst-badge lst-badge-theme" style={{ background: `${activity.color}18`, color: activity.color }}>{t}</span>
-            ))}
-            <span className="lst-badge lst-badge-grade">Grade {activity.grade}</span>
-            <span className="lst-badge lst-badge-time">{activity.duration}</span>
-            {activity.energyLevel && <span className="lst-badge lst-badge-energy">⚡ {activity.energyLevel} Energy</span>}
-            {activity.complexity && <span className="lst-badge lst-badge-complex">🧩 {activity.complexity}</span>}
-          </div>
-          
-          <div className="lst-card-obj">{activity.objective}</div>
-        </div>
-        
-        <div className="lst-card-chevron">▶</div>
-      </div>
-
-      {isExpanded && (
-        <div className="lst-card-body">
-          <div className="lst-expanded-grid">
-            
-            {/* LEFT COLUMN: Core Content */}
-            <div className="lst-card-main-content">
-              {activity.phases.map((phase, pi) => (
-                <div key={pi} className="lst-phase">
-                  <div className="lst-phase-header">
-                    <span className="lst-phase-name">{phase.phase}</span>
-                    <span className="lst-phase-time">{phase.time}</span>
-                  </div>
-                  {phase.steps.map((s, si) => <Step key={si} s={s} />)}
-                </div>
-              ))}
-
-              <div style={{ marginTop: '24px' }}>
-                <h4 style={{ fontFamily: "'Fraunces', serif", marginBottom: '12px' }}>Debrief Questions</h4>
-                {activity.debrief.map((d, i) => (
-                  <div key={i} className="lst-debrief-item">
-                    <div className="lst-debrief-q">Q{i + 1}: {d.q}</div>
-                    <div className="lst-debrief-note">Facilitator Note: {d.note}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* RIGHT COLUMN: Sidebar Tools */}
-            <div className="lst-card-sidebar no-print">
-              
-              <div className="lst-sidebar-box">
-                <div className="lst-sb-title">🎯 Student Outcomes</div>
-                {activity.studentOutcomes ? (
-                  <ul className="lst-outcome-list">
-                    {activity.studentOutcomes.map((out, i) => <li key={i}>{out}</li>)}
-                  </ul>
-                ) : (
-                  <div className="lst-sb-text">Builds core competencies in {activity.themeShort.join(' and ')}.</div>
-                )}
-              </div>
-
-              <div className="lst-sidebar-box">
-                <div className="lst-sb-title">📌 Best Used When</div>
-                <div className="lst-sb-text">{activity.bestUsedWhen || "Ideal for standard classroom life skills integration."}</div>
-              </div>
-
-              <div className="lst-sidebar-box">
-                <div className="lst-sb-title">🛠️ Materials Needed</div>
-                <div className="lst-materials" style={{ marginTop: '8px' }}>
-                  {activity.materials.map((m, i) => <span key={i} className="lst-material-tag">{m}</span>)}
-                </div>
-              </div>
-
-              {activity.proTip && (
-                <div className="lst-protip">
-                  <strong>💡 Pro Tip:</strong><br/>
-                  {activity.proTip}
-                </div>
-              )}
-
-              {activity.watchOutFor && (
-                 <div style={{ marginTop: '20px' }}>
-                   <div className="lst-sb-title">⚠️ Watch Out For</div>
-                   {activity.watchOutFor.map((w, i) => <div key={i} className="lst-watch-item">{w}</div>)}
-                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* ACTION FOOTER */}
-          <div className="lst-card-actions no-print">
-            <button className="lst-action-btn primary" onClick={() => onLogSession(activity)}>
-              📝 Log Session Notes
-            </button>
-            
-            {activity.guidePdf ? (
-              <a href={activity.guidePdf} download target="_blank" rel="noreferrer" className="lst-action-btn secondary" style={{ textDecoration: "none" }}>
-                📄 Download Facilitator Guide
-              </a>
-            ) : (
-              <button className="lst-action-btn secondary" onClick={() => onPrint(activity, "guide")}>
-                📄 Print Facilitator Guide
-              </button>
-            )}
-
-            {activity.worksheetPdf ? (
-              <a href={activity.worksheetPdf} download target="_blank" rel="noreferrer" className="lst-action-btn secondary" style={{ textDecoration: "none" }}>
-                🖨️ Download Student Handout
-              </a>
-            ) : (
-              <button className="lst-action-btn secondary" onClick={() => onPrint(activity, "worksheet")}>
-                🖨️ Print Student Handout
-              </button>
-            )}
-          </div>
-
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-const GRADE_TABS = [
-  { key: "lower",  label: "Lower Secondary", sub: "Grade 5–7" },
-  { key: "middle", label: "Middle Secondary", sub: "Grade 8–10" },
-  { key: "upper",  label: "Senior Secondary", sub: "Grade 11–12" },
-];
-
-export default function LifeSkillsTrainer({ navigate, onBack }) {
-  const [activeTab,    setActiveTab]    = useState("lower");
-  const [searchQuery,  setSearchQuery]  = useState("");
-  const [themeFilter,  setThemeFilter]  = useState("All");
-  const [quickFilter,  setQuickFilter]  = useState("All");
-  const [expandedId,   setExpandedId]   = useState(null);
-  const [printData,    setPrintData]    = useState(null); 
-  const [loggingActivity, setLoggingActivity] = useState(null);
-
-  useEffect(() => {
-    const s = document.createElement("style");
-    s.textContent = PAGE_CSS;
-    document.head.appendChild(s);
-    return () => document.head.removeChild(s);
-  }, []);
-
-  useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, []);
-
-  const handlePrint = useCallback((activity, mode) => { setPrintData({ activity, mode }); }, []);
-  const closePrint = useCallback(() => { setPrintData(null); }, []);
-  const handleToggle = useCallback((id) => { setExpandedId(prev => prev === id ? null : id); }, []);
-
-  // Complex Filtering Logic
-  const filtered = useMemo(() => {
-    return ACTIVITIES.filter(a => {
-      const matchTab = a.gradeKey === activeTab;
-      const matchTheme = themeFilter === "All" || a.themeShort.includes(themeFilter);
-      
-      const q = searchQuery.toLowerCase();
-      const matchSearch = !q || 
-        a.title.toLowerCase().includes(q) || 
-        a.objective.toLowerCase().includes(q) ||
-        (a.bestUsedWhen && a.bestUsedWhen.toLowerCase().includes(q));
-
-      let matchQuick = true;
-      if (quickFilter === "High Energy") matchQuick = a.energyLevel === "High";
-      if (quickFilter === "Low Prep") matchQuick = a.materials.length <= 1;
-
-      return matchTab && matchTheme && matchSearch && matchQuick;
-    });
-  }, [activeTab, themeFilter, searchQuery, quickFilter]);
-
-  const handleSaveLog = (activityId, logData) => {
-    console.log("Saved log for:", activityId, logData);
-    // In a real app, this would post to a backend.
-  };
-
-  return (
-    <>
-      {printData && (
-        <PrintView activity={printData.activity} mode={printData.mode} onClose={closePrint} />
-      )}
-
-      {loggingActivity && (
-        <SessionLoggerModal 
-          activity={loggingActivity} 
-          onClose={() => setLoggingActivity(null)} 
-          onSave={handleSaveLog} 
-        />
-      )}
-
-      <div className="lst-page">
-        <div className="lst-topbar">
-          <button className="lst-back" onClick={onBack || (() => navigate && navigate("/resources"))}>← Back to Resources</button>
-          <div className="lst-topbar-title">Life Skills Trainer — Activity Bank</div>
-          <div className="lst-topbar-right">Counsellor Tool</div>
-        </div>
-
-        <div className="lst-hero">
-          <div className="lst-hero-blob lst-hero-blob-1" />
-          <div className="lst-hero-blob lst-hero-blob-2" />
-          <div className="lst-hero-inner">
-            <div style={{ flex: 1, minWidth: "300px" }}>
-              <div className="lst-hero-eyebrow">Counsellor Productivity Suite</div>
-              <h1 className="lst-hero-h1">Life Skills Trainer<br /><em>Activity Bank</em></h1>
-              <p className="lst-hero-sub">The definitive curriculum for building resilience, emotional intelligence, and critical thinking. Mapped to WHO Core Life Skills. Find the right activity, print the guides, and log your session outcomes.</p>
-              <div className="lst-hero-tags">
-                <span className="lst-hero-tag">Smart Discoverability</span>
-                <span className="lst-hero-tag">Session Logging</span>
-                <span className="lst-hero-tag">Printable Handouts</span>
-              </div>
-            </div>
-            <div className="lst-hero-right">
-              <div className="lst-stat-card">
-                <div className="lst-stat-num">50</div>
-                <div className="lst-stat-label">Activities</div>
-              </div>
-              <div className="lst-stat-card">
-                <div className="lst-stat-num">10</div>
-                <div className="lst-stat-label">WHO Life Skills</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="lst-tabs-wrap">
-          <div className="lst-tabs">
-            {GRADE_TABS.map(t => (
-              <button key={t.key} className={`lst-tab ${activeTab === t.key ? "active" : ""}`} onClick={() => { setActiveTab(t.key); setExpandedId(null); setThemeFilter("All"); setQuickFilter("All"); setSearchQuery(""); }}>
-                {t.label}
-                <span className="lst-tab-sub">{t.sub} · {ACTIVITIES.filter(a => a.gradeKey === t.key).length} activities</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* SMART TOOLBAR */}
-        <div className="lst-toolbar">
-          <div className="lst-toolbar-inner">
-            <div className="lst-search-wrap">
-              <span className="lst-search-icon">🔍</span>
-              <input 
-                type="text" 
-                className="lst-search-input" 
-                placeholder="Search by topic, conflict, or keyword (e.g., anger)..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            <div className="lst-quick-filters">
-              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ls-muted)', marginRight: '8px', textTransform: 'uppercase' }}>Quick Sort:</span>
-              {["All", "High Energy", "Low Prep"].map(qf => (
-                <button 
-                  key={qf} 
-                  className={`lst-qf-btn ${quickFilter === qf ? 'active' : ''}`}
-                  onClick={() => setQuickFilter(qf)}
-                >
-                  {qf === "High Energy" ? "⚡ " : qf === "Low Prep" ? "⏱️ " : ""}{qf}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="lst-toolbar-inner" style={{ paddingTop: '12px', borderTop: '1px dashed var(--ls-border)' }}>
-             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ls-muted)', marginRight: '8px', textTransform: 'uppercase' }}>WHO Skill:</span>
-             <div className="lst-filter-row" style={{ flex: 1, overflowX: 'auto', flexWrap: 'nowrap', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-              {ALL_THEMES.map(t => (
-                <button key={t} className={`lst-chip ${themeFilter === t ? "active" : ""}`} onClick={() => setThemeFilter(t)}>{t}</button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="lst-grid">
-
-          {/* SUGGESTED FLOW BANNER (Decision Support) */}
-          {!searchQuery && themeFilter === "All" && activeTab === 'lower' && (
-            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', border: '1px solid var(--ls-border)', borderLeft: '6px solid var(--ls-amber)', boxShadow: 'var(--ls-shadow-sm)', marginBottom: '12px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--ls-amber)', marginBottom: '8px' }}>✨ Suggested Session Flow</div>
-              <div style={{ fontSize: '18px', fontFamily: "'Fraunces', serif", fontWeight: 700, color: 'var(--ls-ink)' }}>The "Emotional Reset" Module</div>
-              <p style={{ fontSize: '14px', color: 'var(--ls-ink-soft)', marginTop: '8px', maxWidth: '800px' }}>Having trouble with classroom friction? Run this 3-part sequence over three sessions to build emotional vocabulary and empathy.</p>
-              <div className="lst-sugg-grid">
-                <div className="lst-sugg-card" onClick={() => setExpandedId("l_ce_1")}>
-                  <div style={{ fontSize: '11px', color: 'var(--ls-muted)', fontWeight: 700, marginBottom: '4px' }}>Session 1: Baseline</div>
-                  <div className="lst-sugg-title">1. The Emotion Thermometer</div>
-                </div>
-                <div className="lst-sugg-card" onClick={() => setExpandedId("l_sa_1")}>
-                  <div style={{ fontSize: '11px', color: 'var(--ls-muted)', fontWeight: 700, marginBottom: '4px' }}>Session 2: Deep Dive</div>
-                  <div className="lst-sugg-title">2. The Feelings Iceberg</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {filtered.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "80px 20px", color: "var(--ls-muted)" }}>
-              <div style={{ fontSize: '40px', marginBottom: '16px' }}>🔍</div>
-              <p style={{ fontSize: "18px", fontWeight: 700, color: 'var(--ls-ink)' }}>No activities found.</p>
-              <p style={{ fontSize: "14px", marginTop: '8px' }}>Try adjusting your search or clearing the filters.</p>
-              <button className="lst-action-btn secondary" style={{ margin: '24px auto 0' }} onClick={() => {setSearchQuery(''); setThemeFilter('All'); setQuickFilter('All');}}>Clear Filters</button>
-            </div>
-          ) : (
-            filtered.map((activity, index) => (
-              <ActivityCard
-                key={activity.id}
-                activity={activity}
-                displayNumber={index + 1}
-                isExpanded={expandedId === activity.id}
-                onToggle={() => handleToggle(activity.id)}
-                onPrint={handlePrint}
-                onLogSession={setLoggingActivity}
-              />
-            ))
-          )}
-
-        </div>
-      </div>
-    </>
-  );
 }
