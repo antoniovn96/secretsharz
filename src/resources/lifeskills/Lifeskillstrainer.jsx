@@ -180,7 +180,7 @@ function SessionLoggerModal({ activity, onClose, onSave }) {
       </div>
     </div>
   );
-},
+}
 // ─── ACTIVITY DATA BATCH 1 (Lower Secondary: Grades 5-7) ──────────────────────
 // Completely expanded with New Productivity Metadata
 const ACTIVITIES = [
