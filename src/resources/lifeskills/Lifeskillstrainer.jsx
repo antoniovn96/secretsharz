@@ -220,7 +220,7 @@ const ACTIVITIES = [
   // ──────────────────────── LOWER SECONDARY (Grade 5-7) ────────────────────────
   // ── WHO Skill 1: Self-Awareness ──
   {
-    id: "l_sa_1", title: "The Feelings Iceberg", themeShort: ["Self-awareness", "Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Individual", "Pairs", "Full class"], color: "#7C6FA0", colorPale: "#F0EDF8", imagePath: "/resources/lifeskills/placeholder.jpg",
+    id: "l_sa_1", title: "The Feelings Iceberg", themeShort: ["Self-awareness", "Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Individual", "Pairs", "Full class"], color: "#7C6FA0", colorPale: "#F0EDF8", imagePath: "/resources/lifeskills/thefeelingsiceberg/thefeelingsiceberg.jpg",
     energyLevel: "Low", complexity: "Moderate", rating: 4.8, usedBy: 342,
     bestUsedWhen: "Students are exhibiting unexplained anger or classroom conflicts are rising over 'small' things.",
     studentOutcomes: ["Identify the physiological markers of primary emotions.", "Distinguish between reactive anger and vulnerable sadness.", "Articulate hidden feelings safely to a peer."],
