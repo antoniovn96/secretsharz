@@ -133,6 +133,24 @@ const PAGE_CSS = `
 .lst-rate-btn:hover { border-color:var(--ls-amber); }
 .lst-rate-btn.active { background:var(--ls-amber-pale); border-color:var(--ls-amber); color:var(--ls-amber); }
 textarea.lst-input { width:100%; padding:16px; border:1px solid var(--ls-border); border-radius:12px; font-family:inherit; min-height:120px; margin-bottom:24px; resize:vertical; }
+
+.lst-tabs-wrap { background:white; border-bottom:1px solid var(--ls-border); }
+.lst-tabs { max-width:1200px; margin:0 auto; display:flex; }
+.lst-tab { flex:1; padding:20px; border:none; background:none; cursor:pointer; border-bottom:3px solid transparent; transition:all .2s; text-align:center; }
+.lst-tab.active { border-bottom-color:var(--ls-amber); background:var(--ls-amber-pale); }
+.lst-tab-sub { display:block; font-size:11px; color:var(--ls-muted); margin-top:4px; }
+
+.lst-chip { padding:6px 14px; border-radius:50px; background:var(--ls-sand); border:1px solid var(--ls-border); font-size:12px; cursor:pointer; white-space:nowrap; }
+.lst-chip.active { background:var(--ls-forest); color:white; border-color:var(--ls-forest); }
+.lst-filter-row { display:flex; gap:8px; align-items:center; }
+
+.lst-material-tag { padding:4px 10px; background:var(--ls-sand); border-radius:6px; font-size:11px; margin-right:6px; margin-bottom:6px; display:inline-block; }
+
+/* Print styles */
+@media print {
+  .no-print { display: none !important; }
+  .lst-page { background: white !important; }
+}
 `;
 
 // ─── HELPER COMPONENTS ────────────────────────────────────────────────────────
@@ -181,9 +199,25 @@ function SessionLoggerModal({ activity, onClose, onSave }) {
     </div>
   );
 }
-// ─── ACTIVITY DATA BATCH 1 (Lower Secondary: Grades 5-7) ──────────────────────
+
+// ─── CONSTANTS & DATA ─────────────────────────────────────────────────────────
+const ALL_THEMES = [
+  "All", 
+  "Self-awareness", 
+  "Empathy", 
+  "Critical thinking", 
+  "Creative thinking", 
+  "Decision making", 
+  "Coping with emotions", 
+  "Coping with stress", 
+  "Effective communication", 
+  "Interpersonal relationships", 
+  "Problem solving"
+];
+
 // Completely expanded with New Productivity Metadata
 const ACTIVITIES = [
+  // ──────────────────────── LOWER SECONDARY (Grade 5-7) ────────────────────────
   // ── WHO Skill 1: Self-Awareness ──
   {
     id: "l_sa_1", title: "The Feelings Iceberg", themeShort: ["Self-awareness", "Coping with emotions"], grade: "5–7", gradeKey: "lower", duration: "35 min", formats: ["Individual", "Pairs", "Full class"], color: "#7C6FA0", colorPale: "#F0EDF8", imagePath: "/resources/lifeskills/placeholder.jpg",
@@ -604,9 +638,8 @@ const ACTIVITIES = [
     watchOutFor: [ "Students lacking the empathy to truly inhabit the reversed role. Guide them through the feelings." ],
     variations: [ { tag: "Writing", text: "Have them write a letter to themselves from the perspective of the person affected by their choice." } ]
   },
-];
-// ──────────────────────── MIDDLE SECONDARY (Grade 8-10) ────────────────────────
-  
+
+  // ──────────────────────── MIDDLE SECONDARY (Grade 8-10) ────────────────────────
   // ── WHO Skill 1: Self-Awareness ──
   {
     id: "m_sa_1", title: "The Core Values Audit", themeShort: ["Self-awareness", "Decision making"], grade: "8–10", gradeKey: "middle", duration: "40 min", formats: ["Individual", "Pairs"], color: "#16A085", colorPale: "#D5F5F0", imagePath: "/resources/lifeskills/placeholder.jpg",
@@ -705,7 +738,6 @@ const ACTIVITIES = [
   },
 
   // ──────────────────────── SENIOR SECONDARY (Grade 11-12) ────────────────────────
-  
   // ── WHO Skill 1: Self-Awareness ──
   {
     id: "s_sa_1", title: "The Future Self Letter", themeShort: ["Self-awareness", "Coping with stress"], grade: "11–12", gradeKey: "upper", duration: "35 min", formats: ["Individual"], color: "#8E44AD", colorPale: "#F5EEF8", imagePath: "/resources/lifeskills/placeholder.jpg",
@@ -811,7 +843,7 @@ function PrintView({ activity, mode, onClose }) {
               <span className="lstp-phase-time">{phase.time}</span>
               <span className="lstp-phase-name">{phase.phase}</span>
             </div>
-            {phase.steps.map((s, si) => <PrintStep key={si} s={s} />)}
+            {phase.steps.map((s, si) => <Step key={si} s={s} />)}
           </div>
         ))}
 
@@ -1219,5 +1251,3 @@ export default function LifeSkillsTrainer({ navigate, onBack }) {
     </>
   );
 }
-// Combine the rest of the array in Part 2! 
-// Export default logic is also in Part 2.
