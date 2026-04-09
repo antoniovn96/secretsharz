@@ -55,15 +55,16 @@ const CSS = `
   .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--sage-pale);border:1.5px solid rgba(74,124,89,0.2);color:var(--sage);padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;letter-spacing:0.3px;margin-bottom:28px;}
   .hero-eyebrow-dot{width:8px;height:8px;background:var(--sage);border-radius:50%;position:relative;}
   .hero-eyebrow-dot::after{content:'';position:absolute;inset:-3px;border:1.5px solid var(--sage);border-radius:50%;animation:pulse-ring 2s ease-out infinite;}
-  .hero-h1{font-family:'Fraunces',serif;font-size:clamp(40px,5.5vw,72px);font-weight:700;line-height:1.1;color:var(--ink);letter-spacing:-1.5px;margin-bottom:20px;}
+  .hero-h1{font-family:'Fraunces',serif;font-size:clamp(40px,5.5vw,72px);font-weight:700;line-height:1.1;color:var(--ink);letter-spacing:-1.5px;margin-bottom:16px;}
   .hero-h1 .underline-word{position:relative;display:inline-block;color:var(--sage);}
-  .hero-sub{font-size:clamp(16px, 2vw, 18px);color:var(--ink-soft);line-height:1.6;max-width:650px;font-weight:500;margin-bottom:24px;}
+  .hero-sub{font-size:clamp(16px, 2vw, 18px);color:var(--ink-soft);line-height:1.6;max-width:650px;font-weight:500;}
+  .hero-sub-main{font-size:clamp(18px, 2.5vw, 22px);color:var(--ink-soft);line-height:1.4;max-width:650px;font-weight:400;margin-bottom:24px; font-style: italic;}
   
   .hero-core-truth { background: rgba(74,124,89,0.05); border-left: 4px solid var(--sage); padding: 18px 24px; border-radius: 0 12px 12px 0; margin-bottom: 36px; font-size: 15px; color: var(--ink-soft); max-width: 600px;}
   .hero-core-truth p { margin:0 0 6px 0; }
   .hero-core-truth p:last-child { margin: 0; }
 
-  .hero-actions{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom: 32px; width: 100%;}
+  .hero-actions{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-bottom: 32px; width: 100%;}
   .btn-primary{background:var(--sage);color:white;padding:16px 36px;border-radius:50px;font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(74,124,89,0.35);transition:all 0.25s;}
   .btn-primary:hover{background:var(--moss);transform:translateY(-2px);box-shadow:0 12px 32px rgba(74,124,89,0.4);}
   .btn-ghost{background:transparent;color:var(--ink-soft);padding:16px 28px;border-radius:50px;font-size:15px;font-weight:700;border:2px solid var(--border);cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;align-items:center;gap:8px;}
@@ -103,11 +104,17 @@ const CSS = `
   .core-truth-bullet:hover { transform: scale(1.02); border-color: var(--sage); }
   .core-truth-icon { background: var(--sage-pale); color: var(--sage); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
 
+  /* ── PAIN MIRROR SECTION ── */
+  .pain-mirror { padding: 80px 48px; background: var(--sand); text-align: center; }
+  .pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 1000px; margin: 40px auto; }
+  .pain-card { background: white; border: 1px solid var(--border); border-radius: var(--r-md); padding: 32px 24px; font-size: 18px; color: var(--ink-soft); font-weight: 600; font-style: italic; box-shadow: var(--shadow-sm); }
+  .pain-card::before { content: '"'; font-family: 'Fraunces', serif; font-size: 32px; color: var(--sage-light); display: block; margin-bottom: 10px; line-height: 0.5; }
+
   /* ── JOURNEY VISUALIZATION ── */
   .journey-container { display: flex; align-items: center; justify-content: space-between; overflow-x: auto; padding: 20px 0 40px; gap: 16px; scrollbar-width: none; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
   .journey-container::-webkit-scrollbar { display: none; }
-  .journey-step { flex: 1; min-width: 150px; text-align: center; background: white; padding: 28px 20px; border-radius: 20px; border: 1px solid var(--border); position: relative; z-index: 2; box-shadow: var(--shadow-sm); scroll-snap-align: center; }
-  .journey-arrow { color: var(--sage); font-weight: bold; font-size: 24px; flex-shrink: 0; }
+  .journey-step { flex: 1; min-width: 160px; text-align: center; background: white; padding: 28px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2; box-shadow: 0 8px 32px rgba(0,0,0,0.2); scroll-snap-align: center; }
+  .journey-arrow { color: var(--sage-light); font-weight: bold; font-size: 24px; flex-shrink: 0; }
   .journey-emoji { font-size: 36px; margin-bottom: 16px; }
   .journey-label { font-size: 16px; font-weight: 700; color: var(--ink); }
 
@@ -141,9 +148,13 @@ const CSS = `
   .pillar-cta{margin-top:28px;padding-top:18px;border-top:1px solid var(--border);font-size:15px;font-weight:700;color:var(--sage);cursor:pointer;display:flex;align-items:center;gap:6px; transition: gap 0.2s;}
   .pillar-cta:hover{color:var(--moss); gap:10px;}
 
-  /* ── Social Proof ── */
+  /* ── Social Proof & Stats ── */
   .social-proof-section{padding:100px 0;overflow:hidden;background:linear-gradient(180deg,transparent,var(--sand));}
-  .sp-header{text-align:center;font-size:22px;font-family:'Fraunces',serif;font-weight:700;color:var(--ink);margin-bottom:48px; padding: 0 20px;}
+  .stats-strip { display: flex; justify-content: center; gap: 60px; flex-wrap: wrap; margin-bottom: 60px; padding: 0 24px; }
+  .stat-box { text-align: center; }
+  .stat-box-num { font-family: 'Fraunces', serif; font-size: 48px; font-weight: 700; color: var(--sage); line-height: 1; margin-bottom: 8px; }
+  .stat-box-label { font-size: 14px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 1px; }
+
   .sp-slider{display:flex;gap:24px;padding:0 48px 24px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none; -webkit-overflow-scrolling: touch;}
   .sp-slider::-webkit-scrollbar{display:none;}
   .sp-card{background:white;padding:36px;border-radius:var(--r-md);box-shadow:var(--shadow-sm);min-width:360px;max-width:360px;scroll-snap-align:center;flex-shrink:0;border:1px solid var(--border);}
@@ -165,12 +176,14 @@ const CSS = `
 
   /* ── Privacy & Objections ── */
   .safe-section{background:linear-gradient(135deg,var(--moss) 0%,#1E3D2A 100%);padding:120px 48px;text-align:center;position:relative;overflow:hidden;}
-  .safe-content{position:relative;z-index:1;max-width:850px;margin:0 auto;}
-  .objection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; margin: 50px 0 80px; }
-  .objection-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 32px 24px; text-align: center; color: white; transition: background 0.2s; }
-  .objection-card:hover { background: rgba(255,255,255,0.1); }
-  .objection-card span { font-size: 36px; display: block; margin-bottom: 16px; }
-  .objection-card h4 { font-size: 17px; font-weight: 700; margin: 0; color: white; }
+  .safe-content{position:relative;z-index:1;max-width:900px;margin:0 auto;}
+  
+  .aha-headline { font-size: clamp(40px, 5vw, 64px); color: white; font-family: 'Fraunces', serif; line-height: 1.1; margin-bottom: 20px;}
+  .objection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin: 60px 0 80px; }
+  .objection-card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 40px 24px; text-align: center; color: white; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+  .objection-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+  .objection-card span { font-size: 56px; display: block; margin-bottom: 24px; }
+  .objection-card h4 { font-size: 20px; font-weight: 700; margin: 0; color: white; }
   
   .privacy-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;text-align:left;margin-bottom:60px;}
   .privacy-item{background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05);padding:32px;border-radius:20px;display:flex;align-items:flex-start;gap:20px;}
@@ -187,33 +200,34 @@ const CSS = `
   .quiz-entry-strip{background:linear-gradient(135deg,var(--lav-pale),var(--peach-pale));border:1.5px solid rgba(124,111,160,0.2);border-radius:var(--r-md);padding:32px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;max-width:1100px;margin:0 auto 40px;flex-wrap:wrap;}
   .quiz-entry-btn{background:var(--lavender);color:white;border:none;padding:16px 32px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;white-space:nowrap;}
   
-  /* ── MOBILE ENHANCEMENTS (The Fixes) ── */
+  /* ── MOBILE ENHANCEMENTS ── */
   @media(max-width:900px){
     .ss-hero{padding: 40px 24px; min-height: auto; text-align: center;}
     .hero-content{align-items: center; text-align: center;}
     .hero-eyebrow{margin: 0 auto 24px;}
-    .hero-h1{font-size: clamp(38px, 10vw, 56px); letter-spacing: -1px;}
-    .hero-sub{font-size: 17px; margin-bottom: 32px;}
+    .hero-h1{font-size: clamp(42px, 10vw, 56px); letter-spacing: -1px;}
+    .hero-sub{font-size: 16px;}
     
-    /* Make Core Truth stack nicely */
-    .hero-core-truth{border-left: none; border-top: 4px solid var(--sage); border-radius: 16px; padding: 24px;}
+    .hero-core-truth{border-left: none; border-top: 4px solid var(--sage); border-radius: 16px; padding: 24px; text-align: left;}
     
-    /* Buttons take full width on mobile */
-    .hero-actions{flex-direction: column; gap: 16px; width: 100%; max-width: 400px;}
-    .btn-primary, .btn-ghost{width: 100%; justify-content: center;}
+    .hero-actions{flex-direction: column; gap: 16px; width: 100%; max-width: 400px; margin: 0 auto 32px; align-items: center;}
+    .hero-actions > div { align-items: center !important; width: 100%; }
+    .btn-primary, .btn-ghost{width: 100%; justify-content: center; align-self: center !important;}
+    .hero-actions p { margin-left: 0 !important; text-align: center !important;}
     
     .trust-signals{justify-content: center;}
     .hero-right{display:none;}
     
-    .section, .section-alt{padding: 64px 24px;}
+    .section, .section-alt, .pain-mirror{padding: 64px 24px;}
     .section-h2{font-size: 32px;}
+    .aha-headline {font-size: 36px;}
     
     .relief-grid { grid-template-columns: 1fr; }
+    .pain-grid { grid-template-columns: 1fr; }
     
     .core-truth-bullets { padding: 0; }
     .core-truth-bullet { flex-direction: column; text-align: center; gap: 16px; padding: 24px; }
     
-    /* Journey elements scroll smoothly */
     .journey-container { padding-bottom: 20px; }
     
     .share-item { flex-direction: column; align-items: center; text-align: center; padding: 24px; }
@@ -235,6 +249,7 @@ const CSS = `
     
     .modal { padding: 32px 24px; max-height: 90vh; overflow-y: auto;}
     .sp-slider{padding:0 24px 24px;}
+    .stats-strip { gap: 30px; }
   }
 `;
 
@@ -258,8 +273,15 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
   return (
     <>
       <Head>
-        <title>Secret Sharz | Anonymous Mental Health Support for Youth</title>
-        <meta name="description" content="A safe, anonymous space for students to track moods, share thoughts, and access professional crisis support and career guidance." />
+        <title>Secret Sharz | #1 Anonymous Student Mental Health & Career Platform</title>
+        <meta name="description" content="India's top anonymous emotional safe space and career discovery platform for students. Get free emotional first aid, vent anonymously, and plan your career with VidyaVantage." />
+        <meta name="keywords" content="student mental health, anonymous venting, career guidance, Indian students, POCSO aligned, emotional support, VidyaVantage, Holland RIASEC" />
+        <meta property="og:title" content="Secret Sharz | Anonymous Mental Health Support & Career Guidance" />
+        <meta property="og:description" content="Fix your mind first. Then fix your future. Anonymous emotional safe space + career discovery platform for Indian students." />
+        <meta property="og:image" content="/secret-sharz-logo.png" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <link rel="icon" href="/android-chrome-192x192.png" />
       </Head>
 
       {!currentUser && (
@@ -268,30 +290,37 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
         </div>
       )}
 
-      {/* 1. HERO SECTION (Rewritten for Mobile) */}
+      {/* 1. HERO SECTION */}
       <section className="ss-hero">
         <div className="hero-bg-blob blob-1" /><div className="hero-bg-blob blob-2" />
         <div className="hero-content">
           <div className="hero-eyebrow anim-up"><div className="hero-eyebrow-dot" />Safe · Anonymous · For Indian Youth</div>
-          <h1 className="hero-h1 anim-up-1">The things you can't tell anyone... <br /><span className="underline-word">are exactly what's holding back your future.</span></h1>
-          <p className="hero-sub anim-up-2">
-            An anonymous emotional safe space + career discovery platform for Indian students.
+          <h1 className="hero-h1 anim-up-1">Fix your mind first. <br /><span className="underline-word">Then fix your future.</span></h1>
+          
+          <p className="hero-sub-main anim-up-2">
+            The things you can't tell anyone... are exactly what's holding back your future.
+          </p>
+          <p className="hero-sub anim-up-2" style={{fontSize: '16px', fontWeight: '600'}}>
+            Anonymous emotional support + career guidance platform for students.
           </p>
           
-          {/* CORE TRUTH ABOVE THE FOLD */}
           <div className="hero-core-truth anim-up-3">
             <p><strong>You can't make life decisions when your mind is overwhelmed.</strong></p>
             <p>We help you clear your mind first — then guide your future.</p>
           </div>
 
           <div className="hero-actions anim-up-4">
-            <button className="btn-primary" onClick={() => navigate(currentUser ? '/dashboard' : '/auth')}>
-              Start feeling better now →
-            </button>
-            <button className="btn-ghost" onClick={() => setModal('talk')}>💬 I Need to Talk to Someone</button>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+              <button className="btn-primary" onClick={() => navigate(currentUser ? '/dashboard' : '/auth')}>
+                Start feeling better in 30 seconds →
+              </button>
+              <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px', marginLeft: '16px' }}>
+                No login required to start.
+              </p>
+            </div>
+            <button className="btn-ghost" onClick={() => setModal('talk')} style={{ alignSelf: 'flex-start' }}>💬 I Need to Talk to Someone</button>
           </div>
 
-          {/* TRUST SIGNALS */}
           <div className="trust-signals anim-up-4">
             <span>🧑‍⚕️ Built by school counsellors</span>
             <span>🛡️ Aligned with POCSO</span>
@@ -305,11 +334,11 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
         </div>
       </section>
 
-      {/* 2. INSTANT RELIEF SECTION (NEW) */}
+      {/* 2. INSTANT RELIEF SECTION */}
       <section className="section-alt">
         <div className="section-header" style={{ marginBottom: '20px' }}>
-          <h2 className="section-h2">Feel better in <em>under 60 seconds.</em></h2>
-          <p className="section-p">No long sign-ups. No therapy jargon. Just immediate tools to regulate your nervous system right now.</p>
+          <h2 className="section-h2">Feeling overwhelmed <em>right now?</em></h2>
+          <p className="section-p">Try this. It works in under 60 seconds.</p>
         </div>
         <div className="relief-grid" style={{ maxWidth: '900px', margin: '0 auto 40px' }}>
           <div className="relief-card">
@@ -355,6 +384,18 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
         </div>
       </section>
 
+      {/* 7. PAIN MIRROR SECTION (NEW) */}
+      <section className="pain-mirror">
+        <h2 className="section-h2">If this sounds like you, <em>you're not alone.</em></h2>
+        <div className="pain-grid">
+          <div className="pain-card">I feel behind everyone else.</div>
+          <div className="pain-card">I don't know what I'm doing with my life.</div>
+          <div className="pain-card">I'm tired but I can't rest.</div>
+          <div className="pain-card">I can't talk to anyone about this.</div>
+        </div>
+        <button className="btn-primary" style={{marginTop: '20px'}} onClick={() => navigate(currentUser ? '/dashboard' : '/auth')}>Start here →</button>
+      </section>
+
       {/* 4. S.H.A.R.E METHODOLOGY */}
       <section className="section-alt">
         <div className="section-header" style={{ marginBottom: '40px' }}>
@@ -374,25 +415,25 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
         </div>
       </section>
 
-      {/* 7. JOURNEY VISUALIZATION (NEW) */}
+      {/* JOURNEY VISUALIZATION */}
       <section className="section" style={{ background: 'var(--ink)', color: 'white', textAlign: 'center', padding: '80px 24px' }}>
         <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', marginBottom: '40px' }}>The Secret Sharz Transformation</h2>
         <div className="journey-container" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <div className="journey-step"><div className="journey-emoji">🌪️</div><div className="journey-label">Overwhelmed</div></div>
+          <div className="journey-step"><div className="journey-emoji">😵</div><div className="journey-label">Overwhelmed</div></div>
           <div className="journey-arrow">→</div>
-          <div className="journey-step"><div className="journey-emoji">🗣️</div><div className="journey-label">Vent</div></div>
+          <div className="journey-step"><div className="journey-emoji">🗣️</div><div className="journey-label">Finally heard</div></div>
           <div className="journey-arrow">→</div>
           <div className="journey-step"><div className="journey-emoji">🌿</div><div className="journey-label">Calm</div></div>
           <div className="journey-arrow">→</div>
-          <div className="journey-step"><div className="journey-emoji">🧭</div><div className="journey-label">Discover</div></div>
+          <div className="journey-step"><div className="journey-emoji">🧭</div><div className="journey-label">Clear</div></div>
           <div className="journey-arrow">→</div>
-          <div className="journey-step"><div className="journey-emoji">🎯</div><div className="journey-label">Decide</div></div>
+          <div className="journey-step"><div className="journey-emoji">🎯</div><div className="journey-label">Confident</div></div>
           <div className="journey-arrow">→</div>
-          <div className="journey-step"><div className="journey-emoji">🚀</div><div className="journey-label">Act</div></div>
+          <div className="journey-step"><div className="journey-emoji">🚀</div><div className="journey-label">In control</div></div>
         </div>
       </section>
 
-      {/* 5. THE PILLARS (Rewritten) */}
+      {/* 5. THE PILLARS */}
       <section className="section-alt">
         <div className="section-header">
           <h2 className="section-h2">Everything you need to <em>feel better</em> — in one place.</h2>
@@ -410,7 +451,7 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
         </div>
       </section>
 
-      {/* 9. B2B PITCH (Moved Up) */}
+      {/* B2B PITCH */}
       <section className="b2b-section" style={{ background: 'var(--moss)' }}>
         <div className="section-eyebrow" style={{ color:'var(--sage-pale)' }}>Institutional Partnerships</div>
         <h2 className="section-h2" style={{ color:'white' }}>For Schools & Counselors: <em>Proactive, Not Reactive.</em></h2>
@@ -423,9 +464,14 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
         <button className="btn-primary" style={{ marginTop:'40px', background:'white', color:'var(--moss)' }} onClick={() => setModal('talk')}>Schedule a School Demo</button>
       </section>
 
-      {/* 6. SOCIAL PROOF */}
+      {/* 6. SOCIAL PROOF & STATS */}
       <section className="social-proof-section" style={{ background: 'white', paddingTop: '100px' }}>
-        <div className="sp-header">Join a growing community of 12,000+ students finding their voice.</div>
+        <div className="stats-strip">
+          <div className="stat-box"><div className="stat-box-num">12,000+</div><div className="stat-box-label">Students</div></div>
+          <div className="stat-box"><div className="stat-box-num">50,000+</div><div className="stat-box-label">Emotions Shared</div></div>
+          <div className="stat-box"><div className="stat-box-num">1,00,000+</div><div className="stat-box-label">Calming Sessions</div></div>
+        </div>
+        <div className="sp-header">Join a growing community finding their voice.</div>
         <div className="sp-slider">
           <div className="sp-card"><div className="sp-stars">★★★★★</div><div className="sp-quote">"I act strong in school but cry at night. I finally felt heard here."</div><div className="sp-author">Class 11 Student (Science)</div></div>
           <div className="sp-card"><div className="sp-stars">★★★★★</div><div className="sp-quote">"The 4-7-8 breathing tool actually stopped my panic attack before my physics board exam."</div><div className="sp-author">Class 12 Student (CBSE)</div></div>
@@ -434,7 +480,7 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
         </div>
       </section>
 
-      {/* 8. QUIZ */}
+      {/* QUIZ */}
       <section className="section-alt" style={{ paddingTop: '20px', paddingBottom: '100px' }}>
         <div className="quiz-entry-strip" style={{ margin: '0 auto' }}>
           <div className="quiz-entry-left">
@@ -476,11 +522,11 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
         </div>
       </section>
 
-      {/* 10 & 11. PRIVACY, OBJECTIONS & FINAL CTA */}
+      {/* AHA MOMENT, PRIVACY & FINAL CTA */}
       <section className="safe-section" style={{ background: 'var(--ink)' }}>
         <div className="safe-content">
           <div className="section-eyebrow" style={{ color: 'var(--sage)' }}>THE ANONYMOUS ADVANTAGE</div>
-          <h2 className="section-h2" style={{ color: 'white' }}>Why Secret Sharz works when <em>talking to others doesn't.</em></h2>
+          <div className="aha-headline">Why Secret Sharz works when <em>talking to others doesn't.</em></div>
           
           <div className="objection-grid">
             <div className="objection-card"><span>⚖️</span><h4>No Judgment</h4></div>
@@ -501,8 +547,9 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
             <div className="privacy-item"><span>🇮🇳</span><div><h4>Built under strict Indian child safety laws.</h4><p>POCSO aligned with human moderation.</p></div></div>
           </div>
           
-          <div style={{ marginTop: '80px', padding: '40px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px' }}>
-            <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '36px', color: 'white', marginBottom: '24px' }}>You've carried this alone long enough.</h2>
+          <div style={{ marginTop: '80px', padding: '60px 40px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '32px' }}>
+            <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 'clamp(32px, 5vw, 44px)', color: 'white', marginBottom: '10px', lineHeight: 1.2 }}>You've carried this alone for too long.</h2>
+            <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: 'clamp(24px, 3vw, 32px)', color: 'var(--sage-light)', marginBottom: '36px', fontWeight: '400' }}>You don't have to anymore.</h3>
             <button className="btn-primary" style={{ padding: '20px 48px', fontSize: '18px', width: '100%', maxWidth: '400px' }} onClick={() => navigate(currentUser ? '/dashboard' : '/auth')}>
               Start your safe space now →
             </button>
@@ -513,7 +560,7 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
   );
 }
 
-// ── APP ROUTER COMPONENT (Unchanged) ──────────────────────────────────────────
+// ── APP ROUTER COMPONENT ──────────────────────────────────────────
 export default function App() {
   const [currentPath, setCurrentPath] = useState(() => {
     if (typeof window !== 'undefined') {
