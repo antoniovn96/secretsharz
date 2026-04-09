@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import POCSORStudents from './resources/pocso/POCSORStudents';
 import Lifeskillstrainer from './resources/lifeskills/Lifeskillstrainer';
 import PoshResources from './resources/posh/poshresources';
+import MentalHealthFirstAid from './mentalhealth/MentalHealthFirstAid';
 
 // ── RESOURCE LIBRARY CSS ──────────────────────────────────────────────────
 const RESOURCE_CSS = `
@@ -191,7 +192,27 @@ const RESOURCE_LIST = [
     isNew: true,
     component: PoshResources,
     pdfLink: null 
-  }
+  },
+  {
+  id: 'mh-first-aid',
+  slug: 'mental-health-first-aid',
+  title: 'Mental Health & Emotional First Aid',
+  subtitle: 'Immediate relief & maintenance tools',
+  topic: 'Mental Health',
+  audience: ['Students', 'Teachers', 'Counsellors'],
+  ageGroups: ['All Ages'],
+  formats: ['Interactive', 'PDF'],
+  languages: ['English'],
+  icon: '🩹',
+  color: '#7C6FA0', 
+  colorPale: '#F0EDF8',
+  accentColor: '#A89DD0',
+  description: 'A critical toolkit for emotional survival. Includes the Grounding Toolkit, Emotion Wheel, In My Control worksheets, Exam Anxiety guides, and a National Crisis Directory.',
+  lastUpdated: 'April 2026',
+  isNew: true,
+  component: MentalHealthFirstAid,
+  pdfLink: null 
+}
 ];
 
 const ALL_AUDIENCES = ['Students', 'Parents', 'Teachers', 'Counsellors', 'NGO Workers', 'Staff', 'Administration'];
