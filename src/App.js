@@ -1355,3 +1355,4 @@ function WallPage({ navigate }) {
     </div>
   );
 }
+
