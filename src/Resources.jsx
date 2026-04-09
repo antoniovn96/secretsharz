@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import POCSORStudents from './resources/pocso/POCSORStudents';
 import Lifeskillstrainer from './resources/lifeskills/Lifeskillstrainer';
 import PoshResources from './resources/posh/poshresources';
-import MentalHealthFirstAid from './mentalhealth/MentalHealthFirstAid';
+import MentalHealthFirstAid from './resources/mentalhealth/MentalHealthFirstAid';
 
 // ── RESOURCE LIBRARY CSS ──────────────────────────────────────────────────
 const RESOURCE_CSS = `
