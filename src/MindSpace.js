@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-// ─── CSS ─────────────────────────────────────────────────────────────────────
 const PAGE_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
   .mh-page { min-height: 100vh; background: var(--warm-white, #FDFCFA); font-family: 'Plus Jakarta Sans', sans-serif; padding-bottom: 120px; position: relative; }
   
-  /* ── TOPBAR & STREAK ── */
   .mh-topbar { background: var(--ink, #1E2820); color: white; height: 56px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 300; border-bottom: 3px solid var(--lavender, #7C6FA0); }
   .mh-back { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 700; background: none; border: none; cursor: pointer; font-family: inherit; padding: 0; transition: color 0.2s; }
   .mh-back:hover { color: white; }
@@ -14,7 +12,6 @@ const PAGE_CSS = `
   
   .mh-streak-banner { background: var(--lavender, #7C6FA0); color: white; text-align: center; padding: 10px 20px; font-size: 14px; font-weight: 600; letter-spacing: 0.5px; z-index: 290; }
 
-  /* ── HERO & MEMORY ── */
   .mh-hero { background: linear-gradient(135deg, var(--ink, #1E2820) 0%, #2A2438 100%); padding: 80px 48px 100px; position: relative; overflow: hidden; text-align: center; color: white; }
   .mh-hero::before { content: ''; position: absolute; top: -50px; left: -50px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(124,111,160,0.15), transparent 70%); border-radius: 50%; }
   .mh-hero-inner { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
@@ -27,7 +24,6 @@ const PAGE_CSS = `
   .mh-h1 em { font-style: italic; color: #B3A4D6; }
   .mh-sub { font-size: 18px; color: rgba(255,255,255,0.8); line-height: 1.6; font-weight: 400; max-width: 600px; margin: 0 auto; }
 
-  /* ── SPLIT START BOX ── */
   .mh-start-container { max-width: 700px; margin: -50px auto 40px; position: relative; z-index: 20; padding: 0 24px; }
   .mh-start-box { background: white; border-radius: 24px; padding: 32px; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,0.12); border: 3px solid var(--lavender, #7C6FA0); }
   .mh-start-box h3 { font-family: 'Fraunces', serif; font-size: 24px; margin: 0 0 8px; color: var(--ink); }
@@ -35,25 +31,22 @@ const PAGE_CSS = `
   .mh-start-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
   .mh-start-actions button { flex: 1; min-width: 250px; padding: 16px; font-size: 15px; }
 
-  /* ── QUICK CALM INLINE ── */
   .quick-calm-inline { background: #EAF4FA; border: 1px solid rgba(41,128,185,0.2); border-radius: 24px; padding: 32px; max-width: 700px; margin: 0 auto 40px; text-align: center; display: none; }
   .quick-calm-inline.active { display: block; animation: fadeIn 0.4s ease; }
   .breathing-circle { width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(135deg, #5B9EBF, #A89DD0); margin: 24px auto; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-family: 'Fraunces', serif; font-size: 24px; box-shadow: 0 8px 32px rgba(91,158,191,0.3); transition: all 0.5s ease; }
   
   @keyframes breatheCycle {
-    0% { transform: scale(1); } /* Start */
-    21% { transform: scale(1.5); } /* Inhale 4s (4/19 = 21%) */
-    58% { transform: scale(1.5); } /* Hold 7s (11/19 = 58%) */
-    100% { transform: scale(1); } /* Exhale 8s (19/19 = 100%) */
+    0% { transform: scale(1); }
+    21% { transform: scale(1.5); }
+    58% { transform: scale(1.5); }
+    100% { transform: scale(1); }
   }
   .breathing-circle.animating { animation: breatheCycle 19s infinite linear; }
 
-  /* ── VALIDATION & HUMAN TOUCH ── */
   .mh-validation { text-align: center; max-width: 600px; margin: 0 auto 48px; padding: 0 24px; color: var(--ink-soft); font-size: 16px; line-height: 1.6; }
   .mh-validation strong { color: var(--ink); font-family: 'Fraunces', serif; font-size: 20px; display: block; margin: 8px 0; }
   .mh-human-touch { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: var(--muted); margin-top: 16px; font-weight: 600; }
 
-  /* ── ROULETTE (SLOT MACHINE) ── */
   .roulette-card { background: white; border-radius: 20px; border: 2px dashed var(--lavender); padding: 32px; text-align: center; margin: 0 auto 48px; max-width: 700px; box-shadow: 0 8px 24px rgba(0,0,0,0.04); }
   .roulette-window { height: 80px; overflow: hidden; position: relative; background: var(--sand); border-radius: 16px; margin: 24px auto; width: 80%; border: 1px solid var(--border); box-shadow: inset 0 4px 12px rgba(0,0,0,0.05); }
   .roulette-track { display: flex; flex-direction: column; transition: transform cubic-bezier(0.15, 0.85, 0.25, 1); }
@@ -62,14 +55,11 @@ const PAGE_CSS = `
   .roulette-item.good { color: var(--lavender); }
   .roulette-msg { background: #F7F3ED; padding: 16px; border-radius: 12px; color: var(--ink); font-weight: 600; font-size: 15px; margin-top: 24px; animation: floatUp 0.4s ease; border-left: 4px solid var(--lavender); }
 
-  /* ── GRID & CARDS ── */
   .mh-container { max-width: 1100px; margin: 0 auto; padding: 0 48px; position: relative; z-index: 10; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
-  
   .mh-card { background: white; border-radius: 20px; border: 1px solid var(--border, rgba(74,124,89,0.15)); box-shadow: 0 8px 24px rgba(0,0,0,0.04); padding: 32px; transition: all 0.3s; display: flex; flex-direction: column; position: relative; overflow: hidden; }
   .mh-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,0.1); border-color: var(--lavender, #7C6FA0); }
   .mh-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; }
   
-  /* Danger/Crisis Overrides */
   @keyframes pulseRed {
     0% { box-shadow: 0 0 0 0 rgba(192,57,43,0.4); }
     70% { box-shadow: 0 0 0 15px rgba(192,57,43,0); }
@@ -77,7 +67,6 @@ const PAGE_CSS = `
   }
   .mh-card.crisis { border: 2px solid #C0392B; background: #FFFDFD; animation: pulseRed 2.5s infinite; grid-column: 1 / -1; }
   .mh-card.crisis::before { background: linear-gradient(90deg, #C0392B, #E74C3C); }
-  
   .mh-card.toolkit::before { background: linear-gradient(90deg, var(--sage, #4A7C59), #87D09E); }
   .mh-card.wheel::before { background: linear-gradient(90deg, var(--lavender, #7C6FA0), #A89DD0); }
   .mh-card.control::before { background: linear-gradient(90deg, var(--sky, #5B9EBF), #89C4E0); }
@@ -87,7 +76,6 @@ const PAGE_CSS = `
   .mh-crisis-label { color: #C0392B; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
   .mh-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; color: var(--ink, #1E2820); margin-bottom: 12px; line-height: 1.2; }
   .mh-desc { font-size: 15px; color: var(--ink-soft, #3D4A40); line-height: 1.6; margin-bottom: 24px; flex: 1; }
-  
   .mh-meta { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
   .mh-badge { padding: 4px 12px; border-radius: 50px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: var(--sand, #F7F3ED); color: var(--muted, #7A8A7D); }
   .mh-badge.time { background: #EAF4FA; color: #2980B9; border: 1px solid rgba(41,128,185,0.2); }
@@ -101,7 +89,6 @@ const PAGE_CSS = `
   .mh-btn-danger { background: #C0392B; color: white; }
   .mh-btn-danger:hover { background: #A93226; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(192,57,43,0.3); }
 
-  /* ── RETURN HOOK & EXIT SAFETY ── */
   .mh-return-hook { max-width: 800px; margin: 80px auto 0; padding: 48px; border-top: 1px solid var(--border); text-align: center; }
   .mh-return-hook h3 { font-family: 'Fraunces', serif; font-size: 24px; color: var(--ink); margin-bottom: 24px; }
   .mh-hook-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
@@ -110,30 +97,35 @@ const PAGE_CSS = `
   
   .mh-exit-safety { text-align: center; padding: 40px 24px; color: var(--muted); font-size: 15px; }
 
-  /* ── TOAST FEEDBACK ── */
   .mh-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--ink); color: white; padding: 16px 24px; border-radius: 50px; font-weight: 600; font-size: 14px; z-index: 2000; opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 12px 24px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; }
   .mh-toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-  /* ── STICKY MOBILE CTA ── */
   .sticky-mobile-cta { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 16px 24px; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); z-index: 1000; border-top: 1px solid var(--border); }
   .sticky-mobile-cta .mh-btn { width: 100%; padding: 16px; font-size: 16px; }
 
-  /* ── MODALS ── */
   .mh-modal-overlay { position: fixed; inset: 0; background: rgba(30,40,32,0.7); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
-  .mh-modal { background: white; border-radius: 24px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 24px 48px rgba(0,0,0,0.2); animation: floatUp 0.3s ease; }
+  .mh-modal { background: white; border-radius: 24px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 24px 48px rgba(0,0,0,0.2); animation: floatUp 0.3s ease; }
   .mh-modal-header { padding: 32px 32px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: white; z-index: 10; display: flex; justify-content: space-between; align-items: flex-start; }
   .mh-modal-title { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 700; color: var(--ink); margin: 0; }
   .mh-modal-close { background: var(--sand); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
   .mh-modal-close:hover { background: #EAE5DE; color: var(--ink); }
   .mh-modal-body { padding: 32px; }
 
-  /* Crisis Directory Specifics */
+  .ew-container { display: flex; flex-direction: column; gap: 24px; }
+  .ew-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .ew-back-btn { background: none; border: none; font-size: 14px; font-weight: 600; color: var(--lavender); cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 0; transition: 0.2s; }
+  .ew-core-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .ew-core-card { padding: 24px; border-radius: 16px; color: white; cursor: pointer; text-align: center; transition: 0.3s; border: none; font-family: inherit; }
+  .ew-chip-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+  .ew-chip { padding: 12px 20px; border-radius: 50px; font-size: 15px; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: 0.2s; font-family: inherit; }
+  .ew-breadcrumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--muted); background: var(--sand); padding: 12px 20px; border-radius: 12px; margin-bottom: 24px; }
+  .ew-result-box { background: white; border: 2px solid; padding: 24px; border-radius: 16px; margin-top: 16px; animation: fadeIn 0.3s ease; }
+
   .crisis-list { display: flex; flex-direction: column; gap: 16px; }
   .crisis-item { background: #FFF0F0; border: 1px solid rgba(192,57,43,0.2); padding: 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
   .crisis-info h4 { margin: 0 0 4px 0; font-size: 18px; color: #C0392B; }
   .crisis-info p { margin: 0; font-size: 13px; color: var(--ink-soft); }
   .crisis-call-btn { background: #C0392B; color: white; text-decoration: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
-  .crisis-call-btn:hover { background: #A93226; transform: scale(1.05); }
 
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes floatUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -144,6 +136,7 @@ const PAGE_CSS = `
     .mh-container { padding: 0 24px; grid-template-columns: 1fr; gap: 32px; }
     .mh-modal-header, .mh-modal-body { padding: 24px; }
     .crisis-item { flex-direction: column; align-items: flex-start; }
+    .ew-core-grid { grid-template-columns: 1fr; }
     .mh-start-container { margin-top: -60px; }
     .mh-actions { flex-direction: column; width: 100%; }
     .mh-actions .mh-btn { width: 100%; }
@@ -151,7 +144,6 @@ const PAGE_CSS = `
   }
 `;
 
-// ─── DATA: ROULETTE (30 EMOTIONS) ─────────────────────────────────────────────
 const ROULETTE_DATA = [
   { text: "Anxious", isGood: false }, { text: "Joyful", isGood: true, msg: "Your capacity for joy is beautiful. Savor it." },
   { text: "Overwhelmed", isGood: false }, { text: "Peaceful", isGood: true, msg: "Take a deep breath and anchor yourself into this peace." },
@@ -173,8 +165,15 @@ const ROULETTE_DATA = [
 const SPIN_MULTIPLIER = 4; 
 const TRACK_ITEMS = Array(SPIN_MULTIPLIER).fill(ROULETTE_DATA).flat();
 
+const EMOTION_DATA = {
+  Anger: { color: '#E8845A', children: { Frustrated: ["Irritated", "Annoyed"], Mad: ["Furious", "Resentful"], Bitter: ["Indignant", "Violated"] } },
+  Fear: { color: '#7C6FA0', children: { Anxious: ["Overwhelmed", "Stressed"], Insecure: ["Inferior", "Worthless"], Scared: ["Helpless", "Panicked"] } },
+  Surprise: { color: '#5B9EBF', children: { Excited: ["Energetic", "Thrilled"], Amazed: ["Astonished", "Awe"], Confused: ["Perplexed", "Dismayed"] } },
+  Happy: { color: '#E1B846', children: { Playful: ["Aroused", "Free"], Content: ["Joyful", "Peaceful"], Proud: ["Confident", "Respected"] } },
+  Sad: { color: '#4A6984', children: { Lonely: ["Isolated", "Empty"], Vulnerable: ["Fragile", "Powerless"], Despair: ["Grief", "Hopeless"] } },
+  Disgust: { color: '#4A7C59', children: { Disapproving: ["Judgmental", "Condemning"], Disappointed: ["Appalled", "Nauseated"], Awful: ["Detestable", "Repugnant"] } }
+};
 
-// ─── SVG WHEEL DATA & HELPERS ────────────────────────────────────────────────
 const SECTORS = [
   { n: 'ANGER', a0: 240, a1: 300, c: ['#C02828', '#D85555', '#EDAAAA'], tc: '#7A1010', mtc: '#fff',
     m: [ { n: 'MAD', o: ['FURIOUS', 'ENRAGED'] }, { n: 'AGGRESSIVE', o: ['PROVOKED', 'HOSTILE'] }, { n: 'FRUSTRATED', o: ['INFURIATED', 'IRRITATED'] }, { n: 'DISTANT', o: ['WITHDRAWN', 'SUSPICIOUS'] }, { n: 'CRITICAL', o: ['RESENTFUL', 'VIOLATED'] }, { n: 'HATEFUL', o: ['JEALOUS', 'INSECURE'] }, { n: 'HURT', o: ['THREATENED', 'HUMILIATED'] } ]
@@ -205,8 +204,7 @@ function arcPath(r1, r2, a0, a1) {
   const [x1, y1] = p(r1, s), [x2, y2] = p(r2, s);
   const [x3, y3] = p(r2, e), [x4, y4] = p(r1, e);
   const f = (n) => n.toFixed(2);
-  if (r1 < 1)
-    return `M${CX},${CY}L${f(x2)},${f(y2)}A${r2},${r2},0,${lg},1,${f(x3)},${f(y3)}Z`;
+  if (r1 < 1) return `M${CX},${CY}L${f(x2)},${f(y2)}A${r2},${r2},0,${lg},1,${f(x3)},${f(y3)}Z`;
   return `M${f(x1)},${f(y1)}L${f(x2)},${f(y2)}A${r2},${r2},0,${lg},1,${f(x3)},${f(y3)}L${f(x4)},${f(y4)}A${r1},${r1},0,${lg},0,${f(x1)},${f(y1)}Z`;
 }
 
@@ -219,19 +217,18 @@ function textProps(r, midAngle, fontSize, fill, fw) {
   return { x: x.toFixed(2), y: y.toFixed(2), fontSize, fill, fontWeight: fw, rot: rot.toFixed(1) };
 }
 
-
-// ─── ROULETTE COMPONENT ───────────────────────────────────────────────────────
 function EmotionRoulette() {
   const [isSpinning, setIsSpinning] = useState(false);
   const [resultMsg, setResultMsg] = useState(null);
   const [offset, setOffset] = useState(0);
   const trackRef = useRef(null);
 
-  const ITEM_HEIGHT = 80;
+  const ITEM_HEIGHT = 80; 
 
   const spin = () => {
     if (isSpinning) return;
-    setIsSpinning(true); setResultMsg(null);
+    setIsSpinning(true);
+    setResultMsg(null);
 
     const finalBlockStart = (SPIN_MULTIPLIER - 1) * ROULETTE_DATA.length;
     const goodIndices = [];
@@ -248,6 +245,7 @@ function EmotionRoulette() {
     setTimeout(() => {
       if(trackRef.current) trackRef.current.style.transition = 'transform 3.5s cubic-bezier(0.15, 0.85, 0.25, 1)';
       setOffset(targetOffset);
+      
       setTimeout(() => {
         setIsSpinning(false);
         setResultMsg(TRACK_ITEMS[targetIndex].msg);
@@ -275,14 +273,14 @@ function EmotionRoulette() {
       </button>
 
       {resultMsg && (
-        <div className="roulette-msg">✨ {resultMsg}</div>
+        <div className="roulette-msg">
+          ✨ {resultMsg}
+        </div>
       )}
     </div>
   );
 }
 
-
-// ─── SVG WHEEL COMPONENTS ─────────────────────────────────────────────────────
 function Wheel({ selection, onSelect }) {
   const svgRef = useRef(null);
   const ttRef  = useRef(null);
@@ -495,7 +493,6 @@ function InfoPanel({ selection, onSelect, onCalmClick }) {
       </div>
       {renderRelated()}
 
-      {/* UX Feedback Loop Link -> Integrated when deepest layer is reached */}
       {type === 'o' && onCalmClick && (
         <button onClick={onCalmClick} style={{
           width: '100%', marginTop: '24px', padding: '14px',
@@ -522,32 +519,53 @@ function InfoPanel({ selection, onSelect, onCalmClick }) {
   );
 }
 
-function WheelOfEmotions({ onCalmClick }) {
+function InteractiveEmotionWheel({ onCalmClick, onLogTool }) {
   const [selection, setSelection] = useState(null);
+  const [feedbackView, setFeedbackView] = useState(false);
+
+  const handleSelect = (s) => {
+    setSelection(s);
+    if(s && s.type === 'o') {
+       onLogTool('Emotion Wheel: ' + SECTORS[s.si].m[s.mi].o[s.oi]);
+    }
+  };
+
+  const handleCalmTrigger = () => {
+    onCalmClick();
+    setFeedbackView(true);
+  };
+
+  if (feedbackView) {
+    return (
+      <div className="ew-container" style={{ textAlign: 'center', padding: '24px 0' }}>
+        <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '24px', color: 'var(--ink)', marginBottom: '16px' }}>How do you feel now?</h3>
+        <p style={{ color: 'var(--ink-soft)', marginBottom: '32px' }}>Checking in after that breathing exercise...</p>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button className="mh-btn mh-btn-outline" onClick={() => {setFeedbackView(false); setSelection(null);}}>🙂 Better</button>
+          <button className="mh-btn mh-btn-outline" onClick={() => {setFeedbackView(false); setSelection(null);}}>😐 Same</button>
+          <button className="mh-btn mh-btn-outline" onClick={() => {setFeedbackView(false); setSelection(null);}}>😞 Worse</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{
-      display: 'flex', gap: '24px', flexWrap: 'wrap',
-      alignItems: 'flex-start', padding: '8px 0',
-      fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif",
-    }}>
-      <Wheel selection={selection} onSelect={setSelection} />
-      <div style={{ flex: 1, minWidth: '300px' }}>
-        <InfoPanel selection={selection} onSelect={setSelection} onCalmClick={onCalmClick} />
+    <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-start', padding: '8px 0', fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif" }}>
+      <Wheel selection={selection} onSelect={handleSelect} />
+      <div style={{ flex: 1, minWidth: '280px' }}>
+        <InfoPanel selection={selection} onSelect={handleSelect} onCalmClick={handleCalmTrigger} />
       </div>
     </div>
   );
 }
 
-
-// ─── MAIN PAGE COMPONENT ───────────────────────────────────────────────────────
-export default function MentalHealthFirstAid({ navigate, onBack }) {
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+export default function MindSpace({ navigate, onBack }) {
   const [activeModal, setActiveModal] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
   const [isQuickCalmActive, setQuickCalmActive] = useState(false);
   const [breathingPhase, setBreathingPhase] = useState("Inhale (4s)");
   
-  // Fake Dynamic Systems
   const streakMessages = [
     "Day 1: You showed up. That matters.",
     "Day 2: You're building a habit of care.",
@@ -556,7 +574,6 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
   const [streakDay] = useState(Math.floor(Math.random() * 3));
   const [lastUsedTool, setLastUsedTool] = useState(null);
 
-  // Inject CSS
   useEffect(() => {
     const s = document.createElement("style");
     s.textContent = PAGE_CSS;
@@ -568,10 +585,8 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
     return () => document.head.removeChild(s);
   }, []);
 
-  // Scroll to top on load
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  // Breathing logic for inline calm
   useEffect(() => {
     let interval;
     if(isQuickCalmActive) {
@@ -670,21 +685,19 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
   return (
     <>
       <div className="mh-page">
-        {/* Streak Psychology Banner */}
         <div className="mh-streak-banner">
           {streakMessages[streakDay]}
         </div>
 
         <div className="mh-topbar">
-          <button className="mh-back" onClick={onBack || (() => navigate && navigate("/resources"))}>← Back to Resources</button>
-          <div className="mh-topbar-title">Secret Sharz</div>
+          <button className="mh-back" onClick={onBack || (() => navigate && navigate("/dashboard"))}>← Back to Dashboard</button>
+          <div className="mh-topbar-title">Mind Space</div>
           <div />
         </div>
 
         <section className="mh-hero">
           <div className="mh-hero-inner">
             
-            {/* Last Used Memory */}
             {lastUsedTool && (
               <div className="mh-memory-badge" onClick={() => triggerToast(`Resuming ${lastUsedTool}...`)}>
                 <span>↺</span> Welcome back. Continue with {lastUsedTool}?
@@ -697,7 +710,6 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
           </div>
         </section>
 
-        {/* Start Box Path */}
         <div className="mh-start-container">
           <div className="mh-start-box">
             <h3>Not sure where to start?</h3>
@@ -709,7 +721,6 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
           </div>
         </div>
 
-        {/* ── INLINE QUICK CALM (NO MODAL) ── */}
         <div className={`quick-calm-inline ${isQuickCalmActive ? 'active' : ''}`}>
           <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '24px', color: 'var(--ink)' }}>4-7-8 Breathing</h3>
           <p style={{ color: 'var(--ink-soft)' }}>Follow the expanding circle.</p>
@@ -719,7 +730,6 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
           <button className="mh-btn mh-btn-outline" onClick={() => setQuickCalmActive(false)}>Close Breathing</button>
         </div>
 
-        {/* Validation Section */}
         <div className="mh-validation">
           Thousands of students feel like this every day.
           <strong>You're someone who is trying.</strong>
@@ -729,7 +739,6 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
           </div>
         </div>
 
-        {/* ── ROULETTE COMPONENT ── */}
         <EmotionRoulette />
 
         <section className="mh-container">
@@ -767,35 +776,31 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
           ))}
         </section>
 
-        {/* Return to Platform Hook */}
         <div className="mh-return-hook">
           <h3>Want to go deeper?</h3>
           <div className="mh-hook-links">
-             <button className="mh-hook-link" onClick={() => triggerToast("Navigating to sharing portal...")}>→ Share anonymously</button>
-             <button className="mh-hook-link" onClick={() => triggerToast("Navigating to emotion tracker...")}>→ Track your emotions</button>
-             <button className="mh-hook-link" onClick={() => triggerToast("Navigating to career path...")}>→ Discover your career path</button>
+             <button className="mh-hook-link" onClick={() => navigate && navigate('/wall')}>→ Share anonymously</button>
+             <button className="mh-hook-link" onClick={() => navigate && navigate('/dashboard')}>→ Track your emotions</button>
+             <button className="mh-hook-link" onClick={() => navigate && navigate('/vidyavantage')}>→ Discover your career path</button>
           </div>
         </div>
 
-        {/* Exit Safety Net */}
         <div className="mh-exit-safety">
           Before you go: Take one deep breath with me. <br/>You are going to be okay.
         </div>
       </div>
 
-      {/* ── STICKY MOBILE CTA ── */}
       <div className="sticky-mobile-cta">
         <button className="mh-btn mh-btn-primary" onClick={startQuickCalm}>
           Need help right now? → Calm me
         </button>
       </div>
 
-      {/* ── TOAST NOTIFICATION ── */}
       <div className={`mh-toast ${toastMessage ? 'visible' : ''}`}>
         <span>💚</span> {toastMessage}
       </div>
 
-      {/* ── CRISIS DIRECTORY MODAL ── */}
+      {/* MODALS */}
       {activeModal === 'crisis' && (
         <div className="mh-modal-overlay" onClick={closeModal}>
           <div className="mh-modal" onClick={e => e.stopPropagation()}>
@@ -849,7 +854,6 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
         </div>
       )}
 
-      {/* ── EXAM ANXIETY PREVIEW MODAL ── */}
       {activeModal === 'exam' && (
         <div className="mh-modal-overlay" onClick={closeModal}>
           <div className="mh-modal" onClick={e => e.stopPropagation()}>
@@ -864,6 +868,9 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
               <h4 style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', color: 'var(--ink)', marginBottom: '12px' }}>2. During the Exam: The 30-Second Reset</h4>
               <p style={{ marginBottom: '24px' }}>If you look at the paper and freeze, flip it over. Do not look at the questions. Do the 5-4-3-2-1 grounding technique. Look for 5 blue things in the room. Feel 4 textures. Take 3 deep breaths. You have the time. Regulate your nervous system first, then turn the paper back over.</p>
 
+              <h4 style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', color: 'var(--ink)', marginBottom: '12px' }}>3. The Truth About Self-Worth</h4>
+              <p style={{ marginBottom: '24px' }}>An exam measures how well you retained specific information on a specific day. It does not measure your intelligence, your capability to succeed in life, or your worth as a human being. The result of this test is data, not an identity.</p>
+
               <div style={{ background: 'var(--sand)', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
                 <p style={{ margin: 0, fontWeight: 700 }}>Download the full 3-page PDF guide for more tactical strategies.</p>
               </div>
@@ -872,7 +879,6 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
         </div>
       )}
 
-      {/* ── EMOTION WHEEL MODAL (UPDATED) ── */}
       {activeModal === 'wheel' && (
         <div className="mh-modal-overlay" onClick={closeModal}>
           <div className="mh-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '850px' }}>
@@ -881,8 +887,7 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
               <button className="mh-modal-close" onClick={closeModal}>✕</button>
             </div>
             <div className="mh-modal-body">
-              {/* Inserted exactly as requested, hooked into the Calm UX Loop */}
-              <WheelOfEmotions onCalmClick={startQuickCalm} />
+              <InteractiveEmotionWheel onCalmClick={startQuickCalm} onLogTool={logTool} />
             </div>
           </div>
         </div>
