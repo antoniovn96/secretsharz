@@ -10,6 +10,7 @@ import MindSpace from './MindSpace';
 import AdminDashboard from './AdminDashboard';
 import Header from './Header';
 import Footer from './Footer';
+import AboutUs from './AboutUs';
 import Blog from './Blog';
 import Resources from './Resources';
 
@@ -711,6 +712,9 @@ export default function App() {
         />
       );
     }
+if (currentPath.startsWith('/about')) {
+  return <AboutUs navigate={navigate} />;
+}
     if (currentPath.startsWith('/resources')) {
       return <Resources navigate={navigate} />;
     }
