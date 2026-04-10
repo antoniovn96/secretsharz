@@ -1,18 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import Head from 'next/head'; 
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
-import VidyaVantage from './VidyaVantage';
-import AuthPage from './AuthPage';
-import StudentDashboard from './StudentDashboard';
-import MindSpace from './MindSpace';
-import AdminDashboard from './AdminDashboard';
+
+// 🚀 OPTIMIZATION 1: LAZY LOADING HEAVY ROUTES
+// This stops the browser from downloading the entire app just to view the homepage.
+const VidyaVantage = lazy(() => import('./VidyaVantage'));
+const AuthPage = lazy(() => import('./AuthPage'));
+const StudentDashboard = lazy(() => import('./StudentDashboard'));
+const MindSpace = lazy(() => import('./MindSpace'));
+const AdminDashboard = lazy(() => import('./AdminDashboard'));
+const Blog = lazy(() => import('./Blog'));
+const Resources = lazy(() => import('./Resources'));
+const AboutUs = lazy(() => import('./AboutUs'));
+
+// Header and Footer stay synchronous because they render on almost every view instantly
 import Header from './Header';
 import Footer from './Footer';
-import AboutUs from './AboutUs';
-import Blog from './Blog';
-import Resources from './Resources';
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');`;
 
@@ -56,10 +61,9 @@ const CSS = `
   .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--sage-pale);border:1.5px solid rgba(74,124,89,0.2);color:var(--sage);padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;letter-spacing:0.3px;margin-bottom:28px;}
   .hero-eyebrow-dot{width:8px;height:8px;background:var(--sage);border-radius:50%;position:relative;}
   .hero-eyebrow-dot::after{content:'';position:absolute;inset:-3px;border:1.5px solid var(--sage);border-radius:50%;animation:pulse-ring 2s ease-out infinite;}
-  .hero-h1{font-family:'Fraunces',serif;font-size:clamp(40px,5.5vw,72px);font-weight:700;line-height:1.1;color:var(--ink);letter-spacing:-1.5px;margin-bottom:16px;}
+  .hero-h1{font-family:'Fraunces',serif;font-size:clamp(40px,5.5vw,72px);font-weight:700;line-height:1.1;color:var(--ink);letter-spacing:-1.5px;margin-bottom:20px;}
   .hero-h1 .underline-word{position:relative;display:inline-block;color:var(--sage);}
-  .hero-sub{font-size:clamp(16px, 2vw, 18px);color:var(--ink-soft);line-height:1.6;max-width:650px;font-weight:500;}
-  .hero-sub-main{font-size:clamp(18px, 2.5vw, 22px);color:var(--ink-soft);line-height:1.4;max-width:650px;font-weight:400;margin-bottom:24px; font-style: italic;}
+  .hero-sub{font-size:clamp(16px, 2vw, 18px);color:var(--ink-soft);line-height:1.6;max-width:650px;font-weight:500;margin-bottom:24px;}
   
   .hero-core-truth { background: rgba(74,124,89,0.05); border-left: 4px solid var(--sage); padding: 18px 24px; border-radius: 0 12px 12px 0; margin-bottom: 36px; font-size: 15px; color: var(--ink-soft); max-width: 600px;}
   .hero-core-truth p { margin:0 0 6px 0; }
@@ -177,14 +181,14 @@ const CSS = `
 
   /* ── Privacy & Objections ── */
   .safe-section{background:linear-gradient(135deg,var(--moss) 0%,#1E3D2A 100%);padding:120px 48px;text-align:center;position:relative;overflow:hidden;}
-  .safe-content{position:relative;z-index:1;max-width:900px;margin:0 auto;}
+  .safe-content{position:relative;z-index:1;max-width:850px;margin:0 auto;}
   
   .aha-headline { font-size: clamp(40px, 5vw, 64px); color: white; font-family: 'Fraunces', serif; line-height: 1.1; margin-bottom: 20px;}
-  .objection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin: 60px 0 80px; }
-  .objection-card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 40px 24px; text-align: center; color: white; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
-  .objection-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-  .objection-card span { font-size: 56px; display: block; margin-bottom: 24px; }
-  .objection-card h4 { font-size: 20px; font-weight: 700; margin: 0; color: white; }
+  .objection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; margin: 50px 0 80px; }
+  .objection-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 32px 24px; text-align: center; color: white; transition: background 0.2s; }
+  .objection-card:hover { background: rgba(255,255,255,0.1); }
+  .objection-card span { font-size: 36px; display: block; margin-bottom: 16px; }
+  .objection-card h4 { font-size: 17px; font-weight: 700; margin: 0; color: white; }
   
   .privacy-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;text-align:left;margin-bottom:60px;}
   .privacy-item{background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05);padding:32px;border-radius:20px;display:flex;align-items:flex-start;gap:20px;}
@@ -268,6 +272,315 @@ const PILLARS = [
   { cls:'guide', icon:'🎓', title:'VidyaVantage Career Match', desc:"Stop guessing your future. Get data-backed career routing based on Holland's RIASEC theory and a database of 500+ Indian colleges.", features:['AI-powered RIASEC test','500+ College Database','Actionable 30-day roadmaps'], cta:'Explore VidyaVantage →', route:'/vidyavantage' },
   { cls:'safe', icon:'🛡️', title:'The Safe Corner', desc:"Get immediate help when the weight is too heavy to carry alone. 24/7 access to trained counselors and national helplines.", features:['24/7 crisis helpline access','Connect with trained counsellors','Report unsafe situations privately'], cta:'View Safety Protocols →', route:'/safe' },
 ];
+
+const QUIZ_QUESTIONS = [
+  {
+    q: "Mental health problems are a sign of personal weakness.",
+    options: ["True — weak people struggle more", "Myth — it's a health condition", "Only true for severe cases", "Partially true"],
+    correct: 1,
+    verdict: "MYTH",
+    explanation: "Mental health conditions are medical conditions, just like diabetes or a broken bone. They arise from a complex mix of genetics, brain chemistry, trauma, and environment — none of which have anything to do with willpower or character strength. Telling someone to 'just be strong' is like telling someone to willpower their way out of a fractured leg."
+  },
+  {
+    q: "Talking about suicide plants the idea in someone's head and makes it more likely.",
+    options: ["True — avoid the topic entirely", "Myth — asking about it can save lives", "It depends on how you ask", "Only true for teenagers"],
+    correct: 1,
+    verdict: "MYTH",
+    explanation: "Research consistently shows that asking someone directly about suicidal thoughts does NOT increase risk — it actually reduces it. Open, compassionate conversations about suicide break the silence that keeps people suffering alone. iCall and NIMHANS both recommend checking in directly with those you're worried about."
+  },
+  {
+    q: "1 in 4 people worldwide will experience a mental health condition in their lifetime.",
+    options: ["False — it's much rarer than that", "Fact — mental health issues are very common", "Only true for developing countries", "True only for anxiety and depression"],
+    correct: 1,
+    verdict: "FACT",
+    explanation: "The World Health Organization (WHO) confirms that 1 in 4 people globally will be affected by mental or neurological disorders at some point in their lives. In India, the National Mental Health Survey found that nearly 150 million people need active mental health interventions. You are far from alone."
+  },
+  {
+    q: "Children and teenagers can't have real mental health problems — they're just being dramatic.",
+    options: ["True — real problems only come with adult stress", "Myth — mental illness begins early in life", "Mostly true for minor anxiety", "Depends on the family situation"],
+    correct: 1,
+    verdict: "MYTH",
+    explanation: "50% of all lifetime mental health conditions begin by age 14, and 75% by age 24 (WHO). Anxiety disorders, depression, ADHD, and OCD are fully diagnosable in childhood. Dismissing a child's distress as 'drama' is one of the most dangerous things adults can do, as it delays treatment and increases shame."
+  },
+  {
+    q: "If you have a mental health condition, you can never fully recover or live a normal life.",
+    options: ["True — it's a lifelong limitation", "Myth — recovery is absolutely possible", "True only for schizophrenia", "Depends on family support"],
+    correct: 1,
+    verdict: "MYTH",
+    explanation: "With appropriate support — therapy, medication where needed, community, and lifestyle changes — the vast majority of people with mental health conditions recover fully or manage their conditions effectively. Many of the world's most successful scientists, athletes, artists, and leaders live with diagnosed mental health conditions."
+  },
+  {
+    q: "Exercise can have a measurable positive effect on depression and anxiety.",
+    options: ["False — only medication works", "Fact — movement is medicine for the mind", "Only true for mild cases", "Only aerobic exercise counts"],
+    correct: 1,
+    verdict: "FACT",
+    explanation: "A landmark study in JAMA Psychiatry found that just 1 hour of exercise per week can prevent 12% of future depression cases. Exercise releases endorphins, reduces cortisol, promotes neurogenesis (new brain cell growth), and improves sleep — all directly tied to mental health. It works as an adjunct to therapy and medication, not a replacement."
+  },
+  {
+    q: "People with mental illness are usually violent and dangerous.",
+    options: ["True — it's well established", "Myth — they are more often victims than perpetrators", "Only true for psychosis", "It's complicated"],
+    correct: 1,
+    verdict: "MYTH",
+    explanation: "This is one of the most damaging and widely held myths. People with mental health conditions are actually 10 times MORE likely to be the victims of violence than to perpetrate it. Most violent crimes are committed by people without any mental illness diagnosis. This stigma causes real harm by making people afraid to seek help."
+  },
+  {
+    q: "India has fewer than 1 psychiatrist per 100,000 people.",
+    options: ["False — India has adequate mental health coverage", "Fact — there is a severe mental health professional shortage", "True only for rural areas", "This used to be true but has improved"],
+    correct: 1,
+    verdict: "FACT",
+    explanation: "India has approximately 0.3 psychiatrists per 100,000 people — one of the lowest ratios in the world (WHO Atlas). The treatment gap in India is enormous: over 80% of people with mental disorders receive no treatment at all. This is why platforms like Secret Sharz and digital mental health tools are critically important for young people."
+  },
+  {
+    q: "Therapy is only for 'crazy' people with severe mental illness.",
+    options: ["True — it's for extreme cases only", "Myth — therapy helps anyone who wants to grow", "Only useful if diagnosed", "True in India's cultural context"],
+    correct: 1,
+    verdict: "MYTH",
+    explanation: "Therapy — particularly Cognitive Behavioural Therapy (CBT) — is evidence-based for everyone from high-performing executives to students dealing with exam stress. In fact, therapy works best as a preventative tool, before crises develop. Athletes, CEOs, and world leaders openly use therapy for performance, resilience, and self-awareness."
+  },
+  {
+    q: "Sleep deprivation significantly increases the risk of anxiety and depression.",
+    options: ["False — it's just tiredness", "Fact — sleep and mental health are deeply linked", "Only for people over 30", "Only if you sleep less than 4 hours"],
+    correct: 1,
+    verdict: "FACT",
+    explanation: "Sleep and mental health have a bidirectional relationship — each affects the other. Research from Harvard Medical School shows that people with insomnia are 10 times more likely to develop clinical depression. During sleep, the brain processes emotional memories and clears toxic proteins. Teenagers need 8-10 hours; consistently sleeping less fundamentally alters mood regulation."
+  },
+  {
+    q: "Using a phone before bed doesn't really affect your mental health.",
+    options: ["True — screen time is overhyped", "Myth — blue light and content disrupt sleep and mood", "Only affects people under 16", "Only matters if you're already anxious"],
+    correct: 1,
+    verdict: "MYTH",
+    explanation: "Blue light from screens suppresses melatonin production, delaying sleep onset by up to 90 minutes (Harvard study). Beyond light, the emotional content of social media — comparison culture, negative news, conflict — activates the brain's threat response. Studies link late-night social media use directly to increased anxiety, depression, and poor self-image in adolescents."
+  },
+  {
+    q: "Meditation and mindfulness have been scientifically proven to reduce stress.",
+    options: ["False — no real scientific evidence", "Fact — it changes measurable brain structure", "Only useful for spiritual people", "The research is too weak to conclude"],
+    correct: 1,
+    verdict: "FACT",
+    explanation: "Neuroscientist Sara Lazar at Harvard found that 8 weeks of Mindfulness-Based Stress Reduction (MBSR) measurably thickened the prefrontal cortex (decision-making, emotional regulation) and shrank the amygdala (fear response) in participants. Mindfulness is now WHO-recommended for managing mild to moderate anxiety and depression."
+  },
+  {
+    q: "Men are just as likely as women to experience depression.",
+    options: ["False — depression is mostly a women's condition", "Fact — men are equally affected but less likely to seek help", "True only for clinical depression", "Men get it more but in a different form"],
+    correct: 1,
+    verdict: "FACT",
+    explanation: "Depression affects men as frequently as women, but men are socialised to suppress emotions and less likely to seek help — making diagnosis and treatment far less common. Men are also 3-4 times more likely to die by suicide than women. In India, the cultural expectation of male stoicism ('be a man') is a significant barrier to young men getting the support they need."
+  },
+  {
+    q: "If someone is smiling and seems happy, they definitely aren't suffering from depression.",
+    options: ["True — you can always tell when someone is depressed", "Myth — 'smiling depression' is a real and common phenomenon", "Only false for very skilled actors", "Mostly true — you'd notice"],
+    correct: 1,
+    verdict: "MYTH",
+    explanation: "'Smiling depression' refers to people who appear perfectly functional and even cheerful on the outside while experiencing major depressive disorder internally. Some of the most beloved comedians and performers in history — who made others laugh — died by suicide. This is why 'check in on your strong friends' is not just a phrase, it's a mental health imperative."
+  },
+  {
+    q: "Childhood trauma can have lasting effects on brain development.",
+    options: ["False — children are resilient and bounce back", "Fact — early adversity rewires the brain", "Only true for physical abuse", "The effects are gone by adulthood"],
+    correct: 1,
+    verdict: "FACT",
+    explanation: "The CDC-Kaiser Adverse Childhood Experiences (ACEs) study found that childhood trauma — abuse, neglect, household dysfunction — physically alters brain structure, particularly the hippocampus (memory) and amygdala (fear). Children with 4+ ACEs have dramatically higher rates of depression, addiction, and physical illness as adults. Trauma-informed care is essential, not optional."
+  },
+  {
+    q: "Social media has no real connection to rising rates of teen anxiety and depression.",
+    options: ["True — screens are a scapegoat", "Myth — the correlation is well-established for heavy use", "Only true in Western countries", "Only affects girls, not boys"],
+    correct: 1,
+    verdict: "MYTH",
+    explanation: "Psychologist Jean Twenge's analysis of 500,000+ adolescents found that teens who spend 5+ hours daily on social media are 66% more likely to have at least one suicide risk factor. Heavy social media use is linked to social comparison, cyberbullying, sleep disruption, and the fear of missing out (FOMO). Moderate use (under 2 hours/day) shows much weaker negative effects."
+  },
+  {
+    q: "Antidepressants change your personality and make you 'not yourself'.",
+    options: ["True — they alter who you are fundamentally", "Myth — they restore chemical balance without changing identity", "Only true for SSRIs", "Depends on the dosage"],
+    correct: 1,
+    verdict: "MYTH",
+    explanation: "When prescribed correctly, antidepressants don't create a new personality — they remove the depressive fog that was suppressing your real one. Most patients report feeling 'more like themselves', not less. However, the right medication, dosage, and combination is highly individual and should always be managed by a qualified psychiatrist, never self-prescribed."
+  },
+  {
+    q: "The gut-brain connection is real — what you eat affects your mood.",
+    options: ["False — food and mood aren't scientifically linked", "Fact — the gut produces 90% of the body's serotonin", "Only true for people with gut disorders", "The research is too new to be reliable"],
+    correct: 1,
+    verdict: "FACT",
+    explanation: "The gut produces approximately 90-95% of the body's serotonin — the key neurotransmitter for mood regulation. The gut-brain axis (via the vagus nerve) creates a constant two-way communication system. A 2017 study published in BMC Medicine found that a Mediterranean-style diet reduced depression risk by 33%. 'You are what you eat' is neurologically literal."
+  },
+  {
+    q: "Asking for help is a sign of weakness.",
+    options: ["True — you should handle things yourself", "Myth — asking for help is one of the bravest things you can do", "Only true if you ask too often", "It depends on what you're asking about"],
+    correct: 1,
+    verdict: "MYTH",
+    explanation: "Seeking help requires self-awareness (knowing something is wrong), vulnerability (admitting it to someone), and courage (taking action despite fear of judgement). These are advanced emotional intelligence skills. The most high-performing humans on the planet — elite athletes, world leaders, successful entrepreneurs — all have coaches, therapists, and mentors. Isolation is weakness. Connection is strength."
+  },
+  {
+    q: "Young people in India who seek counselling risk social stigma and family shame.",
+    options: ["False — stigma is disappearing quickly", "Fact — stigma is real but seeking help matters more", "Only in rural areas", "Only if others find out"],
+    correct: 1,
+    verdict: "FACT",
+    explanation: "Stigma around mental health remains a serious barrier in India — NIMHANS research shows 70%+ of Indians feel embarrassed about having a mental health condition. However, this stigma is changing: Gen Z is the most open generation about mental health in India's history. Starting confidentially — with anonymous platforms, journaling, or trusted individuals — is a completely valid and often necessary first step toward formal care."
+  },
+];
+
+const generateWallData = () => {
+  const rawShorts = [
+    "I act strong in school but cry at night.",
+    "Everyone thinks I'm okay. I'm not.",
+    "I wish someone asked me if I'm actually happy.",
+    "I'm tired… but I can't rest.",
+    "Marks feel like my entire identity.",
+    "I don't hate studying. I hate the pressure.",
+    "I just want peace in my head.",
+    "I laugh a lot… but it's fake sometimes.",
+    "Why is being a good child so exhausting?",
+    "I overthink everything."
+  ];
+  const tags = ["Class 10 • Section A","Class 12 • CBSE","Class 11 • Science","College Fresher","Drop Year Student"];
+  const colors = ["note-yellow","note-green","note-purple","note-blue"];
+  const notes = [];
+  notes.push({ id:'l1', type:'long', text:"I'm in Class 11 and everyone around me seems to have their life figured out… I chose science because everyone said it's the 'best option', but I feel lost every day… I don't even know if I like what I'm studying anymore…", tag:"Class 11 • Science", color:"note-purple", reactions:128 });
+  notes.push({ id:'l2', type:'long', text:"My parents think I'm just lazy, but I feel so mentally tired all the time… I try to study but my mind just keeps racing. I wish they understood that I'm trying my best.", tag:"Class 10 • Section B", color:"note-blue", reactions:89 });
+  notes.push({ id:'l3', type:'long', text:"Moving to a new city was supposed to be exciting… but I feel more alone than ever. Making friends is so hard when you're an introvert.", tag:"College Fresher", color:"note-green", reactions:45 });
+  for (let i = 0; i < 119; i++) {
+    notes.push({
+      id: `s${i}`,
+      type:'short',
+      text: rawShorts[Math.floor(Math.random() * rawShorts.length)],
+      tag: tags[Math.floor(Math.random() * tags.length)],
+      color: colors[Math.floor(Math.random() * colors.length)],
+      reactions: Math.floor(Math.random() * 50) + 5
+    });
+  }
+  return notes.sort(() => Math.random() - 0.5);
+};
+
+// ── MYTH/FACT QUIZ COMPONENT ─────────────────────────────────────────────────
+function MythFactQuiz({ onClose }) {
+  const [qIndex, setQIndex] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+
+  const q = QUIZ_QUESTIONS[qIndex];
+  const total = QUIZ_QUESTIONS.length;
+  const answered = selected !== null;
+
+  const handleSelect = (idx) => {
+    if (answered) return;
+    setSelected(idx);
+    if (idx === q.correct) setScore(s => s + 1);
+  };
+
+  const handleNext = () => {
+    if (qIndex < total - 1) {
+      setQIndex(i => i + 1);
+      setSelected(null);
+    } else {
+      setDone(true);
+    }
+  };
+
+  const handleRetake = () => {
+    setQIndex(0);
+    setSelected(null);
+    setScore(0);
+    setDone(false);
+  };
+
+  const pct = Math.round((score / total) * 100);
+  const resultMsg =
+    pct >= 80 ? "You're impressively well-informed about mental health. Your awareness makes you a better friend, student, and advocate." :
+    pct >= 60 ? "Solid! You know quite a bit, but a few myths slipped through. Keep learning — every myth you bust helps reduce stigma." :
+    pct >= 40 ? "You're on your way. Many of these myths are deeply embedded in our culture. The fact that you're here, learning, already puts you ahead." :
+    "Don't worry — this quiz exposed some deeply ingrained myths. Now you're armed with the truth. Share what you've learned with someone you care about.";
+
+  return (
+    <div className="quiz-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="quiz-modal" onClick={e => e.stopPropagation()}>
+        {!done ? (
+          <>
+            <div className="quiz-header">
+              <button className="quiz-close" onClick={onClose}>✕</button>
+              <h2>🧠 Mental Health: Myth or Fact?</h2>
+              <p>20 questions · answers explained instantly · no judgement</p>
+              <div className="quiz-progress-bar" style={{ marginTop: '16px' }}>
+                <div className="quiz-progress-fill" style={{ width: `${((qIndex + 1) / total) * 100}%` }} />
+              </div>
+            </div>
+
+            <div className="quiz-body">
+              <div className="quiz-q-meta">
+                <span className="quiz-q-num">Question {qIndex + 1} of {total}</span>
+                <span className="quiz-score-live">✓ {score} correct</span>
+              </div>
+              <div className="quiz-question">{q.q}</div>
+              <div className="quiz-options">
+                {q.options.map((opt, i) => {
+                  let cls = 'quiz-opt';
+                  let icon = '○';
+                  if (answered) {
+                    if (i === q.correct) { cls += ' correct'; icon = '✓'; }
+                    else if (i === selected && i !== q.correct) { cls += ' wrong'; icon = '✗'; }
+                    else { cls += ' neutral-reveal'; icon = ' '; }
+                  }
+                  return (
+                    <button key={i} className={cls} onClick={() => handleSelect(i)} disabled={answered}>
+                      <span className="quiz-opt-icon">{icon}</span>{opt}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {answered && (
+                <div className="quiz-reveal">
+                  <div className={`quiz-reveal-badge ${q.verdict === 'MYTH' ? 'myth' : 'fact'}`}>
+                    {q.verdict === 'MYTH' ? '🚫 Myth' : '✅ Fact'} — {selected === q.correct ? 'You got it!' : 'Not quite'}
+                  </div>
+                  <div className="quiz-reveal-text">{q.explanation}</div>
+                </div>
+              )}
+            </div>
+
+            {answered && (
+              <div className="quiz-footer">
+                <button className="quiz-next-btn" onClick={handleNext}>
+                  {qIndex < total - 1 ? 'Next Question →' : 'See My Results →'}
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="quiz-results">
+            <button className="quiz-close" style={{ position: 'absolute', top: '16px', right: '16px' }} onClick={onClose}>✕</button>
+            <div className="quiz-results-trophy">
+              {pct >= 80 ? '🏆' : pct >= 60 ? '🌟' : pct >= 40 ? '🌱' : '💪'}
+            </div>
+            <h2>Quiz Complete!</h2>
+            <div className="quiz-results-score">{score}/{total}</div>
+            <div className="quiz-results-sub">{pct}% correct</div>
+            <div className="quiz-results-msg">&quot;{resultMsg}&quot;</div>
+            <div className="quiz-results-breakdown">
+              <div className="qrb-item">
+                <div className="qrb-label">Correct</div>
+                <div className="qrb-value" style={{ color: 'var(--success)' }}>✓ {score}</div>
+              </div>
+              <div className="qrb-item">
+                <div className="qrb-label">Incorrect</div>
+                <div className="qrb-value" style={{ color: '#C0392B' }}>✗ {total - score}</div>
+              </div>
+              <div className="qrb-item">
+                <div className="qrb-label">Accuracy</div>
+                <div className="qrb-value">{pct}%</div>
+              </div>
+              <div className="qrb-item">
+                <div className="qrb-label">Myths Busted</div>
+                <div className="qrb-value">🧠 {score}</div>
+              </div>
+            </div>
+            <div>
+              <button className="quiz-retake-btn" onClick={handleRetake}>🔄 Retake Quiz</button>
+              <button className="quiz-close-btn" onClick={onClose}>Close</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ── HOME PAGE ─────────────────────────────────────────────────────────────────
 function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
@@ -428,7 +741,7 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
           <div className="journey-arrow">→</div>
           <div className="journey-step"><div className="journey-emoji">🧭</div><div className="journey-label">Clear</div></div>
           <div className="journey-arrow">→</div>
-          <div className="journey-step"><div className="journey-emoji">🎯</div><div className="journey-label">Confident</div></div>
+          <div className="journey-step"><div className="journey-emoji">🎯</div><div className="journey-label">Decide</div></div>
           <div className="journey-arrow">→</div>
           <div className="journey-step"><div className="journey-emoji">🚀</div><div className="journey-label">In control</div></div>
         </div>
@@ -518,12 +831,16 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
           <img 
             src="/20250508_103355.jpg" 
             alt="School Counselling" 
+            loading="lazy"
+            decoding="async"
+            width="450"
+            height="550"
             style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} 
           />
         </div>
       </section>
 
-      {/* AHA MOMENT, PRIVACY & FINAL CTA */}
+      {/* 10 & 11. PRIVACY, OBJECTIONS & FINAL CTA */}
       <section className="safe-section" style={{ background: 'var(--ink)' }}>
         <div className="safe-content">
           <div className="section-eyebrow" style={{ color: 'var(--sage)' }}>THE ANONYMOUS ADVANTAGE</div>
@@ -601,17 +918,6 @@ export default function App() {
 
   const isMasterEmail = currentUser?.email && btoa(currentUser.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
   const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
-
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      const s = document.createElement('style');
-      s.textContent = FONTS + CSS;
-      document.head.appendChild(s);
-      return () => {
-        document.head.removeChild(s);
-      };
-    }
-  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -712,9 +1018,9 @@ export default function App() {
         />
       );
     }
-if (currentPath.startsWith('/about')) {
-  return <AboutUs navigate={navigate} />;
-}
+    if (currentPath.startsWith('/about')) {
+      return <AboutUs navigate={navigate} />;
+    }
     if (currentPath.startsWith('/resources')) {
       return <Resources navigate={navigate} />;
     }
@@ -745,31 +1051,40 @@ if (currentPath.startsWith('/about')) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      {showQuiz && <MythFactQuiz onClose={() => setShowQuiz(false)} />}
-      {modal === 'talk' && (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setModal(null)}>✕</button>
-            <div style={{ fontSize: '48px', marginBottom: '20px' }}>💬</div>
-            <h3 style={{fontFamily: "'Fraunces', serif", fontSize:'24px', marginBottom:'10px'}}>You don't have to carry this alone</h3>
-            <p style={{color:'var(--muted)', marginBottom:'20px'}}>Whether it's a small worry or something really heavy — reaching out is the bravest thing you can do.</p>
-            <div style={{background:'var(--sage-pale)', padding:'16px', borderRadius:'12px', marginBottom:'12px'}}>
-              <strong>🤖 Chat with AI Support</strong><br/>
-              <span style={{fontSize:'13px', color:'var(--sage)'}}>Available right now. Gentle, non-judgemental guidance.</span>
-            </div>
-            <div style={{background:'#FFF0F0', padding:'16px', borderRadius:'12px'}}>
-              <strong style={{color:'#C0392B'}}>🆘 Crisis Support Now</strong><br/>
-              <span style={{fontSize:'13px', color:'#C0392B'}}>iCall: 9152987821 — Available 24/7</span>
+      <Head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+      </Head>
+      <style dangerouslySetInnerHTML={{ __html: FONTS + CSS }} />
+
+      <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#FDFCFA', color: '#4A7C59', fontFamily: "'Fraunces', serif", fontSize: '24px'}}>Loading...</div>}>
+        {showQuiz && <MythFactQuiz onClose={() => setShowQuiz(false)} />}
+        {modal === 'talk' && (
+          <div className="modal-overlay" onClick={() => setModal(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setModal(null)}>✕</button>
+              <div style={{ fontSize: '48px', marginBottom: '20px' }}>💬</div>
+              <h3 style={{fontFamily: "'Fraunces', serif", fontSize:'24px', marginBottom:'10px'}}>You don't have to carry this alone</h3>
+              <p style={{color:'var(--muted)', marginBottom:'20px'}}>Whether it's a small worry or something really heavy — reaching out is the bravest thing you can do.</p>
+              <div style={{background:'var(--sage-pale)', padding:'16px', borderRadius:'12px', marginBottom:'12px'}}>
+                <strong>🤖 Chat with AI Support</strong><br/>
+                <span style={{fontSize:'13px', color:'var(--sage)'}}>Available right now. Gentle, non-judgemental guidance.</span>
+              </div>
+              <div style={{background:'#FFF0F0', padding:'16px', borderRadius:'12px'}}>
+                <strong style={{color:'#C0392B'}}>🆘 Crisis Support Now</strong><br/>
+                <span style={{fontSize:'13px', color:'#C0392B'}}>iCall: 9152987821 — Available 24/7</span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {!currentPath.startsWith('/vidyavantage') && <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />}
-      <main style={{ flex: 1, position: 'relative' }}>
-        {renderRoute()}
-      </main>
-      {!currentPath.startsWith('/vidyavantage') && <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={setModal} />}
+        {!currentPath.startsWith('/vidyavantage') && <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />}
+        <main style={{ flex: 1, position: 'relative' }}>
+          {renderRoute()}
+        </main>
+        {!currentPath.startsWith('/vidyavantage') && <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={setModal} />}
+      </Suspense>
     </div>
   );
 }
