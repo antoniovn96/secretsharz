@@ -43,9 +43,9 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           <button onClick={() => handleNav('/')} className="nav-link">Home</button>
           <button onClick={() => handleNav('/mindspace')} className="nav-link">Mind Space</button>
           
-          {/* RESOURCES ADDED HERE (Before Sharz Wall) */}
-<button onClick={() => navigate('/about')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>About Us</button>          
-<button onClick={() => handleNav('/resources')} className="nav-link">Resources</button>
+          {/* RESOURCES & ABOUT US */}
+          <button onClick={() => handleNav('/about')} className="nav-link">About Us</button>          
+          <button onClick={() => handleNav('/resources')} className="nav-link">Resources</button>
           
           <button onClick={() => handleNav('/wall')} className="nav-link">Sharz Wall</button>
           <button onClick={() => handleNav('/blog')} className="nav-link">Blog</button>
@@ -103,7 +103,10 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
             <span>🧠</span> Mind Space
           </button>
           
-          {/* RESOURCES ADDED HERE FOR MOBILE */}
+          {/* RESOURCES & ABOUT US ADDED HERE FOR MOBILE */}
+          <button onClick={() => handleNav('/about')} className="drawer-link">
+            <span>ℹ️</span> About Us
+          </button>
           <button onClick={() => handleNav('/resources')} className="drawer-link">
             <span>📚</span> Resources
           </button>
