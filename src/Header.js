@@ -44,7 +44,8 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           <button onClick={() => handleNav('/mindspace')} className="nav-link">Mind Space</button>
           
           {/* RESOURCES ADDED HERE (Before Sharz Wall) */}
-          <button onClick={() => handleNav('/resources')} className="nav-link">Resources</button>
+<button onClick={() => navigate('/about')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>About Us</button>          
+<button onClick={() => handleNav('/resources')} className="nav-link">Resources</button>
           
           <button onClick={() => handleNav('/wall')} className="nav-link">Sharz Wall</button>
           <button onClick={() => handleNav('/blog')} className="nav-link">Blog</button>
