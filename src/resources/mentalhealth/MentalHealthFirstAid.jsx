@@ -3,42 +3,63 @@ import React, { useState, useEffect } from 'react';
 const PAGE_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
-  .mh-page { min-height: 100vh; background: var(--warm-white, #FDFCFA); font-family: 'Plus Jakarta Sans', sans-serif; padding-bottom: 80px; }
+  .mh-page { min-height: 100vh; background: var(--warm-white, #FDFCFA); font-family: 'Plus Jakarta Sans', sans-serif; padding-bottom: 80px; position: relative; }
   
-  /* ── TOPBAR ── */
+  /* ── TOPBAR & STREAK ── */
   .mh-topbar { background: var(--ink, #1E2820); color: white; height: 56px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 300; border-bottom: 3px solid var(--lavender, #7C6FA0); }
   .mh-back { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 700; background: none; border: none; cursor: pointer; font-family: inherit; padding: 0; transition: color 0.2s; }
   .mh-back:hover { color: white; }
   .mh-topbar-title { font-family: 'Fraunces', serif; font-size: 16px; color: white; }
+  
+  .mh-streak-banner { background: var(--lavender, #7C6FA0); color: white; text-align: center; padding: 8px 20px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; z-index: 290; }
 
-  /* ── HERO ── */
-  .mh-hero { background: linear-gradient(135deg, var(--ink, #1E2820) 0%, #2A2438 100%); padding: 80px 48px; position: relative; overflow: hidden; text-align: center; color: white; }
+  /* ── HERO & VALIDATION ── */
+  .mh-hero { background: linear-gradient(135deg, var(--ink, #1E2820) 0%, #2A2438 100%); padding: 80px 48px 100px; position: relative; overflow: hidden; text-align: center; color: white; }
   .mh-hero::before { content: ''; position: absolute; top: -50px; left: -50px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(124,111,160,0.15), transparent 70%); border-radius: 50%; }
   .mh-hero-inner { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
   .mh-eyebrow { display: inline-block; background: rgba(124,111,160,0.2); border: 1px solid rgba(124,111,160,0.4); color: #B3A4D6; padding: 6px 16px; border-radius: 50px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
-  .mh-h1 { font-family: 'Fraunces', serif; font-size: clamp(36px, 5vw, 56px); font-weight: 700; line-height: 1.1; margin-bottom: 16px; }
+  .mh-h1 { font-family: 'Fraunces', serif; font-size: clamp(32px, 5vw, 48px); font-weight: 700; line-height: 1.15; margin-bottom: 16px; }
   .mh-h1 em { font-style: italic; color: #B3A4D6; }
-  .mh-sub { font-size: 18px; color: rgba(255,255,255,0.7); line-height: 1.6; font-weight: 400; }
+  .mh-sub { font-size: 18px; color: rgba(255,255,255,0.8); line-height: 1.6; font-weight: 400; max-width: 600px; margin: 0 auto; }
+
+  /* ── START BOX & VALIDATION ── */
+  .mh-start-container { max-width: 600px; margin: -50px auto 40px; position: relative; z-index: 20; padding: 0 24px; }
+  .mh-start-box { background: white; border-radius: 24px; padding: 32px; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,0.12); border: 3px solid var(--lavender, #7C6FA0); }
+  .mh-start-box h3 { font-family: 'Fraunces', serif; font-size: 24px; margin: 0 0 8px; color: var(--ink); }
+  .mh-start-box p { color: var(--ink-soft); margin: 0 0 24px; font-size: 15px; }
+
+  .mh-validation { text-align: center; max-width: 600px; margin: 0 auto 48px; padding: 0 24px; color: var(--ink-soft); font-size: 16px; line-height: 1.6; }
+  .mh-validation strong { color: var(--ink); font-family: 'Fraunces', serif; font-size: 20px; display: block; margin: 8px 0; }
 
   /* ── GRID & CARDS ── */
-  .mh-container { max-width: 1100px; margin: -40px auto 0; padding: 0 48px; position: relative; z-index: 10; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
-  .mh-card { background: white; border-radius: 20px; border: 1px solid var(--border, rgba(74,124,89,0.15)); box-shadow: 0 8px 24px rgba(0,0,0,0.06); padding: 32px; transition: all 0.3s; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .mh-container { max-width: 1100px; margin: 0 auto; padding: 0 48px; position: relative; z-index: 10; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+  
+  .mh-card { background: white; border-radius: 20px; border: 1px solid var(--border, rgba(74,124,89,0.15)); box-shadow: 0 8px 24px rgba(0,0,0,0.04); padding: 32px; transition: all 0.3s; display: flex; flex-direction: column; position: relative; overflow: hidden; }
   .mh-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,0.1); border-color: var(--lavender, #7C6FA0); }
   .mh-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; }
+  
+  /* Danger/Crisis Overrides */
+  @keyframes pulseRed {
+    0% { box-shadow: 0 0 0 0 rgba(192,57,43,0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(192,57,43,0); }
+    100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); }
+  }
+  .mh-card.crisis { border: 2px solid #C0392B; background: #FFFDFD; animation: pulseRed 2.5s infinite; grid-column: 1 / -1; } /* Spans full width */
+  .mh-card.crisis::before { background: linear-gradient(90deg, #C0392B, #E74C3C); }
   
   .mh-card.toolkit::before { background: linear-gradient(90deg, var(--sage, #4A7C59), #87D09E); }
   .mh-card.wheel::before { background: linear-gradient(90deg, var(--lavender, #7C6FA0), #A89DD0); }
   .mh-card.control::before { background: linear-gradient(90deg, var(--sky, #5B9EBF), #89C4E0); }
   .mh-card.anxiety::before { background: linear-gradient(90deg, var(--peach, #E8845A), #F0A97A); }
-  .mh-card.crisis::before { background: linear-gradient(90deg, #C0392B, #E74C3C); }
-  .mh-card.crisis { border-color: rgba(192,57,43,0.2); background: #FFFDFD; }
 
-  .mh-icon { font-size: 40px; margin-bottom: 20px; }
+  .mh-icon { font-size: 40px; margin-bottom: 16px; }
+  .mh-crisis-label { color: #C0392B; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
   .mh-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; color: var(--ink, #1E2820); margin-bottom: 12px; line-height: 1.2; }
   .mh-desc { font-size: 15px; color: var(--ink-soft, #3D4A40); line-height: 1.6; margin-bottom: 24px; flex: 1; }
   
-  .mh-meta { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .mh-meta { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
   .mh-badge { padding: 4px 12px; border-radius: 50px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: var(--sand, #F7F3ED); color: var(--muted, #7A8A7D); }
+  .mh-badge.time { background: #EAF4FA; color: #2980B9; border: 1px solid rgba(41,128,185,0.2); }
   
   .mh-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .mh-btn { padding: 12px 20px; border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-family: inherit; }
@@ -46,11 +67,21 @@ const PAGE_CSS = `
   .mh-btn-primary:hover { background: #655985; transform: translateY(-2px); }
   .mh-btn-outline { background: transparent; color: var(--ink, #1E2820); border: 2px solid var(--border, rgba(74,124,89,0.15)); }
   .mh-btn-outline:hover { border-color: var(--lavender, #7C6FA0); color: var(--lavender, #7C6FA0); }
-  
   .mh-btn-danger { background: #C0392B; color: white; }
   .mh-btn-danger:hover { background: #A93226; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(192,57,43,0.3); }
 
-  /* ── MODALS ── */
+  /* ── RETURN HOOK ── */
+  .mh-return-hook { max-width: 800px; margin: 80px auto 0; padding: 48px; border-top: 1px solid var(--border); text-align: center; }
+  .mh-return-hook h3 { font-family: 'Fraunces', serif; font-size: 24px; color: var(--ink); margin-bottom: 24px; }
+  .mh-hook-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+  .mh-hook-link { background: white; border: 1px solid var(--border); padding: 12px 24px; border-radius: 50px; color: var(--ink); font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; }
+  .mh-hook-link:hover { border-color: var(--lavender); color: var(--lavender); transform: translateY(-2px); }
+
+  /* ── TOAST FEEDBACK ── */
+  .mh-toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--ink); color: white; padding: 16px 24px; border-radius: 50px; font-weight: 600; font-size: 14px; z-index: 2000; opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 12px 24px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; }
+  .mh-toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* ── MODALS (Re-used) ── */
   .mh-modal-overlay { position: fixed; inset: 0; background: rgba(30,40,32,0.7); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
   .mh-modal { background: white; border-radius: 24px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 24px 48px rgba(0,0,0,0.2); animation: floatUp 0.3s ease; }
   .mh-modal-header { padding: 32px 32px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: white; z-index: 10; display: flex; justify-content: space-between; align-items: flex-start; }
@@ -97,12 +128,13 @@ const PAGE_CSS = `
   @keyframes floatUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
   @media(max-width: 768px) {
-    .mh-hero { padding: 60px 24px 80px; }
+    .mh-hero { padding: 60px 24px 100px; }
     .mh-h1 { font-size: 32px; }
-    .mh-container { padding: 0 24px; margin-top: -30px; grid-template-columns: 1fr; }
+    .mh-container { padding: 0 24px; grid-template-columns: 1fr; }
     .mh-modal-header, .mh-modal-body { padding: 24px; }
     .crisis-item { flex-direction: column; align-items: flex-start; }
     .ew-core-grid { grid-template-columns: 1fr; }
+    .mh-start-container { margin-top: -60px; }
   }
 `;
 
@@ -138,7 +170,7 @@ const EMOTION_DATA = {
     }
   },
   Happy: {
-    color: '#E1B846', // Calmer yellow
+    color: '#E1B846', 
     desc: "A state of well-being, contentment, or positive connection.",
     children: {
       Playful: ["Aroused", "Cheeky", "Free"],
@@ -169,29 +201,15 @@ const EMOTION_DATA = {
 // ==========================================
 // INTERACTIVE EMOTION WHEEL COMPONENT
 // ==========================================
-function InteractiveEmotionWheel() {
+function InteractiveEmotionWheel({ onCalmClick }) {
   const [core, setCore] = useState(null);
   const [middle, setMiddle] = useState(null);
   const [outer, setOuter] = useState(null);
 
-  const resetAll = () => {
-    setCore(null);
-    setMiddle(null);
-    setOuter(null);
-  };
+  const resetAll = () => { setCore(null); setMiddle(null); setOuter(null); };
+  const selectCore = (key) => { setCore(key); setMiddle(null); setOuter(null); };
+  const selectMiddle = (key) => { setMiddle(key); setOuter(null); };
 
-  const selectCore = (key) => {
-    setCore(key);
-    setMiddle(null);
-    setOuter(null);
-  };
-
-  const selectMiddle = (key) => {
-    setMiddle(key);
-    setOuter(null);
-  };
-
-  // View 1: Core Selection
   if (!core) {
     return (
       <div className="ew-container">
@@ -201,12 +219,7 @@ function InteractiveEmotionWheel() {
         </div>
         <div className="ew-core-grid">
           {Object.entries(EMOTION_DATA).map(([key, data]) => (
-            <button 
-              key={key} 
-              className="ew-core-card" 
-              style={{ background: data.color }}
-              onClick={() => selectCore(key)}
-            >
+            <button key={key} className="ew-core-card" style={{ background: data.color }} onClick={() => selectCore(key)}>
               <div className="ew-core-title">{key}</div>
               <div className="ew-core-sub">{Object.keys(data.children).length} middle states</div>
             </button>
@@ -222,30 +235,20 @@ function InteractiveEmotionWheel() {
   return (
     <div className="ew-container">
       <div className="ew-nav">
-        <button className="ew-back-btn" onClick={resetAll}>
-          ← View Full Wheel
-        </button>
+        <button className="ew-back-btn" onClick={resetAll}>← View Full Wheel</button>
       </div>
 
       {/* Breadcrumbs */}
       <div className="ew-breadcrumbs">
         <div className="ew-bc-item">
-          <span 
-            className={`ew-bc-text ${!middle ? 'active' : ''}`}
-            style={{ cursor: 'pointer', color: !middle ? coreData.color : 'inherit' }}
-            onClick={() => { setMiddle(null); setOuter(null); }}
-          >
+          <span className={`ew-bc-text ${!middle ? 'active' : ''}`} style={{ cursor: 'pointer', color: !middle ? coreData.color : 'inherit' }} onClick={() => { setMiddle(null); setOuter(null); }}>
             {core}
           </span>
         </div>
         {middle && (
           <div className="ew-bc-item">
             <span className="ew-bc-arrow">›</span>
-            <span 
-              className={`ew-bc-text ${!outer ? 'active' : ''}`}
-              style={{ cursor: 'pointer', color: !outer ? coreData.color : 'inherit' }}
-              onClick={() => setOuter(null)}
-            >
+            <span className={`ew-bc-text ${!outer ? 'active' : ''}`} style={{ cursor: 'pointer', color: !outer ? coreData.color : 'inherit' }} onClick={() => setOuter(null)}>
               {middle}
             </span>
           </div>
@@ -253,87 +256,47 @@ function InteractiveEmotionWheel() {
         {outer && (
           <div className="ew-bc-item">
             <span className="ew-bc-arrow">›</span>
-            <span className="ew-bc-text active" style={{ color: coreData.color }}>
-              {outer}
-            </span>
+            <span className="ew-bc-text active" style={{ color: coreData.color }}>{outer}</span>
           </div>
         )}
       </div>
 
-      {/* View 2: Middle Selection */}
       {!middle && (
         <div className="ew-selection-view">
-          <h4 style={{ fontSize: '18px', color: 'var(--ink)', marginBottom: '16px' }}>
-            What kind of {core}?
-          </h4>
+          <h4 style={{ fontSize: '18px', color: 'var(--ink)', marginBottom: '16px' }}>What kind of {core}?</h4>
           <div className="ew-chip-grid">
             {middleKeys.map(mKey => (
-              <button 
-                key={mKey} 
-                className="ew-chip"
-                style={{ background: '#F7F3ED', color: 'var(--ink)', borderColor: 'transparent' }}
-                onClick={() => selectMiddle(mKey)}
-              >
-                {mKey}
-              </button>
+              <button key={mKey} className="ew-chip" style={{ background: '#F7F3ED', color: 'var(--ink)', borderColor: 'transparent' }} onClick={() => selectMiddle(mKey)}>{mKey}</button>
             ))}
           </div>
         </div>
       )}
 
-      {/* View 3: Outer Selection */}
       {middle && !outer && (
         <div className="ew-selection-view">
-          <h4 style={{ fontSize: '18px', color: 'var(--ink)', marginBottom: '16px' }}>
-            Let's get even more specific:
-          </h4>
+          <h4 style={{ fontSize: '18px', color: 'var(--ink)', marginBottom: '16px' }}>Let's get even more specific:</h4>
           <div className="ew-chip-grid">
             {coreData.children[middle].map(oKey => (
-              <button 
-                key={oKey} 
-                className="ew-chip"
-                style={{ background: 'white', color: coreData.color, borderColor: coreData.color }}
-                onClick={() => setOuter(oKey)}
-              >
-                {oKey}
-              </button>
+              <button key={oKey} className="ew-chip" style={{ background: 'white', color: coreData.color, borderColor: coreData.color }} onClick={() => setOuter(oKey)}>{oKey}</button>
             ))}
           </div>
         </div>
       )}
 
-      {/* View 4: Final Selection & Validation */}
       {outer && (
         <div className="ew-result-box" style={{ borderColor: coreData.color }}>
-          <div className="ew-result-title" style={{ color: coreData.color }}>
-            You are feeling {outer}.
-          </div>
+          <div className="ew-result-title" style={{ color: coreData.color }}>You are feeling {outer}.</div>
           <p className="ew-result-desc">
             Naming your exact emotion immediately decreases its power in your amygdala. 
             It is completely valid to feel {outer.toLowerCase()} right now. 
             Take a deep breath and acknowledge it.
           </p>
-          <div style={{ marginTop: '20px' }}>
-            <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
-              Other variations of feeling {middle}:
-            </p>
-            <div className="ew-chip-grid">
-              {coreData.children[middle].map(sibling => (
-                <button 
-                  key={sibling} 
-                  className={`ew-chip ${sibling === outer ? 'active' : ''}`}
-                  style={{ 
-                    background: sibling === outer ? coreData.color : 'transparent', 
-                    color: sibling === outer ? 'white' : 'var(--ink-soft)', 
-                    borderColor: sibling === outer ? coreData.color : '#EAE5DE',
-                    fontSize: '13px', padding: '6px 14px'
-                  }}
-                  onClick={() => setOuter(sibling)}
-                >
-                  {sibling}
-                </button>
-              ))}
-            </div>
+          
+          <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #EAE5DE' }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink)', marginBottom: '12px' }}>What to do next?</p>
+            <button className="mh-btn mh-btn-primary" onClick={onCalmClick} style={{ width: '100%', padding: '16px' }}>
+              Help me calm this feeling →
+            </button>
           </div>
         </div>
       )}
@@ -347,6 +310,7 @@ function InteractiveEmotionWheel() {
 // ==========================================
 export default function MentalHealthFirstAid({ navigate, onBack }) {
   const [activeModal, setActiveModal] = useState(null);
+  const [toastMessage, setToastMessage] = useState("");
 
   // Inject CSS
   useEffect(() => {
@@ -359,62 +323,89 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
   // Scroll to top on load
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  const openModal = (id) => setActiveModal(id);
+  const triggerToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(""), 4500);
+  };
+
+  const openModal = (id) => {
+    setActiveModal(id);
+    triggerToast("You're doing the right thing. Take this one step at a time.");
+  };
+  
   const closeModal = () => setActiveModal(null);
 
+  const handleCalmFeelingClick = () => {
+    closeModal();
+    // Simulate routing to the breathing tool by opening a PDF or triggering another view
+    window.open("/resources/mh/Grounding_Toolkit.pdf", "_blank");
+    triggerToast("Opening the Grounding Toolkit. Just breathe.");
+  };
+
   const RESOURCES = [
-    {
-      id: "grounding",
-      title: "The Grounding Toolkit",
-      cls: "toolkit",
-      icon: "🧘🏽",
-      badges: ["Printable 1-Pager", "Instant Relief"],
-      desc: "A beautifully designed, printable guide featuring the 5-4-3-2-1 technique, Box Breathing, and the 4-7-8 method. Perfect for sticking above a study desk.",
-      action1: { text: "Download PDF", link: "/resources/mh/Grounding_Toolkit.pdf" },
-    },
-    {
-      id: "emotion-wheel",
-      title: "The Emotion Wheel",
-      cls: "wheel",
-      icon: "🎯",
-      badges: ["Interactive", "Printable"],
-      desc: "Expand your emotional vocabulary. Stop saying 'I feel bad' and figure out if you're actually feeling overwhelmed, insecure, burnt out, or disconnected.",
-      action1: { text: "Use Interactive Tool", onClick: () => openModal('wheel') },
-      action2: { text: "Download PDF", link: "/resources/mh/Emotion_Wheel.pdf" },
-    },
-    {
-      id: "control",
-      title: "In My Control vs. Out of My Control",
-      cls: "control",
-      icon: "⭕",
-      badges: ["Worksheet", "Anxiety Prep"],
-      desc: "A tactical worksheet to map out your anxieties and physically let go of things you cannot change (like exam difficulty or other people's opinions).",
-      action1: { text: "Download PDF", link: "/resources/mh/Control_Worksheet.pdf" },
-    },
-    {
-      id: "exam-survival",
-      title: "The Exam Anxiety Survival Guide",
-      cls: "anxiety",
-      icon: "⚡",
-      badges: ["3-Page Guide", "High Stress"],
-      desc: "How to handle a panic attack during a test, how to actually sleep the night before, and how to separate your self-worth from your marks.",
-      action1: { text: "Read Guide", onClick: () => openModal('exam') },
-      action2: { text: "Download PDF", link: "/resources/mh/Exam_Survival.pdf" },
-    },
     {
       id: "crisis",
       title: "National Crisis Directory",
       cls: "crisis",
       icon: "🆘",
       badges: ["Emergency", "24/7 Support"],
+      timeBadge: "⏱ Immediate",
       desc: "A permanently updated, accessible list of verified Indian helplines for severe distress. If things feel too heavy, reach out immediately.",
       action1: { text: "View Helplines", isDanger: true, onClick: () => openModal('crisis') },
+      isUrgent: true
+    },
+    {
+      id: "grounding",
+      title: "I feel anxious and overwhelmed", // Upgraded Title
+      cls: "toolkit",
+      icon: "🧘🏽",
+      badges: ["Printable 1-Pager"],
+      timeBadge: "⏱ 2 min relief",
+      desc: "A beautifully designed, printable guide featuring the 5-4-3-2-1 technique, Box Breathing, and the 4-7-8 method. Perfect for sticking above a study desk.",
+      action1: { text: "Download Toolkit", link: "/resources/mh/Grounding_Toolkit.pdf" },
+    },
+    {
+      id: "emotion-wheel",
+      title: "I don't understand what I'm feeling", // Upgraded Title
+      cls: "wheel",
+      icon: "🎯",
+      badges: ["Interactive Tool"],
+      timeBadge: "⏱ 5 min relief",
+      desc: "Expand your emotional vocabulary. Stop saying 'I feel bad' and figure out if you're actually feeling overwhelmed, insecure, burnt out, or disconnected.",
+      action1: { text: "Start Interactive Wheel", onClick: () => openModal('wheel') },
+      action2: { text: "Download PDF", link: "/resources/mh/Emotion_Wheel.pdf" },
+    },
+    {
+      id: "control",
+      title: "I feel out of control", // Upgraded Title
+      cls: "control",
+      icon: "⭕",
+      badges: ["Worksheet"],
+      timeBadge: "⏱ 10 min relief",
+      desc: "A tactical worksheet to map out your anxieties and physically let go of things you cannot change (like exam difficulty or other people's opinions).",
+      action1: { text: "Download Worksheet", link: "/resources/mh/Control_Worksheet.pdf" },
+    },
+    {
+      id: "exam-survival",
+      title: "I'm panicking about my exams", // Upgraded Title
+      cls: "anxiety",
+      icon: "⚡",
+      badges: ["3-Page Guide"],
+      timeBadge: "⏱ 3 min relief",
+      desc: "How to handle a panic attack during a test, how to actually sleep the night before, and how to separate your self-worth from your marks.",
+      action1: { text: "Read Survival Guide", onClick: () => openModal('exam') },
+      action2: { text: "Download PDF", link: "/resources/mh/Exam_Survival.pdf" },
     }
   ];
 
   return (
     <>
       <div className="mh-page">
+        {/* Streak Psychology Banner */}
+        <div className="mh-streak-banner">
+          Day 1: You showed up. That matters.
+        </div>
+
         <div className="mh-topbar">
           <button className="mh-back" onClick={onBack || (() => navigate && navigate("/resources"))}>← Back to Resources</button>
           <div className="mh-topbar-title">Secret Sharz</div>
@@ -424,24 +415,46 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
         <section className="mh-hero">
           <div className="mh-hero-inner">
             <div className="mh-eyebrow">Emotional First Aid</div>
-            <h1 className="mh-h1">Tools for immediate relief <br/><em>and daily maintenance.</em></h1>
-            <p className="mh-sub">You don't have to figure it all out right now. Just focus on regulating your nervous system and getting through today. These tools are here to help.</p>
+            <h1 className="mh-h1">Feeling overwhelmed right now?<br/><em>Let’s slow it down together.</em></h1>
+            <p className="mh-sub">You don't need to fix everything. Just focus on getting through the next few minutes.</p>
           </div>
         </section>
+
+        {/* Start Box Path */}
+        <div className="mh-start-container">
+          <div className="mh-start-box">
+            <h3>Not sure where to start?</h3>
+            <p>If you're overwhelmed right now, begin here.</p>
+            <button className="mh-btn mh-btn-primary" style={{ padding: '16px 32px', fontSize: '16px' }} onClick={() => openModal('wheel')}>
+              Start 60-sec Calm →
+            </button>
+          </div>
+        </div>
+
+        {/* Validation Section */}
+        <div className="mh-validation">
+          Thousands of students feel like this every day.
+          <strong>You're not weak. You're overwhelmed.</strong>
+          And that can be helped.
+        </div>
 
         <section className="mh-container">
           {RESOURCES.map((res) => (
             <div key={res.id} className={`mh-card ${res.cls}`}>
+              {res.isUrgent && <span className="mh-crisis-label">⚠️ Need Immediate Help?</span>}
               <div className="mh-icon">{res.icon}</div>
               <h3 className="mh-title">{res.title}</h3>
+              
               <div className="mh-meta">
+                <span className="mh-badge time">{res.timeBadge}</span>
                 {res.badges.map(b => <span key={b} className="mh-badge">{b}</span>)}
               </div>
+              
               <p className="mh-desc">{res.desc}</p>
               
               <div className="mh-actions">
                 {res.action1.link ? (
-                  <a href={res.action1.link} download className={`mh-btn ${res.action1.isDanger ? 'mh-btn-danger' : 'mh-btn-primary'}`} target="_blank" rel="noreferrer">
+                  <a href={res.action1.link} download className={`mh-btn ${res.action1.isDanger ? 'mh-btn-danger' : 'mh-btn-primary'}`} target="_blank" rel="noreferrer" onClick={() => triggerToast("You're doing the right thing.")}>
                     {res.action1.text}
                   </a>
                 ) : (
@@ -459,6 +472,21 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
             </div>
           ))}
         </section>
+
+        {/* Return to Platform Hook */}
+        <div className="mh-return-hook">
+          <h3>Want to go deeper?</h3>
+          <div className="mh-hook-links">
+             <button className="mh-hook-link" onClick={() => triggerToast("Navigating to sharing portal...")}>→ Share anonymously</button>
+             <button className="mh-hook-link" onClick={() => triggerToast("Navigating to emotion tracker...")}>→ Track your emotions</button>
+             <button className="mh-hook-link" onClick={() => triggerToast("Navigating to career path...")}>→ Discover your career path</button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── TOAST NOTIFICATION ── */}
+      <div className={`mh-toast ${toastMessage ? 'visible' : ''}`}>
+        <span>💚</span> {toastMessage}
       </div>
 
       {/* ── CRISIS DIRECTORY MODAL ── */}
@@ -530,9 +558,6 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
               <h4 style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', color: 'var(--ink)', marginBottom: '12px' }}>2. During the Exam: The 30-Second Reset</h4>
               <p style={{ marginBottom: '24px' }}>If you look at the paper and freeze, flip it over. Do not look at the questions. Do the 5-4-3-2-1 grounding technique. Look for 5 blue things in the room. Feel 4 textures. Take 3 deep breaths. You have the time. Regulate your nervous system first, then turn the paper back over.</p>
 
-              <h4 style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', color: 'var(--ink)', marginBottom: '12px' }}>3. The Truth About Self-Worth</h4>
-              <p style={{ marginBottom: '24px' }}>An exam measures how well you retained specific information on a specific day. It does not measure your intelligence, your capability to succeed in life, or your worth as a human being. The result of this test is data, not an identity.</p>
-
               <div style={{ background: 'var(--sand)', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
                 <p style={{ margin: 0, fontWeight: 700 }}>Download the full 3-page PDF guide for more tactical strategies.</p>
               </div>
@@ -541,7 +566,7 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
         </div>
       )}
 
-      {/* ── EMOTION WHEEL MODAL (UPDATED) ── */}
+      {/* ── EMOTION WHEEL MODAL ── */}
       {activeModal === 'wheel' && (
         <div className="mh-modal-overlay" onClick={closeModal}>
           <div className="mh-modal" onClick={e => e.stopPropagation()}>
@@ -550,7 +575,7 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
               <button className="mh-modal-close" onClick={closeModal}>✕</button>
             </div>
             <div className="mh-modal-body">
-              <InteractiveEmotionWheel />
+              <InteractiveEmotionWheel onCalmClick={handleCalmFeelingClick} />
             </div>
           </div>
         </div>
