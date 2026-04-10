@@ -41,12 +41,12 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
         {/* DESKTOP NAVIGATION (Visible on larger screens) */}
         <nav className="desktop-nav">
           <button onClick={() => handleNav('/')} className="nav-link">Home</button>
-          <button onClick={() => handleNav('/mindspace')} className="nav-link">Mind Space</button>
           
-          {/* RESOURCES & ABOUT US */}
+          {/* ABOUT US (Moved before Mind Space, styling fixed) */}
           <button onClick={() => handleNav('/about')} className="nav-link">About Us</button>          
-          <button onClick={() => handleNav('/resources')} className="nav-link">Resources</button>
           
+          <button onClick={() => handleNav('/mindspace')} className="nav-link">Mind Space</button>
+          <button onClick={() => handleNav('/resources')} className="nav-link">Resources</button>
           <button onClick={() => handleNav('/wall')} className="nav-link">Sharz Wall</button>
           <button onClick={() => handleNav('/blog')} className="nav-link">Blog</button>
           <button onClick={() => handleNav('/vidyavantage')} className="nav-link highlight-link">VidyaVantage</button>
@@ -99,18 +99,18 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           <button onClick={() => handleNav('/')} className="drawer-link">
             <span>🏠</span> Home
           </button>
-          <button onClick={() => handleNav('/mindspace')} className="drawer-link">
-            <span>🧠</span> Mind Space
-          </button>
           
-          {/* RESOURCES & ABOUT US ADDED HERE FOR MOBILE */}
+          {/* ABOUT US ADDED HERE FOR MOBILE (Before Mind Space) */}
           <button onClick={() => handleNav('/about')} className="drawer-link">
             <span>ℹ️</span> About Us
+          </button>
+
+          <button onClick={() => handleNav('/mindspace')} className="drawer-link">
+            <span>🧠</span> Mind Space
           </button>
           <button onClick={() => handleNav('/resources')} className="drawer-link">
             <span>📚</span> Resources
           </button>
-          
           <button onClick={() => handleNav('/wall')} className="drawer-link">
             <span>💬</span> Sharz Wall
           </button>
@@ -157,13 +157,13 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 10px 48px; /* Reduced padding for a smaller header */
+          padding: 10px 48px;
           background-color: #0f172a;
           border-bottom: 1px solid #334155;
           z-index: 1000;
           position: sticky;
           top: 0;
-          height: 65px; /* Fixed normal height */
+          height: 65px;
         }
 
         .logo-container {
@@ -173,7 +173,7 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
         }
 
         .header-logo {
-          height: 40px; /* Reduced from 65px to a standard logo size */
+          height: 40px;
           width: auto;
           transition: transform 0.2s ease;
         }
@@ -204,11 +204,11 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
         }
 
         .highlight-link {
-          color: #E8650A; /* VidyaVantage Saffron */
+          color: #E8650A;
           font-weight: 600;
         }
         .highlight-link:hover {
-          color: #F0A500; /* VidyaVantage Gold */
+          color: #F0A500;
         }
 
         .nav-divider {
@@ -244,7 +244,7 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
 
         /* HAMBURGER BUTTON */
         .hamburger-btn {
-          display: none; /* Hidden on desktop */
+          display: none;
           flex-direction: column;
           justify-content: space-between;
           height: 20px;
@@ -386,10 +386,10 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
             padding: 10px 24px;
           }
           .desktop-nav {
-            display: none; /* Hides inline nav on mobile */
+            display: none;
           }
           .hamburger-btn {
-            display: flex; /* Shows hamburger on mobile */
+            display: flex;
           }
           .side-drawer {
             width: 80vw;
