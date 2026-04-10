@@ -92,8 +92,12 @@ const TEMPLATE_CSS = `
   .share-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-right: 4px; }
   .share-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 50px; border: 1.5px solid var(--border); background: white; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; color: var(--ink-soft); }
   .share-btn:hover { transform: translateY(-2px); }
+  .share-btn.facebook:hover { background: #1877F2; border-color: #1877F2; color: white; }
+  .share-btn.twitter:hover { background: #000000; border-color: #000000; color: white; }
+  .share-btn.linkedin:hover { background: #0A66C2; border-color: #0A66C2; color: white; }
+  .share-btn.pinterest:hover { background: #E60023; border-color: #E60023; color: white; }
   .share-btn.whatsapp:hover { background: #25D366; border-color: #25D366; color: white; }
-  .share-btn.twitter:hover { background: #1DA1F2; border-color: #1DA1F2; color: white; }
+  .share-btn.email:hover { background: #718096; border-color: #718096; color: white; }
   .share-btn.copy:hover { background: var(--sage); border-color: var(--sage); color: white; }
   .share-btn.copied { background: var(--sage); border-color: var(--sage); color: white; }
 
@@ -296,14 +300,33 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
     document.body.removeChild(ta);
   };
 
+  const handleFacebookShare = useCallback(() => {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank', 'noopener');
+  }, []);
+
+  const handleTwitterShare = useCallback(() => {
+    const text = `"${safeMeta.title}" via @SecretSharz — a must-read for every student`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`, '_blank', 'noopener');
+  }, [safeMeta.title]);
+
+  const handleLinkedInShare = useCallback(() => {
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank', 'noopener');
+  }, []);
+
+  const handlePinterestShare = useCallback(() => {
+    const text = safeMeta.title ? encodeURIComponent(safeMeta.title) : '';
+    window.open(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(window.location.href)}&description=${text}`, '_blank', 'noopener');
+  }, [safeMeta.title]);
+
   const handleWhatsAppShare = useCallback(() => {
     const text = `Read this article from Secret Sharz: "${safeMeta.title}" — ${window.location.href}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   }, [safeMeta.title]);
 
-  const handleTwitterShare = useCallback(() => {
-    const text = `"${safeMeta.title}" via @SecretSharz — a must-read for every student`;
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`, '_blank', 'noopener');
+  const handleEmailShare = useCallback(() => {
+    const subject = safeMeta.title ? encodeURIComponent(safeMeta.title) : 'Check out this article';
+    const body = `I thought you might find this interesting:%0A%0A${safeMeta.title || ''}%0A${window.location.href}`;
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
   }, [safeMeta.title]);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -393,14 +416,26 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
             {children}
           </div>
 
-          {/* FIX: Share bar with WhatsApp + Twitter — was completely missing */}
+          {/* FIX: Share bar with all requested networks */}
           <div className="share-bar">
             <span className="share-label">Share</span>
+            <button className="share-btn facebook" onClick={handleFacebookShare}>
+              📘 Facebook
+            </button>
+            <button className="share-btn twitter" onClick={handleTwitterShare}>
+              𝕏 X (Twitter)
+            </button>
+            <button className="share-btn linkedin" onClick={handleLinkedInShare}>
+              💼 LinkedIn
+            </button>
+            <button className="share-btn pinterest" onClick={handlePinterestShare}>
+              📌 Pinterest
+            </button>
             <button className="share-btn whatsapp" onClick={handleWhatsAppShare}>
               💬 WhatsApp
             </button>
-            <button className="share-btn twitter" onClick={handleTwitterShare}>
-              𝕏 Twitter/X
+            <button className="share-btn email" onClick={handleEmailShare}>
+              ✉️ Email
             </button>
             <button className={`share-btn copy ${copied ? 'copied' : ''}`} onClick={handleCopyLink}>
               {copied ? '✓ Copied!' : '🔗 Copy Link'}
