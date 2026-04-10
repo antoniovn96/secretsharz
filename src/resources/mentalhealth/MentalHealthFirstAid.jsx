@@ -59,6 +59,32 @@ const PAGE_CSS = `
   .mh-modal-close:hover { background: #EAE5DE; color: var(--ink); }
   .mh-modal-body { padding: 32px; }
 
+  /* ── INTERACTIVE EMOTION WHEEL ── */
+  .ew-container { display: flex; flex-direction: column; gap: 24px; }
+  .ew-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .ew-back-btn { background: none; border: none; font-size: 14px; font-weight: 600; color: var(--lavender, #7C6FA0); cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 0; transition: 0.2s; }
+  .ew-back-btn:hover { color: #5B4E7A; transform: translateX(-4px); }
+  
+  .ew-core-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .ew-core-card { padding: 24px; border-radius: 16px; color: white; cursor: pointer; text-align: center; transition: 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: none; font-family: inherit; }
+  .ew-core-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); filter: brightness(1.05); }
+  .ew-core-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .ew-core-sub { font-size: 12px; opacity: 0.9; }
+
+  .ew-chip-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+  .ew-chip { padding: 12px 20px; border-radius: 50px; font-size: 15px; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: 0.2s; font-family: inherit; }
+  .ew-chip:hover { transform: translateY(-2px); }
+  .ew-chip.active { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+  .ew-breadcrumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--muted); background: var(--sand); padding: 12px 20px; border-radius: 12px; margin-bottom: 24px; }
+  .ew-bc-item { display: flex; align-items: center; gap: 8px; }
+  .ew-bc-arrow { opacity: 0.5; font-size: 12px; }
+  .ew-bc-text.active { color: var(--ink); font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; }
+
+  .ew-result-box { background: white; border: 2px solid; padding: 24px; border-radius: 16px; margin-top: 16px; animation: fadeIn 0.3s ease; }
+  .ew-result-title { font-family: 'Fraunces', serif; font-size: 24px; margin-bottom: 8px; }
+  .ew-result-desc { font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
+
   /* Crisis Directory Specifics */
   .crisis-list { display: flex; flex-direction: column; gap: 16px; }
   .crisis-item { background: #FFF0F0; border: 1px solid rgba(192,57,43,0.2); padding: 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
@@ -67,15 +93,258 @@ const PAGE_CSS = `
   .crisis-call-btn { background: #C0392B; color: white; text-decoration: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
   .crisis-call-btn:hover { background: #A93226; transform: scale(1.05); }
 
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes floatUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
   @media(max-width: 768px) {
     .mh-hero { padding: 60px 24px 80px; }
     .mh-h1 { font-size: 32px; }
     .mh-container { padding: 0 24px; margin-top: -30px; grid-template-columns: 1fr; }
     .mh-modal-header, .mh-modal-body { padding: 24px; }
     .crisis-item { flex-direction: column; align-items: flex-start; }
+    .ew-core-grid { grid-template-columns: 1fr; }
   }
 `;
 
+// ==========================================
+// DATA STRUCTURE FOR EMOTION WHEEL
+// ==========================================
+const EMOTION_DATA = {
+  Anger: {
+    color: '#E8845A',
+    desc: "A response to feeling blocked, threatened, or treated unfairly.",
+    children: {
+      Frustrated: ["Irritated", "Infuriated", "Annoyed"],
+      Mad: ["Furious", "Jealous", "Resentful"],
+      Bitter: ["Indignant", "Violated", "Outraged"]
+    }
+  },
+  Fear: {
+    color: '#7C6FA0',
+    desc: "A response to perceived danger, uncertainty, or feeling unsafe.",
+    children: {
+      Anxious: ["Overwhelmed", "Worried", "Stressed"],
+      Insecure: ["Inadequate", "Inferior", "Worthless"],
+      Scared: ["Helpless", "Frightened", "Panicked"]
+    }
+  },
+  Surprise: {
+    color: '#5B9EBF',
+    desc: "A response to unexpected events, whether positive or negative.",
+    children: {
+      Excited: ["Energetic", "Eager", "Thrilled"],
+      Amazed: ["Astonished", "Awe", "Fascinated"],
+      Confused: ["Perplexed", "Disillusioned", "Dismayed"]
+    }
+  },
+  Happy: {
+    color: '#E1B846', // Calmer yellow
+    desc: "A state of well-being, contentment, or positive connection.",
+    children: {
+      Playful: ["Aroused", "Cheeky", "Free"],
+      Content: ["Joyful", "Peaceful", "Trusting"],
+      Proud: ["Important", "Confident", "Respected"]
+    }
+  },
+  Sad: {
+    color: '#4A6984',
+    desc: "A response to loss, disconnection, or unfulfilled needs.",
+    children: {
+      Lonely: ["Isolated", "Abandoned", "Empty"],
+      Vulnerable: ["Fragile", "Victimized", "Powerless"],
+      Despair: ["Grief", "Powerless", "Hopeless"]
+    }
+  },
+  Disgust: {
+    color: '#4A7C59',
+    desc: "A reaction of repulsion or intense disapproval.",
+    children: {
+      Disapproving: ["Judgmental", "Loathing", "Condemning"],
+      Disappointed: ["Appalled", "Revolted", "Nauseated"],
+      Awful: ["Detestable", "Repugnant", "Abominable"]
+    }
+  }
+};
+
+// ==========================================
+// INTERACTIVE EMOTION WHEEL COMPONENT
+// ==========================================
+function InteractiveEmotionWheel() {
+  const [core, setCore] = useState(null);
+  const [middle, setMiddle] = useState(null);
+  const [outer, setOuter] = useState(null);
+
+  const resetAll = () => {
+    setCore(null);
+    setMiddle(null);
+    setOuter(null);
+  };
+
+  const selectCore = (key) => {
+    setCore(key);
+    setMiddle(null);
+    setOuter(null);
+  };
+
+  const selectMiddle = (key) => {
+    setMiddle(key);
+    setOuter(null);
+  };
+
+  // View 1: Core Selection
+  if (!core) {
+    return (
+      <div className="ew-container">
+        <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+          <h4 style={{ fontSize: '18px', color: 'var(--ink)' }}>Where are you starting from?</h4>
+          <p style={{ fontSize: '14px', color: 'var(--ink-soft)' }}>Select a core feeling below to dig deeper.</p>
+        </div>
+        <div className="ew-core-grid">
+          {Object.entries(EMOTION_DATA).map(([key, data]) => (
+            <button 
+              key={key} 
+              className="ew-core-card" 
+              style={{ background: data.color }}
+              onClick={() => selectCore(key)}
+            >
+              <div className="ew-core-title">{key}</div>
+              <div className="ew-core-sub">{Object.keys(data.children).length} middle states</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const coreData = EMOTION_DATA[core];
+  const middleKeys = Object.keys(coreData.children);
+
+  return (
+    <div className="ew-container">
+      <div className="ew-nav">
+        <button className="ew-back-btn" onClick={resetAll}>
+          ← View Full Wheel
+        </button>
+      </div>
+
+      {/* Breadcrumbs */}
+      <div className="ew-breadcrumbs">
+        <div className="ew-bc-item">
+          <span 
+            className={`ew-bc-text ${!middle ? 'active' : ''}`}
+            style={{ cursor: 'pointer', color: !middle ? coreData.color : 'inherit' }}
+            onClick={() => { setMiddle(null); setOuter(null); }}
+          >
+            {core}
+          </span>
+        </div>
+        {middle && (
+          <div className="ew-bc-item">
+            <span className="ew-bc-arrow">›</span>
+            <span 
+              className={`ew-bc-text ${!outer ? 'active' : ''}`}
+              style={{ cursor: 'pointer', color: !outer ? coreData.color : 'inherit' }}
+              onClick={() => setOuter(null)}
+            >
+              {middle}
+            </span>
+          </div>
+        )}
+        {outer && (
+          <div className="ew-bc-item">
+            <span className="ew-bc-arrow">›</span>
+            <span className="ew-bc-text active" style={{ color: coreData.color }}>
+              {outer}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* View 2: Middle Selection */}
+      {!middle && (
+        <div className="ew-selection-view">
+          <h4 style={{ fontSize: '18px', color: 'var(--ink)', marginBottom: '16px' }}>
+            What kind of {core}?
+          </h4>
+          <div className="ew-chip-grid">
+            {middleKeys.map(mKey => (
+              <button 
+                key={mKey} 
+                className="ew-chip"
+                style={{ background: '#F7F3ED', color: 'var(--ink)', borderColor: 'transparent' }}
+                onClick={() => selectMiddle(mKey)}
+              >
+                {mKey}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* View 3: Outer Selection */}
+      {middle && !outer && (
+        <div className="ew-selection-view">
+          <h4 style={{ fontSize: '18px', color: 'var(--ink)', marginBottom: '16px' }}>
+            Let's get even more specific:
+          </h4>
+          <div className="ew-chip-grid">
+            {coreData.children[middle].map(oKey => (
+              <button 
+                key={oKey} 
+                className="ew-chip"
+                style={{ background: 'white', color: coreData.color, borderColor: coreData.color }}
+                onClick={() => setOuter(oKey)}
+              >
+                {oKey}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* View 4: Final Selection & Validation */}
+      {outer && (
+        <div className="ew-result-box" style={{ borderColor: coreData.color }}>
+          <div className="ew-result-title" style={{ color: coreData.color }}>
+            You are feeling {outer}.
+          </div>
+          <p className="ew-result-desc">
+            Naming your exact emotion immediately decreases its power in your amygdala. 
+            It is completely valid to feel {outer.toLowerCase()} right now. 
+            Take a deep breath and acknowledge it.
+          </p>
+          <div style={{ marginTop: '20px' }}>
+            <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
+              Other variations of feeling {middle}:
+            </p>
+            <div className="ew-chip-grid">
+              {coreData.children[middle].map(sibling => (
+                <button 
+                  key={sibling} 
+                  className={`ew-chip ${sibling === outer ? 'active' : ''}`}
+                  style={{ 
+                    background: sibling === outer ? coreData.color : 'transparent', 
+                    color: sibling === outer ? 'white' : 'var(--ink-soft)', 
+                    borderColor: sibling === outer ? coreData.color : '#EAE5DE',
+                    fontSize: '13px', padding: '6px 14px'
+                  }}
+                  onClick={() => setOuter(sibling)}
+                >
+                  {sibling}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ==========================================
+// MAIN PAGE COMPONENT
+// ==========================================
 export default function MentalHealthFirstAid({ navigate, onBack }) {
   const [activeModal, setActiveModal] = useState(null);
 
@@ -110,7 +379,7 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
       icon: "🎯",
       badges: ["Interactive", "Printable"],
       desc: "Expand your emotional vocabulary. Stop saying 'I feel bad' and figure out if you're actually feeling overwhelmed, insecure, burnt out, or disconnected.",
-      action1: { text: "View Tool", onClick: () => openModal('wheel') },
+      action1: { text: "Use Interactive Tool", onClick: () => openModal('wheel') },
       action2: { text: "Download PDF", link: "/resources/mh/Emotion_Wheel.pdf" },
     },
     {
@@ -272,7 +541,7 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
         </div>
       )}
 
-      {/* ── EMOTION WHEEL PREVIEW MODAL ── */}
+      {/* ── EMOTION WHEEL MODAL (UPDATED) ── */}
       {activeModal === 'wheel' && (
         <div className="mh-modal-overlay" onClick={closeModal}>
           <div className="mh-modal" onClick={e => e.stopPropagation()}>
@@ -280,25 +549,8 @@ export default function MentalHealthFirstAid({ navigate, onBack }) {
               <h3 className="mh-modal-title">The Emotion Wheel</h3>
               <button className="mh-modal-close" onClick={closeModal}>✕</button>
             </div>
-            <div className="mh-modal-body" style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎯</div>
-              <h4 style={{ fontSize: '18px', color: 'var(--ink)', marginBottom: '12px' }}>Name it to Tame it.</h4>
-              <p style={{ fontSize: '15px', color: 'var(--muted)', lineHeight: 1.6, marginBottom: '24px' }}>
-                Neuroscience shows that finding the exact, precise word for what you are feeling instantly reduces the intensity of the emotion in the brain's amygdala. 
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', textAlign: 'left', marginBottom: '24px' }}>
-                <div style={{ background: '#FDF0EA', padding: '16px', borderRadius: '12px' }}>
-                  <div style={{ fontWeight: 700, color: '#C0392B', marginBottom: '8px' }}>Instead of "Angry"</div>
-                  <div style={{ fontSize: '13px', color: 'var(--ink-soft)' }}>Are you feeling Betrayed? Humiliated? Frustrated? Violated?</div>
-                </div>
-                <div style={{ background: '#EAF4FA', padding: '16px', borderRadius: '12px' }}>
-                  <div style={{ fontWeight: 700, color: '#2980B9', marginBottom: '8px' }}>Instead of "Sad"</div>
-                  <div style={{ fontSize: '13px', color: 'var(--ink-soft)' }}>Are you feeling Isolated? Disappointed? Empty? Inferior?</div>
-                </div>
-              </div>
-              <a href="/resources/mh/Emotion_Wheel.pdf" download className="mh-btn mh-btn-primary" style={{ display: 'inline-flex', textDecoration: 'none' }}>
-                Download the High-Res Wheel PDF
-              </a>
+            <div className="mh-modal-body">
+              <InteractiveEmotionWheel />
             </div>
           </div>
         </div>
