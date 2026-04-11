@@ -7,17 +7,18 @@ export const meta = {
   excerpt: "Not all friendships are built to last, and that's okay. Use this healthy friendships checklist to evaluate your circle, recognize red flags, and build connections that actually support your mental health.",
   category: "Relationships",
   date: "07-02-2026",
-  readTime: "8 min read",
-  wordCount: 1150,
+  readTime: "7 min read",
+  wordCount: 1100,
   imgUrl: "/blogss/2026/February/relationship-checklist.jpg",
   tldr: "Your mental health is heavily influenced by the people you spend the most time with. Use our interactive relationship builder to audit your friendships, learn to spot energy vampires, and understand the difference between a low-maintenance friend and a toxic one.",
   toc: [
-    { id: "why-audit-friendships", title: "1. Why You Need a Friendship Audit", level: 3 },
-    { id: "interactive-builder", title: "2. Interactive: The Core 10 Relationship Builder", level: 3 },
-    { id: "red-flags", title: "3. Red Flags: Spotting the Energy Vampires", level: 3 },
+    { id: "quick-checklist", title: "1. The Ultimate Healthy Friendships Checklist (2-Min Test)", level: 3 },
+    { id: "why-audit-friendships", title: "2. Why You Need a Friendship Audit", level: 3 },
+    { id: "red-flags", title: "3. Red Flags & Student Scenarios: Spotting Energy Vampires", level: 3 },
     { id: "green-flags", title: "4. Green Flags: What a Safe Friendship Looks Like", level: 3 },
-    { id: "outgrowing-friends", title: "5. The Reality of Outgrowing People", level: 3 },
-    { id: "faq", title: "6. Friendship FAQs", level: 3 },
+    { id: "pause-and-reflect", title: "5. Pause & Reflect", level: 3 },
+    { id: "interactive-builder", title: "6. Interactive: The Core 10 Relationship Builder", level: 3 },
+    { id: "outgrowing-friends", title: "7. The Reality of Outgrowing People", level: 3 },
   ]
 };
 
@@ -76,9 +77,11 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
   const [selectedTraits, setSelectedTraits] = useState([]);
   const [builderCompleted, setBuilderCompleted] = useState(false);
 
-  // Simulate a global counter by setting an initial fake number, then incrementing
+  // Quick Checklist State
+  const [quickChecks, setQuickChecks] = useState([false, false, false, false, false]);
+
   useEffect(() => {
-    setPressCount(14208); // Mock baseline count
+    setPressCount(14208); 
   }, []);
 
   const openBuilder = () => {
@@ -98,10 +101,17 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
     setAvailableTraits(prev => [trait, ...prev]);
   };
 
+  const toggleQuickCheck = (index) => {
+    const newChecks = [...quickChecks];
+    newChecks[index] = !newChecks[index];
+    setQuickChecks(newChecks);
+  };
+
+  const quickScore = quickChecks.filter(Boolean).length;
+
   return (
     <BlogPostTemplate meta={meta} navigate={navigate} relatedPosts={relatedPosts}>
       
-      {/* 🚀 EXPLICIT SOCIAL SHARING & SCHEMA TAGS 🚀 */}
       <Head>
         <title>{meta.title} | Secret Sharz</title>
         <meta name="description" content={meta.excerpt} />
@@ -110,31 +120,89 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
         <meta property="og:image" content={meta.imgUrl} />
         <meta property="og:type" content="article" />
         <meta property="twitter:card" content="summary_large_image" />
-        
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       </Head>
 
-      <p>We talk a lot about toxic romantic relationships, but we rarely talk about toxic friendships. As a student, your friend group is your primary support system. They are the people you vent to after a brutal exam, the ones you eat lunch with, and the ones who shape your daily reality.</p>
+      {/* THE HOOK */}
+      <h2 style={{ fontFamily: 'Fraunces', color: 'var(--sage)', fontSize: '28px', lineHeight: '1.4', marginBottom: '24px' }}>
+        Do your friends make you feel better... or more anxious?
+      </h2>
+      <p>If your group chat stresses you out more than your upcoming exams, this is your sign to pause and check your circle. As a student, your time and energy are your most valuable resources, yet they are constantly under attack.</p>
       
-      <p>But what happens when the group chat starts giving you anxiety? What happens when you realize you are walking on eggshells around someone you call your "best friend"? Doing a weekly relationship check using a <strong>healthy friendships checklist</strong> is one of the most powerful ways to protect your mental health.</p>
+      <p>You say "yes" to keep the peace. You share your notes because you don't want to be called selfish. You listen to them vent for two hours, but when you need support, they are suddenly "too busy." If this sounds familiar, it is time to run a <strong>healthy friendships checklist</strong>.</p>
 
       {/* Optimized Image SEO */}
       <img 
         src={meta.imgUrl} 
         alt="Student evaluating their social circle using a healthy friendships checklist" 
-        style={{ width: '100%', borderRadius: '12px', marginTop: '20px', marginBottom: '20px', border: '1px solid var(--border)' }} 
+        style={{ width: '100%', borderRadius: '12px', marginTop: '20px', marginBottom: '40px', border: '1px solid var(--border)' }} 
       />
 
-      <h3 id="why-audit-friendships">1. Why You Need a Friendship Audit</h3>
+      <h3 id="quick-checklist">1. The Ultimate Healthy Friendships Checklist (2-Min Test)</h3>
+      <p>Think of one specific friend who has been draining your energy recently. Answer honestly below:</p>
+      
+      <div style={{ background: 'var(--sage-pale)', padding: '24px', borderRadius: '14px', marginBottom: '30px', border: '1px solid var(--sage-light)' }}>
+        <h4 style={{ margin: '0 0 16px 0', color: 'var(--ink)', fontFamily: 'Fraunces', fontSize: '20px' }}>Tick ✔ if true:</h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {[
+            "I feel safe being completely myself around them.",
+            "They respect my boundaries when I say 'no'.",
+            "They celebrate my success (and don't compete with me).",
+            "I don't feel emotionally drained after talking to them.",
+            "We both put equal effort into this friendship."
+          ].map((text, i) => (
+            <label key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: 'white', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+              <input type="checkbox" checked={quickChecks[i]} onChange={() => toggleQuickCheck(i)} style={{ width: '20px', height: '20px', accentColor: 'var(--sage)' }} />
+              <span style={{ fontSize: '15px', color: 'var(--ink-soft)', fontWeight: '600' }}>{text}</span>
+            </label>
+          ))}
+        </div>
+        
+        <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(74,124,89,0.2)' }}>
+          <h4 style={{ margin: '0 0 12px 0', color: 'var(--ink)', fontFamily: 'Fraunces', fontSize: '20px' }}>Your Score: {quickScore}/5</h4>
+          <p style={{ margin: 0, fontWeight: 'bold', color: quickScore >= 4 ? 'var(--success)' : quickScore >= 2 ? '#E67E22' : '#C0392B' }}>
+            {quickScore >= 4 ? "🌱 Healthy: This connection is a safe space." : quickScore >= 2 ? "⚠️ Needs Reflection: There is friction. Boundaries need to be set." : "🛑 Red Flag: This relationship is actively draining your mental health."}
+          </p>
+        </div>
+      </div>
+
+      <h3 id="why-audit-friendships">2. Why You Need a Friendship Audit</h3>
       <p>You audit your study schedule, your finances, and your screen time. Why wouldn't you audit the people who consume the majority of your emotional bandwidth?</p>
-      <p>Many students hold onto friendships out of pure nostalgia or convenience. You might think, <em>"We've been friends since 8th grade, I can't cut them off now,"</em> even if hanging out with them currently leaves you feeling drained, insecure, or constantly criticized. An audit isn't about being ruthless; it's an act of self-reflection to be honest about where your energy is going.</p>
+      <p>Many students hold onto friendships out of pure nostalgia. You might think, <em>"We've been friends since 8th grade, I can't cut them off now,"</em> even if hanging out with them currently leaves you feeling deeply insecure. An audit isn't about being ruthless; it's an act of self-reflection to be honest about where your energy is going.</p>
 
-      <h3 id="interactive-builder">2. Interactive: The Core 10 Relationship Builder</h3>
+      <h3 id="red-flags">3. Red Flags & Student Scenarios: Spotting Energy Vampires</h3>
+      <p>Toxicity isn't always loud screaming matches in the cafeteria. Often, it's quiet, draining behavior from "energy vampires." Look out for these micro-scenarios:</p>
+      <ul style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <li><strong>The Sarcastic Saboteur:</strong> You share good news (like scoring high on a mock test) → they go silent, or offer a "compliment" wrapped in sarcasm: <em>"Wow, the grading must have been super easy this time."</em></li>
+        <li><strong>The Unpaid Therapist:</strong> They need help → you drop everything and listen to them vent for hours. You need help → they’re suddenly "too busy" or leave you on read.</li>
+        <li><strong>The Guilt Tripper:</strong> They make you feel like a terrible person for prioritizing your studies, your family, or your sleep over hanging out with them.</li>
+      </ul>
+
+      <h3 id="green-flags">4. Green Flags: What a Safe Friendship Looks Like</h3>
+      <p>If you've been in toxic dynamics for a long time, you might not even know what a healthy friendship feels like. A truly safe connection involves:</p>
+      <ul>
+        <li><strong>Low-Maintenance Loyalty:</strong> You don't have to text every single day to prove your friendship. When exam season hits, they say, <em>"Good luck, talk to you when it's over,"</em> without taking your absence personally.</li>
+        <li><strong>Cheerleading:</strong> They say your name in rooms full of opportunities. They are genuinely, loudly proud of your successes.</li>
+      </ul>
+
+      <h3 id="pause-and-reflect">5. Pause & Reflect</h3>
+      <div style={{ background: '#1E2820', color: 'white', padding: '32px', borderRadius: '16px', margin: '32px 0' }}>
+        <h4 style={{ fontFamily: 'Fraunces', fontSize: '22px', marginBottom: '16px', color: 'var(--sage-light)' }}>Be Honest With Yourself:</h4>
+        <ul style={{ paddingLeft: '20px', lineHeight: '1.8' }}>
+          <li>Which friend drains me the most?</li>
+          <li>Where am I pretending to be someone else just to fit in?</li>
+          <li>Do I feel respected, or just tolerated?</li>
+          <li><strong>If I met them today, would I still choose them?</strong></li>
+        </ul>
+        <p style={{ marginTop: '20px', fontStyle: 'italic', opacity: 0.8 }}>Take 60 seconds. Your answers matter.</p>
+      </div>
+
+      <h3 id="interactive-builder">6. Interactive: The Core 10 Relationship Builder</h3>
       <p>Every healthy friendship is built on shared expectations, but those expectations are rarely spoken out loud. We've created an interactive tool to help you define exactly what matters to you.</p>
-      <p><strong>Instructions:</strong> Sit down with your partner or friend. Look through the 50 parameters provided. Together, discuss and select the <strong>top 10 traits</strong> that you both agree are non-negotiable for your relationship to thrive.</p>
+      <p><strong>Instructions:</strong> Sit down with a close friend or partner. Look through the 50 parameters provided. Together, select the <strong>top 10 traits</strong> that you both agree are non-negotiable for your relationship to thrive.</p>
 
-      <div style={{ textAlign: 'center', background: 'var(--sage-pale)', padding: '40px 24px', borderRadius: '16px', margin: '40px 0', border: '1px solid var(--sage-light)' }}>
+      <div style={{ textAlign: 'center', background: 'var(--sand)', padding: '40px 24px', borderRadius: '16px', margin: '40px 0', border: '1px solid var(--border)' }}>
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>🤝</div>
         <h4 style={{ fontFamily: 'Fraunces, serif', fontSize: '24px', color: 'var(--ink)', marginBottom: '8px' }}>Build Your Core 10 Checklist</h4>
         <p style={{ color: 'var(--ink-soft)', marginBottom: '24px' }}>Discover what truly matters to your connection.</p>
@@ -149,70 +217,37 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
         </p>
       </div>
 
-      <h3 id="red-flags">3. Red Flags: Spotting the Energy Vampires</h3>
-      <p>Sometimes, toxicity isn't loud. It isn't screaming matches in the cafeteria. Often, it's quiet, draining behavior from "energy vampires." Look out for these subtle red flags:</p>
-      <ul>
-        <li><strong>The Crisis Creator:</strong> They only text you when their life is falling apart. They treat you like an unpaid therapist, but when <em>you</em> are having a bad day, they suddenly disappear or change the subject back to themselves.</li>
-        <li><strong>The Sarcastic Saboteur:</strong> Whenever you achieve something (a good grade, a new opportunity), they offer "compliments" wrapped in sarcasm or immediately try to one-up you. <em>"Wow, I can't believe you got an A, the paper must have been graded easily."</em></li>
-        <li><strong>The Guilt Tripper:</strong> They make you feel like a terrible person for prioritizing your studies, your family, or your sleep over hanging out with them.</li>
-      </ul>
-
-      <h3 id="green-flags">4. Green Flags: What a Safe Friendship Looks Like</h3>
-      <p>If you've been in toxic dynamics for a long time, you might not even know what a healthy friendship feels like. A truly safe connection involves:</p>
-      <ul>
-        <li><strong>Low-Maintenance Loyalty:</strong> You don't have to text every single day to prove your friendship. When exam season hits, they say, <em>"Good luck, talk to you when it's over,"</em> without taking your absence personally.</li>
-        <li><strong>Cheerleading:</strong> They say your name in rooms full of opportunities. They are genuinely, loudly proud of your successes.</li>
-        <li><strong>Safe Corrections:</strong> When you mess up, they tell you privately and kindly, rather than embarrassing you in front of the group.</li>
-      </ul>
-
-      <h3 id="outgrowing-friends">5. The Reality of Outgrowing People</h3>
+      <h3 id="outgrowing-friends">7. The Reality of Outgrowing People</h3>
       <p>This is the hardest truth of student life: You are going to outgrow people. And that does not make them villains, and it does not make you a bad person.</p>
       <p>Many friendships are formed purely based on proximity—you sat next to each other in 9th-grade math. As you move through high school and college, your values, your ambition, and your worldview will drastically shift. If a friendship requires you to shrink yourself, hide your goals, or pretend to be someone you aren't just to "fit in," it is time to let it go. Grieve the loss, but do not cling to a connection that no longer serves you.</p>
 
-      <h3 id="faq">6. Friendship FAQs</h3>
-      <div style={{ marginBottom: '40px' }}>
-        <p><strong>Q: Is it okay to "ghost" a toxic friend?</strong><br/>
-        A: If the person is physically or emotionally abusive, prioritizing your safety is paramount, and cutting contact is valid. However, if you simply outgrew them, a slow fade (being busy, responding less) or a kind but brief conversation is usually healthier and provides closure.</p>
-
-        <p><strong>Q: What if I have no friends after I cut off the toxic ones?</strong><br/>
-        A: Being alone is temporarily uncomfortable, but being surrounded by people who make you feel terrible is deeply damaging. Use the space to figure out who you actually are, and you will eventually attract people who align with your authentic self.</p>
+      {/* 1-LINE VIRAL TAKEAWAY */}
+      <div style={{ borderLeft: '4px solid var(--sage)', paddingLeft: '20px', margin: '40px 0' }}>
+        <h3 style={{ fontFamily: 'Fraunces', fontSize: '20px', color: 'var(--ink)', margin: '0 0 8px 0' }}>If You Remember One Thing:</h3>
+        <p style={{ fontSize: '18px', fontStyle: 'italic', fontWeight: '600', color: 'var(--ink-soft)', margin: 0 }}>
+          "Not everyone who has history with you deserves a future with you."
+        </p>
       </div>
 
-      {/* 📢 CALL TO ACTION & SHAREABLE QUOTE */}
-      <h3 style={{ textAlign: 'center', fontSize: '28px', marginTop: '50px' }}>Final Thought</h3>
-      <div style={{ textAlign: 'center', margin: '40px 0' }}>
-        <h2 style={{ fontFamily: 'Fraunces', color: 'var(--sage)', fontStyle: 'italic', marginBottom: '20px', lineHeight: '1.4' }}>
-          "Surround yourself with people who talk about visions and ideas, not other people."
-        </h2>
-        <p style={{ marginBottom: '24px', color: 'var(--ink-soft)' }}>Your social circle is your psychological diet. Make sure you aren't feeding your brain junk food through a deep self-reflection.</p>
-        
+      {/* 📢 STRONGER CALL TO ACTION */}
+      <div style={{ textAlign: 'center', margin: '60px 0 40px' }}>
         <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button 
             onClick={() => navigate('/mindspace')}
             style={{ background: 'var(--ink)', color: 'white', border: 'none', padding: '16px 28px', borderRadius: '50px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'var(--shadow-md)' }}
           >
-            Reflect in Mind Space →
+            Figure out who truly belongs in your life →
           </button>
           <button 
             onClick={() => navigate('/wall')}
             style={{ background: 'white', color: 'var(--sage)', border: '2px solid var(--sage)', padding: '16px 28px', borderRadius: '50px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
           >
-            Discuss Friendships on the Wall
+            See how others deal with toxic friends →
           </button>
         </div>
       </div>
 
-      {/* 🧲 INTERNAL LINKING FOR SEO */}
-      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '30px', marginTop: '40px' }}>
-        <p style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', color: 'var(--muted)' }}>Deepen Your Mental Health Journey:</p>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/stop-seeking-validation')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ How to Stop Seeking Validation from Others</button></li>
-          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/setting-boundaries-guide')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ How to Set Boundaries Without Feeling Guilty</button></li>
-          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/safe')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Access 24/7 Professional Support in our Safe Corner</button></li>
-        </ul>
-      </div>
-
-      {/* ── INTERACTIVE MODAL POPUP ── */}
+      {/* ── INTERACTIVE MODAL POPUP (THE BUILDER) ── */}
       {showBuilder && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,40,32,0.8)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setShowBuilder(false)}>
           <div style={{ background: 'white', borderRadius: '24px', width: '100%', maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
@@ -270,8 +305,6 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
                         onClick={() => selectTrait(trait)}
                         disabled={selectedTraits.length >= 10}
                         style={{ background: 'white', border: '1px solid var(--border)', padding: '10px 16px', borderRadius: '50px', fontSize: '13px', fontWeight: '600', color: 'var(--ink-soft)', cursor: selectedTraits.length >= 10 ? 'not-allowed' : 'pointer', opacity: selectedTraits.length >= 10 ? 0.5 : 1, transition: '0.2s', fontFamily: 'inherit' }}
-                        onMouseEnter={e => { if (selectedTraits.length < 10) { e.currentTarget.style.borderColor = 'var(--sage)'; e.currentTarget.style.color = 'var(--sage)'; } }}
-                        onMouseLeave={e => { if (selectedTraits.length < 10) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--ink-soft)'; } }}
                       >
                         + {trait}
                       </button>
