@@ -146,11 +146,11 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
         <h4 style={{ margin: '0 0 16px 0', color: 'var(--ink)', fontFamily: 'Fraunces', fontSize: '20px' }}>Tick ✔ if true:</h4>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {[
-            "I feel safe being completely myself around them.",
-            "They respect my boundaries when I say 'no'.",
-            "They celebrate my success (and don't compete with me).",
+            "I can be 100% myself.",
+            "They respect my boundaries.",
+            "They celebrate my success (and don't compete).",
             "I don't feel emotionally drained after talking to them.",
-            "We both put equal effort into this friendship."
+            "Effort is equal."
           ].map((text, i) => (
             <label key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: 'white', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
               <input type="checkbox" checked={quickChecks[i]} onChange={() => toggleQuickCheck(i)} style={{ width: '20px', height: '20px', accentColor: 'var(--sage)' }} />
@@ -162,14 +162,26 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
         <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(74,124,89,0.2)' }}>
           <h4 style={{ margin: '0 0 12px 0', color: 'var(--ink)', fontFamily: 'Fraunces', fontSize: '20px' }}>Your Score: {quickScore}/5</h4>
           <p style={{ margin: 0, fontWeight: 'bold', color: quickScore >= 4 ? 'var(--success)' : quickScore >= 2 ? '#E67E22' : '#C0392B' }}>
-            {quickScore >= 4 ? "🌱 Healthy: This connection is a safe space." : quickScore >= 2 ? "⚠️ Needs Reflection: There is friction. Boundaries need to be set." : "🛑 Red Flag: This relationship is actively draining your mental health."}
+            {quickScore >= 4 ? "🌱 Healthy: This connection is a safe space." : quickScore >= 2 ? "⚠️ Needs Attention: There is friction. Boundaries need to be set." : "🛑 Red Flag: This relationship is actively draining your mental health."}
           </p>
+        </div>
+        
+        <div style={{ marginTop: '20px', fontSize: '14px', color: 'var(--ink-soft)', fontStyle: 'italic' }}>
+          Now that you’ve seen where your friendship stands... let’s define what a healthy one should actually look like. Keep reading.
         </div>
       </div>
 
       <h3 id="why-audit-friendships">2. Why You Need a Friendship Audit</h3>
       <p>You audit your study schedule, your finances, and your screen time. Why wouldn't you audit the people who consume the majority of your emotional bandwidth?</p>
       <p>Many students hold onto friendships out of pure nostalgia. You might think, <em>"We've been friends since 8th grade, I can't cut them off now,"</em> even if hanging out with them currently leaves you feeling deeply insecure. An audit isn't about being ruthless; it's an act of self-reflection to be honest about where your energy is going.</p>
+
+      {/* PATTERN INTERRUPT */}
+      <div style={{ background: '#FFF0F0', borderLeft: '4px solid #C0392B', padding: '24px', margin: '40px 0', borderRadius: '0 12px 12px 0' }}>
+        <h4 style={{ margin: '0 0 12px', color: '#C0392B', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '14px' }}>🚨 Reality Check:</h4>
+        <p style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--ink)', margin: 0, lineHeight: '1.5' }}>
+          If you're constantly explaining your worth to someone... they already know your value. <br/><span style={{color: '#C0392B'}}>They just don't respect it.</span>
+        </p>
+      </div>
 
       <h3 id="red-flags">3. Red Flags & Student Scenarios: Spotting Energy Vampires</h3>
       <p>Toxicity isn't always loud screaming matches in the cafeteria. Often, it's quiet, draining behavior from "energy vampires." Look out for these micro-scenarios:</p>
@@ -181,9 +193,10 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
 
       <h3 id="green-flags">4. Green Flags: What a Safe Friendship Looks Like</h3>
       <p>If you've been in toxic dynamics for a long time, you might not even know what a healthy friendship feels like. A truly safe connection involves:</p>
-      <ul>
-        <li><strong>Low-Maintenance Loyalty:</strong> You don't have to text every single day to prove your friendship. When exam season hits, they say, <em>"Good luck, talk to you when it's over,"</em> without taking your absence personally.</li>
-        <li><strong>Cheerleading:</strong> They say your name in rooms full of opportunities. They are genuinely, loudly proud of your successes.</li>
+      <ul style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <li><strong>Low-Maintenance Loyalty:</strong> You disappear during exams to focus → they don't take it personally. They say, <em>"Good luck, talk to you when it's over."</em></li>
+        <li><strong>Cheerleading:</strong> You tell them good news → they hype you up like it's their own win. They are genuinely, loudly proud of your successes.</li>
+        <li><strong>Safe Corrections:</strong> You mess up or say something insensitive → they tell you privately and kindly, rather than embarrassing you in front of the group.</li>
       </ul>
 
       <h3 id="pause-and-reflect">5. Pause & Reflect</h3>
@@ -222,9 +235,9 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
       <p>Many friendships are formed purely based on proximity—you sat next to each other in 9th-grade math. As you move through high school and college, your values, your ambition, and your worldview will drastically shift. If a friendship requires you to shrink yourself, hide your goals, or pretend to be someone you aren't just to "fit in," it is time to let it go. Grieve the loss, but do not cling to a connection that no longer serves you.</p>
 
       {/* 1-LINE VIRAL TAKEAWAY */}
-      <div style={{ borderLeft: '4px solid var(--sage)', paddingLeft: '20px', margin: '40px 0' }}>
+      <div style={{ borderLeft: '4px solid var(--sage)', paddingLeft: '20px', margin: '60px 0 40px' }}>
         <h3 style={{ fontFamily: 'Fraunces', fontSize: '20px', color: 'var(--ink)', margin: '0 0 8px 0' }}>If You Remember One Thing:</h3>
-        <p style={{ fontSize: '18px', fontStyle: 'italic', fontWeight: '600', color: 'var(--ink-soft)', margin: 0 }}>
+        <p style={{ fontSize: '22px', fontStyle: 'italic', fontWeight: '700', color: 'var(--ink-soft)', margin: 0, lineHeight: '1.4' }}>
           "Not everyone who has history with you deserves a future with you."
         </p>
       </div>
@@ -305,6 +318,8 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
                         onClick={() => selectTrait(trait)}
                         disabled={selectedTraits.length >= 10}
                         style={{ background: 'white', border: '1px solid var(--border)', padding: '10px 16px', borderRadius: '50px', fontSize: '13px', fontWeight: '600', color: 'var(--ink-soft)', cursor: selectedTraits.length >= 10 ? 'not-allowed' : 'pointer', opacity: selectedTraits.length >= 10 ? 0.5 : 1, transition: '0.2s', fontFamily: 'inherit' }}
+                        onMouseEnter={e => { if (selectedTraits.length < 10) { e.currentTarget.style.borderColor = 'var(--sage)'; e.currentTarget.style.color = 'var(--sage)'; } }}
+                        onMouseLeave={e => { if (selectedTraits.length < 10) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--ink-soft)'; } }}
                       >
                         + {trait}
                       </button>
@@ -316,7 +331,16 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
               <div style={{ padding: '48px 32px', textAlign: 'center' }}>
                 <div style={{ fontSize: '64px', marginBottom: '16px' }}>✨</div>
                 <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '28px', color: 'var(--ink)', marginBottom: '16px' }}>Your Core Checklist is Ready</h3>
-                <p style={{ color: 'var(--ink-soft)', marginBottom: '32px' }}>Take a screenshot of this list. Hold yourselves and each other accountable to these standards.</p>
+                
+                {/* EMOTIONAL PAYOFF SECTION */}
+                <div style={{ background: '#EAF4FA', border: '1px solid #5B9EBF', borderRadius: '12px', padding: '24px', margin: '0 auto 32px', maxWidth: '500px' }}>
+                  <p style={{ margin: 0, color: '#2980B9', fontWeight: '600', fontSize: '16px', fontStyle: 'italic' }}>
+                    "You selected traits like {selectedTraits[0]} and {selectedTraits[1]}. This means you are someone who seeks depth, safety, and mutual respect—not just company. Do not settle for less."
+                  </p>
+                </div>
+
+                <p style={{ color: 'var(--ink-soft)', marginBottom: '24px' }}>Take a screenshot of this list. Hold yourselves and each other accountable to these standards.</p>
+                
                 <div style={{ background: 'var(--sand)', padding: '32px', borderRadius: '16px', border: '1px solid var(--border)', textAlign: 'left', maxWidth: '400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {selectedTraits.map((trait, idx) => (
                     <div key={`final-${idx}`} style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--ink)' }}>
