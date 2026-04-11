@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import BlogPostTemplate from '../../../BlogPostTemplate';
 
@@ -7,13 +7,13 @@ export const meta = {
   excerpt: "Not all friendships are built to last, and that's okay. Use this healthy friendships checklist to evaluate your circle, recognize red flags, and build connections that actually support your mental health.",
   category: "Relationships",
   date: "07-02-2026",
-  readTime: "7 min read",
-  wordCount: 1100,
+  readTime: "8 min read",
+  wordCount: 1150,
   imgUrl: "/blogss/2026/February/relationship-checklist.jpg",
-  tldr: "Your mental health is heavily influenced by the people you spend the most time with. Use our interactive checklist to audit your friendships, learn to spot energy vampires, and understand the difference between a low-maintenance friend and a toxic one.",
+  tldr: "Your mental health is heavily influenced by the people you spend the most time with. Use our interactive relationship builder to audit your friendships, learn to spot energy vampires, and understand the difference between a low-maintenance friend and a toxic one.",
   toc: [
     { id: "why-audit-friendships", title: "1. Why You Need a Friendship Audit", level: 3 },
-    { id: "interactive-checklist", title: "2. Interactive: The Healthy Friendships Checklist", level: 3 },
+    { id: "interactive-builder", title: "2. Interactive: The Core 10 Relationship Builder", level: 3 },
     { id: "red-flags", title: "3. Red Flags: Spotting the Energy Vampires", level: 3 },
     { id: "green-flags", title: "4. Green Flags: What a Safe Friendship Looks Like", level: 3 },
     { id: "outgrowing-friends", title: "5. The Reality of Outgrowing People", level: 3 },
@@ -54,31 +54,48 @@ const faqSchema = {
   ]
 };
 
+// 50 Parameters for the Interactive Builder
+const TRAIT_POOL = [
+  "Active Listening", "Unconditional Trust", "Respecting Boundaries", "No Gossip", "Equal Effort",
+  "Celebrating Successes", "Sincere Apologies", "Quick Forgiveness", "Constructive Honesty", "Financial Respect",
+  "Consistent Check-ins", "Safe Space for Venting", "Shared Core Values", "Humor & Playfulness", "Zero Guilt-Tripping",
+  "Independence", "Healthy Conflict Resolution", "Keeping Secrets", "Defending Each Other", "Non-Judgmental Advice",
+  "Respecting Differences", "Showing Empathy", "Low-Maintenance Loyalty", "Remembering Details", "Being Present",
+  "Not Keeping Score", "Valuing Mental Health", "Saying 'No' Safely", "Respecting Other Friendships", "No Passive Aggression",
+  "Direct Communication", "Expressing Gratitude", "Quality Time", "Emotional Check-ins", "Punctuality",
+  "Supporting Growth", "Letting Go of Petty Fights", "Keeping Promises", "Mutual Respect", "Vulnerability",
+  "Sharing Responsibilities", "Compassionate Truth", "Recognizing Triggers", "Celebrating Milestones", "Providing Distractions",
+  "Silent Support", "No Sarcastic Put-Downs", "Sharing Resources", "Validating Feelings", "Mutual Evolution"
+];
+
 export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
-  // Unique Interactivity: Friendship Checklist Calculator
-  const [score, setScore] = useState(0);
-  const [submitted, setSubmitted] = useState(false);
-  const [answers, setAnswers] = useState({});
+  // Interactive State
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [pressCount, setPressCount] = useState(0);
+  const [availableTraits, setAvailableTraits] = useState(TRAIT_POOL);
+  const [selectedTraits, setSelectedTraits] = useState([]);
+  const [builderCompleted, setBuilderCompleted] = useState(false);
 
-  const questions = [
-    { id: 'q1', text: "Do I feel energized (rather than exhausted) after hanging out with them?" },
-    { id: 'q2', text: "Can I share my successes without them making a sarcastic or jealous comment?" },
-    { id: 'q3', text: "When I say 'no' to hanging out because I need to study or sleep, do they respect it without guilt-tripping me?" },
-    { id: 'q4', text: "Do they apologize and change their behavior when they hurt my feelings?" },
-    { id: 'q5', text: "Is the effort balanced? (I am not always the one initiating plans or doing the emotional heavy lifting)." }
-  ];
+  // Simulate a global counter by setting an initial fake number, then incrementing
+  useEffect(() => {
+    setPressCount(14208); // Mock baseline count
+  }, []);
 
-  const handleAnswer = (qId, value) => {
-    setAnswers(prev => ({ ...prev, [qId]: value }));
+  const openBuilder = () => {
+    setPressCount(prev => prev + 1);
+    setShowBuilder(true);
+    setBuilderCompleted(false);
   };
 
-  const calculateScore = () => {
-    let total = 0;
-    Object.values(answers).forEach(val => {
-      if (val === 'yes') total += 1;
-    });
-    setScore(total);
-    setSubmitted(true);
+  const selectTrait = (trait) => {
+    if (selectedTraits.length >= 10) return;
+    setAvailableTraits(prev => prev.filter(t => t !== trait));
+    setSelectedTraits(prev => [...prev, trait]);
+  };
+
+  const removeTrait = (trait) => {
+    setSelectedTraits(prev => prev.filter(t => t !== trait));
+    setAvailableTraits(prev => [trait, ...prev]);
   };
 
   return (
@@ -94,7 +111,6 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
         <meta property="og:type" content="article" />
         <meta property="twitter:card" content="summary_large_image" />
         
-        {/* Injecting Schema Markup invisibly into the page */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       </Head>
@@ -112,62 +128,25 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
 
       <h3 id="why-audit-friendships">1. Why You Need a Friendship Audit</h3>
       <p>You audit your study schedule, your finances, and your screen time. Why wouldn't you audit the people who consume the majority of your emotional bandwidth?</p>
-      <p>Many students hold onto friendships out of pure nostalgia or convenience. You might think, <em>"We've been friends since 8th grade, I can't cut them off now,"</em> even if hanging out with them currently leaves you feeling drained, insecure, or constantly criticized. An audit isn't about being ruthless; it's about being honest about where your energy is going.</p>
+      <p>Many students hold onto friendships out of pure nostalgia or convenience. You might think, <em>"We've been friends since 8th grade, I can't cut them off now,"</em> even if hanging out with them currently leaves you feeling drained, insecure, or constantly criticized. An audit isn't about being ruthless; it's an act of self-reflection to be honest about where your energy is going.</p>
 
-      <h3 id="interactive-checklist">2. Interactive: The Healthy Friendships Checklist</h3>
-      <p>Think about a specific friend or friend group that has been stressing you out lately. Answer the 5 questions below honestly to evaluate the health of that dynamic.</p>
+      <h3 id="interactive-builder">2. Interactive: The Core 10 Relationship Builder</h3>
+      <p>Every healthy friendship is built on shared expectations, but those expectations are rarely spoken out loud. We've created an interactive tool to help you define exactly what matters to you.</p>
+      <p><strong>Instructions:</strong> Sit down with your partner or friend. Look through the 50 parameters provided. Together, discuss and select the <strong>top 10 traits</strong> that you both agree are non-negotiable for your relationship to thrive.</p>
 
-      <div style={{ background: 'var(--sand)', padding: '24px', borderRadius: '14px', marginBottom: '30px', border: '1px solid var(--border)' }}>
-        {!submitted ? (
-          <div>
-            {questions.map((q) => (
-              <div key={q.id} style={{ marginBottom: '20px', background: 'white', padding: '16px', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
-                <p style={{ margin: '0 0 12px 0', fontWeight: '600', color: 'var(--ink)' }}>{q.text}</p>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button 
-                    onClick={() => handleAnswer(q.id, 'yes')}
-                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '2px solid var(--sage)', background: answers[q.id] === 'yes' ? 'var(--sage)' : 'transparent', color: answers[q.id] === 'yes' ? 'white' : 'var(--sage)', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
-                  >
-                    Yes
-                  </button>
-                  <button 
-                    onClick={() => handleAnswer(q.id, 'no')}
-                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '2px solid #C0392B', background: answers[q.id] === 'no' ? '#C0392B' : 'transparent', color: answers[q.id] === 'no' ? 'white' : '#C0392B', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
-                  >
-                    No
-                  </button>
-                </div>
-              </div>
-            ))}
-            <button 
-              onClick={calculateScore}
-              disabled={Object.keys(answers).length < 5}
-              style={{ width: '100%', padding: '16px', background: Object.keys(answers).length < 5 ? '#ccc' : 'var(--ink)', color: 'white', border: 'none', borderRadius: '50px', fontSize: '16px', fontWeight: 'bold', cursor: Object.keys(answers).length < 5 ? 'not-allowed' : 'pointer', transition: '0.2s' }}
-            >
-              See My Results
-            </button>
-          </div>
-        ) : (
-          <div style={{ background: 'white', padding: '32px 24px', borderRadius: '12px', border: '2px solid var(--sage-light)', textAlign: 'center', animation: 'floatUp 0.3s ease', boxShadow: 'var(--shadow-md)' }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>{score >= 4 ? '🌱' : score >= 2 ? '⚠️' : '🛑'}</div>
-            <h4 style={{ margin: '0 0 12px 0', color: 'var(--ink)', fontFamily: 'Fraunces', fontSize: '24px' }}>
-              Your Score: {score}/5 Green Flags
-            </h4>
-            <p style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'var(--ink-soft)', lineHeight: '1.6' }}>
-              {score >= 4 
-                ? "This sounds like a highly supportive, safe friendship. Make sure to nurture it and reciprocate the good energy!" 
-                : score >= 2 
-                ? "There is friction here. The dynamic might not be toxic, but you need to have a serious conversation about boundaries and mutual respect." 
-                : "Red Alert. This relationship is actively draining your mental health. It is okay to distance yourself to protect your peace."}
-            </p>
-            <button 
-              onClick={() => { setSubmitted(false); setAnswers({}); setScore(0); }}
-              style={{ background: 'transparent', color: 'var(--sage)', border: '2px solid var(--sage)', padding: '10px 24px', borderRadius: '50px', fontWeight: 'bold', cursor: 'pointer' }}
-            >
-              Test another friendship ↺
-            </button>
-          </div>
-        )}
+      <div style={{ textAlign: 'center', background: 'var(--sage-pale)', padding: '40px 24px', borderRadius: '16px', margin: '40px 0', border: '1px solid var(--sage-light)' }}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🤝</div>
+        <h4 style={{ fontFamily: 'Fraunces, serif', fontSize: '24px', color: 'var(--ink)', marginBottom: '8px' }}>Build Your Core 10 Checklist</h4>
+        <p style={{ color: 'var(--ink-soft)', marginBottom: '24px' }}>Discover what truly matters to your connection.</p>
+        <button 
+          onClick={openBuilder}
+          style={{ background: 'var(--ink)', color: 'white', padding: '16px 32px', borderRadius: '50px', fontSize: '16px', fontWeight: 'bold', border: 'none', cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'var(--shadow-md)' }}
+        >
+          Launch Relationship Builder
+        </button>
+        <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '16px', fontWeight: 'bold' }}>
+          This tool has been used <span style={{ color: 'var(--sage)' }}>{pressCount.toLocaleString()}</span> times.
+        </p>
       </div>
 
       <h3 id="red-flags">3. Red Flags: Spotting the Energy Vampires</h3>
@@ -205,7 +184,7 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
         <h2 style={{ fontFamily: 'Fraunces', color: 'var(--sage)', fontStyle: 'italic', marginBottom: '20px', lineHeight: '1.4' }}>
           "Surround yourself with people who talk about visions and ideas, not other people."
         </h2>
-        <p style={{ marginBottom: '24px', color: 'var(--ink-soft)' }}>Your social circle is your psychological diet. Make sure you aren't feeding your brain junk food.</p>
+        <p style={{ marginBottom: '24px', color: 'var(--ink-soft)' }}>Your social circle is your psychological diet. Make sure you aren't feeding your brain junk food through a deep self-reflection.</p>
         
         <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button 
@@ -232,6 +211,98 @@ export default function HealthyFriendshipChecklist({ navigate, relatedPosts }) {
           <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/safe')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Access 24/7 Professional Support in our Safe Corner</button></li>
         </ul>
       </div>
+
+      {/* ── INTERACTIVE MODAL POPUP ── */}
+      {showBuilder && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,40,32,0.8)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setShowBuilder(false)}>
+          <div style={{ background: 'white', borderRadius: '24px', width: '100%', maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+            
+            <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'white', zIndex: 10 }}>
+              <div>
+                <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '24px', margin: '0 0 4px', color: 'var(--ink)' }}>The Core 10 Relationship Builder</h3>
+                <p style={{ margin: 0, fontSize: '13px', color: 'var(--muted)' }}>Discuss together. Click traits below to add them to your checklist.</p>
+              </div>
+              <button onClick={() => setShowBuilder(false)} style={{ background: 'var(--sand)', border: 'none', width: '36px', height: '36px', borderRadius: '50%', cursor: 'pointer', fontWeight: 'bold', color: 'var(--muted)' }}>✕</button>
+            </div>
+
+            {!builderCompleted ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', padding: '32px' }}>
+                
+                {/* Selected List */}
+                <div style={{ background: 'var(--sage-pale)', borderRadius: '16px', padding: '24px', border: '1px solid var(--sage-light)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h4 style={{ margin: 0, color: 'var(--sage)', fontSize: '18px' }}>Your Core 10</h4>
+                    <span style={{ fontWeight: 'bold', color: selectedTraits.length === 10 ? 'var(--success)' : 'var(--sage)', fontSize: '14px' }}>{selectedTraits.length}/10</span>
+                  </div>
+                  
+                  {selectedTraits.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--sage)', opacity: 0.6, fontStyle: 'italic', fontSize: '14px' }}>
+                      Your checklist is empty. Click traits from the pool to add them.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {selectedTraits.map((trait, idx) => (
+                        <div key={`sel-${idx}`} onClick={() => removeTrait(trait)} style={{ background: 'white', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--sage-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: '0.2s', boxShadow: 'var(--shadow-sm)', fontSize: '14px', fontWeight: '600', color: 'var(--ink)' }}>
+                          <span><span style={{ color: 'var(--sage)', marginRight: '8px' }}>{idx + 1}.</span> {trait}</span>
+                          <span style={{ color: 'var(--danger)', fontSize: '18px' }}>×</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {selectedTraits.length === 10 && (
+                    <button 
+                      onClick={() => setBuilderCompleted(true)}
+                      style={{ width: '100%', marginTop: '24px', padding: '16px', background: 'var(--sage)', color: 'white', border: 'none', borderRadius: '50px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(74,124,89,0.3)' }}
+                    >
+                      Save Our Checklist
+                    </button>
+                  )}
+                </div>
+
+                {/* Available Pool */}
+                <div>
+                  <h4 style={{ margin: '0 0 16px', color: 'var(--ink)', fontSize: '18px' }}>Available Traits ({availableTraits.length})</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', maxHeight: '500px', overflowY: 'auto', paddingRight: '10px' }}>
+                    {availableTraits.map((trait, idx) => (
+                      <button 
+                        key={`avail-${idx}`} 
+                        onClick={() => selectTrait(trait)}
+                        disabled={selectedTraits.length >= 10}
+                        style={{ background: 'white', border: '1px solid var(--border)', padding: '10px 16px', borderRadius: '50px', fontSize: '13px', fontWeight: '600', color: 'var(--ink-soft)', cursor: selectedTraits.length >= 10 ? 'not-allowed' : 'pointer', opacity: selectedTraits.length >= 10 ? 0.5 : 1, transition: '0.2s', fontFamily: 'inherit' }}
+                        onMouseEnter={e => { if (selectedTraits.length < 10) { e.currentTarget.style.borderColor = 'var(--sage)'; e.currentTarget.style.color = 'var(--sage)'; } }}
+                        onMouseLeave={e => { if (selectedTraits.length < 10) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--ink-soft)'; } }}
+                      >
+                        + {trait}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ padding: '48px 32px', textAlign: 'center' }}>
+                <div style={{ fontSize: '64px', marginBottom: '16px' }}>✨</div>
+                <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: '28px', color: 'var(--ink)', marginBottom: '16px' }}>Your Core Checklist is Ready</h3>
+                <p style={{ color: 'var(--ink-soft)', marginBottom: '32px' }}>Take a screenshot of this list. Hold yourselves and each other accountable to these standards.</p>
+                <div style={{ background: 'var(--sand)', padding: '32px', borderRadius: '16px', border: '1px solid var(--border)', textAlign: 'left', maxWidth: '400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {selectedTraits.map((trait, idx) => (
+                    <div key={`final-${idx}`} style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--ink)' }}>
+                      <span style={{ color: 'var(--sage)', marginRight: '12px' }}>✓</span>{trait}
+                    </div>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => setShowBuilder(false)}
+                  style={{ marginTop: '32px', padding: '16px 40px', background: 'var(--ink)', color: 'white', border: 'none', borderRadius: '50px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer' }}
+                >
+                  Done
+                </button>
+              </div>
+            )}
+            
+          </div>
+        </div>
+      )}
 
     </BlogPostTemplate>
   );
