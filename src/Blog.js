@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 
 const BLOG_CSS = `
   /* ── Page Shell ──────────────────────────────────────────────────── */
@@ -170,10 +170,8 @@ function highlightText(text, query) {
 // ── AUTO-DETECT BLOG POSTS FROM FOLDER ─────────────────────────────────────
 let BLOG_POSTS = [];
 try {
-  // Webpack magic: reads all .js files inside the /blogss/ folder automatically.
-  // CRITICAL FIX: The regex /^(?!.*(Blog\.js|BlogPostTemplate\.js)).*\.js$/ explicitly ignores 
-  // Blog.js and BlogPostTemplate.js to prevent Vercel from crashing in an infinite loop!
-  const req = require.context('./blogss', true, /^(?!.*(Blog\.js|BlogPostTemplate\.js)).*\.js$/); 
+  // CRITICAL FIX: The regex now looks for BOTH .js and .jsx files!
+  const req = require.context('./blogss', true, /^(?!.*(Blog|BlogPostTemplate)\.(js|jsx)$).*\.(js|jsx)$/); 
   
   BLOG_POSTS = req.keys().map((fileName, index) => {
     const module = req(fileName);
@@ -183,8 +181,9 @@ try {
 
     return {
       id: index + 1,
-      slug: meta.slug || fileName.replace('./', '').replace('.js', '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      title: meta.title || fileName.replace('./', '').replace('.js', ''),
+      // Safely strip .js or .jsx from the slug
+      slug: meta.slug || fileName.replace('./', '').replace(/\.jsx?$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      title: meta.title || fileName.replace('./', '').replace(/\.jsx?$/, ''),
       excerpt: meta.excerpt || "Click to read more...",
       category: meta.category || "Mental Health",
       date: displayDate,
