@@ -15,6 +15,14 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
   // Helper to handle navigation and close menu automatically
   const handleNav = (path) => {
     setIsMenuOpen(false);
+
+    // 🚀 THE FIX: If navigating to the main blog page while inside a specific post,
+    // force a clean navigation to reset the Blog component's internal state.
+    if (path === '/blog' && window.location.pathname.startsWith('/blog/')) {
+      window.location.href = '/blog';
+      return;
+    }
+
     if (navigate) {
       navigate(path);
     } else {
