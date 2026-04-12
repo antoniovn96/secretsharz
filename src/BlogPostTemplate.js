@@ -1,8 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-
-// FIX: Removed `import Head from 'next/head'` — this is a Next.js-only API that
-// crashes at build time in this custom SPA router project. Replaced with
-// document.title and meta tag manipulation via useEffect.
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 const TEMPLATE_CSS = `
   /* ── Top Bar ─────────────────────────────────────────────────────── */
@@ -18,20 +14,54 @@ const TEMPLATE_CSS = `
   .reading-time-pill { font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; background: var(--sand); padding: 6px 14px; border-radius: 50px; display: flex; align-items: center; gap: 5px; }
   .reading-time-pill.urgent { color: var(--sage); background: var(--sage-pale); }
 
-  /* ── Reading Mode ─────────────────────────────────────────────────── */
-  .blog-page.reading-mode { background: #1a1a1a !important; }
+  /* ── Reading Mode (Dark Mode) FIXED ──────────────────────────────── */
+  .blog-page.reading-mode { 
+    /* We swap the CSS variables so everything updates automatically */
+    --ink: #f0ece4; 
+    --ink-soft: #c8c0b4; 
+    --muted: #a09a94; 
+    --border: #333333; 
+    --sand: #222222;
+    --sage-pale: rgba(74,124,89,0.15);
+    --lav-pale: rgba(124,111,160,0.15);
+    background: #1a1a1a !important; 
+  }
   .blog-page.reading-mode .post-view { background: #1a1a1a; }
-  .blog-page.reading-mode .post-content h1 { color: #f0ece4 !important; }
-  .blog-page.reading-mode .post-body { color: #c8c0b4 !important; }
-  .blog-page.reading-mode .post-body h2, .blog-page.reading-mode .post-body h3 { color: #e8e0d4 !important; }
-  .blog-page.reading-mode .post-full-meta { color: #6a6460 !important; border-bottom-color: #2a2a2a !important; }
-  .blog-page.reading-mode .post-top-bar { background: rgba(26,26,26,0.98) !important; border-bottom-color: #2a2a2a !important; }
-  .blog-page.reading-mode .post-tldr { background: #222 !important; border-color: var(--lavender) !important; }
-  .blog-page.reading-mode .post-tldr h4, .blog-page.reading-mode .post-tldr p { color: #c8c0b4 !important; }
-  .blog-page.reading-mode .reaction-box { background: #222 !important; border-color: #333 !important; }
-  .blog-page.reading-mode .react-btn { background: #2a2a2a !important; color: #c8c0b4 !important; border-color: #444 !important; }
-  .blog-page.reading-mode .cta-footer-box { background: #1e2a1e !important; }
-  .blog-page.reading-mode .blog-tag { background: rgba(74,124,89,0.2) !important; }
+  .blog-page.reading-mode .post-content h1 { color: var(--ink) !important; }
+  
+  /* Explicit overrides for high-specificity tags */
+  .blog-page.reading-mode .post-body, 
+  .blog-page.reading-mode .post-body p, 
+  .blog-page.reading-mode .post-body li,
+  .blog-page.reading-mode .post-body blockquote { color: var(--ink-soft) !important; }
+  
+  .blog-page.reading-mode .post-body h2, 
+  .blog-page.reading-mode .post-body h3 { color: var(--ink) !important; }
+  .blog-page.reading-mode .post-body blockquote { background: var(--sand) !important; }
+  .blog-page.reading-mode .post-top-bar { background: rgba(26,26,26,0.98) !important; }
+  .blog-page.reading-mode .post-tldr { background: var(--sand) !important; }
+  
+  /* Containers & Cards */
+  .blog-page.reading-mode .reaction-box, 
+  .blog-page.reading-mode .cta-footer-box,
+  .blog-page.reading-mode .related-card,
+  .blog-page.reading-mode .toc-box { background: var(--sand) !important; border-color: var(--border) !important; }
+  
+  /* Buttons */
+  .blog-page.reading-mode .react-btn,
+  .blog-page.reading-mode .share-btn { background: #2a2a2a !important; color: var(--ink-soft) !important; border-color: #444 !important; }
+  
+  /* Titles in widgets */
+  .blog-page.reading-mode .reaction-box h3,
+  .blog-page.reading-mode .cta-footer-box h3,
+  .blog-page.reading-mode .related-title,
+  .blog-page.reading-mode .related-card-title { color: var(--ink) !important; }
+  
+  /* Table of Contents */
+  .blog-page.reading-mode .toc-title { color: var(--muted) !important; }
+  .blog-page.reading-mode .toc-link { color: var(--ink-soft) !important; }
+  .blog-page.reading-mode .toc-item { border-bottom-color: var(--border) !important; }
+  .blog-page.reading-mode .share-label { color: var(--muted) !important; }
 
   /* ── Article Layout ──────────────────────────────────────────────── */
   .post-view { max-width: 760px; margin: 0 auto; padding: 0 24px 80px; transition: background 0.3s; }
@@ -131,8 +161,6 @@ const TEMPLATE_CSS = `
 `;
 
 // ── TOC BUILDER ──────────────────────────────────────────────────────────────
-// Parses an array of { id, title, level } objects passed via meta.toc,
-// or auto-extracts h2/h3 from the rendered DOM after mount.
 function TableOfContents({ toc, activeId }) {
   if (!toc || toc.length === 0) return null;
   return (
@@ -172,7 +200,6 @@ function useReadingProgress(bodyRef, totalWords) {
       const rect = el.getBoundingClientRect();
       const totalH = el.offsetHeight;
       const scrolled = Math.max(0, -rect.top);
-      // FIX: Guard against division by zero (e.g. short pages with no scroll)
       const pct = totalH > 0 ? Math.min(100, (scrolled / totalH) * 100) : 0;
       setProgress(pct);
       if (totalWords && pct < 100) {
@@ -234,12 +261,10 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
     return () => document.head.removeChild(style);
   }, []);
 
-  // FIX: Replace next/head with direct document manipulation
   useEffect(() => {
     const prev = document.title;
     if (safeMeta.title) document.title = `${safeMeta.title} | Secret Sharz`;
 
-    // Open Graph meta tags
     const ogTags = [
       { property: 'og:title', content: safeMeta.title },
       { property: 'og:description', content: safeMeta.excerpt },
@@ -262,10 +287,8 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
     };
   }, [safeMeta.title, safeMeta.excerpt, safeMeta.imgUrl]);
 
-  // Scroll to top on mount
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  // Back-to-top visibility
   useEffect(() => {
     const onScroll = () => setShowBackToTop(window.scrollY > 400);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -275,8 +298,6 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
   const { progress, minsLeft } = useReadingProgress(bodyRef, totalWords);
   const activeTocId = useActiveTocId(toc);
 
-  // FIX: handleCopyLink now has a fallback for environments where
-  // navigator.clipboard is unavailable (HTTP, some browsers, WebViews)
   const handleCopyLink = useCallback(() => {
     const url = window.location.href;
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -334,11 +355,9 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
   return (
     <div className={`blog-page ${isReadingMode ? 'reading-mode' : ''}`} style={{ padding: 0, background: isReadingMode ? '#1a1a1a' : 'white', transition: 'background 0.3s' }}>
 
-      {/* ── INTERACTIVE TOP BAR ── */}
       <div className="post-top-bar">
         <button className="post-back-btn" onClick={() => navigate('/blog')}>← Back</button>
 
-        {/* FIX: Reading time remaining — was completely missing */}
         {minsLeft !== null ? (
           <span className={`reading-time-pill ${minsLeft <= 2 ? 'urgent' : ''}`}>
             {minsLeft <= 1 ? '🎉 Almost done!' : `⏱ ${minsLeft} min left`}
@@ -350,7 +369,6 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
         )}
 
         <div className="post-actions">
-          {/* Text size toggle */}
           <button
             className="action-icon-btn"
             title={isTextLarge ? 'Reduce text size' : 'Increase text size'}
@@ -359,7 +377,6 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
             {isTextLarge ? 'Aa−' : 'Aa+'}
           </button>
 
-          {/* FIX: Reading mode / dark mode toggle — was completely missing */}
           <button
             className={`action-icon-btn ${isReadingMode ? 'reading-mode-on' : ''}`}
             title={isReadingMode ? 'Exit reading mode' : 'Reading mode (dark)'}
@@ -368,7 +385,6 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
             {isReadingMode ? '☀️' : '🌙'}
           </button>
 
-          {/* FIX: Copy link now has fallback for HTTP/restricted environments */}
           <button
             className={`action-icon-btn ${copied ? 'reading-mode-on' : ''}`}
             title="Copy link to share"
@@ -383,7 +399,6 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
         </div>
       </div>
 
-      {/* ── ARTICLE ── */}
       <div className="post-view">
         <div className="post-content">
           <div className="post-tag-row">
@@ -400,7 +415,6 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
             <img src={safeMeta.imgUrl} alt={safeMeta.title} className="post-hero-img" />
           )}
 
-          {/* TL;DR Box */}
           {safeMeta.tldr && (
             <div className="post-tldr">
               <h4>Quick Summary 💡</h4>
@@ -408,41 +422,25 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
             </div>
           )}
 
-          {/* FIX: Table of Contents — was completely missing */}
           <TableOfContents toc={toc} activeId={activeTocId} />
 
-          {/* Article body */}
           <div ref={bodyRef} className={`post-body ${isTextLarge ? 'text-large' : 'text-normal'}`}>
             {children}
           </div>
 
-          {/* FIX: Share bar with all requested networks */}
           <div className="share-bar">
             <span className="share-label">Share</span>
-            <button className="share-btn facebook" onClick={handleFacebookShare}>
-              📘 Facebook
-            </button>
-            <button className="share-btn twitter" onClick={handleTwitterShare}>
-              𝕏 X (Twitter)
-            </button>
-            <button className="share-btn linkedin" onClick={handleLinkedInShare}>
-              💼 LinkedIn
-            </button>
-            <button className="share-btn pinterest" onClick={handlePinterestShare}>
-              📌 Pinterest
-            </button>
-            <button className="share-btn whatsapp" onClick={handleWhatsAppShare}>
-              💬 WhatsApp
-            </button>
-            <button className="share-btn email" onClick={handleEmailShare}>
-              ✉️ Email
-            </button>
+            <button className="share-btn facebook" onClick={handleFacebookShare}>📘 Facebook</button>
+            <button className="share-btn twitter" onClick={handleTwitterShare}>𝕏 X (Twitter)</button>
+            <button className="share-btn linkedin" onClick={handleLinkedInShare}>💼 LinkedIn</button>
+            <button className="share-btn pinterest" onClick={handlePinterestShare}>📌 Pinterest</button>
+            <button className="share-btn whatsapp" onClick={handleWhatsAppShare}>💬 WhatsApp</button>
+            <button className="share-btn email" onClick={handleEmailShare}>✉️ Email</button>
             <button className={`share-btn copy ${copied ? 'copied' : ''}`} onClick={handleCopyLink}>
               {copied ? '✓ Copied!' : '🔗 Copy Link'}
             </button>
           </div>
 
-          {/* Reaction box */}
           <div className={`reaction-box ${reaction ? 'thank-you' : ''}`}>
             {reaction ? (
               <>
@@ -462,7 +460,6 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
             )}
           </div>
 
-          {/* CTA Footer */}
           <div className="cta-footer-box">
             <h3>Need to talk?</h3>
             <p>Our safe space is always open. Share anonymously, no sign-up required.</p>
@@ -482,7 +479,6 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
             </div>
           </div>
 
-          {/* FIX: Related posts section — was completely missing */}
           {relatedPosts && relatedPosts.length > 0 && (
             <div className="related-section">
               <div className="related-title">📚 Keep Reading</div>
@@ -513,7 +509,6 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
         </div>
       </div>
 
-      {/* FIX: Back-to-top floating button — was completely missing */}
       <button
         className={`back-to-top-btn ${showBackToTop ? 'visible' : ''}`}
         onClick={scrollToTop}
@@ -524,47 +519,3 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
     </div>
   );
 }
-
-// ── USAGE EXAMPLE (How to create a blog post file) ───────────────────────────
-//
-// Create a file at src/blogs/MyPost.jsx:
-//
-// import React from 'react';
-// import BlogPostTemplate from '../BlogPostTemplate';
-//
-// const META = {
-//   title: "My Article Title",
-//   excerpt: "Short description shown on the blog listing page.",
-//   category: "Mental Health",
-//   date: "April 1, 2026",
-//   readTime: "5 min read",
-//   wordCount: 1200,
-//   imgUrl: "https://images.unsplash.com/photo-xxx",
-//   tldr: "One sentence summary shown before the article body.",
-//   toc: [
-//     { id: "section-1", title: "Why This Matters", level: 2 },
-//     { id: "section-2", title: "What the Research Says", level: 2 },
-//     { id: "section-2a", title: "The Indian Context", level: 3 },
-//     { id: "section-3", title: "What You Can Do Today", level: 2 },
-//   ],
-// };
-//
-// export const meta = META;
-//
-// export default function MyPost({ navigate, relatedPosts }) {
-//   return (
-//     <BlogPostTemplate meta={META} navigate={navigate} relatedPosts={relatedPosts}>
-//       <h2 id="section-1">Why This Matters</h2>
-//       <p>Your article content here...</p>
-//       <h2 id="section-2">What the Research Says</h2>
-//       <h3 id="section-2a">The Indian Context</h3>
-//       <p>More content...</p>
-//       <h2 id="section-3">What You Can Do Today</h2>
-//       <p>Actionable advice...</p>
-//     </BlogPostTemplate>
-//   );
-// }
-//
-// Then add it to BLOG_POSTS in Blog.jsx:
-// import MyPost from './blogs/MyPost';
-// { id: 'x1', slug: 'my-post', ..., component: MyPost }
