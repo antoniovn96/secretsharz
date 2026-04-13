@@ -13,11 +13,11 @@ export const meta = {
   tldr: "Communication skills in relationships are not about being articulate — they are about being brave enough to say the true thing in the right way. This guide covers the 4 communication styles, scripts for the hardest conversations, the most damaging listening mistakes students make, and a personalised style finder that reveals exactly how you communicate under pressure.",
   toc: [
     { id: "why-it-breaks",     title: "1. Why Relationships Break Down (It Is Usually This)",         level: 3 },
-    { id: "four-styles",       title: "2. The 4 Communication Styles — Which One Are You?",           level: 3 },
-    { id: "style-finder",      title: "3. Interactive: Find Your Communication Style",                level: 3 },
-    { id: "scripts",           title: "4. Scripts for the Hardest Conversations",                     level: 3 },
+    { id: "four-styles",       title: "2. The 4 Communication Styles — Which One Are You?",            level: 3 },
+    { id: "style-finder",      title: "3. Interactive: Find Your Communication Style",                 level: 3 },
+    { id: "scripts",           title: "4. Scripts for the Hardest Conversations",                      level: 3 },
     { id: "listening",         title: "5. The Listening Mistakes That Destroy Conversations",         level: 3 },
-    { id: "faq",               title: "6. Communication in Relationships FAQs",                       level: 3 },
+    { id: "faq",               title: "6. Communication in Relationships FAQs",                        level: 3 },
   ],
 };
 
@@ -80,7 +80,7 @@ const SCENARIOS = [
     situation: "A friend has cancelled plans with you at the last minute for the third time this month.",
     options: [
       { style: 'P',  text: "It is fine, I understand you are busy. Do not worry about it." },
-      { style: 'PA', text: "Sure, no problem." — you never initiate plans again and slowly drift away." },
+      { style: 'PA', text: "Sure, no problem. — you never initiate plans again and slowly drift away." }, // FIX: Removed the rogue quotation mark here
       { style: 'A',  text: "You always do this. You clearly do not care about this friendship at all." },
       { style: 'As', text: "I want to mention — this is the third time this month. It is starting to affect me. Can we talk about it?" },
     ],
