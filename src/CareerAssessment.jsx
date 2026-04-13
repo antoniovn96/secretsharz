@@ -53,7 +53,6 @@ const STYLES = `
   .q-check{width:18px;height:18px;border-radius:50%;background:rgba(45,125,70,.15);border:2px solid rgba(45,125,70,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;color:var(--success);transition:all .2s;}
   .q-card.answered .q-check{background:var(--success);border-color:var(--success);color:white;}
   .q-text{font-size:15px;font-weight:500;color:var(--dark);line-height:1.55;margin-bottom:18px;}
-  .q-hint{font-size:12px;color:var(--muted);margin-bottom:14px;font-style:italic;}
 
   .q-scale-wrap{display:flex;flex-direction:column;gap:8px;}
   .q-scale-labels{display:flex;justify-content:space-between;}
@@ -664,7 +663,7 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
       });
       clearTimeout(timeoutId);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.details || data.error || \`Server error \${res.status}\`);
+      if (!res.ok) throw new Error(data.details || data.error || `Server error ${res.status}`);
 
       const text   = data.content?.map(b => b.text || '').join('') || '';
       let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
@@ -678,7 +677,7 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
       clearTimeout(timeoutId);
       setError(err.name === 'AbortError'
         ? 'The analysis timed out. Please check your connection and try again.'
-        : \`Could not generate your analysis: \${err.message}\`);
+        : `Could not generate your analysis: ${err.message}`);
       setScreen('form');
       setCurrentSection(sectionBeforeSubmit);
     }
@@ -721,7 +720,7 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
           </p>
           <div className="vv-loading-steps">
             {loadingLabels.map((step, i) => (
-              <div key={i} className={`loading-step \${loadingStep > i ? 'done' : loadingStep === i ? 'active' : ''}`}>
+              <div key={i} className={`loading-step ${loadingStep > i ? 'done' : loadingStep === i ? 'active' : ''}`}>
                 <div className="step-dot" />{step}
               </div>
             ))}
@@ -764,7 +763,7 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
                     <span>{RIASEC_COLORS[k].desc}</span>
                   </div>
                   <div className="riasec-bar-bg">
-                    <div className="riasec-bar-fill" style={{ width:\`\${v * 10}%\`, background:RIASEC_COLORS[k].bar }} />
+                    <div className="riasec-bar-fill" style={{ width:`${v * 10}%`, background:RIASEC_COLORS[k].bar }} />
                   </div>
                   <div className="riasec-bar-score" style={{ color:RIASEC_COLORS[k].color }}>{v}</div>
                 </div>
@@ -778,11 +777,11 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
               <p>What each letter in your code means for your career direction.</p>
               <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
                 {[
-                  { label:\`Primary — \${RIASEC_COLORS[riasec.code[0]]?.label}\`, text:codeBreakdown.primary, color:RIASEC_COLORS[riasec.code[0]]?.color },
-                  { label:\`Secondary — \${RIASEC_COLORS[riasec.code[1]]?.label}\`, text:codeBreakdown.secondary, color:RIASEC_COLORS[riasec.code[1]]?.color },
-                  { label:\`Tertiary — \${RIASEC_COLORS[riasec.code[2]]?.label}\`, text:codeBreakdown.tertiary, color:RIASEC_COLORS[riasec.code[2]]?.color },
+                  { label:`Primary — ${RIASEC_COLORS[riasec.code[0]]?.label}`, text:codeBreakdown.primary, color:RIASEC_COLORS[riasec.code[0]]?.color },
+                  { label:`Secondary — ${RIASEC_COLORS[riasec.code[1]]?.label}`, text:codeBreakdown.secondary, color:RIASEC_COLORS[riasec.code[1]]?.color },
+                  { label:`Tertiary — ${RIASEC_COLORS[riasec.code[2]]?.label}`, text:codeBreakdown.tertiary, color:RIASEC_COLORS[riasec.code[2]]?.color },
                 ].map((item, i) => (
-                  <div key={i} style={{ background:'var(--parchment)', borderRadius:'12px', padding:'14px 18px', borderLeft:\`3px solid \${item.color}\` }}>
+                  <div key={i} style={{ background:'var(--parchment)', borderRadius:'12px', padding:'14px 18px', borderLeft:`3px solid ${item.color}` }}>
                     <div style={{ fontSize:'11px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'1px', color:item.color, marginBottom:'5px' }}>{item.label}</div>
                     <p style={{ margin:0, fontSize:'14px', color:'var(--brown)', lineHeight:1.6 }}>{item.text}</p>
                   </div>
@@ -830,7 +829,7 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
 
   return (
     <div className="vv-root">
-      <Header badge={\`Step \${currentSection + 1} of \${ALL_SECTIONS.length}\`} showNav={false} />
+      <Header badge={`${currentSection + 1} of ${ALL_SECTIONS.length}`} showNav={false} />
 
       {currentSection > 0 && (
         <div className="vv-progress-wrap">
@@ -839,7 +838,7 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
               const realIdx = i + 1;
               const st = realIdx < currentSection ? 'done' : realIdx === currentSection ? 'active' : 'todo';
               return (
-                <div key={s.id} className={`vv-section-pill \${st}`}>
+                <div key={s.id} className={`vv-section-pill ${st}`}>
                   {st === 'done' ? '✓' : s.emoji} {s.label}
                 </div>
               );
@@ -847,7 +846,7 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
           </div>
           <div className="vv-progress-right">
             <div className="vv-progress-bar-bg">
-              <div className="vv-progress-fill" style={{ width:\`\${progress}%\` }} />
+              <div className="vv-progress-fill" style={{ width:`${progress}%` }} />
             </div>
             <span className="vv-progress-pct">{progress}%</span>
           </div>
@@ -896,7 +895,7 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
         )}
 
         {(section.id === 'activities' || section.id === 'skills') && section.questions.map((q, idx) => (
-          <div key={q.id} className={`q-card \${answers[q.id] !== undefined ? 'answered' : ''}`}>
+          <div key={q.id} className={`q-card ${answers[q.id] !== undefined ? 'answered' : ''}`}>
             <div className="q-card-top">
               <div className="q-number">Question {idx + 1} of {section.questions.length}</div>
               <div className="q-check">{answers[q.id] !== undefined ? '✓' : ''}</div>
@@ -909,7 +908,7 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
               </div>
               <div className="q-scale">
                 {[1, 2, 3, 4, 5].map(v => (
-                  <button key={v} className={`scale-btn \${answers[q.id] === v ? 'selected' : ''}`} onClick={() => setAnswer(q.id, v)}>{v}</button>
+                  <button key={v} className={`scale-btn ${answers[q.id] === v ? 'selected' : ''}`} onClick={() => setAnswer(q.id, v)}>{v}</button>
                 ))}
               </div>
             </div>
@@ -917,17 +916,17 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
         ))}
 
         {['academics','values','personality','future'].includes(section.id) && section.questions.map((q, idx) => (
-          <div key={q.id} className={`q-card \${answers[q.id] !== undefined ? 'answered' : ''}`}>
+          <div key={q.id} className={`q-card ${answers[q.id] !== undefined ? 'answered' : ''}`}>
             <div className="q-card-top">
               <div className="q-number">Question {idx + 1} of {section.questions.length}</div>
               <div className="q-check">{answers[q.id] !== undefined ? '✓' : ''}</div>
             </div>
             <div className="q-text">{q.text}</div>
-            <div className={`choice-grid \${q.choices.length <= 4 ? 'single-col' : ''}`}>
+            <div className={`choice-grid ${q.choices.length <= 4 ? 'single-col' : ''}`}>
               {q.choices.map((c, i) => (
                 <button
                   key={i}
-                  className={`choice-btn \${answers[q.id] === c.text ? 'selected' : ''}`}
+                  className={`choice-btn ${answers[q.id] === c.text ? 'selected' : ''}`}
                   onClick={() => setAnswer(q.id, c.text)}
                 >
                   <span className="cb-icon">{c.icon}</span>
@@ -961,4 +960,3 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
     </div>
   );
 }
-"
