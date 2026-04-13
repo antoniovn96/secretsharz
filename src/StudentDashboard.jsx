@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import CareerAssessment from "./CareerAssessment"; // 🔗 Linked the Assessment Component
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
 
@@ -169,11 +170,20 @@ const NAV_ITEMS = [
   { id: "counsellor", icon: "📅", label: "Book Expert" },
 ];
 
-export default function StudentDashboard({ user, userData, initialTab = "home", onStartAssessment, onBack, onLogout }) {
+export default function StudentDashboard({ user, userData, initialTab = "home", onBack, onLogout }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isParentMode, setIsParentMode] = useState(false);
   const [toast, setToast] = useState(null);
   const [advisoryMsg, setAdvisoryMsg] = useState("");
+
+  // 🔗 Connection State
+  const [showAssessment, setShowAssessment] = useState(false);
+  const [localUserData, setLocalUserData] = useState(userData || {});
+
+  // Keep localUserData in sync if external userData updates
+  useEffect(() => {
+    if (userData) setLocalUserData(userData);
+  }, [userData]);
 
   useEffect(() => {
     const style = document.createElement("style");
@@ -195,63 +205,62 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     setTimeout(() => setToast(null), 3000);
   };
 
-  // ── DATA EXTRACTION & FALLBACKS ──
-  const studentName = userData?.name || user?.displayName || "Student";
+  // ── DATA EXTRACTION & FALLBACKS (Using linked localUserData) ──
+  const studentName = localUserData?.name || user?.displayName || "Student";
   const firstName = studentName.split(" ")[0];
-  const hasAssessment = !!userData?.riasecCode;
+  const hasAssessment = !!localUserData?.riasecCode;
   
-  const xp = userData?.xp || 10;
+  const xp = localUserData?.xp || 10;
   
-  // Extract Careers from userData OR provide highly realistic fallbacks if assessment is done but data is missing
-  const bestCareer = userData?.bestCareer || (hasAssessment ? {
+  const bestCareer = localUserData?.bestCareer || (hasAssessment ? {
     title: "Software Engineer", subtitle: "Tech & Innovation", matchPercent: 94,
     pros: ["High starting salary", "Global opportunities"], cons: ["Sedentary lifestyle", "Continuous learning required"],
     parentMetrics: { stability: "High", demand: "Very High", safety: "High" }
   } : null);
 
-  const recommendedCareer = userData?.recommendedCareer || (hasAssessment ? {
+  const recommendedCareer = localUserData?.recommendedCareer || (hasAssessment ? {
     title: "Data Analyst", subtitle: "Research & Logic", matchPercent: 88,
     pros: ["Growing field", "Remote work options"], cons: ["Repetitive tasks", "Screen fatigue"],
     parentMetrics: { stability: "High", demand: "High", safety: "High" }
   } : null);
 
-  const leastCareer = userData?.leastCareer || (hasAssessment ? {
+  const leastCareer = localUserData?.leastCareer || (hasAssessment ? {
     title: "Event Manager", subtitle: "Social & Enterprising", matchPercent: 42,
     pros: ["Creative freedom", "Networking"], cons: ["High stress", "Irregular hours"],
     parentMetrics: { stability: "Low", demand: "Medium", safety: "Moderate" }
   } : null);
 
-  // Extract Stream & Colleges OR provide fallbacks
-  const streamRec = userData?.streamRec || (hasAssessment ? {
+  const streamRec = localUserData?.streamRec || (hasAssessment ? {
     name: "Science (PCM)", match: 92,
     reasons: ["Strong analytical thinking", "Interest in technology", "Matches Investigative profile"]
   } : null);
 
-  const collegesExt = userData?.collegesExt && userData.collegesExt.length > 0 ? userData.collegesExt : (hasAssessment ? [
+  const collegesExt = localUserData?.collegesExt && localUserData.collegesExt.length > 0 ? localUserData.collegesExt : (hasAssessment ? [
     { name: "Indian Institute of Technology (IIT)", loc: "Various", cutoffs: "Top 2%", fees: "₹1-2L/yr", placement: "95%+" },
     { name: "National Institute of Technology (NIT)", loc: "Various", cutoffs: "Top 5%", fees: "₹1L/yr", placement: "90%+" },
     { name: "BITS Pilani", loc: "Pilani", cutoffs: "Top 8%", fees: "₹1.5L/yr", placement: "92%+" }
   ] : []);
 
-  // Extract Compare Stats OR provide fallbacks
-  const compareStats = userData?.compareStats && userData.compareStats.length > 0 ? userData.compareStats : (hasAssessment ? [
+  const compareStats = localUserData?.compareStats && localUserData.compareStats.length > 0 ? localUserData.compareStats : (hasAssessment ? [
     { title: bestCareer?.title || "Path 1", salary: "₹12-25L", years: "4 Years", difficulty: "High", wlb: "Moderate" },
     { title: recommendedCareer?.title || "Path 2", salary: "₹8-15L", years: "3-4 Years", difficulty: "Medium", wlb: "Good" },
     { title: leastCareer?.title || "Path 3", salary: "₹5-10L", years: "3 Years", difficulty: "Low", wlb: "Poor" }
   ] : []);
 
-  // Extract Skill Gaps OR provide fallbacks
-  const skillGaps = userData?.skillGaps && userData.skillGaps.length > 0 ? userData.skillGaps : (hasAssessment ? [
+  const skillGaps = localUserData?.skillGaps && localUserData.skillGaps.length > 0 ? localUserData.skillGaps : (hasAssessment ? [
     { skill: "Analytical Thinking", status: "On Track", student: 8 },
     { skill: "Public Speaking", status: "Needs Work", student: 4 },
     { skill: "Time Management", status: "On Track", student: 7 }
   ] : []);
 
-  // Extract Execution Plan OR provide fallbacks
-  const executionPlan = userData?.executionPlan && userData.executionPlan.length > 0 ? userData.executionPlan : (hasAssessment ? [
-    { title: "Skill Up", action: "Complete a basic Python course this month." },
-    { title: "Research", action: "Look up admission criteria for top 3 target colleges." }
-  ] : []);
+  // Map AI next steps to the execution plan if present
+  const executionPlan = localUserData?.executionPlan && localUserData.executionPlan.length > 0 
+    ? localUserData.executionPlan 
+    : (localUserData?.nextSteps ? localUserData.nextSteps.map((step, i) => ({ title: `Action Step ${i + 1}`, action: step })) 
+    : (hasAssessment ? [
+      { title: "Skill Up", action: "Complete a basic Python course this month." },
+      { title: "Research", action: "Look up admission criteria for top 3 target colleges." }
+    ] : []));
 
   const renderLockedState = (icon, title, desc = "") => (
     <div className="db-empty-state">
@@ -264,9 +273,36 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         <span style={{color: "#B45309"}}>{advisoryMsg}</span>
       </div>
       
-      <button className="db-btn" onClick={onStartAssessment} style={{fontSize: "16px", padding: "14px 32px"}}>Start Assessment 🚀</button>
+      {/* 🔗 This now triggers the Assessment view */}
+      <button className="db-btn" onClick={() => setShowAssessment(true)} style={{fontSize: "16px", padding: "14px 32px"}}>Start Assessment 🚀</button>
     </div>
   );
+
+  // 🔗 If the user clicks "Start Assessment", we render the CareerAssessment component
+  if (showAssessment) {
+    return (
+      <CareerAssessment
+        onBack={() => setShowAssessment(false)}
+        onSaveResults={(results) => {
+          // Immediately save the AI results into our local dashboard state
+          setLocalUserData({
+            ...localUserData,
+            name: results.studentInfo?.name || localUserData.name,
+            classLevel: results.studentInfo?.class || localUserData.classLevel,
+            riasecCode: results.riasec?.code,
+            riasecSummary: results.riasecSummary,
+            bestCareer: results.bestCareer,
+            recommendedCareer: results.recommendedCareer,
+            leastCareer: results.leastCareer,
+            nextSteps: results.nextSteps // we map this to execution plan
+          });
+          setShowAssessment(false);
+          setActiveTab("careers"); // Move them straight to their matches
+          showToast("Assessment Complete! Your roadmap is unlocked.");
+        }}
+      />
+    );
+  }
 
   return (
     <div className="db-root">
@@ -280,7 +316,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         <div className="db-student-info">
           <div className="db-avatar">{studentName.charAt(0)}</div>
           <div className="db-student-name">{studentName}</div>
-          <div className="db-student-class">{userData?.classLevel || "Class Not Set"}</div>
+          <div className="db-student-class">{localUserData?.classLevel || "Class Not Set"}</div>
         </div>
 
         <nav className="db-nav">
@@ -322,11 +358,12 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                   <div className="db-welcome-eyebrow">Welcome Back</div>
                   <h1 className="db-welcome-h1">Hey {firstName},<br /><em>own your future.</em></h1>
                   <p className="db-welcome-p">
-                    {hasAssessment ? `Your RIASEC code is ${userData.riasecCode}. Your best path is ${bestCareer?.title}.` : "Take our free AI assessment to unlock your career roadmap."}
+                    {hasAssessment ? `Your RIASEC code is ${localUserData.riasecCode}. Your best path is ${bestCareer?.title}.` : "Take our free AI assessment to unlock your career roadmap."}
                   </p>
                 </div>
                 <div className="db-welcome-action">
-                  {!hasAssessment && <button className="db-welcome-btn" onClick={onStartAssessment}>Take Assessment 🚀</button>}
+                  {/* 🔗 This now triggers the Assessment view */}
+                  {!hasAssessment && <button className="db-welcome-btn" onClick={() => setShowAssessment(true)}>Take Assessment 🚀</button>}
                   {hasAssessment && <button className="db-welcome-btn" onClick={() => setActiveTab("careers")}>View Matches →</button>}
                 </div>
               </div>
@@ -485,7 +522,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 <>
                   <div style={{ marginBottom: "20px" }}>
                     <h2 style={{ fontFamily: "Fraunces", fontSize: "24px", color: "var(--ink)" }}>Target Colleges</h2>
-                    <p style={{ color: "var(--muted)", fontSize: "14px" }}>Based on your {userData?.riasecCode || "profile"} and Stream.</p>
+                    <p style={{ color: "var(--muted)", fontSize: "14px" }}>Based on your {localUserData?.riasecCode || "profile"} and Stream.</p>
                   </div>
                   {collegesExt.map((c, i) => (
                     <div key={i} className="db-college-ext">
@@ -621,9 +658,9 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                   <div className="db-card-body">
                     <div style={{ background: "linear-gradient(135deg, var(--ink), #1C2850)", borderRadius: "var(--r-lg)", padding: "32px", marginBottom: "24px", color: "white" }}>
                       <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", fontWeight: "700", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "8px" }}>RIASEC Career Report — {studentName}</div>
-                      <div style={{ fontFamily: "Fraunces, serif", fontSize: "36px", fontWeight: "700", color: "var(--gold)", marginBottom: "8px" }}>{userData?.riasecCode || "Pending"}</div>
+                      <div style={{ fontFamily: "Fraunces, serif", fontSize: "36px", fontWeight: "700", color: "var(--gold)", marginBottom: "8px" }}>{localUserData?.riasecCode || "Pending"}</div>
                       <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.7)", lineHeight: "1.7", maxWidth: "600px" }}>
-                        {userData?.riasecSummary || "Your detailed AI-generated psychological and career summary is being finalized based on your latest assessment."}
+                        {localUserData?.riasecSummary || "Your detailed AI-generated psychological and career summary is being finalized based on your latest assessment."}
                       </div>
                     </div>
                   </div>
