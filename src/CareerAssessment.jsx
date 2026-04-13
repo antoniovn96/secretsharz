@@ -669,11 +669,11 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
     const prompt = `You are VidyaVantage, an expert AI career counsellor specialising in Indian education (2025–2026), using Holland's RIASEC theory.
 
 STUDENT PROFILE:
-- Name: ${info.name}
-- Class/Level: ${info.class}
-- City: ${info.city}
-- Career aspiration (if any): ${info.aspiration || 'Not specified'}
-- Boards: ${info.boards || 'Not specified'}
+- Name: ${info.name.replace(/"/g, '\\"')}
+- Class/Level: ${info.class.replace(/"/g, '\\"')}
+- City: ${info.city.replace(/"/g, '\\"')}
+- Career aspiration (if any): ${(info.aspiration || 'Not specified').replace(/"/g, '\\"')}
+- Boards: ${(info.boards || 'Not specified').replace(/"/g, '\\"')}
 
 RIASEC SCORES (0–10, from dual interest + ability assessment):
 R (Realistic/Doer)=${riasec.scores.R}, I (Investigative/Thinker)=${riasec.scores.I}, A (Artistic/Creator)=${riasec.scores.A}, S (Social/Helper)=${riasec.scores.S}, E (Enterprising/Persuader)=${riasec.scores.E}, C (Conventional/Organiser)=${riasec.scores.C}
@@ -681,29 +681,29 @@ R (Realistic/Doer)=${riasec.scores.R}, I (Investigative/Thinker)=${riasec.scores
 Sorted ranking: ${riasec.sorted.map(([k,v])=>`${k}=${v}`).join(', ')}
 
 PERSONALITY INDICATORS:
-- Setback response: ${personality.setbackResponse}
-- Natural team role: ${personality.teamRole}
-- Social energy: ${personality.socialEnergy}
-- Decision-making style: ${personality.decisionStyle}
-- Core motivation: ${personality.coreMotivation}
-- Academic pattern: ${personality.academicPattern}
-- Income vs meaning: ${personality.incomeVsMeaning}
-- Risk tolerance: ${personality.riskTolerance}
-- Work-life balance: ${personality.workLifeBalance}
+- Setback response: ${(personality.setbackResponse || '').replace(/"/g, '\\"')}
+- Natural team role: ${(personality.teamRole || '').replace(/"/g, '\\"')}
+- Social energy: ${(personality.socialEnergy || '').replace(/"/g, '\\"')}
+- Decision-making style: ${(personality.decisionStyle || '').replace(/"/g, '\\"')}
+- Core motivation: ${(personality.coreMotivation || '').replace(/"/g, '\\"')}
+- Academic pattern: ${(personality.academicPattern || '').replace(/"/g, '\\"')}
+- Income vs meaning: ${(personality.incomeVsMeaning || '').replace(/"/g, '\\"')}
+- Risk tolerance: ${(personality.riskTolerance || '').replace(/"/g, '\\"')}
+- Work-life balance: ${(personality.workLifeBalance || '').replace(/"/g, '\\"')}
 
 FUTURE VISION:
-- Emerging trend that excites them: ${personality.trendInterest}
-- Career model preference: ${personality.futureWorkModel}
-- AI-era focus: ${personality.aiEraFocus}
-- Legacy goal: ${personality.legacyGoal}
-- Skill they want to build: ${personality.skillBuildGoal}
-- Subject preference: ${answers['b1'] || 'not specified'}
-- Work environment: ${answers['c2'] || 'not specified'}
-- Primary career value: ${answers['c1'] || 'not specified'}
-- Industry attraction: ${answers['e2'] || 'not specified'}
-- 10-year vision: ${answers['e1'] || 'not specified'}
+- Emerging trend that excites them: ${(personality.trendInterest || '').replace(/"/g, '\\"')}
+- Career model preference: ${(personality.futureWorkModel || '').replace(/"/g, '\\"')}
+- AI-era focus: ${(personality.aiEraFocus || '').replace(/"/g, '\\"')}
+- Legacy goal: ${(personality.legacyGoal || '').replace(/"/g, '\\"')}
+- Skill they want to build: ${(personality.skillBuildGoal || '').replace(/"/g, '\\"')}
+- Subject preference: ${(answers['b1'] || 'not specified').replace(/"/g, '\\"')}
+- Work environment: ${(answers['c2'] || 'not specified').replace(/"/g, '\\"')}
+- Primary career value: ${(answers['c1'] || 'not specified').replace(/"/g, '\\"')}
+- Industry attraction: ${(answers['e2'] || 'not specified').replace(/"/g, '\\"')}
+- 10-year vision: ${(answers['e1'] || 'not specified').replace(/"/g, '\\"')}
 
-INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid JSON (no markdown, no backticks). Structure:
+INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid JSON (no markdown, no backticks). Ensure all internal strings are properly escaped to prevent JSON parse errors. Structure:
 
 {
   "riasecSummary": "3 sentences describing this student's unique RIASEC personality in warm, specific, encouraging language. Mention all 3 code letters and what the combination means.",
@@ -782,7 +782,10 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
       if (!res.ok) throw new Error(data.details || data.error || `Server error ${res.status}`);
 
       const text   = data.content?.map(b => b.text || '').join('') || '';
-      const clean  = text.replace(/```json|```/g, '').trim();
+      
+      // Much safer JSON cleanup
+      let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      
       const parsed = JSON.parse(clean);
 
       const finalResults = { ...parsed, riasec, studentInfo:info, personalityProfile:personality };
