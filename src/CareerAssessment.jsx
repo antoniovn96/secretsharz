@@ -53,6 +53,7 @@ const STYLES = `
   .q-check{width:18px;height:18px;border-radius:50%;background:rgba(45,125,70,.15);border:2px solid rgba(45,125,70,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;color:var(--success);transition:all .2s;}
   .q-card.answered .q-check{background:var(--success);border-color:var(--success);color:white;}
   .q-text{font-size:15px;font-weight:500;color:var(--dark);line-height:1.55;margin-bottom:18px;}
+  .q-hint{font-size:12px;color:var(--muted);margin-bottom:14px;font-style:italic;}
 
   .q-scale-wrap{display:flex;flex-direction:column;gap:8px;}
   .q-scale-labels{display:flex;justify-content:space-between;}
