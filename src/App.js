@@ -7,6 +7,7 @@ import { auth, db } from './firebase';
 // 🚀 OPTIMIZATION 1: LAZY LOADING HEAVY ROUTES
 // This stops the browser from downloading the entire app just to view the homepage.
 const VidyaVantage = lazy(() => import('./VidyaVantage'));
+const VidyaVantageBlog = lazy(() => import('./VidyaVantageBlog'));
 const AuthPage = lazy(() => import('./AuthPage'));
 const StudentDashboard = lazy(() => import('./StudentDashboard'));
 const MindSpace = lazy(() => import('./MindSpace'));
@@ -1024,7 +1025,10 @@ export default function App() {
     if (currentPath.startsWith('/resources')) {
       return <Resources navigate={navigate} />;
     }
-    if (currentPath.startsWith('/vidyavantage')) {
+if (currentPath.startsWith('/vidyavantage/blog')) {
+   return <VidyaVantageBlog navigate={navigate} />;
+ }    
+if (currentPath.startsWith('/vidyavantage')) {
       return (
         <>
           <div className="instant-action-bar" style={{background: 'var(--ink)'}}>
