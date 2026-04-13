@@ -283,11 +283,11 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.details || data.error || \`Server error \${res.status}\`);
+        throw new Error(data.details || data.error || `Server error ${res.status}`);
       }
 
       const text = data.content?.map(b => b.text || '').join('') || '';
-      const clean = text.replace(/\`\`\`json|\`\`\`/g, '').trim();
+      const clean = text.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(clean);
       
       const finalResults = { ...parsed, riasec, studentInfo: info };
@@ -298,7 +298,7 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
       clearTimeout(timeoutId);
       const message = err.name === 'AbortError'
         ? 'The analysis timed out. Please check your connection and try again.'
-        : \`We couldn't generate your analysis: \${err.message}\`;
+        : `We couldn't generate your analysis: ${err.message}`;
       setError(message);
       setScreen('form');
       setCurrentSection(sectionBeforeSubmit);
@@ -343,7 +343,7 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
         <p>Our AI is analysing your unique RIASEC personality and academic profile to find your perfect career match.</p>
         <div className="vv-loading-steps">
           {['Mapping RIASEC personality profile', 'Analysing academic strengths', 'Searching Indian career database', 'Generating personalised recommendations', 'Matching top colleges'].map((step, i) => (
-            <div key={i} className={`loading-step \${loadingStep > i ? 'done' : loadingStep === i ? 'active' : ''}`}>
+            <div key={i} className={`loading-step ${loadingStep > i ? 'done' : loadingStep === i ? 'active' : ''}`}>
               <div className="step-dot" />{step}
             </div>
           ))}
@@ -376,7 +376,7 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
             { data: recommendedCareer, cls: 'recommended', badge: '✅ Recommended Career Path', barColor: 'var(--gold)' },
             { data: leastCareer, cls: 'least', badge: '⚠️ Least Recommended Path', barColor: 'var(--danger)' },
           ].filter(c => c.data).map(({ data, cls, badge, barColor }) => (
-            <div key={cls} className={`career-card \${cls}`}>
+            <div key={cls} className={`career-card ${cls}`}>
               <div className="career-badge">{badge}</div>
               <div className="career-title">{data.title}</div>
               <div className="career-subtitle">{data.subtitle}</div>
@@ -386,7 +386,7 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
                   <span className="match-pct">{data.matchPercent}%</span>
                 </div>
                 <div className="match-bar-bg">
-                  <div className="match-bar-fill" style={{ width: \`\${data.matchPercent}%\`, background: barColor }} />
+                  <div className="match-bar-fill" style={{ width: `${data.matchPercent}%`, background: barColor }} />
                 </div>
               </div>
               <div className="ai-analysis">{data.analysis}</div>
@@ -428,12 +428,12 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
 
   return (
     <div className="vv-root">
-      <Header badge={\`Step \${currentSection + 1} of \${ALL_SECTIONS.length}\`} showNav={false} />
+      <Header badge={`Step ${currentSection + 1} of ${ALL_SECTIONS.length}`} showNav={false} />
       {currentSection > 0 && (
         <div className="vv-progress-wrap">
           <span className="vv-section-tag">{section.label}</span>
           <span className="vv-progress-label">{answeredQ}/{totalQ} answered</span>
-          <div className="vv-progress-bar-bg"><div className="vv-progress-fill" style={{ width: \`\${progress}%\` }} /></div>
+          <div className="vv-progress-bar-bg"><div className="vv-progress-fill" style={{ width: `${progress}%` }} /></div>
           <span className="vv-progress-pct">{progress}%</span>
         </div>
       )}
@@ -473,10 +473,10 @@ Respond ONLY with a valid JSON object (no markdown, no backticks) with this exac
                 {q.type === 'scale' ? (
                   <div>
                     <div className="q-scale-labels"><span className="q-scale-label">Not at all</span><span className="q-scale-label">Very much</span></div>
-                    <div className="q-scale">{[1, 2, 3, 4, 5].map(v => <button key={v} className={`scale-btn \${answers[q.id] === v ? 'selected' : ''}`} onClick={() => setAnswers({ ...answers, [q.id]: v })}>{v}</button>)}</div>
+                    <div className="q-scale">{[1, 2, 3, 4, 5].map(v => <button key={v} className={`scale-btn ${answers[q.id] === v ? 'selected' : ''}`} onClick={() => setAnswers({ ...answers, [q.id]: v })}>{v}</button>)}</div>
                   </div>
                 ) : (
-                  <div className="choice-grid">{q.choices.map((c, i) => <button key={i} className={`choice-btn \${answers[q.id] === c ? 'selected' : ''}`} onClick={() => setAnswers({ ...answers, [q.id]: c })}>{c}</button>)}</div>
+                  <div className="choice-grid">{q.choices.map((c, i) => <button key={i} className={`choice-btn ${answers[q.id] === c ? 'selected' : ''}`} onClick={() => setAnswers({ ...answers, [q.id]: c })}>{c}</button>)}</div>
                 )}
               </div>
             ))}
