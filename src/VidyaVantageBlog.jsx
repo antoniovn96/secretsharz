@@ -34,18 +34,25 @@ const VV_BLOG_CSS = `
   .vv-empty { text-align: center; padding: 80px 20px; color: var(--muted); grid-column: 1 / -1; }
 `;
 
-// ── AUTO-DETECT POSTS FROM THE NEW FOLDER ──
+// ── AUTO-DETECT POSTS FROM THE NESTED FOLDERS ──
 let VV_POSTS = [];
 try {
-  // CRITICAL: This points to the NEW folder 'vv-blogs'
-  const req = require.context('./vv-blogs', true, /\.(js|jsx)$/); 
+  // CRITICAL FIX: Changed folder to './vvblogs'. 
+  // The 'true' parameter means it will recursively search all nested year/month folders!
+  const req = require.context('./vvblogs', true, /\.(js|jsx)$/); 
   
   VV_POSTS = req.keys().map((fileName, index) => {
     const module = req(fileName);
     const meta = module.meta || {}; 
+    
+    // Clean up the filename to create a nice, short URL slug even if it's nested deep in folders
+    // Example: "./2026/February/MyPost.jsx" becomes "mypost"
+    const rawFileName = fileName.split('/').pop(); 
+    const generatedSlug = rawFileName.replace(/\.jsx?$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
     return {
       id: index + 1,
-      slug: meta.slug || fileName.replace('./', '').replace(/\.jsx?$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      slug: meta.slug || generatedSlug,
       title: meta.title || "Untitled Career Post",
       excerpt: meta.excerpt || "",
       category: meta.category || "Career Guidance",
@@ -56,7 +63,7 @@ try {
     };
   });
 } catch (error) {
-  console.warn("Could not auto-load from ./vv-blogs folder. Ensure the folder exists.", error);
+  console.warn("Could not auto-load from ./vvblogs folder. Ensure the folder exists.", error);
 }
 
 export default function VidyaVantageBlog({ navigate }) {
@@ -122,7 +129,7 @@ export default function VidyaVantageBlog({ navigate }) {
           <div className="vv-empty">
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
             <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '24px', color: 'var(--dark)' }}>No articles yet</h3>
-            <p>Create your first `.jsx` file inside the `src/vv-blogs/` folder to see it appear here.</p>
+            <p>Create your first `.jsx` file inside the `src/vvblogs/` folder to see it appear here.</p>
           </div>
         ) : (
           VV_POSTS.map(post => (
