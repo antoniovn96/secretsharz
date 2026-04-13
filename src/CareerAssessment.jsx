@@ -249,7 +249,7 @@ const SKILLS_QUESTIONS = [
   { id:'s4',  riasec:'I', text:'Scientific thinking — formulating hypotheses, evaluating evidence, and drawing conclusions systematically.' },
   { id:'s5',  riasec:'A', text:'Creative output — writing, visual art, music, design, photography, or performance.' },
   { id:'s6',  riasec:'A', text:'Generating ideas that others have not thought of — lateral thinking and imaginative leaps.' },
-  { id:'s7',  riasec:'S', text:'Reading people's emotions and responding with genuine empathy and sensitivity.' },
+  { id:'s7',  riasec:'S', text:'Reading emotions of people and responding with genuine empathy and sensitivity.' },
   { id:'s8',  riasec:'S', text:'Explaining things clearly so that different kinds of people actually understand — teaching and coaching.' },
   { id:'s9',  riasec:'E', text:'Motivating and influencing others to take action toward a shared goal — natural leadership.' },
   { id:'s10', riasec:'E', text:'Managing strategy, resources, and competing priorities under pressure — organising people at scale.' },
