@@ -249,7 +249,7 @@ const SKILLS_QUESTIONS = [
   { id:'s4',  riasec:'I', text:'Scientific thinking — formulating hypotheses, evaluating evidence, and drawing conclusions systematically.' },
   { id:'s5',  riasec:'A', text:'Creative output — writing, visual art, music, design, photography, or performance.' },
   { id:'s6',  riasec:'A', text:'Generating ideas that others have not thought of — lateral thinking and imaginative leaps.' },
-  { id:'s7',  riasec:'S', text:'Reading emotions of people and responding with genuine empathy and sensitivity.' },
+  { id:'s7',  riasec:'S', text:'Reading people\'s emotions and responding with genuine empathy and sensitivity.' },
   { id:'s8',  riasec:'S', text:'Explaining things clearly so that different kinds of people actually understand — teaching and coaching.' },
   { id:'s9',  riasec:'E', text:'Motivating and influencing others to take action toward a shared goal — natural leadership.' },
   { id:'s10', riasec:'E', text:'Managing strategy, resources, and competing priorities under pressure — organising people at scale.' },
@@ -308,7 +308,7 @@ const ACADEMIC_QUESTIONS = [
   {
     id:'b5', text:'If you could design one new class that your school or college does not yet offer, it would be:',
     choices:[
-      {icon:'🤖', text:'Artificial Intelligence & Ethics',          riasec:'I'},
+      {icon:'🤖', text:'Artificial Intelligence & Ethics',           riasec:'I'},
       {icon:'🌿', text:'Environmental Sustainability & Climate Action', riasec:'R'},
       {icon:'💰', text:'Personal Finance & Investment for Youth',   riasec:'E'},
       {icon:'🧠', text:'Psychology & Mental Health Studies',        riasec:'S'},
@@ -448,7 +448,7 @@ const PERSONALITY_QUESTIONS = [
     choices:[
       {icon:'🤖', text:'AI, machine learning, and the automation of knowledge work', riasec:'I'},
       {icon:'🌍', text:'Climate solutions, renewable energy, and sustainable tech',  riasec:'R'},
-      {icon:'🧬', text:'Biotech, genetic medicine, and longevity science',           riasec:'I'},
+      {icon:'🧬', text:'Biotech, genetic medicine, and longevity science',            riasec:'I'},
       {icon:'🎥', text:'Creator economy, digital content, and personalised media',   riasec:'A'},
       {icon:'🧠', text:'Mental health, emotional intelligence, and wellness tech',   riasec:'S'},
       {icon:'🏗️', text:'Infrastructure, smart cities, and physical world innovation',riasec:'R'},
@@ -461,7 +461,7 @@ const PERSONALITY_QUESTIONS = [
       {icon:'🛠️', text:'Creating something tangible that did not exist before',       riasec:'R'},
       {icon:'🌟', text:'The recognition and influence that comes from succeeding',    riasec:'E'},
       {icon:'🎨', text:'The freedom to express exactly who you are through your work',riasec:'A'},
-      {icon:'💙', text:'Knowing you made a real difference in someone's life',        riasec:'S'},
+      {icon:'💙', text:'Knowing you made a real difference in someone\'s life',       riasec:'S'},
       {icon:'📊', text:'The clarity and progress that comes from a well-executed plan',riasec:'C'},
     ],
   },
@@ -474,7 +474,7 @@ const FUTURE_QUESTIONS = [
   {
     id:'e1', text:'If you imagine yourself at 35, fulfilled and doing meaningful work — which image resonates most?',
     choices:[
-      {icon:'🏗️', text:'Running a company I built from scratch',                    riasec:'E'},
+      {icon:'🏗️', text:'Running a company I built from scratch',                     riasec:'E'},
       {icon:'🔬', text:'Leading a research lab or publishing work that changes a field', riasec:'I'},
       {icon:'🎬', text:'Creating art, content, or design that reaches millions',    riasec:'A'},
       {icon:'🏥', text:'Healing, counselling, or educating people who need it',     riasec:'S'},
@@ -541,7 +541,7 @@ const FUTURE_QUESTIONS = [
 
 // ── ALL SECTIONS METADATA ──────────────────────────────────────────────────────
 const ALL_SECTIONS = [
-  { id:'info',        label:'Profile',          emoji:'👤', questions:[] },
+  { id:'info',        label:'Profile',        emoji:'👤', questions:[] },
   { id:'activities',  label:'Interests',        emoji:'🎯', questions:ACTIVITY_QUESTIONS },
   { id:'skills',      label:'Abilities',        emoji:'⚡', questions:SKILLS_QUESTIONS },
   { id:'academics',   label:'Academics',        emoji:'📚', questions:ACADEMIC_QUESTIONS },
