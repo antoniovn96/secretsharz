@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import Header from '../src/Header';
-import Footer from '../src/Footer';
+import Header from './Header';
+import Footer from './Footer';
 
 const CollegeDetails = ({ currentUser, handleLogout, isAdmin, setModal }) => {
     const router = useRouter();
