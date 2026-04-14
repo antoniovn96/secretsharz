@@ -7,6 +7,8 @@ import { auth, db } from './firebase';
 // 🚀 OPTIMIZATION 1: LAZY LOADING HEAVY ROUTES
 // This stops the browser from downloading the entire app just to view the homepage.
 const VidyaVantage = lazy(() => import('./VidyaVantage'));
+const CollegesPage = lazy(() => import('./CollegesPage')); // ✅ ADDED
+const CollegeDetails = lazy(() => import('./CollegeDetails')); // ✅ ADDED
 const VidyaVantageBlog = lazy(() => import('./VidyaVantageBlog'));
 const AuthPage = lazy(() => import('./AuthPage'));
 const StudentDashboard = lazy(() => import('./StudentDashboard'));
@@ -924,22 +926,17 @@ export default function App() {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
-        let isDbAdmin = false;
         try {
           const snap = await getDoc(doc(db, 'users', user.uid));
           if (snap.exists()) {
             setUserData(snap.data());
-            if (snap.data().role === 'super_admin') isDbAdmin = true;
           }
         } catch (e) { console.error(e); }
-
-        const isMaster = user.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
-        const isUserAdmin = isDbAdmin || isMaster;
 
         if (typeof window !== 'undefined') {
           const path = window.location.pathname.replace(/\/+$/, '') || '/';
           if (path === '/auth' || path === '/') {
-            navigate(isUserAdmin ? '/admin' : '/dashboard');
+            navigate(isAdmin ? '/admin' : '/dashboard');
           }
         }
       } else {
@@ -949,25 +946,12 @@ export default function App() {
       setAuthChecked(true);
     });
     return () => unsub();
-  }, []); 
+  }, [isAdmin]); 
 
   const handleAuthSuccess = async (user, isNew) => {
     setCurrentUser(user);
-    let isDbAdmin = false;
-    try {
-      const snap = await getDoc(doc(db, 'users', user.uid));
-      if (snap.exists()) {
-        setUserData(snap.data());
-        if (snap.data().role === 'super_admin') isDbAdmin = true;
-      }
-    } catch (err) { console.error(err); }
-    const isMaster = user?.email && btoa(user.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
-    if (isDbAdmin || isMaster) {
-      navigate('/admin');
-    } else {
-      if (isNew) setModal('onboarding');
-      else navigate('/dashboard');
-    }
+    if (isNew) setModal('onboarding');
+    else navigate('/dashboard');
   };
 
   const handleLogout = async () => {
@@ -1004,46 +988,59 @@ export default function App() {
       );
     }
     if (currentPath.startsWith('/mindspace')) {
+      return <MindSpace userData={userData} onNavigate={(targetTab) => {
+        if (!currentUser) { navigate('/auth'); return; }
+        setDashboardTab(targetTab);
+        navigate('/dashboard');
+      }} />;
+    }
+    if (currentPath.startsWith('/about')) return <AboutUs navigate={navigate} />;
+    if (currentPath.startsWith('/resources')) return <Resources navigate={navigate} />;
+    if (currentPath.startsWith('/vidyavantage/blog')) return <VidyaVantageBlog navigate={navigate} />;
+    
+    // ✅ ADDED COLLEGES ROUTE
+    if (currentPath.startsWith('/colleges')) {
       return (
-        <MindSpace
-          userData={userData}
-          onNavigate={(targetTab) => {
-            if (!currentUser) {
-              alert("You must be logged in to view your career data.");
-              navigate('/auth');
-              return;
-            }
-            setDashboardTab(targetTab);
-            navigate('/dashboard');
-          }}
+        <CollegesPage 
+          navigate={navigate} 
+          currentUser={currentUser} 
+          handleLogout={handleLogout} 
+          isAdmin={isAdmin} 
+          setModal={setModal} 
         />
       );
     }
-    if (currentPath.startsWith('/about')) {
-      return <AboutUs navigate={navigate} />;
+
+    // ✅ ADDED COLLEGE DETAILS ROUTE
+    if (currentPath.startsWith('/college-details')) {
+      return (
+        <CollegeDetails 
+          navigate={navigate} 
+          currentUser={currentUser} 
+          handleLogout={handleLogout} 
+          isAdmin={isAdmin} 
+          setModal={setModal} 
+        />
+      );
     }
-    if (currentPath.startsWith('/resources')) {
-      return <Resources navigate={navigate} />;
-    }
-if (currentPath.startsWith('/vidyavantage/blog')) {
-   return <VidyaVantageBlog navigate={navigate} />;
- }    
-if (currentPath.startsWith('/vidyavantage')) {
+
+    if (currentPath.startsWith('/vidyavantage')) {
       return (
         <>
           <div className="instant-action-bar" style={{background: 'var(--ink)'}}>
             <button style={{background:'none', border:'none', color:'white', cursor:'pointer', fontWeight:'bold'}} onClick={() => navigate(currentUser ? '/dashboard' : '/')}>← Back to Secret Sharz</button>
           </div>
-          <VidyaVantage onBack={() => navigate(currentUser ? '/dashboard' : '/')} />
+          {/* ✅ Passed 'navigate' prop so your Top Colleges button works */}
+          <VidyaVantage 
+            onBack={() => navigate(currentUser ? '/dashboard' : '/')} 
+            navigate={navigate}
+          />
         </>
       );
     }
-    if (currentPath.startsWith('/blog')) {
-      return <Blog />;
-    }
-    if (currentPath === '/') {
-      return <HomePage currentUser={currentUser} isAdmin={isAdmin} setModal={setModal} setShowQuiz={setShowQuiz} navigate={navigate} />;
-    }
+    if (currentPath.startsWith('/blog')) return <Blog />;
+    if (currentPath === '/') return <HomePage currentUser={currentUser} isAdmin={isAdmin} setModal={setModal} setShowQuiz={setShowQuiz} navigate={navigate} />;
+    
     return (
       <div style={{minHeight:'60vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}>
         <h1 style={{fontFamily:"'Fraunces', serif", fontSize:'80px', color:'var(--sage-pale)'}}>404</h1>
@@ -1083,11 +1080,18 @@ if (currentPath.startsWith('/vidyavantage')) {
           </div>
         )}
 
-        {!currentPath.startsWith('/vidyavantage') && <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />}
+        {/* ✅ Updated logic to prevent double headers on colleges pages */}
+        {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && (
+          <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
+        )}
+        
         <main style={{ flex: 1, position: 'relative' }}>
           {renderRoute()}
         </main>
-        {!currentPath.startsWith('/vidyavantage') && <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={setModal} />}
+
+        {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && (
+          <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={setModal} />
+        )}
       </Suspense>
     </div>
   );

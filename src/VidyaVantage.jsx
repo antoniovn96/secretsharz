@@ -19,7 +19,7 @@ const STYLES = `
   .vv-tagline{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-weight:500;}
   .vv-badge{background:var(--saffron);color:white;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;}
   .vv-header-nav{display:flex;align-items:center;gap:12px;}
-  .vv-nav-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;text-decoration:none;display:inline-block;}
+  .vv-nav-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
   .vv-nav-btn:hover{background:rgba(240,165,0,0.2);border-color:var(--gold);color:var(--gold);}
   .vv-nav-btn.active{background:var(--saffron);border-color:var(--saffron);color:white;}
   
@@ -807,8 +807,8 @@ export default function VidyaVantage({ onBack, navigate }) {
         <div className="vv-header-nav">
           <button className={`vv-nav-btn ${screen === 'explorer' ? 'active' : ''}`} onClick={() => setScreen('explorer')}>🔎 Explore Careers</button>
           <button className={`vv-nav-btn`} onClick={() => setScreen('assessment')}>📝 Take Assessment</button>
-          {/* 👇 Connection to the Colleges Page 👇 */}
-          <button className="vv-nav-btn" onClick={() => navigate('/colleges')}>🏫 Top Colleges</button>
+          {/* 👇 Safely wired up Top Colleges button 👇 */}
+          <button className="vv-nav-btn" onClick={() => { if(navigate) navigate('/colleges') }}>🏫 Top Colleges</button>
           {badge && <div className="vv-badge">{badge}</div>}
         </div>
       )}
@@ -855,8 +855,8 @@ export default function VidyaVantage({ onBack, navigate }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button style={{ background: 'var(--parchment)', border: '1px solid rgba(61,34,5,0.12)', color: 'var(--brown)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => setScreen('explorer')}>🔎 Explore Career Paths First</button>
               
-              {/* 👇 Connection to the Colleges Page 👇 */}
-              <button style={{ background: 'var(--cream)', border: '1.5px solid var(--teal)', color: 'var(--teal)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => navigate('/colleges')}>🏫 Browse Top Colleges</button>
+              {/* 👇 Safely wired up Browse Colleges button 👇 */}
+              <button style={{ background: 'var(--cream)', border: '1.5px solid var(--teal)', color: 'var(--teal)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => { if(navigate) navigate('/colleges') }}>🏫 Browse Top Colleges</button>
             </div>
           </div>
         </div>
@@ -1024,7 +1024,7 @@ export default function VidyaVantage({ onBack, navigate }) {
 
       {/* FOOTER CTA */}
       <div className="vv-footer">
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '32px', marginBottom: '16px' }}>Still Confused About Your Career?</h2>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '32px', margin: '0 0 16px 0' }}>Still Confused About Your Career?</h2>
         <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '32px', fontSize: '16px' }}>Stop guessing. Take the 25-Minute Assessment to reveal the exact path you were built to walk on.</p>
         <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button className="vv-start-btn" onClick={() => setScreen('assessment')}>Take Assessment Now →</button>
