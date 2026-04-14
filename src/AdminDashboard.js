@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
-import { doc, setDoc, getDoc, collection, getDocs, addDoc, updateDoc } from 'firebase/firestore';
+// ✅ Added onSnapshot to the import list
+import { doc, setDoc, getDoc, collection, getDocs, addDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 
 const COLLECTIONS = {
   USERS: 'users',
@@ -220,12 +221,15 @@ export default function AdminDashboard({ user, onBackToApp }) {
     }
   }, [toast]);
 
-  // --- FETCH DATA ---
+  // --- FETCH DATA (WITH REAL-TIME UPDATES) ---
   useEffect(() => {
     let isMounted = true;
+    let unsubscribeStudents = null; // ✅ Listener cleanup variable
+
     const fetchPlatformData = async () => {
       setLoadingData(true);
       try {
+        // Fetch static configuration/settings
         const docSnap = await getDoc(doc(db, COLLECTIONS.SETTINGS, "superadmin_profile"));
         if (isMounted && docSnap.exists()) setProfile(prev => ({ ...prev, ...docSnap.data() }));
 
@@ -240,16 +244,16 @@ export default function AdminDashboard({ user, onBackToApp }) {
         const instSnap = await getDocs(collection(db, COLLECTIONS.INSTITUTIONS));
         if (isMounted) setInstitutions(instSnap.docs.map(d => ({ id: d.id, ...d.data() })));
 
-        const stuSnap = await getDocs(collection(db, COLLECTIONS.USERS));
-        if (isMounted) {
-          let allStudents = stuSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // ✅ REAL-TIME LISTENER FOR STUDENTS
+        unsubscribeStudents = onSnapshot(collection(db, COLLECTIONS.USERS), (snapshot) => {
+          let allStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
           
           // Role-Based Filtering: If counsellor, only show assigned students
           if (isCounsellor) {
-            allStudents = allStudents.filter(s => s.assignedCounsellorId === user.uid);
+            allStudents = allStudents.filter(s => s.assignedCounsellorId === user?.uid);
           }
 
-          // Mock empty arrays for new features if they don't exist in DB yet
+          // Format defaults
           const formatted = allStudents.map(s => ({
             ...s,
             counsellingStatus: s.counsellingStatus || 'Not Started',
@@ -257,25 +261,42 @@ export default function AdminDashboard({ user, onBackToApp }) {
             assignedCounsellorId: s.assignedCounsellorId || ''
           }));
           
-          setStudents(formatted);
-        }
+          if (isMounted) setStudents(formatted);
+          
+          // If a student is currently selected in a modal, update their data live too
+          setSelectedStudent(prevSelected => {
+             if (!prevSelected) return null;
+             const updatedCurrent = formatted.find(stu => stu.id === prevSelected.id);
+             return updatedCurrent || prevSelected;
+          });
+
+        }, (error) => {
+          console.error("Real-time listen error: ", error);
+          if (isMounted) setToast({ type: 'error', message: 'Live connection lost.'});
+        });
+
       } catch (e) {
         console.error("Data fetch error", e);
-        setToast({ type: 'error', message: 'Failed to load platform data.'});
+        if (isMounted) setToast({ type: 'error', message: 'Failed to load platform data.'});
       } finally {
         if (isMounted) setLoadingData(false);
       }
     };
+    
     fetchPlatformData();
-    return () => { isMounted = false; };
+    
+    // ✅ Cleanup listener when component unmounts
+    return () => { 
+      isMounted = false; 
+      if (unsubscribeStudents) unsubscribeStudents();
+    };
   }, [isCounsellor, user?.uid]);
 
   // --- ACTIONS ---
   const handleUpdateStudent = async (studentId, updates) => {
     try {
       await updateDoc(doc(db, COLLECTIONS.USERS, studentId), updates);
-      setStudents(students.map(s => s.id === studentId ? { ...s, ...updates } : s));
-      setSelectedStudent(prev => prev ? { ...prev, ...updates } : null);
+      // NOTE: We no longer need to manually setStudents() here because onSnapshot will automatically catch the update!
       setToast({ type: 'success', message: 'Student record updated.' });
     } catch (err) {
       setToast({ type: 'error', message: 'Failed to update record.' });
