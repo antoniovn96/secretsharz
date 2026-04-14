@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import Header from './Header';
+import Footer from './Footer';
 
 const CollegesPage = ({ navigate, currentUser, handleLogout, isAdmin, setModal }) => {
     const [collegeData, setCollegeData] = useState([]);
@@ -27,16 +29,24 @@ const CollegesPage = ({ navigate, currentUser, handleLogout, isAdmin, setModal }
     }, [search, location, collegeData]);
 
     return (
-        <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '40px' }}>
+        <div style={{ minHeight: '100vh', background: '#F8FAFC' }}>
+            {/* 1. Added Header back so it shows up */}
+            <Header 
+                navigate={navigate} 
+                currentUser={currentUser} 
+                handleLogout={handleLogout} 
+                isAdmin={isAdmin} 
+            />
+
             <style dangerouslySetInnerHTML={{ __html: `
                 .colleges-hero {
-                    background: #1E2820; /* Matching your site's ink/moss color */
+                    background: #1E2820; 
                     text-align: center; 
                     padding: 80px 20px; 
                     color: white;
                     border-radius: 24px;
                     max-width: 1200px;
-                    margin: 0 auto 40px;
+                    margin: 40px auto; /* Added margin-top to clear the header */
                 }
                 .filter-container { 
                     max-width: 1000px; 
@@ -66,10 +76,12 @@ const CollegesPage = ({ navigate, currentUser, handleLogout, isAdmin, setModal }
                     text-decoration: none; 
                     color: inherit;
                     transition: all 0.3s ease;
+                    display: flex;
+                    flex-direction: column;
                 }
                 .college-card:hover { transform: translateY(-8px); box-shadow: 0 20px 60px rgba(30,40,32,0.13); }
                 .card-img { width: 100%; height: 220px; object-fit: cover; }
-                .card-body { padding: 24px; }
+                .card-body { padding: 24px; flex-grow: 1; }
                 .filter-input { 
                     padding: 14px 20px; 
                     border: 1.5px solid rgba(74,124,89,0.2); 
@@ -113,6 +125,14 @@ const CollegesPage = ({ navigate, currentUser, handleLogout, isAdmin, setModal }
                     ))}
                 </div>
             </main>
+
+            {/* 2. Added Footer back */}
+            <Footer 
+                navigate={navigate} 
+                currentUser={currentUser} 
+                handleLogout={handleLogout} 
+                setModal={setModal} 
+            />
         </div>
     );
 };

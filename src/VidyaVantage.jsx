@@ -19,7 +19,7 @@ const STYLES = `
   .vv-tagline{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-weight:500;}
   .vv-badge{background:var(--saffron);color:white;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;}
   .vv-header-nav{display:flex;align-items:center;gap:12px;}
-  .vv-nav-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+  .vv-nav-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;text-decoration:none;display:inline-block;}
   .vv-nav-btn:hover{background:rgba(240,165,0,0.2);border-color:var(--gold);color:var(--gold);}
   .vv-nav-btn.active{background:var(--saffron);border-color:var(--saffron);color:white;}
   
@@ -460,7 +460,7 @@ function SalaryViz({ entry, mid, senior }) {
 }
 
 // ─── CAREER EXPLORER COMPONENT ───────────────────────────────────────────────
-function CareerExplorer({ assessmentRiasec }) {
+function CareerExplorer({ assessmentRiasec, navigate }) {
   const [explorerTab, setExplorerTab] = useState('browse');
   const [search, setSearch] = useState('');
   const [streamFilter, setStreamFilter] = useState('All');
@@ -768,7 +768,7 @@ function CareerExplorer({ assessmentRiasec }) {
 }
 
 // ─── MAIN APP COMPONENT ───────────────────────────────────────────────────────
-export default function VidyaVantage({ onBack }) {
+export default function VidyaVantage({ onBack, navigate }) {
   const [screen, setScreen] = useState('hero');
   const [assessmentResults, setAssessmentResults] = useState(null);
   const topRef = useRef(null);
@@ -807,6 +807,8 @@ export default function VidyaVantage({ onBack }) {
         <div className="vv-header-nav">
           <button className={`vv-nav-btn ${screen === 'explorer' ? 'active' : ''}`} onClick={() => setScreen('explorer')}>🔎 Explore Careers</button>
           <button className={`vv-nav-btn`} onClick={() => setScreen('assessment')}>📝 Take Assessment</button>
+          {/* 👇 Connection to the Colleges Page 👇 */}
+          <button className="vv-nav-btn" onClick={() => navigate('/colleges')}>🏫 Top Colleges</button>
           {badge && <div className="vv-badge">{badge}</div>}
         </div>
       )}
@@ -817,7 +819,7 @@ export default function VidyaVantage({ onBack }) {
   if (screen === 'explorer') return (
     <div className="vv-root" ref={topRef}>
       <Header badge="🇮🇳 India's Career AI" />
-      <CareerExplorer assessmentRiasec={assessmentResults?.riasec?.code || null} />
+      <CareerExplorer assessmentRiasec={assessmentResults?.riasec?.code || null} navigate={navigate} />
     </div>
   );
 
@@ -849,15 +851,13 @@ export default function VidyaVantage({ onBack }) {
           <div style={{ margin: '14px 0 0', fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>Takes only 25 minutes • 100% Free</div>
           
           <div style={{ borderTop: '1px solid rgba(61,34,5,0.08)', marginTop: '20px', paddingTop: '20px' }}>
-            <p style={{ color: 'var(--muted)', fontSize: '13px', marginBottom: '10px' }}>Explore the platform:</p>
-            
+            <p style={{ color: 'var(--muted)', fontSize: '13px', marginBottom: '10px' }}>Not sure where to start?</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button style={{ background: 'var(--parchment)', border: '1px solid rgba(61,34,5,0.12)', color: 'var(--brown)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => setScreen('explorer')}>🔎 Explore Career Paths</button>
+              <button style={{ background: 'var(--parchment)', border: '1px solid rgba(61,34,5,0.12)', color: 'var(--brown)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => setScreen('explorer')}>🔎 Explore Career Paths First</button>
               
-              {/* 👇 Your new Colleges link 👇 */}
-              <a href="/colleges.html" style={{ background: 'var(--cream)', border: '1px solid rgba(10,92,99,0.2)', color: 'var(--teal)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, display: 'block', width: '100%', fontFamily: "'DM Sans', sans-serif", textDecoration: 'none', boxSizing: 'border-box' }}>🏫 Discover Top Colleges</a>
+              {/* 👇 Connection to the Colleges Page 👇 */}
+              <button style={{ background: 'var(--cream)', border: '1.5px solid var(--teal)', color: 'var(--teal)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => navigate('/colleges')}>🏫 Browse Top Colleges</button>
             </div>
-            
           </div>
         </div>
       </div>
@@ -913,7 +913,7 @@ export default function VidyaVantage({ onBack }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
             {[
               ['1', 'Create Profile', 'Log your academic history & interests.'],
-              ['2', 'Take Assessment', 'Complete the 25-min AI psychometric test.'],
+              ['2', 'Take Assessment', 'Complete the 25-min AI Psychometric Test.'],
               ['3', 'Get Matches', 'Review your RIASEC code and pathways.'],
               ['4', 'Meet Expert', 'Discuss results 1-on-1 with a counsellor.'],
             ].map(([num, title, desc]) => (
