@@ -2,7 +2,7 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 
 // ⚠️ REPLACE THIS STRING WITH YOUR ACTUAL MONGODB CREDENTIALS ⚠️
-const MONGO_URI = "mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@cluster0.o5hch.mongodb.net/vidyavantage?retryWrites=true&w=majority";
+const MONGO_URI = "mongodb+srv://avnoronhav96:431996@Ntonio@cluster0.o5hch.mongodb.net/vidyavantage?retryWrites=true&w=majority";
 
 const collegeSchema = new mongoose.Schema({}, { strict: false }); 
 const College = mongoose.model('College', collegeSchema);
