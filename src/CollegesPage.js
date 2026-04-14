@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Head from 'next/head';
 
-const CollegesPage = () => {
+const CollegesPage = ({ navigate, currentUser, handleLogout, isAdmin, setModal }) => {
     const [collegeData, setCollegeData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [search, setSearch] = useState('');
@@ -28,32 +27,28 @@ const CollegesPage = () => {
     }, [search, location, collegeData]);
 
     return (
-        <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
-            <Head>
-                <title>Top Colleges | VidyaVantage</title>
-            </Head>
-
-            {/* Note: We REMOVED <Header /> and <Footer /> here because 
-                Next.js automatically adds them from your _app.js layout */}
-
+        <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '40px' }}>
             <style dangerouslySetInnerHTML={{ __html: `
                 .colleges-hero {
-                    background: linear-gradient(135deg, #0A2342, #1E3A8A);
+                    background: #1E2820; /* Matching your site's ink/moss color */
                     text-align: center; 
-                    padding: 60px 20px; 
+                    padding: 80px 20px; 
                     color: white;
+                    border-radius: 24px;
+                    max-width: 1200px;
+                    margin: 0 auto 40px;
                 }
                 .filter-container { 
-                    max-width: 1200px; 
-                    margin: -30px auto 40px; 
+                    max-width: 1000px; 
+                    margin: -70px auto 40px; 
                     background: white; 
-                    padding: 20px; 
+                    padding: 24px; 
                     border-radius: 16px; 
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                    box-shadow: 0 12px 40px rgba(30,40,32,0.1);
                     display: flex; 
                     gap: 15px; 
-                    flex-wrap: wrap; 
                     justify-content: center;
+                    border: 1px solid rgba(74,124,89,0.15);
                 }
                 .college-grid { 
                     display: grid; 
@@ -65,44 +60,43 @@ const CollegesPage = () => {
                 }
                 .college-card { 
                     background: white; 
-                    border-radius: 16px; 
+                    border-radius: 20px; 
                     overflow: hidden; 
-                    border: 1px solid #e2e8f0; 
+                    border: 1px solid rgba(74,124,89,0.1); 
                     text-decoration: none; 
                     color: inherit;
-                    transition: 0.3s;
-                    display: flex;
-                    flex-direction: column;
+                    transition: all 0.3s ease;
                 }
-                .college-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-                .card-img { width: 100%; height: 200px; object-fit: cover; }
-                .card-body { padding: 20px; flex-grow: 1; }
+                .college-card:hover { transform: translateY(-8px); box-shadow: 0 20px 60px rgba(30,40,32,0.13); }
+                .card-img { width: 100%; height: 220px; object-fit: cover; }
+                .card-body { padding: 24px; }
                 .filter-input { 
-                    padding: 12px 18px; 
-                    border: 1px solid #ddd; 
-                    border-radius: 10px; 
-                    width: 250px; 
+                    padding: 14px 20px; 
+                    border: 1.5px solid rgba(74,124,89,0.2); 
+                    border-radius: 50px; 
+                    width: 280px; 
                     font-family: inherit;
+                    outline: none;
                 }
+                .filter-input:focus { border-color: #4A7C59; }
             `}} />
 
             <main>
                 <div className="colleges-hero">
-                    <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '10px' }}>Top Colleges</h1>
-                    <p style={{ fontSize: '1.1rem', opacity: 0.9 }}>Your gateway to premier academic institutions.</p>
+                    <h1 style={{ fontSize: '3.5rem', fontFamily: 'Fraunces, serif', marginBottom: '10px' }}>Top Colleges</h1>
+                    <p style={{ fontSize: '1.2rem', opacity: 0.8 }}>Your gateway to premier academic institutions.</p>
                 </div>
 
                 <div className="filter-container">
                     <input 
                         type="text" 
-                        placeholder="🔍 Search college name..." 
+                        placeholder="🔍 Search by name..." 
                         className="filter-input"
                         onChange={(e) => setSearch(e.target.value)}
                     />
                     <select className="filter-input" onChange={(e) => setLocation(e.target.value)}>
                         <option value="all">📍 All Locations</option>
                         <option value="bengaluru">Bengaluru</option>
-                        <option value="mumbai">Mumbai</option>
                         <option value="delhi">Delhi</option>
                     </select>
                 </div>
@@ -112,8 +106,8 @@ const CollegesPage = () => {
                         <a key={idx} href={`/college-details?name=${encodeURIComponent(college.name)}`} className="college-card">
                             <img src={college.image} className="card-img" alt={college.name} />
                             <div className="card-body">
-                                <h2 style={{ fontSize: '1.2rem', marginBottom: '8px', color: '#0A2342' }}>{college.name}</h2>
-                                <p style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 600 }}>📍 {college.displayLocation || college.location}</p>
+                                <h2 style={{ fontSize: '1.4rem', color: '#1E2820', marginBottom: '8px' }}>{college.name}</h2>
+                                <p style={{ color: '#4A7C59', fontWeight: 700 }}>📍 {college.displayLocation || college.location}</p>
                             </div>
                         </a>
                     ))}
