@@ -847,9 +847,17 @@ export default function VidyaVantage({ onBack }) {
           <p style={{ color: 'var(--muted)', marginBottom: '24px', fontSize: '15px' }}>Answer 25 thoughtful questions about your personality, academics and values. Our AI will map your unique profile and reveal your best career paths.</p>
           <button className="vv-start-btn" style={{ width: '100%' }} onClick={() => setScreen('assessment')}>Begin Career Assessment →</button>
           <div style={{ margin: '14px 0 0', fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>Takes only 25 minutes • 100% Free</div>
+          
           <div style={{ borderTop: '1px solid rgba(61,34,5,0.08)', marginTop: '20px', paddingTop: '20px' }}>
-            <p style={{ color: 'var(--muted)', fontSize: '13px', marginBottom: '10px' }}>Not sure where to start?</p>
-            <button style={{ background: 'var(--parchment)', border: '1px solid rgba(61,34,5,0.12)', color: 'var(--brown)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => setScreen('explorer')}>🔎 Explore Career Paths First</button>
+            <p style={{ color: 'var(--muted)', fontSize: '13px', marginBottom: '10px' }}>Explore the platform:</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button style={{ background: 'var(--parchment)', border: '1px solid rgba(61,34,5,0.12)', color: 'var(--brown)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => setScreen('explorer')}>🔎 Explore Career Paths</button>
+              
+              {/* 👇 Your new Colleges link 👇 */}
+              <a href="/colleges.html" style={{ background: 'var(--cream)', border: '1px solid rgba(10,92,99,0.2)', color: 'var(--teal)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, display: 'block', width: '100%', fontFamily: "'DM Sans', sans-serif", textDecoration: 'none', boxSizing: 'border-box' }}>🏫 Discover Top Colleges</a>
+            </div>
+            
           </div>
         </div>
       </div>
@@ -905,7 +913,7 @@ export default function VidyaVantage({ onBack }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
             {[
               ['1', 'Create Profile', 'Log your academic history & interests.'],
-              ['2', 'Take Assessment', 'Complete the 25-min AI Psychometric Test.'],
+              ['2', 'Take Assessment', 'Complete the 25-min AI psychometric test.'],
               ['3', 'Get Matches', 'Review your RIASEC code and pathways.'],
               ['4', 'Meet Expert', 'Discuss results 1-on-1 with a counsellor.'],
             ].map(([num, title, desc]) => (
