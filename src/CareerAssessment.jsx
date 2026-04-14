@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { auth } from './firebase'; // ✅ Added Firebase auth import
 
 const GOOGLE_FONTS = `@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');`;
 
@@ -224,7 +225,7 @@ const ACADEMIC_QUESTIONS = [
   {
     id:'b5', text:'If you could design one new class that your school or college does not yet offer, it would be:',
     choices:[
-      {icon:'🤖', text:'Artificial Intelligence & Ethics',           riasec:'I'},
+      {icon:'🤖', text:'Artificial Intelligence & Ethics',            riasec:'I'},
       {icon:'🌿', text:'Environmental Sustainability & Climate Action', riasec:'R'},
       {icon:'💰', text:'Personal Finance & Investment for Youth',   riasec:'E'},
       {icon:'🧠', text:'Psychology & Mental Health Studies',        riasec:'S'},
@@ -349,7 +350,7 @@ const PERSONALITY_QUESTIONS = [
       {icon:'📈', text:'Data-first — I research, compare options, and decide logically', riasec:'I'},
       {icon:'🫀', text:'Gut-first — strong intuition that I mostly trust',               riasec:'A'},
       {icon:'🔮', text:'Vision-first — I ask "what is the best possible outcome?" and work back', riasec:'E'},
-      {icon:'👥', text:'Consensus-first — I consult others before committing',           riasec:'S'},
+      {icon:'👥', text:'Consensus-first — I consult others before committing',            riasec:'S'},
       {icon:'📋', text:'Process-first — I follow a systematic checklist and trust the system', riasec:'C'},
     ],
   },
@@ -381,10 +382,10 @@ const FUTURE_QUESTIONS = [
   {
     id:'e1', text:'If you imagine yourself at 35, fulfilled and doing meaningful work — which image resonates most?',
     choices:[
-      {icon:'🏗️', text:'Running a company I built from scratch',                     riasec:'E'},
+      {icon:'🏗️', text:'Running a company I built from scratch',                      riasec:'E'},
       {icon:'🔬', text:'Leading a research lab or publishing work that changes a field', riasec:'I'},
-      {icon:'🎬', text:'Creating art, content, or design that reaches millions',    riasec:'A'},
-      {icon:'🏥', text:'Healing, counselling, or educating people who need it',     riasec:'S'},
+      {icon:'🎬', text:'Creating art, content, or design that reaches millions',     riasec:'A'},
+      {icon:'🏥', text:'Healing, counselling, or educating people who need it',      riasec:'S'},
       {icon:'⚙️', text:'Engineering systems or infrastructure that people rely on', riasec:'R'},
       {icon:'🌐', text:'Managing a large organisation or department with precision',riasec:'C'},
     ],
@@ -514,6 +515,13 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior:'smooth' });
   }, [screen, currentSection]);
+
+  // ✅ Auto-fill name if user is logged in
+  useEffect(() => {
+    if (auth?.currentUser?.displayName) {
+      setInfo(prev => ({ ...prev, name: auth.currentUser.displayName }));
+    }
+  }, []);
 
   const isSectionComplete = (idx) => {
     const sec = ALL_SECTIONS[idx];
@@ -865,10 +873,19 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
         {section.id === 'info' && (
           <div>
             <div className="vv-two-col">
-              <div className="vv-field">
-                <label>Your Full Name *</label>
-                <input value={info.name} onChange={e => setInfo({...info, name:e.target.value})} placeholder="e.g. Arjun Sharma" />
-              </div>
+              {auth?.currentUser?.displayName ? (
+                <div className="vv-field">
+                  <label>Your Full Name *</label>
+                  <div style={{ padding: '14px 18px', background: '#f8fafc', borderRadius: '12px', border: '2px solid rgba(45,125,70,0.2)', color: 'var(--dark)', fontWeight: 600, fontSize: '15px' }}>
+                    {info.name} <span style={{color: 'var(--success)', float: 'right', fontSize: '12px'}}>✓ Auto-filled</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="vv-field">
+                  <label>Your Full Name *</label>
+                  <input value={info.name} onChange={e => setInfo({...info, name:e.target.value})} placeholder="e.g. Arjun Sharma" />
+                </div>
+              )}
               <div className="vv-field">
                 <label>Current Class / Level *</label>
                 <select value={info.class} onChange={e => setInfo({...info, class:e.target.value})}>
