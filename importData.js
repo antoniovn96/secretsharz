@@ -1,8 +1,13 @@
 const fs = require('fs');
 const mongoose = require('mongoose');
 
+<<<<<<< HEAD
 // ⚠️ REPLACE THIS STRING WITH YOUR ACTUAL MONGODB CREDENTIALS ⚠️
 const MONGO_URI = "mongodb+srv://avnoronhav96:431996@Ntonio@cluster0.o5hch.mongodb.net/vidyavantage?retryWrites=true&w=majority";
+=======
+// ⚠️ REPLACE THIS STRING WITH YOUR ACTUAL MONGODB STRING ⚠️
+const MONGO_URI = "mongodb+srv://uploaduser:Vidya12345@vidyavantage.ywduj5u.mongodb.net/?appName=VidyaVantage";
+>>>>>>> b2e3173 (Added colleges directory)
 
 const collegeSchema = new mongoose.Schema({}, { strict: false }); 
 const College = mongoose.model('College', collegeSchema);

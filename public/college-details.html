@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Details | VidyaVantage</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg-main: #F8FAFC; 
+            --text-dark: #0F172A; 
+            --text-muted: #475569; 
+            --theme: #0A2342; 
+            --theme-light: #1E3A8A;
+            --gold: #D4AF37; 
+            --white: #FFFFFF; 
+            --success: #059669;
+            --success-bg: #ecfdf5;
+            --radius: 16px;
+        }
+        
+        * { box-sizing: border-box; }
+        body { font-family: 'Nunito', sans-serif; background: var(--bg-main); color: var(--text-dark); margin: 0; padding-bottom: 100px; line-height: 1.6;}
+        h1, h2, h3, h4 { font-family: 'Montserrat', sans-serif; margin-top: 0; }
+        
+        .top-nav { background: rgba(10, 35, 66, 0.98); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.1); backdrop-filter: blur(10px); }
+        .nav-logo { color: var(--gold); font-weight: 900; text-decoration: none; font-size: 1.5rem; letter-spacing: 1px;}
+        .back-btn { color: white; text-decoration: none; font-weight: 700; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 50px; transition: all 0.3s ease;}
+        .back-btn:hover { background: var(--white); color: var(--theme); }
+        
+        .hero { background: linear-gradient(135deg, var(--theme), var(--theme-light)); color: white; padding: 80px 5% 100px; text-align: center; position: relative;}
+        .hero::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 50px; background: var(--bg-main); clip-path: polygon(0 100%, 100% 100%, 100% 0); }
+        .hero h1 { font-size: 3.5rem; margin: 0 0 15px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .hero p { font-size: 1.2rem; opacity: 0.9; margin: 0; font-weight: 600; display: inline-block; background: rgba(255,255,255,0.1); padding: 8px 20px; border-radius: 50px; backdrop-filter: blur(5px);}
+        .official-website-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--gold); color: var(--theme); padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: 900; font-family: 'Nunito'; margin-top: 20px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); transition: all 0.3s ease; }
+        .official-website-btn:hover { transform: translateY(-2px); background: #fce68d; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); }
+
+        .container { max-width: 1200px; margin: -50px auto 40px; padding: 0 20px; display: grid; grid-template-columns: 1fr; gap: 40px; position: relative; z-index: 10;}
+        
+        .data-card { background: white; padding: 40px; border-radius: var(--radius); box-shadow: 0 10px 40px rgba(0,0,0,0.04); border: 1px solid rgba(226, 232, 240, 0.8); }
+        .data-card h2 { border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 25px; color: var(--theme); font-size: 1.8rem; display: flex; align-items: center; gap: 10px;}
+        
+        .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .data-item { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; transition: transform 0.3s ease; }
+        .data-item:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .data-label { font-size: 0.8rem; color: #64748b; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; display: block; letter-spacing: 0.5px;}
+        .data-value { font-size: 1.2rem; font-weight: 800; color: var(--theme); }
+        
+        /* ✨ 3-TIER CONTROL PANEL UI ✨ */
+        .filter-panel { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px 30px; margin-bottom: 30px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);}
+        .filter-label { font-size: 0.85rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 12px; display: block; letter-spacing: 1px;}
+        
+        /* ✨ UNIVERSAL DROPDOWN STYLING ✨ */
+        .custom-select { width: 100%; max-width: 400px; padding: 12px 20px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 1rem; font-family: 'Nunito', sans-serif; font-weight: 800; color: var(--theme); background: var(--white); outline: none; transition: all 0.3s ease; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230A2342' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; padding-right: 2.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 20px;}
+        .custom-select:focus, .custom-select:hover { border-color: var(--theme-light); box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); }
+        
+        .course-list { display: flex; flex-direction: column; gap: 15px; }
+        .course-card { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff; transition: all 0.3s ease; display: flex; justify-content: space-between; align-items: center; padding: 20px 25px;}
+        .course-card:hover { border-color: #cbd5e1; box-shadow: 0 10px 30px rgba(0,0,0,0.06); transform: translateY(-2px); cursor: pointer; }
+        
+        .header-left { display: flex; align-items: center; gap: 20px; flex-grow: 1;}
+        .compare-checkbox { width: 22px; height: 22px; cursor: pointer; accent-color: var(--theme); }
+        
+        .course-title-block { display: flex; flex-direction: column; }
+        .course-title { font-size: 1.25rem; font-weight: 800; color: var(--theme); margin: 0; }
+        .course-dept-tag { font-size: 0.8rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-top: 4px; }
+        .campus-badge { display: inline-block; background: #fef3c7; color: #b45309; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; margin-top: 6px; border: 1px solid #fde68a;}
+        
+        .view-btn { background: #f1f5f9; color: var(--theme); border: none; padding: 10px 25px; border-radius: 50px; font-weight: 800; font-family: 'Nunito'; cursor: pointer; transition: all 0.3s ease;}
+        .view-btn:hover { background: var(--theme); color: white; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); z-index: 2000; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.3s ease; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-content { background: white; width: 100%; max-width: 900px; max-height: 90vh; border-radius: 20px; overflow-y: auto; position: relative; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+        .modal-close { position: absolute; top: 25px; right: 25px; background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.5rem; font-weight: bold; color: var(--text-muted); cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.3s; }
+        .modal-close:hover { background: #fee2e2; color: #ef4444; transform: rotate(90deg); }
+        .modal-header-text { margin-bottom: 25px; padding-right: 40px;}
+        .modal-header-text h2 { color: var(--theme); font-size: 2rem; margin: 0 0 5px; }
+        .modal-header-text span { color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 0.9rem;}
+        
+        .text-clamp { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: all 0.3s ease; }
+        .text-clamp.expanded { -webkit-line-clamp: unset; line-clamp: unset; }
+        .read-more-btn { background: none; border: none; color: var(--theme); font-family: 'Nunito', sans-serif; font-weight: 800; cursor: pointer; padding: 0; margin-top: 5px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px; }
+        .read-more-btn:hover { text-decoration: underline; }
+
+        .course-overview { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 25px; padding: 20px; background: #f8fafc; border-radius: 12px; border-left: 4px solid var(--theme);}
+        .scholarship-box { background: var(--success-bg); border: 1px solid #a7f3d0; padding: 25px; border-radius: 12px; margin-top: 10px; margin-bottom: 10px;}
+        .scholarship-box h4 { color: var(--success); font-size: 1.2rem; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;}
+        .scholarship-box ul { margin: 0; padding-left: 20px; color: #166534; }
+        .scholarship-box li { margin-bottom: 10px; font-weight: 600; }
+        .pathways-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 25px; border-radius: 12px; margin-top: 25px; margin-bottom: 25px;}
+        .pathways-box h4 { color: var(--theme-light); font-size: 1.2rem; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;}
+        .pathways-box ul { margin: 0; padding-left: 20px; color: var(--theme); }
+        .pathways-box li { margin-bottom: 10px; font-size: 0.95rem; }
+        .pathways-box strong { color: var(--theme-light); font-weight: 800; }
+        
+        .curriculum-wrapper { margin-bottom: 30px; overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);}
+        .curriculum-wrapper table { width: 100%; border-collapse: collapse; text-align: left; background: white;}
+        .curriculum-wrapper th { background-color: var(--theme); color: white; padding: 15px 20px; font-weight: 700; white-space: nowrap; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        .curriculum-wrapper td { padding: 15px 20px; border-bottom: 1px solid #e2e8f0; color: var(--text-muted); font-weight: 600; }
+        .curriculum-wrapper td:first-child { white-space: nowrap; font-weight: 800; color: var(--theme); }
+        .curriculum-wrapper tr:nth-child(even) { background-color: #f8fafc; }
+        .curriculum-wrapper tr:hover td { background-color: #f1f5f9; color: var(--theme); }
+
+        .course-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; align-items: start;}
+        .meta-box { background: white; padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
+        .meta-box strong { color: var(--text-muted); display: block; margin-bottom: 5px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        .meta-value { font-size: 1.1rem; font-weight: 800; color: var(--theme); }
+        .highlight-text { color: var(--success); font-size: 1.3rem;} 
+
+        .modal-content::-webkit-scrollbar { width: 8px; }
+        .modal-content::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px;}
+        .modal-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .modal-content::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        #compareBar { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--theme); color: white; padding: 15px 35px; border-radius: 50px; z-index: 1000; box-shadow: 0 20px 40px rgba(10, 35, 66, 0.4); align-items: center; gap: 25px; border: 2px solid rgba(255,255,255,0.1); animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;}
+        @keyframes slideUp { from { bottom: -100px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        #compareBar span { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 10px;}
+        .go-compare-btn { background: var(--gold); color: var(--theme); border: none; padding: 12px 30px; border-radius: 50px; font-weight: 900; cursor: pointer; font-size: 1.05rem; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);}
+        .go-compare-btn:hover { transform: scale(1.05); background: #fce68d; }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="index.html" class="nav-logo">VIDYAVANTAGE</a>
+        <a href="colleges.html" class="back-btn">← Back to Directory</a>
+    </nav>
+
+    <div id="compareBar">
+        <span id="compareCountText">⚖️ 0 Courses Selected</span>
+        <button class="go-compare-btn" onclick="goToComparePage()">Compare Now ➔</button>
+    </div>
+
+    <div id="courseModal" class="modal-overlay" onclick="closeModalOnOutsideClick(event)">
+        <div class="modal-content" id="modalContentBox">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <div id="loader" style="text-align: center; padding: 150px 20px; font-size: 1.5rem; font-weight: 800; color: var(--theme);">
+        <span style="font-size: 3rem; display: block; margin-bottom: 20px;">⚙️</span>
+        Building Premium Insights...
+    </div>
+    
+    <div id="content" style="display: none;">
+        <div class="hero" id="heroSection">
+            <h1 id="colName">Institution Name</h1>
+            <p id="colMeta">Location • Affiliation</p>
+        </div>
+
+        <div class="container">
+            <div class="data-card">
+                <h2>📊 Group / Institution Overview</h2>
+                <div class="data-grid">
+                    <div class="data-item"><span class="data-label">Accreditation</span><span class="data-value" id="accred">...</span></div>
+                    <div class="data-item"><span class="data-label">NIRF Rank</span><span class="data-value" id="nirf">...</span></div>
+                    <div class="data-item"><span class="data-label">Avg. Tuition</span><span class="data-value" id="tuition">...</span></div>
+                    <div class="data-item"><span class="data-label">Hostel Fees</span><span class="data-value" id="hostel">...</span></div>
+                </div>
+            </div>
+
+            <div class="data-card">
+                <h2>🎯 Programs & Curriculums</h2>
+                
+                <div class="filter-panel">
+                    <div id="campusFilterSection" style="display: none; margin-bottom: 20px;">
+                        <span class="filter-label">📍 1. Select Campus / Location</span>
+                        <select id="campusSelector" class="custom-select" style="margin-bottom: 0;" onchange="setCampus(this.value)">
+                        </select>
+                    </div>
+
+                    <div id="levelFilterSection" style="margin-bottom: 20px;">
+                        <span id="label-level" class="filter-label">🎓 2. Choose Program Level</span>
+                        <select id="levelSelector" class="custom-select" style="margin-bottom: 0;" onchange="setLevel(this.value)">
+                        </select>
+                    </div>
+                    
+                    <div id="deptFilterSection" style="display: none;">
+                        <span id="label-dept" class="filter-label">🏛️ 3. Filter by Academic Department</span>
+                        <select id="deptSelector" class="custom-select" style="margin-bottom: 0;" onchange="setDept(this.value)">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="course-list" id="coursesContainer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCollegeData = null;
+        let selectedCoursesToCompare = JSON.parse(localStorage.getItem('vidyaVantageCompare')) || [];
+        let currentlyDisplayedCourses = []; 
+        
+        let selectedCampus = 'All Campuses';
+        let selectedLevel = 'All Programs';
+        let selectedDept = 'All Departments';
+
+        function formatLongText(text, limit = 80) {
+            if (!text || text === 'N/A' || text === 'Pending' || text === 'Data Pending') return text || 'N/A';
+            if (text.length <= limit) return text;
+            return `
+                <div class="text-clamp">${text}</div>
+                <button class="read-more-btn" onclick="toggleText(this)">Read More ▼</button>
+            `;
+        }
+
+        function toggleText(btn) {
+            const contentBox = btn.previousElementSibling;
+            if (contentBox.classList.contains('expanded')) {
+                contentBox.classList.remove('expanded');
+                btn.innerText = 'Read More ▼';
+            } else {
+                contentBox.classList.add('expanded');
+                btn.innerText = 'Show Less ▲';
+            }
+        }
+
+        function normalizeCampus(campusName, collegeName) {
+            let c = (campusName || "").trim().toLowerCase();
+            let col = (collegeName || "").toLowerCase();
+
+            // --- JAIN UNIVERSITY ---
+            if (c.includes("cms") || c.includes("business school")) return "CMS Business School";
+            if (c.includes("global campus") || c.includes("ramanagara")) return "JAIN Global Campus";
+            if (c.includes("kochi")) return "Kochi Campus";
+            
+            // --- PES UNIVERSITY ---
+            if (col.includes("pes") || c.includes("pes")) {
+                if (c.includes("electronic city") || c.includes("ecc") || c.includes("ec campus")) return "EC Campus (Electronic City)";
+                if (c.includes("hanumantha") || c.includes("hn campus") || c.includes("hn")) return "HN Campus (Hanumanth Nagar)";
+                return "RR Campus (Ring Road)";
+            }
+
+            // --- BANGALORE UNIVERSITY (STRICT RULES) ---
+            if (col.includes("bangalore university")) {
+                if (c.includes("jnana") || c.includes("bharathi") || c.includes("jnanabharathi") || c.includes("uvce")) {
+                    return "Jnanabharathi Campus";
+                }
+                if (c.includes("central college")) return "Central College Campus";
+                
+                // Default everything else to the main campus to prevent duplicates
+                return "Jnanabharathi Campus"; 
+            }
+
+            if (!campusName) return "Main Campus";
+            
+            if (c.includes("main") || c.includes("bengaluru") || c.includes("bangalore") || c === "campus" || c.includes("india")) {
+                return "Main Campus";
+            }
+            if (c.includes(col) || col.includes(c) || c.includes("rvce") || c.includes("rashtreeya") || c.includes("joseph")) {
+                return "Main Campus";
+            }
+
+            return campusName.trim();
+        }
+
+        // ✨ STRICT PROGRAM LEVEL NORMALIZER ✨
+        function normalizeProgramLevel(level) {
+            if (!level) return "Undergraduate"; 
+            let lvl = level.toLowerCase();
+            
+            if (lvl.includes('10th') || lvl.includes('puc') || lvl.includes('diploma') || lvl.includes('11th') || lvl.includes('12th') || lvl.includes('polytechnic') || lvl.includes('iti')) {
+                return 'Pre-University';
+            }
+            if (lvl.includes('undergraduate') || lvl.includes('ug') || lvl.includes('bachelor')) {
+                return 'Undergraduate';
+            }
+            if (lvl.includes('postgraduate') || lvl.includes('pg') || lvl.includes('master')) {
+                return 'Postgraduate';
+            }
+            if (lvl.includes('phd') || lvl.includes('doctorate')) {
+                return 'PhD';
+            }
+            if (lvl.includes('certificate')) {
+                return 'Certificate';
+            }
+            
+            return 'Undergraduate'; 
+        }
+
+        function normalizeDepartment(courseName, aiDepartment) {
+            if (aiDepartment && aiDepartment.trim().length > 0) {
+                return aiDepartment.trim();
+            }
+            return "General Department";
+        }
+
+        function buildFilters() {
+            if (!currentCollegeData || !currentCollegeData.detailedCourses) return;
+
+            // --- CAMPUS DROPDOWN ---
+            const rawCampuses = currentCollegeData.detailedCourses.map(c => c.normalizedCampus || 'Main Campus');
+            const uniqueCampuses = ['All Campuses', ...new Set(rawCampuses)];
+            
+            const campusSection = document.getElementById('campusFilterSection');
+            const campusSelect = document.getElementById('campusSelector');
+            const labelLevel = document.getElementById('label-level');
+            const labelDept = document.getElementById('label-dept');
+            
+            if (uniqueCampuses.length > 2) {
+                campusSection.style.display = 'block';
+                labelLevel.innerText = "🎓 2. Choose Program Level";
+                labelDept.innerText = "🏛️ 3. Filter by Academic Department";
+                campusSelect.innerHTML = uniqueCampuses.map(campus => 
+                    `<option value="${campus}" ${campus === selectedCampus ? 'selected' : ''}>${campus}</option>`
+                ).join('');
+            } else {
+                campusSection.style.display = 'none';
+                labelLevel.innerText = "🎓 1. Choose Program Level";
+                labelDept.innerText = "🏛️ 2. Filter by Academic Department";
+            }
+
+            const campusFilteredCourses = currentCollegeData.detailedCourses.filter(c => {
+                if (selectedCampus === 'All Campuses') return true;
+                return c.normalizedCampus === selectedCampus;
+            });
+
+            // --- LEVEL DROPDOWN ---
+            const rawLevels = campusFilteredCourses.map(c => c.normalizedLevel);
+            const uniqueLevels = ['All Programs', ...new Set(rawLevels)];
+            
+            const levelSelect = document.getElementById('levelSelector');
+            levelSelect.innerHTML = uniqueLevels.map(level => {
+                return `<option value="${level}" ${level === selectedLevel ? 'selected' : ''}>${level}</option>`;
+            }).join('');
+
+            const levelFilteredCourses = campusFilteredCourses.filter(c => {
+                if (selectedLevel === 'All Programs') return true;
+                return c.normalizedLevel === selectedLevel;
+            });
+
+            // --- DEPARTMENT DROPDOWN ---
+            const rawDepts = levelFilteredCourses.map(c => c.normalizedDept);
+            const uniqueDepts = ['All Departments', ...new Set(rawDepts)];
+
+            const deptSection = document.getElementById('deptFilterSection');
+            const deptSelect = document.getElementById('deptSelector');
+            
+            if (uniqueDepts.length <= 1) {
+                deptSection.style.display = 'none';
+            } else {
+                deptSection.style.display = 'block';
+                deptSelect.innerHTML = uniqueDepts.map(dept => {
+                    return `<option value="${dept}" ${dept === selectedDept ? 'selected' : ''}>${dept}</option>`;
+                }).join('');
+            }
+
+            renderCourses();
+        }
+
+        function setCampus(campus) {
+            selectedCampus = campus;
+            selectedLevel = 'All Programs'; 
+            selectedDept = 'All Departments';
+            buildFilters();
+        }
+
+        function setLevel(level) {
+            selectedLevel = level;
+            selectedDept = 'All Departments'; 
+            buildFilters(); 
+        }
+
+        function setDept(dept) {
+            selectedDept = dept;
+            buildFilters(); 
+        }
+
+        function renderCourses() {
+            const container = document.getElementById('coursesContainer');
+            
+            if (!currentCollegeData || !currentCollegeData.detailedCourses || currentCollegeData.detailedCourses.length === 0) {
+                container.innerHTML = `<p style="padding: 30px; text-align: center; background: #f8fafc; border-radius: 12px; font-weight: 700; color: #64748b;">Course curriculums are currently being mapped. Check back soon!</p>`;
+                return;
+            }
+
+            currentlyDisplayedCourses = currentCollegeData.detailedCourses.filter(c => {
+                const passesCampus = (selectedCampus === 'All Campuses' || c.normalizedCampus === selectedCampus);
+                const passesLevel = (selectedLevel === 'All Programs' || c.normalizedLevel === selectedLevel);
+                const passesDept = (selectedDept === 'All Departments' || c.normalizedDept === selectedDept);
+                return passesCampus && passesLevel && passesDept;
+            });
+
+            if (currentlyDisplayedCourses.length === 0) {
+                container.innerHTML = `<p style="padding: 30px; text-align: center; background: #f8fafc; border-radius: 12px; font-weight: 700; color: #64748b;">No courses match these specific filters.</p>`;
+                return;
+            }
+
+            container.innerHTML = currentlyDisplayedCourses.map((course, index) => {
+                const uniqueCourseId = currentCollegeData.name + "___" + course.courseName;
+                const isChecked = selectedCoursesToCompare.some(c => c.uniqueId === uniqueCourseId) ? "checked" : "";
+                
+                const showCampusBadge = (selectedCampus === 'All Campuses' && course.normalizedCampus && course.normalizedCampus !== 'Main Campus') 
+                    ? `<span class="campus-badge">📍 ${course.normalizedCampus}</span>` : '';
+
+                return `
+                <div class="course-card" onclick="openModal(${index})">
+                    <div class="header-left">
+                        <input type="checkbox" class="compare-checkbox" title="Select to Compare" onchange="handleCheck(event, this, '${course.courseName}')" onclick="event.stopPropagation()" ${isChecked}>
+                        <div class="course-title-block">
+                            <h3 class="course-title">${course.courseName}</h3>
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <span class="course-dept-tag">${course.normalizedDept}</span>
+                                ${showCampusBadge}
+                            </div>
+                        </div>
+                    </div>
+                    <button class="view-btn">View Details ➔</button>
+                </div>
+            `}).join('');
+            
+            updateCompareBar();
+        }
+
+        function openModal(courseIndex) {
+            const course = currentlyDisplayedCourses[courseIndex];
+            const modal = document.getElementById('courseModal');
+            const modalBody = document.getElementById('modalBody');
+            
+            document.body.style.overflow = 'hidden'; 
+
+            const eligibilityFullText = `${course.eligibilityCriteria}<br><span style="color:#64748b; font-size:0.85rem; display:block; margin-top:5px;">Exams: ${course.entranceExams || 'N/A'}</span>`;
+            
+            modalBody.innerHTML = `
+                <div class="modal-header-text">
+                    <h2>${course.courseName}</h2>
+                    <span style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        ${course.normalizedDept} 
+                        ${(course.normalizedCampus && course.normalizedCampus !== 'Main Campus') ? `<span class="campus-badge" style="margin-top:0;">📍 ${course.normalizedCampus}</span>` : ''}
+                    </span>
+                </div>
+                
+                <div class="course-meta-grid">
+                    <div class="meta-box"><strong>💰 Estimated Fees</strong> <span class="meta-value">${course.fees || 'Check Prospectus'}</span></div>
+                    <div class="meta-box"><strong>⏳ Duration</strong> <span class="meta-value">${course.duration || 'N/A'}</span></div>
+                    <div class="meta-box">
+                        <strong>🎓 Eligibility & Exams</strong> 
+                        <span class="meta-value" style="font-size:0.95rem; font-weight:600;">
+                            ${formatLongText(eligibilityFullText, 100)}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="course-overview">
+                    <strong>Overview: </strong>
+                    <div style="margin-top:5px;">${formatLongText(course.overview, 150)}</div>
+                </div>
+                
+                ${course.curriculumHTML && course.curriculumHTML.length > 10 ? `
+                <h4 style="color: var(--theme); margin-bottom: 15px; font-size: 1.2rem;">📖 Semester-by-Semester Curriculum</h4>
+                <div class="curriculum-wrapper">
+                    ${course.curriculumHTML}
+                </div>
+                ` : ''}
+                
+                <h4 style="color: var(--theme); margin-bottom: 15px; font-size: 1.2rem; margin-top:10px;">📈 Placement & Career Insights</h4>
+                <div class="course-meta-grid">
+                    <div class="meta-box"><strong>Placement Rate</strong> <span class="meta-value highlight-text">${course.placementRate || 'Pending'}</span></div>
+                    <div class="meta-box"><strong>💵 Avg Salary</strong> <span class="meta-value">${course.averageSalary || 'N/A'}</span></div>
+                    <div class="meta-box">
+                        <strong>🏢 Top Recruiters</strong> 
+                        <span class="meta-value" style="font-size:0.95rem; font-weight:600;">
+                            ${formatLongText(course.topRecruiters, 60)}
+                        </span>
+                    </div>
+                    <div class="meta-box">
+                        <strong>💼 Typical Roles</strong> 
+                        <span class="meta-value" style="font-size:0.95rem; font-weight:600;">
+                            ${formatLongText(course.careerOpportunities, 60)}
+                        </span>
+                    </div>
+                </div>
+
+                ${course.careerPathwaysHTML && course.careerPathwaysHTML.length > 10 ? `
+                <div class="pathways-box">
+                    <h4>🚀 Career Pathways (What you can become)</h4>
+                    ${course.careerPathwaysHTML}
+                </div>
+                ` : ''}
+
+                ${course.scholarshipsHTML && course.scholarshipsHTML.length > 10 ? `
+                <div class="scholarship-box">
+                    <h4>🎓 Scholarships & Financial Aid</h4>
+                    ${course.scholarshipsHTML}
+                </div>
+                ` : ''}
+            `;
+            
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('courseModal').classList.remove('show');
+            document.body.style.overflow = 'auto'; 
+        }
+
+        function closeModalOnOutsideClick(event) {
+            if (event.target.id === 'courseModal') closeModal();
+        }
+
+        function handleCheck(event, checkbox, courseName) {
+            event.stopPropagation(); 
+            const uniqueCourseId = currentCollegeData.name + "___" + courseName;
+
+            if (checkbox.checked) {
+                const courseData = currentCollegeData.detailedCourses.find(c => c.courseName === courseName);
+                const courseToAdd = JSON.parse(JSON.stringify(courseData)); 
+                courseToAdd.parentCollege = currentCollegeData.name; 
+                courseToAdd.uniqueId = uniqueCourseId; 
+                selectedCoursesToCompare.push(courseToAdd);
+            } else {
+                selectedCoursesToCompare = selectedCoursesToCompare.filter(c => c.uniqueId !== uniqueCourseId);
+            }
+            
+            localStorage.setItem('vidyaVantageCompare', JSON.stringify(selectedCoursesToCompare));
+            updateCompareBar();
+        }
+
+        function updateCompareBar() {
+            const bar = document.getElementById('compareBar');
+            const countText = document.getElementById('compareCountText');
+            if (selectedCoursesToCompare.length > 0) {
+                bar.style.display = 'flex';
+                countText.innerHTML = `⚖️ ${selectedCoursesToCompare.length} Program(s) in Compare Cart`;
+            } else {
+                bar.style.display = 'none';
+            }
+        }
+
+        function goToComparePage() {
+            window.location.href = 'compare.html';
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetName = urlParams.get('name');
+
+        // ✨ THIS IS THE ONLY LINE WE CHANGED (Line 241) ✨
+        if (targetName) {
+            fetch('https://firebasestorage.googleapis.com/v0/b/career-intelligence-system.firebasestorage.app/o/colleges.json?alt=media&token=cd33625c-ef8e-44f6-b9e6-026226a9df17')
+                .then(response => response.json())
+                .then(data => {
+                    currentCollegeData = data.find(c => c.name === targetName);
+                    if (!currentCollegeData) return;
+
+                    // ✨ RUNNING ALL 3 NORMALIZERS ✨
+                    if (currentCollegeData.detailedCourses) {
+                        currentCollegeData.detailedCourses.forEach(course => {
+                            course.normalizedDept = normalizeDepartment(course.courseName, course.department);
+                            course.normalizedCampus = normalizeCampus(course.campusName, currentCollegeData.name);
+                            course.normalizedLevel = normalizeProgramLevel(course.programLevel);
+                        });
+                    }
+
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('content').style.display = 'block';
+                    
+                    document.getElementById('heroSection').style.background = `linear-gradient(135deg, ${currentCollegeData.theme || '#0A2342'}, #1E3A8A)`;
+                    document.getElementById('colName').innerText = currentCollegeData.name;
+                    
+                    document.getElementById('colMeta').innerText = `${currentCollegeData.location || 'India'} • Est. ${currentCollegeData.establishedYear || 'N/A'}`;
+                    
+                    if (currentCollegeData.websiteUrl) {
+                        const heroSection = document.getElementById('heroSection');
+                        const webBtn = document.createElement('a');
+                        webBtn.href = currentCollegeData.websiteUrl;
+                        webBtn.target = "_blank"; 
+                        webBtn.className = "official-website-btn";
+                        webBtn.innerHTML = "🌐 Visit Official Website ➔";
+                        heroSection.appendChild(webBtn);
+                    }
+                    
+                    document.getElementById('accred').innerText = currentCollegeData.accreditation || 'N/A';
+                    document.getElementById('nirf').innerText = currentCollegeData.nirfRanking || 'N/A';
+                    document.getElementById('tuition').innerText = currentCollegeData.tuitionFee || 'N/A';
+                    document.getElementById('hostel').innerText = currentCollegeData.hostelFee || 'N/A';
+
+                    buildFilters();
+                })
+                .catch(error => console.error(error));
+        }
+    </script>
+</body>
+</html>
