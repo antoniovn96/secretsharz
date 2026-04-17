@@ -1026,16 +1026,10 @@ export default function App() {
 
     if (currentPath.startsWith('/vidyavantage')) {
       return (
-        <>
-          <div className="instant-action-bar" style={{background: 'var(--ink)'}}>
-            <button style={{background:'none', border:'none', color:'white', cursor:'pointer', fontWeight:'bold'}} onClick={() => navigate(currentUser ? '/dashboard' : '/')}>← Back to Secret Sharz</button>
-          </div>
-          {/* ✅ Passed 'navigate' prop so your Top Colleges button works */}
-          <VidyaVantage 
-            onBack={() => navigate(currentUser ? '/dashboard' : '/')} 
-            navigate={navigate}
-          />
-        </>
+        <VidyaVantage 
+          onBack={() => navigate(currentUser ? '/dashboard' : '/')} 
+          navigate={navigate}
+        />
       );
     }
     if (currentPath.startsWith('/blog')) return <Blog />;

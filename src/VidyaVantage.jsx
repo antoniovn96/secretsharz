@@ -769,6 +769,14 @@ function CareerExplorer({ assessmentRiasec, navigate }) {
 
 // ─── MAIN APP COMPONENT ───────────────────────────────────────────────────────
 export default function VidyaVantage({ onBack, navigate }) {
+  // Ensure navigate function is available
+  const safeNavigate = (path) => {
+    if (navigate && typeof navigate === 'function') {
+      navigate(path);
+    } else {
+      console.error('Navigate function not available');
+    }
+  };
   const [screen, setScreen] = useState('hero');
   const [assessmentResults, setAssessmentResults] = useState(null);
   const topRef = useRef(null);
@@ -807,8 +815,7 @@ export default function VidyaVantage({ onBack, navigate }) {
         <div className="vv-header-nav">
           <button className={`vv-nav-btn ${screen === 'explorer' ? 'active' : ''}`} onClick={() => setScreen('explorer')}>🔎 Explore Careers</button>
           <button className={`vv-nav-btn`} onClick={() => setScreen('assessment')}>📝 Take Assessment</button>
-          {/* 👇 Safely wired up Top Colleges button 👇 */}
-          <button className="vv-nav-btn" onClick={() => { if(navigate) navigate('/colleges') }}>🏫 Top Colleges</button>
+          <button className="vv-nav-btn" onClick={() => safeNavigate('/colleges')}>🏫 Top Colleges</button>
           {badge && <div className="vv-badge">{badge}</div>}
         </div>
       )}
@@ -819,7 +826,7 @@ export default function VidyaVantage({ onBack, navigate }) {
   if (screen === 'explorer') return (
     <div className="vv-root" ref={topRef}>
       <Header badge="🇮🇳 India's Career AI" />
-      <CareerExplorer assessmentRiasec={assessmentResults?.riasec?.code || null} navigate={navigate} />
+      <CareerExplorer assessmentRiasec={assessmentResults?.riasec?.code || null} navigate={safeNavigate} />
     </div>
   );
 
@@ -855,8 +862,7 @@ export default function VidyaVantage({ onBack, navigate }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button style={{ background: 'var(--parchment)', border: '1px solid rgba(61,34,5,0.12)', color: 'var(--brown)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => setScreen('explorer')}>🔎 Explore Career Paths First</button>
               
-              {/* 👇 Safely wired up Browse Colleges button 👇 */}
-              <button style={{ background: 'var(--cream)', border: '1.5px solid var(--teal)', color: 'var(--teal)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => { if(navigate) navigate('/colleges') }}>🏫 Browse Top Colleges</button>
+              <button style={{ background: 'var(--cream)', border: '1.5px solid var(--teal)', color: 'var(--teal)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => safeNavigate('/colleges')}>🏫 Browse Top Colleges</button>
             </div>
           </div>
         </div>
