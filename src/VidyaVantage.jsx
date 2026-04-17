@@ -837,7 +837,7 @@ export default function VidyaVantage({ onBack, navigate }) {
       {/* HERO */}
       <div className="vv-hero-new">
         <div className="vv-hero-content">
-          <span className="vv-hero-eyebrow">For Class 8th – 12th & Undergraduates</span>
+          <span className="vv-hero-eyebrow">For Class 8th - 12th &amp; Undergraduates</span>
           <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 'clamp(36px, 5vw, 56px)', color: 'var(--dark)', lineHeight: 1.1, marginBottom: '20px' }}>
             Confused About <br /><em style={{ color: 'var(--saffron)', fontStyle: 'italic' }}>Science, Commerce or Arts?</em>
           </h1>
@@ -978,9 +978,9 @@ export default function VidyaVantage({ onBack, navigate }) {
               <p style={{ textTransform: 'uppercase', fontWeight: 700, color: 'var(--muted)', fontSize: '12px', letterSpacing: '1px', margin: '0 0 8px 0' }}>Meet the Career Architect</p>
               <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '32px', color: 'var(--dark)', margin: '0 0 4px 0' }}>Antonio Vian Noronha</h3>
               <h4 style={{ color: 'var(--saffron)', fontSize: '16px', margin: '0 0 16px 0' }}>Lead School Counsellor</h4>
-              <p style={{ color: 'var(--brown)', fontSize: '16px', lineHeight: 1.6, fontStyle: 'italic', margin: '0 0 20px 0' }}>"My mission is to replace career anxiety with data-driven confidence. Combining deep psychometric testing with human empathy allows us to find the exact intersection of what a student loves and what they are naturally built to succeed in."</p>
+              <p style={{ color: 'var(--brown)', fontSize: '16px', lineHeight: 1.6, fontStyle: 'italic', margin: '0 0 20px 0' }}>&quot;My mission is to replace career anxiety with data-driven confidence. Combining deep psychometric testing with human empathy allows us to find the exact intersection of what a student loves and what they are naturally built to succeed in.&quot;</p>
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                <span style={{ background: 'var(--cream)', padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(61,34,5,0.1)', fontSize: '13px', fontWeight: 700 }}>🎓 MSW (Medical & Psychiatric)</span>
+                <span style={{ background: 'var(--cream)', padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(61,34,5,0.1)', fontSize: '13px', fontWeight: 700 }}>🎓 MSW (Medical &amp; Psychiatric)</span>
                 <span style={{ background: 'var(--cream)', padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(61,34,5,0.1)', fontSize: '13px', fontWeight: 700 }}>🌟 5000+ Students Guided</span>
               </div>
             </div>

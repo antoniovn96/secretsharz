@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import Head from 'next/head'; 
+import { Helmet } from 'react-helmet';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
@@ -589,17 +589,17 @@ function MythFactQuiz({ onClose }) {
 function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
   return (
     <>
-      <Head>
-        <title>Secret Sharz | #1 Anonymous Student Mental Health & Career Platform</title>
+      <Helmet>
+        <title>Secret Sharz | #1 Anonymous Student Mental Health &amp; Career Platform</title>
         <meta name="description" content="India's top anonymous emotional safe space and career discovery platform for students. Get free emotional first aid, vent anonymously, and plan your career with VidyaVantage." />
         <meta name="keywords" content="student mental health, anonymous venting, career guidance, Indian students, POCSO aligned, emotional support, VidyaVantage, Holland RIASEC" />
-        <meta property="og:title" content="Secret Sharz | Anonymous Mental Health Support & Career Guidance" />
+        <meta property="og:title" content="Secret Sharz | Anonymous Mental Health Support &amp; Career Guidance" />
         <meta property="og:description" content="Fix your mind first. Then fix your future. Anonymous emotional safe space + career discovery platform for Indian students." />
         <meta property="og:image" content="/secret-sharz-logo.png" />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="icon" href="/android-chrome-192x192.png" />
-      </Head>
+      </Helmet>
 
       {!currentUser && (
         <div className="instant-action-bar" onClick={() => navigate('/auth')}>
@@ -771,7 +771,7 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
       {/* B2B PITCH */}
       <section className="b2b-section" style={{ background: 'var(--moss)' }}>
         <div className="section-eyebrow" style={{ color:'var(--sage-pale)' }}>Institutional Partnerships</div>
-        <h2 className="section-h2" style={{ color:'white' }}>For Schools & Counselors: <em>Proactive, Not Reactive.</em></h2>
+        <h2 className="section-h2" style={{ color:'white' }}>For Schools &amp; Counselors: <em>Proactive, Not Reactive.</em></h2>
         <p className="section-p" style={{ color:'rgba(255,255,255,0.8)' }}>Empower your student body with an anonymous, POCSO-aligned emotional safety net.</p>
         <div className="b2b-grid">
           <div className="b2b-card"><div style={{ fontSize:'36px', marginBottom:'15px' }}>🛡️</div><h3 style={{ fontFamily:'Fraunces, serif', fontSize:'22px', marginBottom:'10px' }}>Early Intervention</h3><p style={{ fontSize:'15px', color:'rgba(255,255,255,0.7)', lineHeight:1.6 }}>Our platform helps students self-regulate before stress turns into a crisis.</p></div>
@@ -1046,11 +1046,11 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Head>
+      <Helmet>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-      </Head>
+      </Helmet>
       <style dangerouslySetInnerHTML={{ __html: FONTS + CSS }} />
 
       <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#FDFCFA', color: '#4A7C59', fontFamily: "'Fraunces', serif", fontSize: '24px'}}>Loading...</div>}>
