@@ -83,7 +83,7 @@ The money is exceptional, even in India. Top investment banks (Goldman Sachs, Mo
 
 This career is for the hyper-ambitious. You need razor-sharp analytical skills, the ability to work under extreme pressure, and thick skin (seniors can be brutal). An MBA from a top school (IIM A/B/C, ISB) or a degree from a target undergrad (St. Stephens, SRCC, IIT) is almost mandatory. If you want wealth, prestige, and are willing to grind, this is the path.`,
     dayInTheLife: [
-      'Build a financial model projecting 5-year revenue for a client's acquisition target',
+      'Build a financial model projecting 5-year revenue for a client\'s acquisition target',
       'Prepare pitch deck for a ₹500 crore IPO, work until 2 AM to meet deadline',
       'Attend client meetings with senior bankers, take detailed notes and follow up on action items'
     ],
