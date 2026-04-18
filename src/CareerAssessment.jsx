@@ -1143,7 +1143,7 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
           </button>
           {currentSection > 0 && (
             <span className="section-progress-note">
-              {section.questions.filter(q => answers[q.id] !== undefined).length} / {section.questions.length} answered
+              {currentQuestions.filter(q => answers[q.id] !== undefined).length} / {currentQuestions.length} answered
             </span>
           )}
           {isLast ? (
@@ -1151,7 +1151,18 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
               Analyse My Career Profile 🚀
             </button>
           ) : (
-            <button className="btn-next" onClick={() => setCurrentSection(currentSection + 1)} disabled={!sectionDone}>
+            <button 
+              className="btn-next" 
+              onClick={() => {
+                // Trigger dynamic generation after profile section
+                if (currentSection === 0 && !dynamicSkillsQuestions && !dynamicAcademicQuestions) {
+                  generateDynamicQuestions();
+                } else {
+                  setCurrentSection(currentSection + 1);
+                }
+              }} 
+              disabled={!sectionDone}
+            >
               Continue →
             </button>
           )}
