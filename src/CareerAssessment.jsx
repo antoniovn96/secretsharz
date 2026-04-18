@@ -832,64 +832,140 @@ Next Steps Guidance: ${nextStepsGuidance}
 
 ${streamMismatchProtocol}
 
-MANDATORY INSTRUCTIONS:
-1. Apply Holland's RIASEC theory as the foundation for career matching.
-2. STRICTLY follow the ${studentStage} stage approach defined above. Your tone, recommendations, and next steps MUST align with the stage-appropriate counseling style.
-3. If STREAM MISMATCH PROTOCOL is active, prioritize emotional validation and pivot strategies over traditional linear paths.
-4. Respond ONLY with valid JSON (no markdown, no backticks). Ensure all internal strings are properly escaped to prevent JSON parse errors.
-5. Make recommendations specific to the Indian education system and 2025-2026 career landscape.
+MANDATORY INSTRUCTIONS — READ CAREFULLY:
+
+1. **RIASEC FOUNDATION**: Apply Holland's RIASEC theory as the scientific foundation. You MUST analyze ALL SIX dimensions (R, I, A, S, E, C) and explain how their specific score pattern creates their unique profile.
+
+2. **DEVELOPMENTAL STAGE COMPLIANCE**: You are counseling a student in the **${studentStage} STAGE**. Your entire response must strictly follow the stage-specific approach:
+   - Goal: ${stageGoal}
+   - Counseling Style: ${approachStyle}
+   - Next Steps Requirements: ${nextStepsGuidance}
+   
+   **CRITICAL**: Do NOT give exploration-stage students (Grade 8-10) premature career commitments. Do NOT give specialization-stage students (PG) vague exploration advice. Match your directiveness to their stage.
+
+3. **STREAM MISMATCH PROTOCOL**: ${isStreamMismatch ? 'ACTIVATED — This student shows signs of stream/path misalignment. You MUST:' : 'Not triggered.'}
+   ${isStreamMismatch ? `
+   - Conduct 3-Layer Analysis: Separate Interest, Aptitude, and Values to identify the disconnect
+   - Recommend "Adjacent Careers" (e.g., Engineering → UX Design) or "Hybrid Paths" that leverage existing investment
+   - In riasecSummary and bestCareer, provide emotional validation: "Recognizing a mismatch early is wisdom, not weakness"
+   - In nextSteps, include at least one action about exploring adjacent options or validating the pivot
+   - Prioritize paths that allow course correction without complete restart` : ''}
+
+4. **FULL RIASEC ANALYSIS REQUIREMENT**: In the fullRiasecAnalysis section, you must:
+   - Analyze each of the 6 RIASEC dimensions individually with their specific score
+   - Explain what HIGH scores mean (strengths, natural fits)
+   - Explain what LOW scores mean (challenges, misalignments) — be honest but not discouraging
+   - In "interactionPattern", synthesize how their unique combination of highs and lows creates their working style
+   - Example: "Your R=2, I=9, A=7 pattern suggests you thrive in abstract creative problem-solving but may struggle with hands-on mechanical tasks"
+
+5. **CAREER RECOMMENDATIONS**: 
+   - bestCareer must have 85%+ RIASEC compatibility AND stage-appropriateness
+   - Explicitly reference which RIASEC dimensions make it a strong match
+   - If stream mismatch is active, explain how this path allows pivoting
+   - Be specific about Indian colleges, entrance exams, and realistic timelines for their stage
+
+6. **NEXT STEPS PRECISION**: Each of the 3 next steps must:
+   - Be stage-appropriate (exploration vs decision vs execution)
+   - Be actionable with a clear timeline (1 week, 1 month, 3-6 months)
+   - If stream mismatch detected, include one step about validating the new direction
+
+7. **TONE CALIBRATION**: 
+   - For Exploration Stage (8-10): Encouraging, curiosity-driven, non-pressuring
+   - For Decision Stage (11-12): Supportive but clear, data-backed, narrowing options
+   - For Refinement Stage (UG): Directive, employability-focused, skill-gap honest
+   - For Specialization Stage (PG): Strategic, ROI-focused, market-positioning sharp
+
+8. **JSON VALIDITY**: Respond ONLY with valid JSON (no markdown, no backticks). Ensure all internal strings are properly escaped to prevent JSON parse errors.
+
+9. **INDIAN CONTEXT**: All recommendations must be specific to the Indian education system, 2025-2026 career landscape, and realistic for a student in ${info.city || 'India'}.
 
 JSON Structure:
 
 {
-  "riasecSummary": "3 sentences describing this student's unique RIASEC personality in warm, specific, encouraging language.",
+  "riasecSummary": "3-4 sentences describing this student's unique RIASEC personality in warm, specific, encouraging language. Must reflect their developmental stage and any stream mismatch concerns.",
   "codeBreakdown": {
     "primary": "1 sentence about the dominant letter and what it means for this student specifically",
     "secondary": "1 sentence about the second letter and how it adds nuance",
     "tertiary": "1 sentence about the third letter and how all three together create a unique profile"
   },
+  "fullRiasecAnalysis": {
+    "R_Realistic": {
+      "score": ${riasec.scores.R},
+      "interpretation": "2-3 sentences explaining what this score means for hands-on work, technical skills, and physical problem-solving. Reference their actual answers.",
+      "careerImplication": "How this score shapes their relationship with practical, mechanical, or outdoor careers."
+    },
+    "I_Investigative": {
+      "score": ${riasec.scores.I},
+      "interpretation": "2-3 sentences explaining what this score means for analytical thinking, research, and intellectual curiosity.",
+      "careerImplication": "How this score influences their fit for scientific, academic, or data-driven careers."
+    },
+    "A_Artistic": {
+      "score": ${riasec.scores.A},
+      "interpretation": "2-3 sentences explaining what this score means for creativity, self-expression, and originality.",
+      "careerImplication": "How this score affects their potential in creative, design, or media careers."
+    },
+    "S_Social": {
+      "score": ${riasec.scores.S},
+      "interpretation": "2-3 sentences explaining what this score means for empathy, teaching, and helping others.",
+      "careerImplication": "How this score determines their alignment with counseling, education, or healthcare careers."
+    },
+    "E_Enterprising": {
+      "score": ${riasec.scores.E},
+      "interpretation": "2-3 sentences explaining what this score means for leadership, persuasion, and business acumen.",
+      "careerImplication": "How this score impacts their suitability for management, sales, or entrepreneurial careers."
+    },
+    "C_Conventional": {
+      "score": ${riasec.scores.C},
+      "interpretation": "2-3 sentences explaining what this score means for organization, detail-orientation, and systematic work.",
+      "careerImplication": "How this score relates to administrative, financial, or process-driven careers."
+    },
+    "interactionPattern": "2-3 sentences explaining how their HIGH and LOW scores across all six dimensions interact to create their unique working style. Example: 'Your high I and low E suggests you prefer independent research over team leadership.'"
+  },
   "personalityInsights": {
-    "workStyle": "How this student naturally works — specific, based on their answers",
-    "strengthZone": "Where they are most likely to excel and why",
-    "growthEdge": "The one area that will require the most intentional development",
-    "leadershipStyle": "How they lead or influence others"
+    "workStyle": "How this student naturally works — specific, based on their answers and RIASEC profile",
+    "strengthZone": "Where they are most likely to excel and why — must reference specific RIASEC dimensions",
+    "growthEdge": "The one area that will require the most intentional development — must be stage-appropriate (exploration vs execution)",
+    "leadershipStyle": "How they lead or influence others — based on E and S scores",
+    "decisionMakingStyle": "How they make important choices — based on personality indicators and I/C scores",
+    "stressResponse": "How they handle pressure and setbacks — based on their setback response answer and RIASEC profile"
   },
   "bestCareer": {
-    "title": "Career Path Name",
+    "title": "Career Path Name — must be stage-appropriate and consider stream mismatch if applicable",
     "subtitle": "3-4 specific roles within this path",
     "matchPercent": 92,
-    "analysis": "4 sentences: why this is the best match using their RIASEC code, personality, AND their stated preferences. Be specific.",
-    "pros": ["Pro 1 — specific to this student", "Pro 2", "Pro 3"],
-    "cons": ["Real challenge 1", "Real challenge 2"],
-    "colleges": ["Top Indian college 1", "Top Indian college 2", "Top Indian college 3"],
-    "skillsToBuild": ["Specific skill 1", "Specific skill 2"],
-    "entryPath": "The most realistic step-by-step entry path for an Indian student at their level"
+    "analysis": "4-5 sentences: why this is the best match using their RIASEC code (reference specific dimension scores), personality indicators, stated preferences, AND developmental stage. If stream mismatch detected, explain how this path allows pivoting.",
+    "pros": ["Pro 1 — specific to this student and their RIASEC profile", "Pro 2 — reference their high scores", "Pro 3 — stage-appropriate benefit"],
+    "cons": ["Real challenge 1 — reference their low RIASEC scores", "Real challenge 2 — honest about developmental stage barriers"],
+    "colleges": ["Top Indian college 1 for this path", "Top Indian college 2", "Top Indian college 3"],
+    "skillsToBuild": ["Specific skill 1 — addresses a RIASEC gap", "Specific skill 2 — stage-appropriate"],
+    "entryPath": "The most realistic step-by-step entry path for an Indian student at their current level (${studentStage} stage). Must be concrete and actionable."
   },
   "recommendedCareer": {
-    "title": "Career Path Name — a solid secondary match",
+    "title": "Career Path Name — a solid secondary match that complements their RIASEC profile differently",
     "subtitle": "Specific roles",
     "matchPercent": 76,
-    "analysis": "3-4 sentences on why this is a strong secondary match",
-    "pros": ["Pro 1", "Pro 2"],
-    "cons": ["Challenge 1", "Challenge 2"],
+    "analysis": "3-4 sentences on why this is a strong secondary match. Explain which RIASEC dimensions this path leverages vs the primary recommendation.",
+    "pros": ["Pro 1 — different RIASEC strength utilized", "Pro 2 — stage-appropriate"],
+    "cons": ["Challenge 1 — RIASEC dimension gap", "Challenge 2 — realistic barrier"],
     "colleges": ["College 1", "College 2"],
-    "skillsToBuild": ["Skill 1", "Skill 2"],
-    "entryPath": "Step-by-step entry for this student"
+    "skillsToBuild": ["Skill 1 — addresses gap", "Skill 2"],
+    "entryPath": "Step-by-step entry for this student at ${studentStage} stage"
   },
   "leastCareer": {
-    "title": "Career Path Name",
-    "subtitle": "Why the RIASEC mismatch is significant",
+    "title": "Career Path Name — lowest RIASEC compatibility",
+    "subtitle": "Why the RIASEC mismatch is significant — reference specific dimension gaps",
     "matchPercent": 21,
-    "analysis": "2-3 sentences — gentle, honest, non-discouraging. Focus on RIASEC mismatch, not failure.",
-    "pros": ["One genuine redeeming overlap if any"],
-    "cons": ["Key mismatch 1", "Key mismatch 2"],
+    "analysis": "2-3 sentences — gentle, honest, non-discouraging. Explicitly state which RIASEC dimensions are misaligned (e.g., 'This path requires high E and C, but your scores are 2 and 3 respectively'). Frame as incompatibility, not inadequacy.",
+    "pros": ["One genuine redeeming overlap if any — be honest if there is none"],
+    "cons": ["Key RIASEC mismatch 1 — specific dimension", "Key RIASEC mismatch 2 — specific dimension"],
     "colleges": []
   },
   "nextSteps": [
-    "Specific step 1 for this student — actionable within 1 week",
-    "Specific step 2 — achievable within 1 month",
-    "Specific step 3 — 3-6 month goal"
-  ]
+    "STAGE-SPECIFIC Step 1 — must align with ${studentStage} stage guidance (${nextStepsGuidance}). Actionable within 1 week.",
+    "STAGE-SPECIFIC Step 2 — achievable within 1 month. Must respect developmental stage (no premature career locking for exploration stage).",
+    "STAGE-SPECIFIC Step 3 — 3-6 month goal. If stream mismatch detected, include one step about exploring adjacent options or validating the pivot."
+  ],
+  "developmentalStageNote": "1-2 sentences acknowledging the student's current stage (${studentStage}) and what that means for their timeline. Example: 'You're in the Exploration Stage — this is the time to sample widely, not commit narrowly. Your next 6 months should prioritize curiosity over certainty.'"
 }`;
 
     const controller = new AbortController();
