@@ -581,7 +581,26 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
       strengths: []
     };
 
-    const prompt = `You are an expert educational psychologist designing a personalized career assessment for an Indian student.
+    // Determine developmental stage for question generation
+    const classLevel = academicInfo.grade.toLowerCase();
+    let questionTone = 'exploratory and curiosity-driven';
+    let scenarioContext = 'school activities and hobbies';
+    
+    if (classLevel.includes('class 8') || classLevel.includes('class 9') || classLevel.includes('class 10')) {
+      questionTone = 'exploratory, non-pressuring, and curiosity-driven';
+      scenarioContext = 'school clubs, hobbies, weekend activities, and things they enjoy doing';
+    } else if (classLevel.includes('class 11') || classLevel.includes('class 12') || classLevel.includes('puc')) {
+      questionTone = 'decision-focused but supportive';
+      scenarioContext = 'stream subjects, entrance exam preparation, and future college plans';
+    } else if (classLevel.includes('year ug') || classLevel.includes('undergraduate')) {
+      questionTone = 'practical and employability-focused';
+      scenarioContext = 'internships, projects, skill-building, and career preparation';
+    } else {
+      questionTone = 'strategic and specialization-focused';
+      scenarioContext = 'professional work, networking, and career positioning';
+    }
+
+    const prompt = `You are an expert educational psychologist designing a personalized career assessment for an Indian student, following stage-based developmental counseling principles.
 
 STUDENT PROFILE:
 - Grade/Class: ${academicInfo.grade}
@@ -590,16 +609,22 @@ STUDENT PROFILE:
 - Weak Areas: ${academicInfo.weakSubjects.length > 0 ? academicInfo.weakSubjects.join(', ') : 'None specified'}
 - Strengths: ${academicInfo.strengths.length > 0 ? academicInfo.strengths.join(', ') : 'None specified'}
 
-TASK: Generate TWO arrays of questions tailored to this student's age and academic context:
+DEVELOPMENTAL CONTEXT:
+- Question Tone: ${questionTone}
+- Scenario Context: ${scenarioContext}
+
+TASK: Generate TWO arrays of questions tailored to this student's developmental stage and academic context:
 
 1. **dynamicSkillsQuestions** (12 questions): Self-assessment of natural abilities across RIASEC dimensions
 2. **dynamicAcademicQuestions** (6 questions): Multiple-choice questions about academic preferences and learning style
 
 CRITICAL REQUIREMENTS:
-- Use age-appropriate language for their grade level
-- Reference subjects and scenarios they actually encounter
-- For weak subjects, probe alternative strengths (e.g., if weak in Math, test spatial/creative reasoning)
+- Use age-appropriate language matching the ${questionTone} tone
+- Reference ${scenarioContext} that they actually encounter
+- For weak subjects, probe alternative strengths (e.g., if weak in Math, test spatial/creative reasoning or pattern recognition in non-mathematical contexts)
 - Each question must map to RIASEC codes: R (Realistic), I (Investigative), A (Artistic), S (Social), E (Enterprising), C (Conventional)
+- Questions should feel natural and non-threatening, avoiding academic pressure language
+- For younger students (Class 8-10), focus on discovery and exploration, NOT career commitment
 
 RESPONSE FORMAT (valid JSON only, no markdown):
 {
@@ -718,7 +743,57 @@ Ensure all strings are properly escaped for JSON parsing. Make questions engagin
       setLoadingStep(i + 1);
     }
 
-    const prompt = `You are VidyaVantage, an expert AI career counsellor specialising in Indian education (2025–2026), using Holland's RIASEC theory.
+    // Determine student's developmental stage
+    const classLevel = info.class.toLowerCase();
+    let studentStage = 'EXPLORATION'; // Default
+    let stageGoal = '';
+    let approachStyle = '';
+    let nextStepsGuidance = '';
+    
+    if (classLevel.includes('class 8') || classLevel.includes('class 9') || classLevel.includes('class 10')) {
+      studentStage = 'EXPLORATION';
+      stageGoal = 'Build self-awareness and exposure, not force career decisions';
+      approachStyle = 'Non-directive (guide, do not prescribe). Focus on curiosity and skill sampling.';
+      nextStepsGuidance = 'Include: Skill sampling activities, reflective journaling prompts, career exposure opportunities. DO NOT push them to pick Science/Commerce/Arts yet. Encourage exploration across multiple domains.';
+    } else if (classLevel.includes('class 11') || classLevel.includes('class 12') || classLevel.includes('puc')) {
+      studentStage = 'DECISION';
+      stageGoal = 'Make an informed stream and career direction decision';
+      approachStyle = 'Semi-directive (guide with data and clarity). Help narrow down 2-3 strong options based on SWOT and stream-career alignment.';
+      nextStepsGuidance = 'Include: Reality testing exercises, entrance exam preparation roadmap, stream alignment verification. Provide clear decision-making frameworks.';
+    } else if (classLevel.includes('year ug') || classLevel.includes('undergraduate') || classLevel.includes('1st year') || classLevel.includes('2nd year') || classLevel.includes('3rd year') || classLevel.includes('4th year')) {
+      studentStage = 'REFINEMENT';
+      stageGoal = 'Convert degree into a viable career path';
+      approachStyle = 'Directive and strategy-based. Focus on employability and career clarity.';
+      nextStepsGuidance = 'Include: Internship hunting strategies, skill gap analysis with specific courses, portfolio building roadmap. Be concrete and actionable.';
+    } else if (classLevel.includes('postgraduate') || classLevel.includes('pg') || classLevel.includes('masters') || classLevel.includes('mba')) {
+      studentStage = 'SPECIALIZATION';
+      stageGoal = 'Achieve career positioning and niche specialization';
+      approachStyle = 'Highly directive and strategic. Focus on ROI, personal branding, and competitive positioning.';
+      nextStepsGuidance = 'Include: LinkedIn networking tactics, interview readiness drills, career transition planning with timeline. Focus on market differentiation.';
+    }
+
+    // Check for stream mismatch crisis indicators
+    const streamMismatchIndicators = [
+      personality.academicPattern?.toLowerCase().includes('disengaged'),
+      personality.academicPattern?.toLowerCase().includes('bored'),
+      personality.setbackResponse?.toLowerCase().includes('wrong'),
+      personality.coreMotivation?.toLowerCase().includes('hate'),
+      (info.aspiration || '').toLowerCase().includes('confused'),
+      (info.aspiration || '').toLowerCase().includes('wrong stream')
+    ].filter(Boolean).length;
+
+    const isStreamMismatch = streamMismatchIndicators >= 2;
+    const streamMismatchProtocol = isStreamMismatch ? `
+CRITICAL: STREAM MISMATCH PROTOCOL ACTIVATED
+This student shows signs of being in the wrong stream or struggling with their current path. You MUST:
+1. Use 3-Layer Analysis: Analyze Interest vs Aptitude vs Values separately and identify the disconnect.
+2. Recommend "Adjacent Careers" (e.g., Engineering → UX Design, Medicine → Healthcare Management) or "Hybrid Paths" that leverage existing investment.
+3. In riasecSummary, provide emotional support and normalize that changing direction is a CORRECTION, not a failure. Use phrases like "recognizing a mismatch early is wisdom, not weakness" and "your past choices were made with the information you had then."
+4. In bestCareer and recommendedCareer, prioritize paths that allow pivoting without complete restart.
+5. In nextSteps, include one step specifically about "exploring adjacent options" or "validating the pivot."
+` : '';
+
+    const prompt = `You are VidyaVantage, an expert AI career counsellor specializing in Indian education (2025–2026), using Holland's RIASEC theory combined with stage-based developmental career counseling.
 
 STUDENT PROFILE:
 - Name: ${info.name.replace(/"/g, '\\"')}
@@ -749,7 +824,22 @@ FUTURE VISION:
 - Legacy goal: ${(personality.legacyGoal || '').replace(/"/g, '\\"')}
 - Skill they want to build: ${(personality.skillBuildGoal || '').replace(/"/g, '\\"')}
 
-INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid JSON (no markdown, no backticks). Ensure all internal strings are properly escaped to prevent JSON parse errors. Structure:
+DEVELOPMENTAL STAGE FRAMEWORK:
+Student is in: ${studentStage} STAGE
+Stage Goal: ${stageGoal}
+Counseling Approach: ${approachStyle}
+Next Steps Guidance: ${nextStepsGuidance}
+
+${streamMismatchProtocol}
+
+MANDATORY INSTRUCTIONS:
+1. Apply Holland's RIASEC theory as the foundation for career matching.
+2. STRICTLY follow the ${studentStage} stage approach defined above. Your tone, recommendations, and next steps MUST align with the stage-appropriate counseling style.
+3. If STREAM MISMATCH PROTOCOL is active, prioritize emotional validation and pivot strategies over traditional linear paths.
+4. Respond ONLY with valid JSON (no markdown, no backticks). Ensure all internal strings are properly escaped to prevent JSON parse errors.
+5. Make recommendations specific to the Indian education system and 2025-2026 career landscape.
+
+JSON Structure:
 
 {
   "riasecSummary": "3 sentences describing this student's unique RIASEC personality in warm, specific, encouraging language.",
