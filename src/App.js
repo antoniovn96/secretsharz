@@ -9,6 +9,7 @@ import { auth, db } from './firebase';
 const VidyaVantage = lazy(() => import('./VidyaVantage'));
 const CollegesPage = lazy(() => import('./CollegesPage')); // ✅ ADDED
 const CollegeDetails = lazy(() => import('./CollegeDetails')); // ✅ ADDED
+const CareerExplorer = lazy(() => import('./CareerExplorer')); // ✅ ADDED
 const VidyaVantageBlog = lazy(() => import('./VidyaVantageBlog'));
 const AuthPage = lazy(() => import('./AuthPage'));
 const StudentDashboard = lazy(() => import('./StudentDashboard'));
@@ -997,6 +998,11 @@ export default function App() {
     if (currentPath.startsWith('/about')) return <AboutUs navigate={navigate} />;
     if (currentPath.startsWith('/resources')) return <Resources navigate={navigate} />;
     if (currentPath.startsWith('/vidyavantage/blog')) return <VidyaVantageBlog navigate={navigate} />;
+    
+    // ✅ ADDED CAREER EXPLORER ROUTE
+    if (currentPath.startsWith('/explore')) {
+      return <CareerExplorer navigate={navigate} />;
+    }
     
     // ✅ ADDED COLLEGES ROUTE
     if (currentPath.startsWith('/colleges')) {

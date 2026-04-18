@@ -813,7 +813,7 @@ export default function VidyaVantage({ onBack, navigate }) {
       </div>
       {showNav && (
         <div className="vv-header-nav">
-          <button className={`vv-nav-btn ${screen === 'explorer' ? 'active' : ''}`} onClick={() => setScreen('explorer')}>🔎 Explore Careers</button>
+          <button className={`vv-nav-btn`} onClick={() => safeNavigate('/explore')}>🔎 Explore Careers</button>
           <button className={`vv-nav-btn`} onClick={() => setScreen('assessment')}>📝 Take Assessment</button>
           <button className="vv-nav-btn" onClick={() => safeNavigate('/colleges')}>🏫 Top Colleges</button>
           {badge && <div className="vv-badge">{badge}</div>}
