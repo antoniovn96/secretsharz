@@ -1107,6 +1107,144 @@ JSON Structure:
             </div>
           )}
 
+          {results.fullRiasecAnalysis && (
+            <div className="riasec-radar" style={{ marginBottom:'24px' }}>
+              <h4>Your 6-Dimensional Analysis</h4>
+              <p>Deep dive into how each RIASEC dimension shapes your unique working style and career fit.</p>
+              <div style={{ display:'flex', flexDirection:'column', gap:'16px', marginTop:'20px' }}>
+                {Object.entries(results.fullRiasecAnalysis).map(([key, data]) => {
+                  if (key === 'interactionPattern') return null;
+                  const letter = key.split('_')[0];
+                  const dimension = RIASEC_COLORS[letter];
+                  if (!dimension) return null;
+                  
+                  return (
+                    <div key={key} style={{ 
+                      background:'white', 
+                      borderRadius:'16px', 
+                      padding:'20px 24px', 
+                      border:`2px solid ${dimension.bg}`,
+                      boxShadow:'0 2px 8px rgba(0,0,0,0.04)'
+                    }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px' }}>
+                        <div style={{ 
+                          width:'48px', 
+                          height:'48px', 
+                          borderRadius:'12px', 
+                          background:dimension.bg, 
+                          color:dimension.color,
+                          display:'flex',
+                          alignItems:'center',
+                          justifyContent:'center',
+                          fontSize:'24px',
+                          fontWeight:'700',
+                          fontFamily:"'Playfair Display', serif"
+                        }}>
+                          {letter}
+                        </div>
+                        <div style={{ flex:1 }}>
+                          <div style={{ 
+                            fontSize:'18px', 
+                            fontWeight:'700', 
+                            color:'var(--dark)',
+                            fontFamily:"'Playfair Display', serif",
+                            marginBottom:'2px'
+                          }}>
+                            {dimension.label} — {dimension.desc}
+                          </div>
+                          <div style={{ 
+                            fontSize:'13px', 
+                            fontWeight:'700', 
+                            color:dimension.color,
+                            letterSpacing:'0.5px'
+                          }}>
+                            Your Score: {data.score}/10
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div style={{ 
+                        background:'var(--parchment)', 
+                        borderRadius:'10px', 
+                        padding:'14px 16px',
+                        marginBottom:'10px'
+                      }}>
+                        <div style={{ 
+                          fontSize:'11px', 
+                          fontWeight:'700', 
+                          textTransform:'uppercase', 
+                          letterSpacing:'1px', 
+                          color:'var(--muted)',
+                          marginBottom:'6px'
+                        }}>
+                          What This Score Means
+                        </div>
+                        <p style={{ 
+                          margin:0, 
+                          fontSize:'14px', 
+                          color:'var(--brown)', 
+                          lineHeight:1.7 
+                        }}>
+                          {data.interpretation}
+                        </p>
+                      </div>
+
+                      <div style={{ 
+                        fontSize:'11px', 
+                        fontWeight:'700', 
+                        textTransform:'uppercase', 
+                        letterSpacing:'1px', 
+                        color:'var(--muted)',
+                        marginBottom:'6px'
+                      }}>
+                        Career Implication
+                      </div>
+                      <p style={{ 
+                        margin:0, 
+                        fontSize:'14px', 
+                        color:'var(--dark)', 
+                        lineHeight:1.7,
+                        fontWeight:'500'
+                      }}>
+                        {data.careerImplication}
+                      </p>
+                    </div>
+                  );
+                })}
+
+                {results.fullRiasecAnalysis.interactionPattern && (
+                  <div style={{ 
+                    background:'linear-gradient(135deg, var(--dark), var(--brown))', 
+                    borderRadius:'16px', 
+                    padding:'24px', 
+                    color:'white',
+                    marginTop:'8px'
+                  }}>
+                    <div style={{ 
+                      fontSize:'11px', 
+                      fontWeight:'700', 
+                      textTransform:'uppercase', 
+                      letterSpacing:'1px', 
+                      color:'var(--gold)',
+                      marginBottom:'10px'
+                    }}>
+                      🔗 Your Unique Pattern
+                    </div>
+                    <p style={{ 
+                      margin:0, 
+                      fontSize:'16px', 
+                      lineHeight:1.7,
+                      fontFamily:"'Cormorant Garamond', serif",
+                      fontStyle:'italic'
+                    }}>
+                      {results.fullRiasecAnalysis.interactionPattern}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="unlock-dashboard-cta">
             <h3>Your Blueprint is Ready</h3>
             <p>We've mapped your personality to the Indian career landscape. Discover your top career matches, skills gaps, recommended colleges, and your personalised execution plan.</p>
