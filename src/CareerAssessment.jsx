@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { auth } from './firebase'; // ✅ Added Firebase auth import
+import { auth, db } from './firebase'; // ✅ Added Firebase auth and db import
+import { doc, getDoc } from 'firebase/firestore';
 
 const GOOGLE_FONTS = `@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');`;
 
@@ -457,14 +458,17 @@ const ALL_SECTIONS = [
   { id:'future',      label:'Future Vision',    emoji:'🚀', questions:FUTURE_QUESTIONS },
 ];
 
-function computeRIASEC(answers) {
+function computeRIASEC(answers, dynamicSkills = null, dynamicAcademics = null) {
   const interest = { R:0, I:0, A:0, S:0, E:0, C:0 };
   const ability  = { R:0, I:0, A:0, S:0, E:0, C:0 };
 
   ACTIVITY_QUESTIONS.forEach(q => {
     if (answers[q.id]) interest[q.riasec] += answers[q.id];
   });
-  SKILLS_QUESTIONS.forEach(q => {
+  
+  // Use dynamic skills questions if available, otherwise use static
+  const skillsQuestions = dynamicSkills || SKILLS_QUESTIONS;
+  skillsQuestions.forEach(q => {
     if (answers[q.id]) ability[q.riasec] += answers[q.id] * 0.85;
   });
 
@@ -473,7 +477,9 @@ function computeRIASEC(answers) {
     combined[k] = (interest[k] || 0) + (ability[k] || 0);
   });
 
-  const choiceGroups = [ACADEMIC_QUESTIONS, VALUES_QUESTIONS, PERSONALITY_QUESTIONS, FUTURE_QUESTIONS];
+  // Use dynamic academic questions if available
+  const academicQuestions = dynamicAcademics || ACADEMIC_QUESTIONS;
+  const choiceGroups = [academicQuestions, VALUES_QUESTIONS, PERSONALITY_QUESTIONS, FUTURE_QUESTIONS];
   choiceGroups.forEach(group => {
     group.forEach(q => {
       if (answers[q.id] !== undefined) {
@@ -503,6 +509,10 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
   const [results,         setResults]        = useState(savedResults || null);
   const [loadingStep,     setLoadingStep]    = useState(0);
   const [error,           setError]          = useState(null);
+  const [generatingQuestions, setGeneratingQuestions] = useState(false);
+  const [dynamicSkillsQuestions, setDynamicSkillsQuestions] = useState(null);
+  const [dynamicAcademicQuestions, setDynamicAcademicQuestions] = useState(null);
+  const [userAcademicData, setUserAcademicData] = useState(null);
   const topRef = useRef(null);
 
   useEffect(() => {
@@ -516,17 +526,150 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
     topRef.current?.scrollIntoView({ behavior:'smooth' });
   }, [screen, currentSection]);
 
-  // ✅ Auto-fill name if user is logged in
+  // ✅ Auto-fill name and fetch academic data if user is logged in
   useEffect(() => {
-    if (auth?.currentUser?.displayName) {
-      setInfo(prev => ({ ...prev, name: auth.currentUser.displayName }));
-    }
+    const fetchUserData = async () => {
+      if (auth?.currentUser) {
+        // Auto-fill name
+        if (auth.currentUser.displayName) {
+          setInfo(prev => ({ ...prev, name: auth.currentUser.displayName }));
+        }
+        
+        // Fetch academic data from Firebase
+        try {
+          const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            setUserAcademicData({
+              grade: data.grade || data.class || '',
+              subjects: data.subjects || [],
+              marks: data.marks || {},
+              weakSubjects: data.weakSubjects || [],
+              strengths: data.strengths || []
+            });
+          }
+        } catch (e) {
+          console.error('Error fetching user academic data:', e);
+        }
+      }
+    };
+    fetchUserData();
   }, []);
 
   const isSectionComplete = (idx) => {
     const sec = ALL_SECTIONS[idx];
     if (sec.id === 'info') return info.name.trim() && info.class;
-    return sec.questions.every(q => answers[q.id] !== undefined);
+    
+    // Use dynamic questions if available
+    const questionsToCheck = 
+      sec.id === 'skills' && dynamicSkillsQuestions ? dynamicSkillsQuestions :
+      sec.id === 'academics' && dynamicAcademicQuestions ? dynamicAcademicQuestions :
+      sec.questions;
+    
+    return questionsToCheck.every(q => answers[q.id] !== undefined);
+  };
+
+  const generateDynamicQuestions = async () => {
+    setGeneratingQuestions(true);
+    setError(null);
+
+    const academicInfo = userAcademicData || {
+      grade: info.class,
+      subjects: [],
+      marks: {},
+      weakSubjects: [],
+      strengths: []
+    };
+
+    const prompt = `You are an expert educational psychologist designing a personalized career assessment for an Indian student.
+
+STUDENT PROFILE:
+- Grade/Class: ${academicInfo.grade}
+- Subjects: ${academicInfo.subjects.length > 0 ? academicInfo.subjects.join(', ') : 'Not specified'}
+- Academic Performance: ${Object.keys(academicInfo.marks).length > 0 ? JSON.stringify(academicInfo.marks) : 'Not available'}
+- Weak Areas: ${academicInfo.weakSubjects.length > 0 ? academicInfo.weakSubjects.join(', ') : 'None specified'}
+- Strengths: ${academicInfo.strengths.length > 0 ? academicInfo.strengths.join(', ') : 'None specified'}
+
+TASK: Generate TWO arrays of questions tailored to this student's age and academic context:
+
+1. **dynamicSkillsQuestions** (12 questions): Self-assessment of natural abilities across RIASEC dimensions
+2. **dynamicAcademicQuestions** (6 questions): Multiple-choice questions about academic preferences and learning style
+
+CRITICAL REQUIREMENTS:
+- Use age-appropriate language for their grade level
+- Reference subjects and scenarios they actually encounter
+- For weak subjects, probe alternative strengths (e.g., if weak in Math, test spatial/creative reasoning)
+- Each question must map to RIASEC codes: R (Realistic), I (Investigative), A (Artistic), S (Social), E (Enterprising), C (Conventional)
+
+RESPONSE FORMAT (valid JSON only, no markdown):
+{
+  "dynamicSkillsQuestions": [
+    {
+      "id": "ds1",
+      "riasec": "R",
+      "text": "Age-appropriate skill assessment question here"
+    },
+    ... (12 total)
+  ],
+  "dynamicAcademicQuestions": [
+    {
+      "id": "da1",
+      "text": "Age-appropriate academic preference question",
+      "choices": [
+        {"icon": "📐", "text": "Choice text", "riasec": "I"},
+        {"icon": "🎨", "text": "Choice text", "riasec": "A"},
+        ... (4-6 choices per question)
+      ]
+    },
+    ... (6 total)
+  ]
+}
+
+Ensure all strings are properly escaped for JSON parsing. Make questions engaging and relevant to Indian students in ${academicInfo.grade}.`;
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7
+        }),
+        signal: AbortSignal.timeout(45000)
+      });
+
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
+      }
+
+      const data = await res.json();
+      const text = data.content?.map(b => b.text || '').join('') || '';
+      let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      
+      const parsed = JSON.parse(clean);
+
+      if (!parsed.dynamicSkillsQuestions || !parsed.dynamicAcademicQuestions) {
+        throw new Error('Invalid response structure from AI');
+      }
+
+      setDynamicSkillsQuestions(parsed.dynamicSkillsQuestions);
+      setDynamicAcademicQuestions(parsed.dynamicAcademicQuestions);
+      setGeneratingQuestions(false);
+      
+      // Move to next section after successful generation
+      setCurrentSection(1);
+      
+    } catch (err) {
+      console.error('Dynamic question generation failed:', err);
+      setError('Could not personalize questions. Using standard assessment.');
+      setGeneratingQuestions(false);
+      
+      // Fallback: continue with static questions
+      setTimeout(() => {
+        setError(null);
+        setCurrentSection(1);
+      }, 2000);
+    }
   };
 
   const totalQ    = ALL_SECTIONS.slice(1).reduce((s, sec) => s + sec.questions.length, 0);
@@ -559,7 +702,7 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
     setLoadingStep(0);
     setError(null);
 
-    const riasec      = computeRIASEC(answers);
+    const riasec      = computeRIASEC(answers, dynamicSkillsQuestions, dynamicAcademicQuestions);
     const personality = buildPersonalityProfile();
 
     const steps = [
@@ -818,10 +961,50 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
     );
   }
 
+  // Show dynamic question generation screen
+  if (generatingQuestions) {
+    return (
+      <div className="vv-root">
+        <Header badge="Personalizing..." showNav={false} />
+        <div className="vv-loading" ref={topRef}>
+          <div className="vv-loading-spinner" />
+          <h3>Tailoring your assessment, {info.name.split(' ')[0]}...</h3>
+          <p style={{ color:'var(--muted)', fontSize:'15px', marginTop:'8px', lineHeight:1.6 }}>
+            Our AI is analyzing your academic profile to create questions specifically designed for your grade level and learning style.
+          </p>
+          <div className="vv-loading-steps" style={{ marginTop: '32px' }}>
+            <div className="loading-step active">
+              <div className="step-dot" />Analyzing your grade level and subjects
+            </div>
+            <div className="loading-step active">
+              <div className="step-dot" />Identifying your academic strengths
+            </div>
+            <div className="loading-step active">
+              <div className="step-dot" />Generating personalized questions
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const section     = ALL_SECTIONS[currentSection];
   const isLast      = currentSection === ALL_SECTIONS.length - 1;
   const isFirst     = currentSection === 0;
   const sectionDone = isSectionComplete(currentSection);
+  
+  // Get the appropriate questions for current section
+  const getCurrentSectionQuestions = () => {
+    if (section.id === 'skills' && dynamicSkillsQuestions) {
+      return dynamicSkillsQuestions;
+    }
+    if (section.id === 'academics' && dynamicAcademicQuestions) {
+      return dynamicAcademicQuestions;
+    }
+    return section.questions;
+  };
+  
+  const currentQuestions = getCurrentSectionQuestions();
 
   const sectionMeta = {
     info:        { badge:'Your Profile',                    desc:'Tell us about yourself so we can personalise everything.' },
@@ -911,7 +1094,7 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
           </div>
         )}
 
-        {(section.id === 'activities' || section.id === 'skills') && section.questions.map((q, idx) => (
+        {(section.id === 'activities' || section.id === 'skills') && currentQuestions.map((q, idx) => (
           <div key={q.id} className={`q-card ${answers[q.id] !== undefined ? 'answered' : ''}`}>
             <div className="q-card-top">
               <div className="q-number">Question {idx + 1} of {section.questions.length}</div>
@@ -932,7 +1115,7 @@ INSTRUCTIONS: Apply Holland's RIASEC 5-step methodology. Respond ONLY with valid
           </div>
         ))}
 
-        {['academics','values','personality','future'].includes(section.id) && section.questions.map((q, idx) => (
+        {['academics','values','personality','future'].includes(section.id) && currentQuestions.map((q, idx) => (
           <div key={q.id} className={`q-card ${answers[q.id] !== undefined ? 'answered' : ''}`}>
             <div className="q-card-top">
               <div className="q-number">Question {idx + 1} of {section.questions.length}</div>
