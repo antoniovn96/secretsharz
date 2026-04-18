@@ -879,6 +879,8 @@ MANDATORY INSTRUCTIONS — READ CAREFULLY:
 
 9. **INDIAN CONTEXT**: All recommendations must be specific to the Indian education system, 2025-2026 career landscape, and realistic for a student in ${info.city || 'India'}.
 
+CRITICAL: You must return ONLY valid, parseable JSON. Do NOT use unescaped double quotes (") or newlines (\n) inside your text strings. Keep your sentences concise to ensure the JSON does not get truncated. Use single quotes or apostrophes within text instead of double quotes. Replace any newlines with spaces.
+
 JSON Structure:
 
 {
@@ -985,7 +987,15 @@ JSON Structure:
       const text   = data.content?.map(b => b.text || '').join('') || '';
       let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
       
-      const parsed = JSON.parse(clean);
+      let parsed;
+      try {
+        parsed = JSON.parse(clean);
+      } catch (parseError) {
+        console.error('JSON PARSE ERROR:', parseError.message);
+        console.error('RAW AI OUTPUT:', clean);
+        console.error('OUTPUT LENGTH:', clean.length);
+        throw new Error(`Failed to parse AI response: ${parseError.message}. Check console for raw output.`);
+      }
 
       const finalResults = { ...parsed, riasec, studentInfo:info, personalityProfile:personality };
       setResults(finalResults);
