@@ -1059,10 +1059,11 @@ JSON Structure:
 
   if (screen === 'results' && results) {
     const { riasec, riasecSummary, codeBreakdown, studentInfo } = results;
+    const isAuthenticated = auth?.currentUser;
 
     return (
       <div className="vv-root">
-        <Header badge="Primary Report" showNav={false} />
+        <Header badge={isAuthenticated ? "Primary Report" : "Free Preview"} showNav={false} />
         <div className="vv-results" ref={topRef}>
 
           <div className="results-hero">
@@ -1117,7 +1118,60 @@ JSON Structure:
             </div>
           )}
 
-          {results.fullRiasecAnalysis && (
+          {!isAuthenticated && (
+            <div style={{
+              background: 'linear-gradient(135deg, var(--saffron), var(--gold))',
+              borderRadius: '24px',
+              padding: '40px',
+              textAlign: 'center',
+              color: 'white',
+              marginBottom: '24px'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔒</div>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '28px', marginBottom: '12px' }}>
+                Unlock Your Complete Career Blueprint
+              </h3>
+              <p style={{ fontSize: '16px', opacity: 0.9, marginBottom: '24px', maxWidth: '600px', margin: '0 auto 24px' }}>
+                Sign up now to access your full 6-dimensional RIASEC analysis, personalized career matches, college recommendations, and 30-day action roadmap.
+              </p>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button 
+                  style={{
+                    background: 'white',
+                    color: 'var(--saffron)',
+                    border: 'none',
+                    padding: '16px 32px',
+                    borderRadius: '50px',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit'
+                  }}
+                  onClick={() => window.location.href = '/auth'}
+                >
+                  Sign Up Free →
+                </button>
+                <button 
+                  style={{
+                    background: 'transparent',
+                    color: 'white',
+                    border: '2px solid white',
+                    padding: '14px 28px',
+                    borderRadius: '50px',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit'
+                  }}
+                  onClick={() => window.location.href = '/auth'}
+                >
+                  Log In
+                </button>
+              </div>
+            </div>
+          )}
+
+          {isAuthenticated && results.fullRiasecAnalysis && (
             <div className="riasec-radar" style={{ marginBottom:'24px' }}>
               <h4>Your 6-Dimensional Analysis</h4>
               <p>Deep dive into how each RIASEC dimension shapes your unique working style and career fit.</p>
@@ -1255,20 +1309,22 @@ JSON Structure:
             </div>
           )}
 
-          <div className="unlock-dashboard-cta">
-            <h3>Your Blueprint is Ready</h3>
-            <p>We've mapped your personality to the Indian career landscape. Discover your top career matches, skills gaps, recommended colleges, and your personalised execution plan.</p>
-            <button 
-              className="btn-unlock" 
-              onClick={() => {
-                if (onSaveResults) {
-                  onSaveResults(results);
-                }
-              }}
-            >
-              Unlock My Comprehensive Dashboard →
-            </button>
-          </div>
+          {isAuthenticated && (
+            <div className="unlock-dashboard-cta">
+              <h3>Your Blueprint is Ready</h3>
+              <p>We've mapped your personality to the Indian career landscape. Discover your top career matches, skills gaps, recommended colleges, and your personalised execution plan.</p>
+              <button 
+                className="btn-unlock" 
+                onClick={() => {
+                  if (onSaveResults) {
+                    onSaveResults(results);
+                  }
+                }}
+              >
+                Unlock My Comprehensive Dashboard →
+              </button>
+            </div>
+          )}
 
         </div>
       </div>

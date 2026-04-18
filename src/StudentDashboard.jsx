@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db, auth } from './firebase';
 import CareerAssessment from "./CareerAssessment"; // 🔗 Linked the Assessment Component
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
@@ -179,11 +181,65 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   // 🔗 Connection State
   const [showAssessment, setShowAssessment] = useState(false);
   const [localUserData, setLocalUserData] = useState(userData || {});
+  
+  // Profile completion state
+  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [profileData, setProfileData] = useState({
+    age: '',
+    gender: '',
+    schoolName: '',
+    gradeLevel: '',
+    marks10th: '',
+    marks11th: '',
+    stream1112: '',
+    marks12th: '',
+    ugCourse: '',
+    ugCGPA: '',
+    pgCourse: '',
+    pgCGPA: ''
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
 
   // Keep localUserData in sync if external userData updates
   useEffect(() => {
     if (userData) setLocalUserData(userData);
   }, [userData]);
+  
+  // Fetch fresh user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (auth?.currentUser) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            setLocalUserData(data);
+            
+            // Pre-fill profile form if data exists
+            if (data.profileComplete) {
+              setProfileData({
+                age: data.age || '',
+                gender: data.gender || '',
+                schoolName: data.schoolName || '',
+                gradeLevel: data.gradeLevel || '',
+                marks10th: data.marks10th || '',
+                marks11th: data.marks11th || '',
+                stream1112: data.stream1112 || '',
+                marks12th: data.marks12th || '',
+                ugCourse: data.ugCourse || '',
+                ugCGPA: data.ugCGPA || '',
+                pgCourse: data.pgCourse || '',
+                pgCGPA: data.pgCGPA || ''
+              });
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching user data:', e);
+        }
+      }
+    };
+    fetchUserData();
+  }, []);
 
   useEffect(() => {
     const style = document.createElement("style");
@@ -203,6 +259,161 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
+  };
+  
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    
+    try {
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      await setDoc(userRef, {
+        ...localUserData,
+        ...profileData,
+        profileComplete: true,
+        profileCompletedAt: new Date().toISOString()
+      }, { merge: true });
+      
+      setLocalUserData(prev => ({ ...prev, ...profileData, profileComplete: true }));
+      setShowProfileForm(false);
+      showToast('✅ Profile saved successfully!');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      showToast('❌ Failed to save profile. Please try again.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+  
+  const renderAcademicFields = () => {
+    const grade = profileData.gradeLevel.toLowerCase();
+    
+    return (
+      <>
+        {/* Always show 10th marks field */}
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>
+            10th Grade Marks (%) {grade.includes('8') || grade.includes('9') || grade.includes('10') ? '(Expected/Actual)' : '*'}
+          </label>
+          <input
+            type="number"
+            value={profileData.marks10th}
+            onChange={(e) => setProfileData({ ...profileData, marks10th: e.target.value })}
+            placeholder="e.g., 85"
+            style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }}
+            required={!grade.includes('8') && !grade.includes('9') && !grade.includes('10')}
+          />
+        </div>
+        
+        {/* Show 11th/12th fields for Grade 11-12 and above */}
+        {(grade.includes('11') || grade.includes('12') || grade.includes('puc') || grade.includes('ug') || grade.includes('pg') || grade.includes('postgraduate')) && (
+          <>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>
+                11th/12th Stream *
+              </label>
+              <select
+                value={profileData.stream1112}
+                onChange={(e) => setProfileData({ ...profileData, stream1112: e.target.value })}
+                style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }}
+                required
+              >
+                <option value="">Select Stream</option>
+                <option value="Science (PCM)">Science (PCM)</option>
+                <option value="Science (PCB)">Science (PCB)</option>
+                <option value="Science (PCMB)">Science (PCMB)</option>
+                <option value="Commerce">Commerce</option>
+                <option value="Arts/Humanities">Arts/Humanities</option>
+              </select>
+            </div>
+            
+            {(grade.includes('12') || grade.includes('ug') || grade.includes('pg') || grade.includes('postgraduate')) && (
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>
+                  12th Grade Marks (%) *
+                </label>
+                <input
+                  type="number"
+                  value={profileData.marks12th}
+                  onChange={(e) => setProfileData({ ...profileData, marks12th: e.target.value })}
+                  placeholder="e.g., 88"
+                  style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }}
+                  required
+                />
+              </div>
+            )}
+          </>
+        )}
+        
+        {/* Show UG fields for UG and PG students */}
+        {(grade.includes('ug') || grade.includes('undergraduate') || grade.includes('pg') || grade.includes('postgraduate')) && (
+          <>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>
+                Current/Completed UG Course *
+              </label>
+              <input
+                type="text"
+                value={profileData.ugCourse}
+                onChange={(e) => setProfileData({ ...profileData, ugCourse: e.target.value })}
+                placeholder="e.g., B.Tech Computer Science"
+                style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }}
+                required
+              />
+            </div>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>
+                UG CGPA (out of 10) *
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={profileData.ugCGPA}
+                onChange={(e) => setProfileData({ ...profileData, ugCGPA: e.target.value })}
+                placeholder="e.g., 8.5"
+                style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }}
+                required
+              />
+            </div>
+          </>
+        )}
+        
+        {/* Show PG fields for PG students */}
+        {(grade.includes('pg') || grade.includes('postgraduate')) && (
+          <>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>
+                Current PG Course *
+              </label>
+              <input
+                type="text"
+                value={profileData.pgCourse}
+                onChange={(e) => setProfileData({ ...profileData, pgCourse: e.target.value })}
+                placeholder="e.g., MBA Marketing"
+                style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }}
+                required
+              />
+            </div>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>
+                PG CGPA (out of 10) *
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={profileData.pgCGPA}
+                onChange={(e) => setProfileData({ ...profileData, pgCGPA: e.target.value })}
+                placeholder="e.g., 9.0"
+                style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }}
+                required
+              />
+            </div>
+          </>
+        )}
+      </>
+    );
   };
 
   // ── DATA EXTRACTION & FALLBACKS (Using linked localUserData) ──
@@ -353,6 +564,197 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
           {/* ── HOME TAB ── */}
           {activeTab === "home" && (
             <div className="db-tab">
+              {/* Profile Completion Banner */}
+              {!localUserData?.profileComplete && (
+                <div style={{ 
+                  background: 'linear-gradient(135deg, #FEF3C7, #FDE68A)', 
+                  border: '2px solid #F59E0B', 
+                  borderRadius: 'var(--r-lg)', 
+                  padding: '24px 32px', 
+                  marginBottom: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '20px'
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#92400E', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '24px' }}>⚠️</span> Complete Your Academic Profile
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#B45309', lineHeight: '1.6' }}>
+                      For the most accurate career and college recommendations, please complete your academic profile below.
+                    </div>
+                  </div>
+                  <button 
+                    className="db-btn" 
+                    style={{ background: '#F59E0B', whiteSpace: 'nowrap' }}
+                    onClick={() => setShowProfileForm(true)}
+                  >
+                    Complete Profile →
+                  </button>
+                </div>
+              )}
+              
+              {/* Profile Form Modal */}
+              {showProfileForm && (
+                <div style={{
+                  position: 'fixed',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.5)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 1000,
+                  padding: '20px'
+                }}>
+                  <div style={{
+                    background: 'white',
+                    borderRadius: 'var(--r-xl)',
+                    maxWidth: '600px',
+                    width: '100%',
+                    maxHeight: '90vh',
+                    overflow: 'auto',
+                    boxShadow: 'var(--shadow-lg)'
+                  }}>
+                    <div style={{ 
+                      padding: '24px 32px', 
+                      borderBottom: '1px solid var(--border)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <h2 style={{ fontFamily: 'Fraunces', fontSize: '24px', color: 'var(--ink)', marginBottom: '4px' }}>
+                          Complete Your Profile
+                        </h2>
+                        <p style={{ fontSize: '13px', color: 'var(--muted)' }}>
+                          This helps us provide personalized recommendations
+                        </p>
+                      </div>
+                      <button 
+                        onClick={() => setShowProfileForm(false)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          fontSize: '24px',
+                          cursor: 'pointer',
+                          color: 'var(--muted)',
+                          padding: '4px'
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    
+                    <form onSubmit={handleProfileSubmit} style={{ padding: '32px' }}>
+                      {/* Basic Info */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>
+                          Age *
+                        </label>
+                        <input
+                          type="number"
+                          value={profileData.age}
+                          onChange={(e) => setProfileData({ ...profileData, age: e.target.value })}
+                          placeholder="e.g., 16"
+                          style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }}
+                          required
+                        />
+                      </div>
+                      
+                      <div style={{ marginBottom: '16px' }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>
+                          Gender *
+                        </label>
+                        <select
+                          value={profileData.gender}
+                          onChange={(e) => setProfileData({ ...profileData, gender: e.target.value })}
+                          style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }}
+                          required
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Non-binary">Non-binary</option>
+                          <option value="Prefer not to say">Prefer not to say</option>
+                        </select>
+                      </div>
+                      
+                      <div style={{ marginBottom: '16px' }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>
+                          School/College Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={profileData.schoolName}
+                          onChange={(e) => setProfileData({ ...profileData, schoolName: e.target.value })}
+                          placeholder="e.g., Delhi Public School"
+                          style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }}
+                          required
+                        />
+                      </div>
+                      
+                      <div style={{ marginBottom: '24px' }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>
+                          Current Grade Level *
+                        </label>
+                        <select
+                          value={profileData.gradeLevel}
+                          onChange={(e) => setProfileData({ ...profileData, gradeLevel: e.target.value })}
+                          style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }}
+                          required
+                        >
+                          <option value="">Select Grade Level</option>
+                          <option value="Class 8">Class 8</option>
+                          <option value="Class 9">Class 9</option>
+                          <option value="Class 10">Class 10</option>
+                          <option value="Class 11">Class 11</option>
+                          <option value="Class 12">Class 12</option>
+                          <option value="1st Year UG">1st Year UG</option>
+                          <option value="2nd Year UG">2nd Year UG</option>
+                          <option value="3rd Year UG">3rd Year UG</option>
+                          <option value="4th Year UG">4th Year UG</option>
+                          <option value="Postgraduate">Postgraduate</option>
+                        </select>
+                      </div>
+                      
+                      {/* Dynamic Academic Fields */}
+                      {profileData.gradeLevel && (
+                        <div style={{ 
+                          background: 'var(--surface)', 
+                          padding: '20px', 
+                          borderRadius: 'var(--r-md)', 
+                          marginBottom: '24px',
+                          border: '1px solid var(--border)'
+                        }}>
+                          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--ink)', marginBottom: '16px' }}>
+                            📚 Academic History
+                          </div>
+                          {renderAcademicFields()}
+                        </div>
+                      )}
+                      
+                      <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowProfileForm(false)}
+                          className="db-btn-outline"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="db-btn"
+                          disabled={savingProfile}
+                        >
+                          {savingProfile ? 'Saving...' : 'Save Profile'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+              
               <div className="db-welcome">
                 <div className="db-welcome-text">
                   <div className="db-welcome-eyebrow">Welcome Back</div>
@@ -362,9 +764,21 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                   </p>
                 </div>
                 <div className="db-welcome-action">
-                  {/* 🔗 This now triggers the Assessment view */}
                   {!hasAssessment && <button className="db-welcome-btn" onClick={() => setShowAssessment(true)}>Take Assessment 🚀</button>}
-                  {hasAssessment && <button className="db-welcome-btn" onClick={() => setActiveTab("careers")}>View Matches →</button>}
+                  {hasAssessment && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <button className="db-welcome-btn" onClick={() => setActiveTab("report")}>
+                        📄 View Full Report
+                      </button>
+                      <button 
+                        className="db-btn-outline" 
+                        style={{ whiteSpace: 'nowrap', padding: '12px 24px' }}
+                        onClick={() => setShowAssessment(true)}
+                      >
+                        🔄 Take Retest
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
