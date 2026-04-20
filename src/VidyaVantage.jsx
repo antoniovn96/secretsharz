@@ -818,7 +818,7 @@ export default function VidyaVantage({ onBack, navigate }) {
   if (screen === 'explorer') return (
     <div className="vv-root" ref={topRef}>
       <Header badge="🇮🇳 India's Career AI" />
-      <CareerExplorer assessmentRiasec={assessmentResults?.riasec?.code || null} navigate={safeNavigate} />
+      <CareerExplorer assessmentRiasec={assessmentResults?.riasec?.code || null} navigate={navigate} />
     </div>
   );
 
@@ -854,7 +854,7 @@ export default function VidyaVantage({ onBack, navigate }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <button style={{ background: 'var(--parchment)', border: '1px solid rgba(61,34,5,0.12)', color: 'var(--brown)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => setScreen('explorer')}>🔎 Explore Career Paths First</button>
               
-              <button style={{ background: 'var(--cream)', border: '1.5px solid var(--teal)', color: 'var(--teal)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => safeNavigate('/colleges')}>🏫 Browse Top Colleges</button>
+              <button style={{ background: 'var(--cream)', border: '1.5px solid var(--teal)', color: 'var(--teal)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => navigate('/colleges')}>🏫 Browse Top Colleges</button>
             </div>
           </div>
         </div>
