@@ -769,14 +769,6 @@ function CareerExplorer({ assessmentRiasec, navigate }) {
 
 // ─── MAIN APP COMPONENT ───────────────────────────────────────────────────────
 export default function VidyaVantage({ onBack, navigate }) {
-  // Ensure navigate function is available
-  const safeNavigate = (path) => {
-    if (navigate && typeof navigate === 'function') {
-      navigate(path);
-    } else {
-      console.error('Navigate function not available');
-    }
-  };
   const [screen, setScreen] = useState('hero');
   const [assessmentResults, setAssessmentResults] = useState(null);
   const topRef = useRef(null);
@@ -813,9 +805,9 @@ export default function VidyaVantage({ onBack, navigate }) {
       </div>
       {showNav && (
         <div className="vv-header-nav">
-          <button className={`vv-nav-btn`} onClick={() => safeNavigate('/explore')}>🔎 Explore Careers</button>
+          <button className={`vv-nav-btn`} onClick={() => navigate('/explore')}>🔎 Explore Careers</button>
           <button className={`vv-nav-btn`} onClick={() => setScreen('assessment')}>📝 Take Assessment</button>
-          <button className="vv-nav-btn" onClick={() => safeNavigate('/colleges')}>🏫 Top Colleges</button>
+          <button className="vv-nav-btn" onClick={() => navigate('/colleges')}>🏫 Top Colleges</button>
           {badge && <div className="vv-badge">{badge}</div>}
         </div>
       )}
@@ -1034,7 +1026,7 @@ export default function VidyaVantage({ onBack, navigate }) {
         <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '32px', fontSize: '16px' }}>Stop guessing. Take the 25-Minute Assessment to reveal the exact path you were built to walk on.</p>
         <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button className="vv-start-btn" onClick={() => setScreen('assessment')}>Take Assessment Now →</button>
-          <button style={{ background: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.3)', color: 'white', padding: '18px 48px', borderRadius: '50px', fontSize: '17px', fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }} onClick={() => setScreen('explorer')}>🔎 Explore Careers First</button>
+          <button style={{ background: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.3)', color: 'white', padding: '18px 48px', borderRadius: '50px', fontSize: '17px', fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }} onClick={() => navigate('/explore')}>🔎 Explore Careers First</button>
         </div>
         <p style={{ marginTop: '40px', fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>© 2026 VidyaVantage. A subsidiary of SecretSharz.</p>
       </div>
