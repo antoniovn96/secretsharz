@@ -10,9 +10,9 @@ const STYLES = `
   }
 
   .ce-hero {
-    background: linear-gradient(135deg, var(--dark) 0%, var(--brown) 100%);
+    background: linear-gradient(135deg, var(--cream) 0%, var(--parchment) 100%);
     padding: 80px 40px 60px;
-    color: white;
+    color: var(--dark);
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -56,11 +56,12 @@ const STYLES = `
     margin-bottom: 16px;
     letter-spacing: -1px;
     line-height: 1.1;
+    color: var(--dark);
   }
 
   .ce-subtitle {
     font-size: 18px;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--brown);
     margin-bottom: 40px;
     max-width: 700px;
     margin-left: auto;
@@ -69,7 +70,7 @@ const STYLES = `
   }
 
   .ce-help-banner {
-    background: linear-gradient(135deg, var(--saffron), var(--gold));
+    background: var(--saffron);
     border-radius: 20px;
     padding: 28px 36px;
     max-width: 800px;
@@ -97,7 +98,7 @@ const STYLES = `
 
   .ce-help-text p {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.9);
+    color: white;
     margin: 0;
     line-height: 1.5;
   }
@@ -120,6 +121,7 @@ const STYLES = `
   .ce-help-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    background: var(--cream);
   }
 
   .ce-sticky-filters {
