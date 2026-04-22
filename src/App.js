@@ -999,8 +999,8 @@ export default function App() {
     if (currentPath.startsWith('/resources')) return <Resources navigate={navigate} />;
     if (currentPath.startsWith('/vidyavantage/blog')) return <VidyaVantageBlog navigate={navigate} />;
     
-    // ✅ ADDED CAREER EXPLORER ROUTE
-    if (currentPath.startsWith('/explore')) {
+    // ✅ CAREER PATHS ROUTE
+    if (currentPath.startsWith('/career-paths')) {
       return <CareerExplorer navigate={navigate} />;
     }
     

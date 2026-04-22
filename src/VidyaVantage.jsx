@@ -805,7 +805,7 @@ export default function VidyaVantage({ onBack, navigate }) {
       </div>
       {showNav && (
         <div className="vv-header-nav">
-          <button className={`vv-nav-btn`} onClick={() => navigate('/explore')}>🔎 Explore Careers</button>
+          <button className={`vv-nav-btn`} onClick={() => navigate('/career-paths')}>🔎 Explore Careers</button>
           <button className={`vv-nav-btn`} onClick={() => setScreen('assessment')}>📝 Take Assessment</button>
           <button className="vv-nav-btn" onClick={() => navigate('/colleges')}>🏫 Top Colleges</button>
           {badge && <div className="vv-badge">{badge}</div>}
@@ -852,7 +852,7 @@ export default function VidyaVantage({ onBack, navigate }) {
           <div style={{ borderTop: '1px solid rgba(61,34,5,0.08)', marginTop: '20px', paddingTop: '20px' }}>
             <p style={{ color: 'var(--muted)', fontSize: '13px', marginBottom: '10px' }}>Not sure where to start?</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button style={{ background: 'var(--parchment)', border: '1px solid rgba(61,34,5,0.12)', color: 'var(--brown)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => setScreen('explorer')}>🔎 Explore Career Paths First</button>
+              <button style={{ background: 'var(--parchment)', border: '1px solid rgba(61,34,5,0.12)', color: 'var(--brown)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => navigate('/career-paths')}>🔎 Explore Career Paths First</button>
               
               <button style={{ background: 'var(--cream)', border: '1.5px solid var(--teal)', color: 'var(--teal)', padding: '12px 24px', borderRadius: '50px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', width: '100%', fontFamily: "'DM Sans', sans-serif" }} onClick={() => navigate('/colleges')}>🏫 Browse Top Colleges</button>
             </div>
@@ -1026,7 +1026,7 @@ export default function VidyaVantage({ onBack, navigate }) {
         <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '32px', fontSize: '16px' }}>Stop guessing. Take the 25-Minute Assessment to reveal the exact path you were built to walk on.</p>
         <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button className="vv-start-btn" onClick={() => setScreen('assessment')}>Take Assessment Now →</button>
-          <button style={{ background: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.3)', color: 'white', padding: '18px 48px', borderRadius: '50px', fontSize: '17px', fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }} onClick={() => navigate('/explore')}>🔎 Explore Careers First</button>
+          <button style={{ background: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.3)', color: 'white', padding: '18px 48px', borderRadius: '50px', fontSize: '17px', fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }} onClick={() => navigate('/career-paths')}>🔎 Explore Careers First</button>
         </div>
         <p style={{ marginTop: '40px', fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>© 2026 VidyaVantage. A subsidiary of SecretSharz.</p>
       </div>

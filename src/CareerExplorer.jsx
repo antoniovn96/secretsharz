@@ -9,56 +9,160 @@ const STYLES = `
     color: var(--dark);
   }
 
-  .ce-header {
+  .ce-hero {
     background: linear-gradient(135deg, var(--dark) 0%, var(--brown) 100%);
-    padding: 60px 40px 40px;
+    padding: 80px 40px 60px;
     color: white;
     text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ce-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(232, 101, 10, 0.15), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .ce-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -5%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(240, 165, 0, 0.12), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .ce-hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
   }
 
   .ce-title {
     font-family: 'Playfair Display', serif;
-    font-size: clamp(32px, 5vw, 48px);
+    font-size: clamp(36px, 6vw, 56px);
     font-weight: 700;
-    margin-bottom: 12px;
-    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+    letter-spacing: -1px;
+    line-height: 1.1;
   }
 
   .ce-subtitle {
-    font-size: 16px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 32px;
-    max-width: 600px;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 40px;
+    max-width: 700px;
     margin-left: auto;
     margin-right: auto;
+    line-height: 1.6;
+  }
+
+  .ce-help-banner {
+    background: linear-gradient(135deg, var(--saffron), var(--gold));
+    border-radius: 20px;
+    padding: 28px 36px;
+    max-width: 800px;
+    margin: 0 auto 40px;
+    box-shadow: 0 12px 40px rgba(232, 101, 10, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .ce-help-text {
+    flex: 1;
+    min-width: 280px;
+  }
+
+  .ce-help-text h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: white;
+  }
+
+  .ce-help-text p {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .ce-help-btn {
+    background: white;
+    color: var(--saffron);
+    border: none;
+    padding: 14px 32px;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .ce-help-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .ce-sticky-filters {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    border-bottom: 2px solid rgba(61, 34, 5, 0.08);
+    padding: 20px 40px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  }
+
+  .ce-sticky-inner {
+    max-width: 1400px;
+    margin: 0 auto;
   }
 
   .ce-search-bar {
     max-width: 600px;
-    margin: 0 auto 24px;
+    margin: 0 auto 20px;
     position: relative;
   }
 
   .ce-search-input {
     width: 100%;
     padding: 16px 20px 16px 50px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(61, 34, 5, 0.15);
     border-radius: 50px;
     font-size: 15px;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: white;
+    color: var(--dark);
     outline: none;
     transition: all 0.2s;
     font-family: 'DM Sans', sans-serif;
   }
 
   .ce-search-input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--muted);
   }
 
   .ce-search-input:focus {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: var(--gold);
+    border-color: var(--saffron);
+    box-shadow: 0 0 0 3px rgba(232, 101, 10, 0.1);
   }
 
   .ce-search-icon {
@@ -67,7 +171,7 @@ const STYLES = `
     top: 50%;
     transform: translateY(-50%);
     font-size: 20px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--muted);
   }
 
   .ce-filters {
@@ -75,8 +179,6 @@ const STYLES = `
     gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
-    max-width: 900px;
-    margin: 0 auto;
   }
 
   .ce-filter-pill {
@@ -86,16 +188,16 @@ const STYLES = `
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(61, 34, 5, 0.12);
+    background: white;
+    color: var(--brown);
     font-family: 'DM Sans', sans-serif;
   }
 
   .ce-filter-pill:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: var(--gold);
-    color: white;
+    border-color: var(--saffron);
+    color: var(--saffron);
+    background: rgba(232, 101, 10, 0.05);
   }
 
   .ce-filter-pill.active {
@@ -113,8 +215,9 @@ const STYLES = `
   .ce-results-count {
     font-size: 14px;
     color: var(--muted);
-    margin-bottom: 24px;
+    margin-bottom: 28px;
     font-weight: 600;
+    text-align: center;
   }
 
   .ce-results-count strong {
@@ -123,38 +226,75 @@ const STYLES = `
 
   .ce-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 28px;
+  }
+
+  @media (max-width: 768px) {
+    .ce-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1200px) {
+    .ce-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1201px) {
+    .ce-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 
   .ce-card {
     background: white;
-    border-radius: 20px;
+    border-radius: 24px;
     border: 2px solid rgba(61, 34, 5, 0.08);
-    padding: 24px;
+    padding: 28px;
     cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ce-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--saffron), var(--gold));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .ce-card:hover::before {
+    transform: scaleX(1);
   }
 
   .ce-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(232, 101, 10, 0.15);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(232, 101, 10, 0.15);
     border-color: var(--saffron);
   }
 
   .ce-card-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
+    font-size: 52px;
+    margin-bottom: 18px;
     display: block;
   }
 
   .ce-card-title {
     font-family: 'Playfair Display', serif;
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
     color: var(--dark);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     line-height: 1.2;
   }
 
@@ -162,33 +302,48 @@ const STYLES = `
     font-size: 14px;
     color: var(--muted);
     line-height: 1.6;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .ce-card-salary {
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 700;
     color: var(--success);
-    margin-bottom: 12px;
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(45, 125, 70, 0.08);
+    border-radius: 12px;
+    width: fit-content;
   }
 
   .ce-card-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
   }
 
   .ce-tag {
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: 20px;
     font-size: 11px;
     font-weight: 700;
     background: var(--parchment);
     color: var(--brown);
     border: 1px solid rgba(61, 34, 5, 0.1);
+    transition: all 0.2s;
+  }
+
+  .ce-card:hover .ce-tag {
+    background: rgba(232, 101, 10, 0.1);
+    border-color: var(--saffron);
+    color: var(--saffron);
   }
 
   .ce-modal-overlay {
@@ -374,35 +529,87 @@ const STYLES = `
 
   .ce-empty-state {
     text-align: center;
-    padding: 80px 20px;
-    color: var(--muted);
+    padding: 100px 20px;
+    background: white;
+    border-radius: 24px;
+    border: 2px dashed rgba(61, 34, 5, 0.15);
+    max-width: 600px;
+    margin: 0 auto;
   }
 
   .ce-empty-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
+    font-size: 72px;
+    margin-bottom: 20px;
   }
 
   .ce-empty-title {
     font-family: 'Playfair Display', serif;
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 700;
     color: var(--dark);
-    margin-bottom: 8px;
+    margin-bottom: 12px;
   }
 
   .ce-empty-desc {
-    font-size: 15px;
+    font-size: 16px;
     color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .ce-empty-btn {
+    background: linear-gradient(135deg, var(--saffron), var(--gold));
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    box-shadow: 0 4px 12px rgba(232, 101, 10, 0.25);
+  }
+
+  .ce-empty-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(232, 101, 10, 0.35);
   }
 
   @media (max-width: 768px) {
-    .ce-header {
-      padding: 40px 20px 30px;
+    .ce-hero {
+      padding: 60px 20px 40px;
+    }
+
+    .ce-title {
+      font-size: 32px;
+    }
+
+    .ce-subtitle {
+      font-size: 16px;
+    }
+
+    .ce-help-banner {
+      flex-direction: column;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .ce-help-text {
+      min-width: 100%;
+    }
+
+    .ce-help-btn {
+      width: 100%;
+    }
+
+    .ce-sticky-filters {
+      padding: 16px 20px;
     }
 
     .ce-grid {
       grid-template-columns: 1fr;
+      gap: 20px;
     }
 
     .ce-modal {
@@ -482,51 +689,87 @@ export default function CareerExplorer({ navigate }) {
     return () => document.head.removeChild(style);
   }, []);
 
+  const getCategoryIcon = (category) => {
+    const iconMap = {
+      'Technology & Data': '💻',
+      'Arts & Design': '🎨',
+      'Healthcare & Psychology': '🏥',
+      'Business & Finance': '💼',
+      'Aviation & Transport': '✈️',
+      'Media & Entertainment': '📺',
+      'Engineering & Infrastructure': '🏗️',
+      'Business & Marketing': '📊'
+    };
+    return iconMap[category] || '🎯';
+  };
+
   return (
     <div className="ce-root">
-      <div className="ce-header">
-        <h1 className="ce-title">Explore Career Paths</h1>
-        <p className="ce-subtitle">
-          Discover detailed information about {CAREER_DATA.length} diverse careers. 
-          Filter by your interests and personality traits.
-        </p>
+      {/* Hero Section */}
+      <div className="ce-hero">
+        <div className="ce-hero-content">
+          <h1 className="ce-title">Explore 100+ Future-Proof Careers</h1>
+          <p className="ce-subtitle">
+            Discover what you'll do, what you'll earn, and how to get there. Browse careers by category, salary, or personality match.
+          </p>
 
-        <div className="ce-search-bar">
-          <span className="ce-search-icon">🔍</span>
-          <input
-            type="text"
-            className="ce-search-input"
-            placeholder="Search by career name or keyword..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <div className="ce-filters">
-          {filters.map(filter => (
-            <button
-              key={filter}
-              className={`ce-filter-pill ${activeFilter === filter ? 'active' : ''}`}
-              onClick={() => setActiveFilter(filter)}
-            >
-              {filter}
+          {/* Help Me Choose Banner */}
+          <div className="ce-help-banner">
+            <div className="ce-help-text">
+              <h3>🤔 Not sure where to start?</h3>
+              <p>Let our AI match you to your perfect career based on your personality and interests.</p>
+            </div>
+            <button className="ce-help-btn" onClick={() => navigate('/vidyavantage')}>
+              Take Assessment →
             </button>
-          ))}
+          </div>
         </div>
       </div>
 
+      {/* Sticky Search & Filters */}
+      <div className="ce-sticky-filters">
+        <div className="ce-sticky-inner">
+          <div className="ce-search-bar">
+            <span className="ce-search-icon">🔍</span>
+            <input
+              type="text"
+              className="ce-search-input"
+              placeholder="Search by career name, category, or keyword..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="ce-filters">
+            {filters.map(filter => (
+              <button
+                key={filter}
+                className={`ce-filter-pill ${activeFilter === filter ? 'active' : ''}`}
+                onClick={() => setActiveFilter(filter)}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Content Area */}
       <div className="ce-content">
         <div className="ce-results-count">
-          Showing <strong>{filteredCareers.length}</strong> of {CAREER_DATA.length} careers
+          Showing <strong>{filteredCareers.length}</strong> of {CAREER_DATA.length} career paths
         </div>
 
         {filteredCareers.length === 0 ? (
           <div className="ce-empty-state">
             <div className="ce-empty-icon">🔍</div>
-            <div className="ce-empty-title">No careers found</div>
+            <div className="ce-empty-title">We couldn't find a career matching that</div>
             <div className="ce-empty-desc">
-              Try adjusting your search or filters to find what you're looking for.
+              Try adjusting your search or filters. Or, let our AI suggest careers based on your unique profile.
             </div>
+            <button className="ce-empty-btn" onClick={() => navigate('/vidyavantage')}>
+              Ask Our AI for Suggestions →
+            </button>
           </div>
         ) : (
           <div className="ce-grid">
@@ -536,14 +779,7 @@ export default function CareerExplorer({ navigate }) {
                 className="ce-card"
                 onClick={() => setSelectedCareer(career)}
               >
-                <span className="ce-card-icon">{career.category === 'Technology & Data' ? '💻' : 
-                  career.category === 'Arts & Design' ? '🎨' :
-                  career.category === 'Healthcare & Psychology' ? '🏥' :
-                  career.category === 'Business & Finance' ? '💼' :
-                  career.category === 'Aviation & Transport' ? '✈️' :
-                  career.category === 'Media & Entertainment' ? '📺' :
-                  career.category === 'Engineering & Infrastructure' ? '🏗️' :
-                  career.category === 'Business & Marketing' ? '📊' : '🎯'}</span>
+                <span className="ce-card-icon">{getCategoryIcon(career.category)}</span>
                 <h3 className="ce-card-title">{career.title}</h3>
                 <p className="ce-card-desc">{career.shortDesc}</p>
                 <div className="ce-card-salary">
