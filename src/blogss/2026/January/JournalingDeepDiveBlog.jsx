@@ -1,18 +1,21 @@
 import React from 'react';
-import BlogPostTemplate from '../../../blogposttemplate'; // Adjust path if necessary
-import JournalingPromptGenerator from '../../../components/JournalingPromptGenerator'; // Adjust path
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import BlogPostTemplate from '../../../BlogPostTemplate'; // Ensure this path points correctly to your template
+import JournalingPromptGenerator from '../../../components/JournalingPromptGenerator';
 
 export default function JournalingDeepDiveBlog() {
   const navigate = useNavigate();
 
+  // The meta object specifically built for your BlogPostTemplate.js
   const meta = {
     title: "30 Deep Journaling Prompts for Self-Love and Relationship Growth",
-    excerpt: "Discover 30 structured self-reflection prompts categorized by emotional regulation, boundaries, self-awareness, and social psychology to radically improve your mental health.",
+    excerpt: "Expand your mental health toolkit with structured self-reflection prompts categorized by emotional regulation, boundaries, and self-awareness.",
+    imgUrl: "/blogss/2026/General/Januarydeep-journaling-prompts-self-love-relationships.jpg",
     category: "Mental Health",
-    readTime: "8 min read",
-    wordCount: 1200,
-    imgUrl: "/blogss/2026/General/January/deep-journaling-prompts-self-love-relationships.jpg",
+    readTime: "7 min read",
+    wordCount: 1100,
+    date: "30-01-2026",
+    tldr: "Blank pages can be intimidating. This guide breaks down 30 highly structured journaling prompts across four psychological categories to help you process boundaries, self-awareness, and peer pressure effectively.",
     toc: [
       { id: "self-awareness", title: "Prompts for Self-Awareness", level: 2 },
       { id: "emotional-regulation", title: "Prompts for Emotional Regulation", level: 2 },
@@ -26,7 +29,7 @@ export default function JournalingDeepDiveBlog() {
     <BlogPostTemplate meta={meta} navigate={navigate}>
       
       <p>
-        The blank page can be intimidating, but it is also one of the most powerful tools for personal transformation. When it comes to mental health journaling, simply writing "Dear Diary" isn't always enough to spark real breakthroughs. You need <strong>structured self-reflection prompts</strong> that guide your brain out of toxic loops and into productive, healing insights.
+        The blank page can be intimidating, but it is also one of the most powerful tools for personal transformation. When it comes to <strong>mental health journaling</strong>, simply writing "Dear Diary" isn't always enough to spark real breakthroughs. You need <strong>structured self-reflection prompts</strong> that guide your brain out of toxic loops and into productive, healing insights.
       </p>
 
       <p>
@@ -77,7 +80,7 @@ export default function JournalingDeepDiveBlog() {
         <li><strong>23.</strong> What is one thing I am doing for someone else that they are fully capable of doing for themselves?</li>
       </ul>
 
-      <h2 id="social-pressure">Prompts for Processing Peer Pressure and Social Psychology</h2>
+      <h2 id="social-pressure">Prompts for Processing Peer Pressure</h2>
       <p>
         We are biologically wired to seek social acceptance, which often leads to abandoning our true selves. Using structured self-reflection prompts to examine peer pressure helps untangle your authentic desires from societal expectations. These prompts reveal where you are masking your true personality just to fit in.
       </p>
