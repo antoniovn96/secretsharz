@@ -5,11 +5,10 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 
 // 🚀 OPTIMIZATION 1: LAZY LOADING HEAVY ROUTES
-// This stops the browser from downloading the entire app just to view the homepage.
 const VidyaVantage = lazy(() => import('./VidyaVantage'));
-const CollegesPage = lazy(() => import('./CollegesPage')); // ✅ ADDED
-const CollegeDetails = lazy(() => import('./CollegeDetails')); // ✅ ADDED
-const CareerExplorer = lazy(() => import('./CareerExplorer')); // ✅ ADDED
+const CollegesPage = lazy(() => import('./CollegesPage'));
+const CollegeDetails = lazy(() => import('./CollegeDetails'));
+const CareerExplorer = lazy(() => import('./CareerExplorer'));
 const VidyaVantageBlog = lazy(() => import('./VidyaVantageBlog'));
 const AuthPage = lazy(() => import('./AuthPage'));
 const StudentDashboard = lazy(() => import('./StudentDashboard'));
@@ -19,7 +18,11 @@ const Blog = lazy(() => import('./Blog'));
 const Resources = lazy(() => import('./Resources'));
 const AboutUs = lazy(() => import('./AboutUs'));
 
-// Header and Footer stay synchronous because they render on almost every view instantly
+// ✅ NEW BLOG IMPORTS ADDED HERE
+const JournalingDeepDiveBlog = lazy(() => import('./blogss/2026/January/JournalingDeepDiveBlog'));
+const MentalHealthResetBlog = lazy(() => import('./blogss/2026/February/MentalHealthResetBlog'));
+
+// Header and Footer stay synchronous
 import Header from './Header';
 import Footer from './Footer';
 
@@ -999,12 +1002,12 @@ export default function App() {
     if (currentPath.startsWith('/resources')) return <Resources navigate={navigate} />;
     if (currentPath.startsWith('/vidyavantage/blog')) return <VidyaVantageBlog navigate={navigate} />;
     
-    // ✅ CAREER PATHS ROUTE
+    // CAREER PATHS ROUTE
     if (currentPath.startsWith('/career-paths')) {
       return <CareerExplorer navigate={navigate} />;
     }
     
-    // ✅ ADDED COLLEGES ROUTE
+    // COLLEGES ROUTE
     if (currentPath.startsWith('/colleges')) {
       return (
         <CollegesPage 
@@ -1017,7 +1020,7 @@ export default function App() {
       );
     }
 
-    // ✅ ADDED COLLEGE DETAILS ROUTE
+    // COLLEGE DETAILS ROUTE
     if (currentPath.startsWith('/college-details')) {
       return (
         <CollegeDetails 
@@ -1038,7 +1041,16 @@ export default function App() {
         />
       );
     }
-    if (currentPath.startsWith('/blog')) return <Blog />;
+
+    // ✅ FIXED BLOG ROUTING LOGIC HERE
+    if (currentPath === '/blog/journaling-deep-dive') return <JournalingDeepDiveBlog />;
+    if (currentPath === '/blog/mental-health-reset') return <MentalHealthResetBlog />;
+    if (currentPath === '/blog' || currentPath === '/blog/') return <Blog />;
+
+    // ✅ FIXED 404 BUTTON PLACEHOLDERS HERE
+    if (currentPath.startsWith('/wall')) return <div style={{minHeight:'60vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}><h2 style={{fontFamily:"'Fraunces', serif", fontSize:'32px', color:'var(--ink)'}}>Sharz Wall (Coming Soon)</h2><button className="btn-primary" style={{marginTop:'20px'}} onClick={() => navigate('/')}>← Back</button></div>;
+    if (currentPath.startsWith('/safe')) return <div style={{minHeight:'60vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}><h2 style={{fontFamily:"'Fraunces', serif", fontSize:'32px', color:'var(--ink)'}}>Safe Corner (Coming Soon)</h2><button className="btn-primary" style={{marginTop:'20px'}} onClick={() => navigate('/')}>← Back</button></div>;
+
     if (currentPath === '/') return <HomePage currentUser={currentUser} isAdmin={isAdmin} setModal={setModal} setShowQuiz={setShowQuiz} navigate={navigate} />;
     
     return (
@@ -1080,7 +1092,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ✅ Updated logic to prevent double headers on colleges pages */}
         {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && (
           <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
         )}
