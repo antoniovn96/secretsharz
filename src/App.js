@@ -1042,9 +1042,9 @@ export default function App() {
       );
     }
 
-    // ✅ FIXED BLOG ROUTING LOGIC HERE
-    if (currentPath === '/blog/journaling-deep-dive') return <JournalingDeepDiveBlog />;
-    if (currentPath === '/blog/mental-health-reset') return <MentalHealthResetBlog />;
+    // ✅ FIXED BLOG ROUTING LOGIC HERE - NOW PASSES NAVIGATE PROP
+    if (currentPath === '/blog/journaling-deep-dive') return <JournalingDeepDiveBlog navigate={navigate} />;
+    if (currentPath === '/blog/mental-health-reset') return <MentalHealthResetBlog navigate={navigate} />;
     if (currentPath === '/blog' || currentPath === '/blog/') return <Blog />;
 
     // ✅ FIXED 404 BUTTON PLACEHOLDERS HERE
