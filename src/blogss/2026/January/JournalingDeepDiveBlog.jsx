@@ -1,12 +1,9 @@
 import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import BlogPostTemplate from '../../../BlogPostTemplate'; // Ensure this path points correctly to your template
+import BlogPostTemplate from '../../../BlogPostTemplate'; 
 import JournalingPromptGenerator from '../../../components/JournalingPromptGenerator';
 
-export default function JournalingDeepDiveBlog() {
-  const navigate = useNavigate();
+export default function JournalingDeepDiveBlog({ navigate }) {
 
-  // The meta object specifically built for your BlogPostTemplate.js
   const meta = {
     title: "30 Deep Journaling Prompts for Self-Love and Relationship Growth",
     excerpt: "Expand your mental health toolkit with structured self-reflection prompts categorized by emotional regulation, boundaries, and self-awareness.",
@@ -97,7 +94,7 @@ export default function JournalingDeepDiveBlog() {
       <hr style={{ margin: '40px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
 
       <p style={{ fontSize: '18px', fontWeight: '500', textAlign: 'center', lineHeight: '1.6' }}>
-        <strong>Want to track your progress?</strong> Try our interactive <Link to="/blog/february-growth-reflection" style={{ color: 'var(--sage)', textDecoration: 'underline' }}>February Growth Reflection Tool</Link> to turn your journal answers into actionable monthly scores.
+        <strong>Want to track your progress?</strong> Try our interactive <span onClick={() => navigate('/blog/february-growth-reflection')} style={{ color: 'var(--sage)', textDecoration: 'underline', cursor: 'pointer' }}>February Growth Reflection Tool</span> to turn your journal answers into actionable monthly scores.
       </p>
 
       <h2 id="interactive-tool">Interactive Prompt Roulette</h2>
