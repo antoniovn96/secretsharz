@@ -2,26 +2,27 @@ import React from 'react';
 import BlogPostTemplate from '../../../BlogPostTemplate'; 
 import JournalingPromptGenerator from '../../../components/JournalingPromptGenerator';
 
+// ✅ MOVED OUTSIDE THE FUNCTION so Blog.js can auto-detect it!
+export const meta = {
+  title: "30 Deep Journaling Prompts for Self-Love and Relationship Growth",
+  slug: "journaling-deep-dive", // Matches your App.js route exactly
+  excerpt: "Expand your mental health toolkit with structured self-reflection prompts categorized by emotional regulation, boundaries, and self-awareness.",
+  imgUrl: "/blogss/2026/General/Januarydeep-journaling-prompts-self-love-relationships.jpg",
+  category: "Mental Health",
+  readTime: "7 min read",
+  wordCount: 1100,
+  date: "30-01-2026",
+  tldr: "Blank pages can be intimidating. This guide breaks down 30 highly structured journaling prompts across four psychological categories to help you process boundaries, self-awareness, and peer pressure effectively.",
+  toc: [
+    { id: "self-awareness", title: "Prompts for Self-Awareness", level: 2 },
+    { id: "emotional-regulation", title: "Prompts for Emotional Regulation", level: 2 },
+    { id: "boundaries", title: "Prompts for Setting Emotional Boundaries", level: 2 },
+    { id: "social-pressure", title: "Prompts for Processing Peer Pressure", level: 2 },
+    { id: "interactive-tool", title: "Interactive Prompt Roulette", level: 2 }
+  ]
+};
+
 export default function JournalingDeepDiveBlog({ navigate }) {
-
-  const meta = {
-    title: "30 Deep Journaling Prompts for Self-Love and Relationship Growth",
-    excerpt: "Expand your mental health toolkit with structured self-reflection prompts categorized by emotional regulation, boundaries, and self-awareness.",
-    imgUrl: "/blogss/2026/General/Januarydeep-journaling-prompts-self-love-relationships.jpg",
-    category: "Mental Health",
-    readTime: "7 min read",
-    wordCount: 1100,
-    date: "30-01-2026",
-    tldr: "Blank pages can be intimidating. This guide breaks down 30 highly structured journaling prompts across four psychological categories to help you process boundaries, self-awareness, and peer pressure effectively.",
-    toc: [
-      { id: "self-awareness", title: "Prompts for Self-Awareness", level: 2 },
-      { id: "emotional-regulation", title: "Prompts for Emotional Regulation", level: 2 },
-      { id: "boundaries", title: "Prompts for Setting Emotional Boundaries", level: 2 },
-      { id: "social-pressure", title: "Prompts for Processing Peer Pressure", level: 2 },
-      { id: "interactive-tool", title: "Interactive Prompt Roulette", level: 2 }
-    ]
-  };
-
   return (
     <BlogPostTemplate meta={meta} navigate={navigate}>
       
@@ -100,7 +101,6 @@ export default function JournalingDeepDiveBlog({ navigate }) {
       <h2 id="interactive-tool">Interactive Prompt Roulette</h2>
       <p>Not ready to tackle all 30 at once? Let our mindful roulette pick a random prompt based on exactly what you need today.</p>
       
-      {/* Interactive Tool Component */}
       <JournalingPromptGenerator />
 
     </BlogPostTemplate>
