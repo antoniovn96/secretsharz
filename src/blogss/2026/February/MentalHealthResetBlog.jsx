@@ -2,27 +2,28 @@ import React from 'react';
 import BlogPostTemplate from '../../../BlogPostTemplate'; 
 import MentalHealthGame from '../../../components/MentalHealthGame';
 
+// ✅ MOVED OUTSIDE THE FUNCTION so Blog.js can auto-detect it!
+export const meta = {
+  title: "The Ultimate Mid-Month Mental Health Reset",
+  slug: "mental-health-reset", // Matches your App.js route exactly
+  excerpt: "Feeling overwhelmed by the middle of the month? It is time to hit the pause button and reset your boundaries, confidence, and self-kindness.",
+  category: "Mental Health",
+  readTime: "6 min read",
+  wordCount: 800,
+  date: "15-02-2026",
+  tldr: "This comprehensive reset guide breaks down how to stop social media comparison, define self-respect versus ego, and confidently say 'no' to protect your peace.",
+  toc: [
+    { id: "kindness", title: "Mid-Month Reset: Treating Yourself with Kindness", level: 2 },
+    { id: "comparison", title: "How to Stop Comparing Yourself to Others", level: 2 },
+    { id: "ego", title: "Self-Respect vs Ego: Understanding the Difference", level: 2 },
+    { id: "confidence", title: "Build Confidence Through Self-Acceptance", level: 2 },
+    { id: "boundaries", title: "Why Saying ‘No’ is Important for Mental Health", level: 2 },
+    { id: "relationships", title: "How Relationships Affect Your Mental Health", level: 2 },
+    { id: "game", title: "Interactive Mental Health Game", level: 2 }
+  ]
+};
+
 export default function MentalHealthResetBlog({ navigate }) {
-
-  const meta = {
-    title: "The Ultimate Mid-Month Mental Health Reset",
-    excerpt: "Feeling overwhelmed by the middle of the month? It is time to hit the pause button and reset your boundaries, confidence, and self-kindness.",
-    category: "Mental Health",
-    readTime: "6 min read",
-    wordCount: 800,
-    date: "15-02-2026",
-    tldr: "This comprehensive reset guide breaks down how to stop social media comparison, define self-respect versus ego, and confidently say 'no' to protect your peace.",
-    toc: [
-      { id: "kindness", title: "Mid-Month Reset: Treating Yourself with Kindness", level: 2 },
-      { id: "comparison", title: "How to Stop Comparing Yourself to Others", level: 2 },
-      { id: "ego", title: "Self-Respect vs Ego: Understanding the Difference", level: 2 },
-      { id: "confidence", title: "Build Confidence Through Self-Acceptance", level: 2 },
-      { id: "boundaries", title: "Why Saying ‘No’ is Important for Mental Health", level: 2 },
-      { id: "relationships", title: "How Relationships Affect Your Mental Health", level: 2 },
-      { id: "game", title: "Interactive Mental Health Game", level: 2 }
-    ]
-  };
-
   return (
     <BlogPostTemplate meta={meta} navigate={navigate}>
       
@@ -85,7 +86,6 @@ export default function MentalHealthResetBlog({ navigate }) {
       <h2 id="game">Test Your Boundaries: The Mindful Choices Game</h2>
       <p>Put what you just learned into practice. Play our interactive scenario game below to test your boundary-setting skills!</p>
       
-      {/* Renders the interactive game here */}
       <MentalHealthGame />
 
     </BlogPostTemplate>
