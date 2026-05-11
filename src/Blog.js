@@ -171,7 +171,8 @@ function highlightText(text, query) {
 let BLOG_POSTS = [];
 try {
   // CRITICAL FIX: The regex now looks for BOTH .js and .jsx files!
-  const req = require.context('./blogss', true, /^(?!.*(Blog|BlogPostTemplate)\.(js|jsx)$).*\.(js|jsx)$/); 
+  // Only exclude the top-level Blog.js and BlogPostTemplate.js/jsx files, NOT blog post files that happen to contain "Blog" in their name.
+  const req = require.context('./blogss', true, /^(?!.*\/BlogPostTemplate\.(js|jsx)$).*\.(js|jsx)$/);
   
   BLOG_POSTS = req.keys().map((fileName, index) => {
     const module = req(fileName);

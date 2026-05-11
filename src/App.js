@@ -1045,7 +1045,7 @@ export default function App() {
     // ✅ FIXED BLOG ROUTING LOGIC HERE - NOW PASSES NAVIGATE PROP
     if (currentPath === '/blog/journaling-deep-dive') return <JournalingDeepDiveBlog navigate={navigate} />;
     if (currentPath === '/blog/mental-health-reset') return <MentalHealthResetBlog navigate={navigate} />;
-    if (currentPath === '/blog' || currentPath === '/blog/') return <Blog />;
+    if (currentPath.startsWith('/blog')) return <Blog navigate={navigate} />;
 
     // ✅ FIXED 404 BUTTON PLACEHOLDERS HERE
     if (currentPath.startsWith('/wall')) return <div style={{minHeight:'60vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}><h2 style={{fontFamily:"'Fraunces', serif", fontSize:'32px', color:'var(--ink)'}}>Sharz Wall (Coming Soon)</h2><button className="btn-primary" style={{marginTop:'20px'}} onClick={() => navigate('/')}>← Back</button></div>;
