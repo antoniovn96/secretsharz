@@ -122,6 +122,18 @@ export default function SmallWins({ navigate, relatedPosts }) {
           &quot;Greatness is just a bunch of small things done consistently well.&quot;
         </h2>
       </div>
+
+      {/* 🧲 INTERNAL LINKING FOR SEO */}
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '30px', marginTop: '40px' }}>
+        <p style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', color: 'var(--muted)' }}>Keep Exploring:</p>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/stay-motivated')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ How to Stay Motivated When You Feel Like Giving Up</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/mid-month-reset')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Mid-Month Mental Health Reset: Are You on Track?</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/mental-health-habits')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ 5 Simple Habits to Improve Your Mental Health in 2026</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/safe')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Access 24/7 Professional Support in our Safe Corner</button></li>
+        </ul>
+      </div>
+
     </BlogPostTemplate>
   );
 }

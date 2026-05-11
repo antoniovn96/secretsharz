@@ -198,6 +198,17 @@ export default function MonthlyReflection({ navigate, relatedPosts }) {
         </button>
       </div>
 
+      {/* 🧲 INTERNAL LINKING FOR SEO */}
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '30px', marginTop: '40px' }}>
+        <p style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', color: 'var(--muted)' }}>Keep Exploring:</p>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/weekly-check-in')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ The Weekly Mental Health Check-In You Need to Start Doing</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/mid-month-reset')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Mid-Month Mental Health Reset: Are You on Track?</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/mental-health-goals')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Goal Setting for Mental Health: How to Set Intentions That Actually Work</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/safe')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Access 24/7 Professional Support in our Safe Corner</button></li>
+        </ul>
+      </div>
+
     </BlogPostTemplate>
   );
 }

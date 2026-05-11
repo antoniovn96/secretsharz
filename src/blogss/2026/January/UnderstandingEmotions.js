@@ -131,6 +131,17 @@ export default function UnderstandingEmotions({ navigate, relatedPosts }) {
         </button>
       </div>
 
+      {/* 🧲 INTERNAL LINKING FOR SEO */}
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '30px', marginTop: '40px' }}>
+        <p style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', color: 'var(--muted)' }}>Keep Exploring:</p>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/emotional-strength')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Building Emotional Strength: Simple Daily Practices</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/stop-overthinking')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Overthinking in the New Year: How to Stop and Take Control</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/negative-self-talk')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ How to Deal with Negative Self-Talk in 2026</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/safe')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Access 24/7 Professional Support in our Safe Corner</button></li>
+        </ul>
+      </div>
+
     </BlogPostTemplate>
   );
 }

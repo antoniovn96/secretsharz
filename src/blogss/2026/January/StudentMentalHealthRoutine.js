@@ -134,6 +134,17 @@ export default function StudentMentalHealthRoutine({ navigate, relatedPosts }) {
           Build Your Routine in Mind Space →
         </button>
       </div>
+      {/* 🧲 INTERNAL LINKING FOR SEO */}
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '30px', marginTop: '40px' }}>
+        <p style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', color: 'var(--muted)' }}>Keep Exploring:</p>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/mental-health-habits')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ 5 Simple Habits to Improve Your Mental Health in 2026</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/self-care-plan')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Creating a Personal Self-Care Plan That Works for You</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/weekly-check-in')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ The Weekly Mental Health Check-In You Need to Start Doing</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/safe')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Access 24/7 Professional Support in our Safe Corner</button></li>
+        </ul>
+      </div>
+
     </BlogPostTemplate>
   );
 }

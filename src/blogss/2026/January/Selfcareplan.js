@@ -467,6 +467,17 @@ export default function SelfCarePlan({ navigate, relatedPosts }) {
         Self-care is not a luxury you earn after finishing everything else. It is the infrastructure that makes "everything else" possible. Start with the plan you built above — even three activities, done consistently for 21 days, will produce measurable changes in your mood and energy. Give yourself that.
       </p>
 
+      {/* 🧲 INTERNAL LINKING FOR SEO */}
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '30px', marginTop: '40px' }}>
+        <p style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', color: 'var(--muted)' }}>Deepen Your Mental Health Journey:</p>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/mental-health-goals')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Goal Setting for Mental Health: How to Set Intentions That Actually Work</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/mental-health-habits')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ 5 Simple Habits to Improve Your Mental Health in 2026</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/blog/setting-boundaries-guide')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ How to Set Boundaries Without Feeling Guilty (Student Guide)</button></li>
+          <li style={{ marginBottom: '12px' }}><button onClick={() => navigate('/safe')} style={{ background:'none', border:'none', color:'var(--sage)', fontWeight:'bold', cursor:'pointer', fontSize:'16px', padding:0, textAlign: 'left', whiteSpace: 'normal', lineHeight: '1.4' }}>→ Access 24/7 Professional Support in our Safe Corner</button></li>
+        </ul>
+      </div>
+
     </BlogPostTemplate>
   );
 }
