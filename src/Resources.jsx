@@ -5,6 +5,7 @@ import POCSORStudents from './resources/pocso/POCSORStudents';
 import Lifeskillstrainer from './resources/lifeskills/Lifeskillstrainer';
 import PoshResources from './resources/posh/poshresources';
 import MentalHealthFirstAid from './resources/mentalhealth/MentalHealthFirstAid';
+import Softskillshub from './softskills/Softskillshub';
 
 // ── RESOURCE LIBRARY CSS ──────────────────────────────────────────────────
 const RESOURCE_CSS = `
@@ -53,6 +54,7 @@ const RESOURCE_CSS = `
   .res-chip.topic-POCSO.active          { background: #2D5240; border-color: #2D5240; }
   .res-chip.topic-Mental-Health.active  { background: #7C6FA0; border-color: #7C6FA0; }
   .res-chip.topic-POSH.active           { background: #8E44AD; border-color: #8E44AD; }
+  .res-chip.topic-Soft-Skills.active    { background: #2980B9; border-color: #2980B9; }
   .res-chip.format-PDF.active           { background: #C0392B; border-color: #C0392B; }
   .res-chip.format-PPT.active           { background: #E67E22; border-color: #E67E22; }
   .res-result-count { font-size: 12px; color: var(--muted, #7A8A7D); font-weight: 600; margin-left: auto; white-space: nowrap; }
@@ -86,6 +88,7 @@ const RESOURCE_CSS = `
   .res-card-tag.age   { background: rgba(30,40,32,0.05); color: var(--ink-soft, #3D4A40); }
   .res-card-tag.topic-POCSO { background: #E8F5EE; color: #2D5240; }
   .res-card-tag.topic-MH    { background: #F0EDF8; color: #7C6FA0; }
+  .res-card-tag.topic-Soft-Skills { background: #EAF4FA; color: #2980B9; }
   .res-card-format-row { display: flex; gap: 8px; margin-bottom: 20px; align-items: center; }
   .res-format-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
   .res-format-badge.pdf { background: rgba(192,57,43,0.08); color: #C0392B; border: 1px solid rgba(192,57,43,0.2); }
@@ -194,29 +197,49 @@ const RESOURCE_LIST = [
     pdfLink: null 
   },
   {
-  id: 'mh-first-aid',
-  slug: 'mental-health-first-aid',
-  title: 'Mental Health & Emotional First Aid',
-  subtitle: 'Immediate relief & maintenance tools',
-  topic: 'Mental Health',
-  audience: ['Students', 'Teachers', 'Counsellors'],
-  ageGroups: ['All Ages'],
-  formats: ['Interactive', 'PDF'],
-  languages: ['English'],
-  icon: '🩹',
-  color: '#7C6FA0', 
-  colorPale: '#F0EDF8',
-  accentColor: '#A89DD0',
-  description: 'A critical toolkit for emotional survival. Includes the Grounding Toolkit, Emotion Wheel, In My Control worksheets, Exam Anxiety guides, and a National Crisis Directory.',
-  lastUpdated: 'April 2026',
-  isNew: true,
-  component: MentalHealthFirstAid,
-  pdfLink: null 
-}
+    id: 'mh-first-aid',
+    slug: 'mental-health-first-aid',
+    title: 'Mental Health & Emotional First Aid',
+    subtitle: 'Immediate relief & maintenance tools',
+    topic: 'Mental Health',
+    audience: ['Students', 'Teachers', 'Counsellors'],
+    ageGroups: ['All Ages'],
+    formats: ['Interactive', 'PDF'],
+    languages: ['English'],
+    icon: '🩹',
+    color: '#7C6FA0', 
+    colorPale: '#F0EDF8',
+    accentColor: '#A89DD0',
+    description: 'A critical toolkit for emotional survival. Includes the Grounding Toolkit, Emotion Wheel, In My Control worksheets, Exam Anxiety guides, and a National Crisis Directory.',
+    lastUpdated: 'April 2026',
+    isNew: true,
+    component: MentalHealthFirstAid,
+    pdfLink: null 
+  },
+  {
+    id: 'softskills-hub',
+    slug: 'soft-skills-hub',
+    title: 'Soft Skills Hub',
+    subtitle: 'Master Interpersonal & Communication Skills',
+    topic: 'Soft Skills',
+    audience: ['Students', 'Teachers', 'Counsellors'],
+    ageGroups: ['Upper Primary (11–13)', 'Secondary (14–17)', 'Adults'],
+    formats: ['Interactive'],
+    languages: ['English'],
+    icon: '💬',
+    color: '#5B9EBF', 
+    colorPale: '#EAF4FA',
+    accentColor: '#2980B9',
+    description: 'An interactive hub dedicated to developing essential soft skills, including communication, empathy, teamwork, and problem-solving for academic and professional success.',
+    lastUpdated: 'May 2026',
+    isNew: true,
+    component: Softskillshub,
+    pdfLink: null 
+  }
 ];
 
 const ALL_AUDIENCES = ['Students', 'Parents', 'Teachers', 'Counsellors', 'NGO Workers', 'Staff', 'Administration'];
-const ALL_TOPICS    = ['POCSO', 'Mental Health', 'Life Skills', 'Career Guidance', 'POSH'];
+const ALL_TOPICS    = ['POCSO', 'Mental Health', 'Life Skills', 'Soft Skills', 'Career Guidance', 'POSH'];
 const ALL_FORMATS   = ['PDF', 'PPT', 'Interactive'];
 
 // ── RESOURCE CARD COMPONENT ───────────────────────────────────────────────────
