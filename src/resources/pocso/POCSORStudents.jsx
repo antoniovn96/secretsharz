@@ -1632,7 +1632,7 @@ export default function POCSORStudents({ navigate, onBack }) {
               <div className="pocso-dl-sub">Online complaint portal · NCPCR</div>
             </div>
           </a>
-          <a href="https://legislative.gov.in/sites/default/files/A2012-32.pdf" target="_blank" rel="noreferrer" className="pocso-dl-card">
+          <a href="https://www.indiacode.nic.in/handle/123456789/2079" target="_blank" rel="noreferrer" className="pocso-dl-card">
             <span className="pocso-dl-icon">⚖️</span>
             <div>
               <div className="pocso-dl-text">Full Act Text</div>
