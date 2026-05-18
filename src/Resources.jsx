@@ -5,7 +5,7 @@ import POCSORStudents from './resources/pocso/POCSORStudents';
 import Lifeskillstrainer from './resources/lifeskills/Lifeskillstrainer';
 import PoshResources from './resources/posh/poshresources';
 import MentalHealthFirstAid from './resources/mentalhealth/MentalHealthFirstAid';
-import Softskillshub from './softskills/Softskillshub';
+import Softskillshub from './resources/softskills/Softskillshub';
 
 // ── RESOURCE LIBRARY CSS ──────────────────────────────────────────────────
 const RESOURCE_CSS = `
