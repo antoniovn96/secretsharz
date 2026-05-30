@@ -14,6 +14,7 @@ const VidyaVantageBlog = lazy(() => import('./VidyaVantageBlog'));
 const AuthPage = lazy(() => import('./AuthPage'));
 const StudentDashboard = lazy(() => import('./StudentDashboard'));
 const MindSpace = lazy(() => import('./MindSpace'));
+const SharzWall = lazy(() => import('./SharzWall'));
 const AdminDashboard = lazy(() => import('./AdminDashboard'));
 const Blog = lazy(() => import('./Blog'));
 const Resources = lazy(() => import('./Resources'));
@@ -1069,7 +1070,7 @@ export default function App() {
     if (currentPath.startsWith('/blog')) return <Blog navigate={navigate} />;
 
     // ✅ FIXED 404 BUTTON PLACEHOLDERS HERE
-    if (currentPath.startsWith('/wall')) return <div style={{minHeight:'60vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}><h2 style={{fontFamily:"'Fraunces', serif", fontSize:'32px', color:'var(--ink)'}}>Sharz Wall (Coming Soon)</h2><button className="btn-primary" style={{marginTop:'20px'}} onClick={() => navigate('/')}>← Back</button></div>;
+    if (currentPath.startsWith('/wall')) return <SharzWall Maps={navigate} />;
     if (currentPath.startsWith('/safe')) return <div style={{minHeight:'60vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}><h2 style={{fontFamily:"'Fraunces', serif", fontSize:'32px', color:'var(--ink)'}}>Safe Corner (Coming Soon)</h2><button className="btn-primary" style={{marginTop:'20px'}} onClick={() => navigate('/')}>← Back</button></div>;
 
     if (currentPath === '/') return <HomePage currentUser={currentUser} isAdmin={isAdmin} setModal={setModal} setShowQuiz={setShowQuiz} navigate={navigate} />;
