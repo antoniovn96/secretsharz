@@ -89,7 +89,7 @@ const STYLES = `
 
   /* ─── CAREER EXPLORER STYLES ─── */
   .exp-hero{background:linear-gradient(135deg,var(--dark) 0%,var(--brown) 70%,rgba(232,101,10,0.4) 100%);padding:56px 40px 40px;text-align:center;color:white;}
-  .exp-tabs{display:flex;gap:0;background:rgba(255,255,255,0.08);border-radius:14px;padding:4px;display:inline-flex;margin-top:24px;}
+  .exp-tabs{gap:0;background:rgba(255,255,255,0.08);border-radius:14px;padding:4px;display:inline-flex;margin-top:24px;}
   .exp-tab{padding:10px 24px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;color:rgba(255,255,255,0.6);border:none;background:none;font-family:'DM Sans',sans-serif;}
   .exp-tab.active{background:white;color:var(--dark);box-shadow:0 2px 8px rgba(0,0,0,0.15);}
   

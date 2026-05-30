@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { Helmet } from 'react-helmet';
+import Head from 'next/head';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
+import { DashboardProvider } from './context/DashboardContext';
 
 // 🚀 OPTIMIZATION 1: LAZY LOADING HEAVY ROUTES
 const VidyaVantage = lazy(() => import('./VidyaVantage'));
@@ -593,17 +594,37 @@ function MythFactQuiz({ onClose }) {
 function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
   return (
     <>
-      <Helmet>
+      <Head>
         <title>Secret Sharz | #1 Anonymous Student Mental Health &amp; Career Platform</title>
         <meta name="description" content="India's top anonymous emotional safe space and career discovery platform for students. Get free emotional first aid, vent anonymously, and plan your career with VidyaVantage." />
         <meta name="keywords" content="student mental health, anonymous venting, career guidance, Indian students, POCSO aligned, emotional support, VidyaVantage, Holland RIASEC" />
+        <link rel="canonical" href="https://www.secretsharz.com/" />
         <meta property="og:title" content="Secret Sharz | Anonymous Mental Health Support &amp; Career Guidance" />
         <meta property="og:description" content="Fix your mind first. Then fix your future. Anonymous emotional safe space + career discovery platform for Indian students." />
-        <meta property="og:image" content="/secret-sharz-logo.png" />
+        <meta property="og:url" content="https://www.secretsharz.com/" />
+        <meta property="og:image" content="https://www.secretsharz.com/secret-sharz-logo.png" />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="icon" href="/android-chrome-192x192.png" />
-      </Helmet>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "Secret Sharz",
+              "url": "https://www.secretsharz.com",
+              "logo": "https://www.secretsharz.com/secret-sharz-logo.png",
+              "description": "India's anonymous emotional safe space and career discovery platform for students. Fix your mind first, then fix your future.",
+              "sameAs": [
+                "https://www.facebook.com/secret.sharz",
+                "https://www.instagram.com/secret.sharz/",
+                "https://www.linkedin.com/company/secret-sharz?trk=public_post_feed-actor-image"
+              ]
+            })
+          }}
+        />
+      </Head>
 
       {!currentUser && (
         <div className="instant-action-bar" onClick={() => navigate('/auth')}>
@@ -1063,47 +1084,49 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Helmet>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-      </Helmet>
-      <style dangerouslySetInnerHTML={{ __html: FONTS + CSS }} />
+    <DashboardProvider navigate={navigate}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        </Head>
+        <style dangerouslySetInnerHTML={{ __html: FONTS + CSS }} />
 
-      <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#FDFCFA', color: '#4A7C59', fontFamily: "'Fraunces', serif", fontSize: '24px'}}>Loading...</div>}>
-        {showQuiz && <MythFactQuiz onClose={() => setShowQuiz(false)} />}
-        {modal === 'talk' && (
-          <div className="modal-overlay" onClick={() => setModal(null)}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setModal(null)}>✕</button>
-              <div style={{ fontSize: '48px', marginBottom: '20px' }}>💬</div>
-              <h3 style={{fontFamily: "'Fraunces', serif", fontSize:'24px', marginBottom:'10px'}}>You don't have to carry this alone</h3>
-              <p style={{color:'var(--muted)', marginBottom:'20px'}}>Whether it's a small worry or something really heavy — reaching out is the bravest thing you can do.</p>
-              <div style={{background:'var(--sage-pale)', padding:'16px', borderRadius:'12px', marginBottom:'12px'}}>
-                <strong>🤖 Chat with AI Support</strong><br/>
-                <span style={{fontSize:'13px', color:'var(--sage)'}}>Available right now. Gentle, non-judgemental guidance.</span>
-              </div>
-              <div style={{background:'#FFF0F0', padding:'16px', borderRadius:'12px'}}>
-                <strong style={{color:'#C0392B'}}>🆘 Crisis Support Now</strong><br/>
-                <span style={{fontSize:'13px', color:'#C0392B'}}>iCall: 9152987821 — Available 24/7</span>
+        <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#FDFCFA', color: '#4A7C59', fontFamily: "'Fraunces', serif", fontSize: '24px'}}>Loading...</div>}>
+          {showQuiz && <MythFactQuiz onClose={() => setShowQuiz(false)} />}
+          {modal === 'talk' && (
+            <div className="modal-overlay" onClick={() => setModal(null)}>
+              <div className="modal" onClick={e => e.stopPropagation()}>
+                <button className="modal-close" onClick={() => setModal(null)}>✕</button>
+                <div style={{ fontSize: '48px', marginBottom: '20px' }}>💬</div>
+                <h3 style={{fontFamily: "'Fraunces', serif", fontSize:'24px', marginBottom:'10px'}}>You don't have to carry this alone</h3>
+                <p style={{color:'var(--muted)', marginBottom:'20px'}}>Whether it's a small worry or something really heavy — reaching out is the bravest thing you can do.</p>
+                <div style={{background:'var(--sage-pale)', padding:'16px', borderRadius:'12px', marginBottom:'12px'}}>
+                  <strong>🤖 Chat with AI Support</strong><br/>
+                  <span style={{fontSize:'13px', color:'var(--sage)'}}>Available right now. Gentle, non-judgemental guidance.</span>
+                </div>
+                <div style={{background:'#FFF0F0', padding:'16px', borderRadius:'12px'}}>
+                  <strong style={{color:'#C0392B'}}>🆘 Crisis Support Now</strong><br/>
+                  <span style={{fontSize:'13px', color:'#C0392B'}}>iCall: 9152987821 — Available 24/7</span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && (
-          <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
-        )}
-        
-        <main style={{ flex: 1, position: 'relative' }}>
-          {renderRoute()}
-        </main>
+          {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && (
+            <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
+          )}
+          
+          <main style={{ flex: 1, position: 'relative' }}>
+            {renderRoute()}
+          </main>
 
-        {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && (
-          <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={setModal} />
-        )}
-      </Suspense>
-    </div>
+          {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && (
+            <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={setModal} />
+          )}
+        </Suspense>
+      </div>
+    </DashboardProvider>
   );
 }

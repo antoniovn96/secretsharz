@@ -1,136 +1,796 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
-// ✅ Added onSnapshot to the import list
-import { doc, setDoc, getDoc, collection, getDocs, addDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs, updateDoc, onSnapshot } from 'firebase/firestore';
+import { useDashboard } from './context/DashboardContext';
 
 const COLLECTIONS = {
   USERS: 'users',
   INSTITUTIONS: 'institutions',
   SETTINGS: 'system_settings',
-  STAFF: 'staff' // Added staff collection for profile saving
+  STAFF: 'staff'
 };
 
-// Mock Counsellors for Assignment System (In production, fetch from a 'staff' collection)
-const COUNSELLORS = [
-  { id: 'c1', name: 'Dr. Sarah Menon' },
-  { id: 'c2', name: 'Arjun Patel' },
-  { id: 'c3', name: 'Priya Sharma' }
-];
-
 const STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
   :root {
-    --bg: #0f172a; --sidebar: #1e1b4b; --card-bg: #1e293b; 
-    --primary: #8b5cf6; --secondary: #06b6d4; --accent: #f43f5e;
-    --text-main: #f8fafc; --text-muted: #94a3b8; --border: #334155;
-    --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    --bg: #F0F4F8;
+    --sidebar-bg: #1A1F36;
+    --sidebar-active: #2D3561;
+    --card-bg: #FFFFFF;
+    --primary: #5B6EF5;
+    --primary-light: #EEF0FE;
+    --secondary: #0EA5E9;
+    --accent: #F43F5E;
+    --text-main: #1A1F36;
+    --text-muted: #6B7A99;
+    --border: #E4E9F2;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+    --r-sm: 10px;
+    --r-md: 16px;
+    --r-lg: 20px;
   }
-  .admin-root { background-color: var(--bg); font-family: 'Nunito', sans-serif; color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; }
-  
-  /* --- SIDEBAR --- */
-  .admin-sidebar { width: 260px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; z-index: 1000; flex-shrink: 0;}
+
+  .admin-root {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .admin-sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    border-right: none;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    z-index: 1000;
+    flex-shrink: 0;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+  }
   .admin-sidebar::-webkit-scrollbar { width: 4px; }
   .admin-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-  .admin-brand { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; position: sticky; top:0; background: var(--sidebar); z-index: 10; cursor: pointer; transition: opacity 0.2s;}
-  .admin-brand:hover { opacity: 0.8; }
-  .admin-brand h2 { margin: 0; font-size: 1.3rem; background: -webkit-linear-gradient(45deg, var(--secondary), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
-  .nav-btn { background: transparent; color: var(--text-muted); border: none; text-align: left; padding: 12px 25px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; width: 100%; display: flex; align-items: center; gap: 10px; }
-  .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
-  .nav-btn.active { background: rgba(139, 92, 246, 0.1); color: var(--primary); border-left-color: var(--primary); }
 
-  /* --- MAIN LAYOUT & TOP HEADER --- */
-  .admin-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative;}
-  .top-header { background: var(--card-bg); height: 70px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; flex-shrink: 0;}
-  .header-actions { display: flex; align-items: center; gap: 15px; }
-  .site-link { color: var(--secondary); text-decoration: none; font-weight: bold; padding: 8px 12px; border-radius: 8px; background: rgba(6, 182, 212, 0.1); transition: 0.2s; font-size: 0.9rem;}
-  .site-link:hover { background: rgba(6, 182, 212, 0.2); }
-  
-  .notify-bell { position: relative; background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; padding: 5px; }
-  .notify-bell:hover { color: white; }
-  .notify-badge { position: absolute; top: 0; right: 0; background: var(--accent); color: white; font-size: 0.6rem; font-weight: bold; height: 16px; width: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .admin-brand {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .admin-brand:hover { opacity: 0.85; }
+  .admin-brand h2 {
+    margin: 0 0 4px 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -0.5px;
+  }
+  .admin-brand-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
 
-  .dropdown-content { position: absolute; right: 0; background-color: var(--card-bg); min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5); z-index: 100; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; margin-top: 10px;}
-  .dropdown-content button, .dropdown-content .notify-item { background:transparent; border:none; width:100%; text-align:left; color: var(--text-main); padding: 12px 16px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.05); cursor:pointer;}
-  .dropdown-content button:hover, .dropdown-content .notify-item:hover { background-color: rgba(255,255,255,0.05); color: var(--primary); }
-  .avatar-btn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--primary); cursor: pointer; object-fit: cover; background: #000; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;}
+  .nav-section-label {
+    padding: 16px 24px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
 
-  /* --- CONTENT AREA --- */
-  .main-content { flex: 1; padding: 20px; overflow-y: auto; position: relative;}
-  .header-bar { margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end;}
-  .header-bar h1 { margin: 0 0 5px 0; font-size: 1.5rem; color: white;}
-  .header-bar p { margin: 0; color: var(--text-muted); font-size: 0.9rem;}
-  
-  .admin-card { background: var(--card-bg); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow-x: auto;}
-  .admin-card h3 { margin-top: 0; color: white; border-bottom: 1px solid var(--border); padding-bottom: 10px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
-  
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
-  .kpi-box { background: linear-gradient(135deg, rgba(30,41,59,1) 0%, rgba(15,23,42,1) 100%); padding: 15px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
-  .kpi-box:hover { transform: translateY(-3px); border-color: var(--primary); }
-  .kpi-box h4 { margin:0 0 5px 0; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;}
-  .kpi-box .val { font-size:1.5rem; font-weight:900; color:white; }
-  
+  .nav-btn {
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    border: none;
+    text-align: left;
+    padding: 11px 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Inter', sans-serif;
+    border-radius: 0;
+    margin: 1px 0;
+  }
+  .nav-btn:hover {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.85);
+  }
+  .nav-btn.active {
+    background: rgba(91,110,245,0.2);
+    color: white;
+    border-left-color: var(--primary);
+    font-weight: 600;
+  }
+  .nav-btn-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+
+  /* Portal Switcher */
+  .portal-switcher {
+    margin: 12px 16px;
+    padding: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--r-md);
+  }
+  .portal-switcher-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding: 0 4px;
+  }
+  .portal-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 12px;
+    background: transparent;
+    border: none;
+    border-radius: var(--r-sm);
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+    text-align: left;
+  }
+  .portal-btn:hover { background: rgba(255,255,255,0.07); color: white; }
+  .portal-btn.current { background: rgba(91,110,245,0.25); color: white; font-weight: 600; }
+  .portal-btn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── MAIN LAYOUT ── */
+  .admin-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .top-header {
+    background: var(--card-bg);
+    height: 68px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 32px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .top-header-left { display: flex; align-items: center; gap: 12px; }
+  .header-actions { display: flex; align-items: center; gap: 12px; }
+
+  .site-link {
+    color: var(--secondary);
+    text-decoration: none;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: var(--r-sm);
+    background: rgba(14,165,233,0.08);
+    transition: 0.2s;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .site-link:hover { background: rgba(14,165,233,0.15); }
+
+  .notify-bell {
+    position: relative;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--r-sm);
+    transition: 0.2s;
+  }
+  .notify-bell:hover { background: var(--bg); color: var(--text-main); }
+  .notify-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: var(--accent);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 700;
+    height: 14px;
+    width: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dropdown-content {
+    position: absolute;
+    right: 0;
+    background: var(--card-bg);
+    min-width: 220px;
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    border-radius: var(--r-md);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .dropdown-content button, .dropdown-content .notify-item {
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    color: var(--text-main);
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    transition: 0.15s;
+  }
+  .dropdown-content button:last-child, .dropdown-content .notify-item:last-child { border-bottom: none; }
+  .dropdown-content button:hover, .dropdown-content .notify-item:hover {
+    background: var(--bg);
+    color: var(--primary);
+  }
+  .avatar-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    cursor: pointer;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: 0.2s;
+  }
+  .avatar-btn:hover { background: var(--primary); color: white; }
+
+  /* ── CONTENT AREA ── */
+  .main-content { flex: 1; padding: 28px 32px; overflow-y: auto; }
+  .header-bar {
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .header-bar h1 { margin: 0 0 4px 0; font-size: 1.5rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; }
+  .header-bar p { margin: 0; color: var(--text-muted); font-size: 0.875rem; }
+
+  /* ── CARDS ── */
+  .admin-card {
+    background: var(--card-bg);
+    padding: 24px;
+    border-radius: var(--r-lg);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto;
+    transition: box-shadow 0.2s;
+  }
+  .admin-card:hover { box-shadow: var(--shadow-md); }
+  .admin-card h3 {
+    margin-top: 0;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ── KPI GRID ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .kpi-box {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
+  }
+  .kpi-box:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+  .kpi-box h4 { margin: 0 0 8px 0; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+  .kpi-box .val { font-size: 1.75rem; font-weight: 800; color: var(--text-main); letter-spacing: -1px; }
+  .kpi-box .val-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+
+  /* ── GRIDS ── */
   .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   .grid-3col { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
 
-  .form-group { margin-bottom: 15px; }
-  .form-label { display: block; font-weight: 700; margin-bottom: 6px; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;}
-  .form-input, .form-select, .form-textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; color: white; background: #0f172a; box-sizing: border-box; font-family: inherit;}
-  .form-input:focus, .form-select:focus { border-color: var(--primary); outline: none; }
-  .search-bar { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
-  
-  .admin-btn { background: linear-gradient(45deg, var(--primary), #a855f7); color: white; border: none; padding: 10px 20px; font-size: 0.95rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-  .admin-btn:hover { opacity: 0.9; transform: translateY(-2px); }
-  .admin-btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 10px 20px; border-radius:8px; cursor:pointer; font-weight:bold; display: inline-flex; align-items: center; gap: 8px;}
-  .admin-btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-  .admin-btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+  /* ── FORMS ── */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    font-size: 0.9rem;
+    color: var(--text-main);
+    background: var(--bg);
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--primary);
+    outline: none;
+    background: white;
+  }
+  .search-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    background: var(--bg);
+    padding: 16px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--border);
+  }
+
+  /* ── BUTTONS ── */
+  .admin-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 2px 8px rgba(91,110,245,0.3);
+  }
+  .admin-btn:hover { background: #4A5CE0; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(91,110,245,0.4); }
+  .admin-btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-main);
+    padding: 9px 18px;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    transition: 0.2s;
+  }
+  .admin-btn-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+  .admin-btn-danger {
+    background: rgba(239,68,68,0.08);
+    color: var(--danger);
+    border: 1.5px solid rgba(239,68,68,0.2);
+    padding: 7px 12px;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    transition: 0.2s;
+  }
   .admin-btn-danger:hover { background: var(--danger); color: white; }
+  .admin-btn-sm {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+  }
+  .admin-btn-sm:hover { background: #4A5CE0; }
+  .admin-btn-sm-outline {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Inter', sans-serif;
+    transition: 0.2s;
+    white-space: nowrap;
+  }
+  .admin-btn-sm-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
 
-  .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; min-width: 600px;}
-  .data-table th, .data-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); }
-  .data-table th { color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; background: rgba(0,0,0,0.2);}
-  .data-table tr.clickable:hover { background: rgba(139, 92, 246, 0.1); cursor: pointer; }
+  /* ── TABLE ── */
+  .data-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.85rem; min-width: 600px; }
+  .data-table th, .data-table td { padding: 13px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  .data-table th { color: var(--text-muted); text-transform: uppercase; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px; background: var(--bg); }
+  .data-table tr.clickable:hover { background: var(--primary-light); cursor: pointer; }
 
-  .admin-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; white-space: nowrap;}
-  .badge-warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning);}
-  .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success);}
-  .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger);}
-  .badge-neutral { background: rgba(148, 163, 184, 0.2); color: var(--text-muted); border: 1px solid var(--text-muted);}
+  /* ── BADGES ── */
+  .admin-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; letter-spacing: 0.3px; }
+  .badge-primary { background: var(--primary-light); color: var(--primary); }
+  .badge-warn { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+  .badge-success { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
+  .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+  .badge-neutral { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
 
-  /* Modals & Tabs */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
-  .modal-content { background: var(--card-bg); width: 100%; max-width: 700px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; }
-  .modal-header { padding: 20px 20px 0 20px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2); }
-  .modal-tabs { display: flex; gap: 20px; margin-top: 15px; }
-  .modal-tab { background: none; border: none; color: var(--text-muted); font-weight: bold; padding: 10px 0; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
-  .modal-tab.active { color: white; border-bottom-color: var(--primary); }
-  .close-btn { background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; position: absolute; right: 20px; top: 15px;}
-  .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+  /* ── MODALS ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,31,54,0.6);
+    backdrop-filter: blur(6px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-content {
+    background: var(--card-bg);
+    width: 100%;
+    max-width: 720px;
+    border-radius: var(--r-lg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+  }
+  .modal-header {
+    padding: 24px 24px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: relative;
+  }
+  .modal-tabs { display: flex; gap: 4px; margin-top: 16px; }
+  .modal-tab {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: 0.2s;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    border-radius: var(--r-sm) var(--r-sm) 0 0;
+  }
+  .modal-tab:hover { color: var(--text-main); background: rgba(0,0,0,0.03); }
+  .modal-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: white; }
+  .close-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+  }
+  .close-btn:hover { background: var(--danger); color: white; border-color: var(--danger); }
+  .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
 
-  /* Timeline */
-  .timeline { border-left: 2px solid var(--border); margin-left: 10px; padding-left: 20px; position: relative; }
+  /* ── TIMELINE ── */
+  .timeline { border-left: 2px solid var(--border); margin-left: 10px; padding-left: 20px; }
   .timeline-item { margin-bottom: 20px; position: relative; }
-  .timeline-dot { position: absolute; left: -27px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); border: 2px solid var(--card-bg); }
-  .timeline-date { font-size: 0.75rem; color: var(--text-muted); font-weight: bold; }
-  
-  /* Funnel */
-  .funnel-container { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; border: 1px solid var(--border); }
-  .funnel-step { text-align: center; flex: 1; position: relative; }
-  .funnel-step:not(:last-child)::after { content: '➔'; position: absolute; right: -10px; top: 30%; color: var(--border); font-size: 1.5rem; }
-  .funnel-val { font-size: 1.8rem; font-weight: 900; color: white; }
-  .funnel-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+  .timeline-dot { position: absolute; left: -27px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); border: 2px solid white; box-shadow: 0 0 0 2px var(--primary); }
+  .timeline-date { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
 
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
-  .empty-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
-  
-  /* Dynamic Array Items */
-  .array-item-card { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px; position: relative;}
-  .remove-item-btn { position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; }
+  /* ── FUNNEL ── */
+  .funnel-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg);
+    padding: 24px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--border);
+    gap: 8px;
+  }
+  .funnel-step { text-align: center; flex: 1; position: relative; }
+  .funnel-step:not(:last-child)::after { content: '→'; position: absolute; right: -12px; top: 30%; color: var(--border); font-size: 1.2rem; }
+  .funnel-val { font-size: 2rem; font-weight: 800; color: var(--text-main); letter-spacing: -1px; }
+  .funnel-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-top: 4px; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+  .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.4; }
+
+  /* ── ARRAY ITEMS ── */
+  .array-item-card {
+    background: var(--bg);
+    padding: 16px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .array-item-card:hover { border-color: var(--primary); }
+  .remove-item-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(239,68,68,0.08);
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 1rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+  }
+  .remove-item-btn:hover { background: var(--danger); color: white; }
+
+  /* ── TOAST ── */
+  .admin-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 14px 20px;
+    border-radius: var(--r-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    z-index: 9999;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Inter', sans-serif;
+  }
+  .admin-toast.success { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+  .admin-toast.error { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+
+  /* ── STUDENT ROSTER CARDS ── */
+  .student-roster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+    margin-top: 4px;
+  }
+  .student-roster-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .student-roster-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--primary);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .student-roster-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: rgba(91,110,245,0.25);
+  }
+  .student-roster-card:hover::before { opacity: 1; }
+
+  .src-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .src-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(91,110,245,0.2);
+  }
+  .src-info { flex: 1; min-width: 0; }
+  .src-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .src-email {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .src-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .src-divider {
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 14px;
+  }
+  .src-assign-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .src-assign-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .src-assign-select {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-sm);
+    font-size: 0.82rem;
+    color: var(--text-main);
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    min-width: 0;
+  }
+  .src-assign-select:focus {
+    border-color: var(--primary);
+    outline: none;
+    background: white;
+  }
+  .src-assign-select.assigned {
+    border-color: rgba(16,185,129,0.4);
+    background: rgba(16,185,129,0.04);
+    color: var(--success);
+    font-weight: 600;
+  }
+  .src-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  /* ── COUNSELLOR CHIP ── */
+  .counsellor-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 4px 6px;
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--success);
+  }
+  .counsellor-chip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    flex-shrink: 0;
+  }
+  .unassigned-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 4px 6px;
+    background: rgba(239,68,68,0.06);
+    border: 1px solid rgba(239,68,68,0.15);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--danger);
+  }
+
+  /* ── COUNSELLOR PANEL ── */
+  .counsellor-panel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 4px;
+  }
+  .counsellor-panel-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+  }
+  .counsellor-panel-card:hover { box-shadow: var(--shadow-md); border-color: rgba(91,110,245,0.2); }
+  .cpc-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .cpc-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #7C6EF5);
+    color: white; font-weight: 800; font-size: 1.1rem;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .cpc-name { font-weight: 700; font-size: 0.95rem; color: var(--text-main); margin-bottom: 2px; }
+  .cpc-title { font-size: 0.78rem; color: var(--text-muted); }
+  .cpc-stats { display: flex; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .cpc-stat { text-align: center; flex: 1; }
+  .cpc-stat-val { font-size: 1.2rem; font-weight: 800; color: var(--text-main); }
+  .cpc-stat-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-top: 2px; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 `;
 
-// Added 'profile' to the top of the array
 const ALL_NAV_TABS = [
   { id: 'profile', icon: '👤', label: 'My Profile', roles: ['super_admin', 'counsellor'] },
-  { id: 'overview', icon: '🏠', label: 'Overview Dashboard', roles: ['super_admin', 'counsellor'] },
+  { id: 'overview', icon: '🏠', label: 'Overview', roles: ['super_admin', 'counsellor'] },
   { id: 'students', icon: '🎓', label: 'Student Master', roles: ['super_admin', 'counsellor'] },
   { id: 'counselling', icon: '🧠', label: 'Counselling Workflow', roles: ['super_admin', 'counsellor'] },
   { id: 'analytics', icon: '📊', label: 'Analytics & Funnel', roles: ['super_admin'] },
@@ -138,54 +798,74 @@ const ALL_NAV_TABS = [
   { id: 'settings', icon: '⚙️', label: 'System Settings', roles: ['super_admin'] },
 ];
 
-export default function AdminDashboard({ user, onBackToApp }) {
+export default function AdminDashboard({ user, onBackToApp, navigate }) {
+  // ── Pull from DashboardContext ──────────────────────────────────────────────
+  const {
+    students: ctxStudents,
+    counsellors: ctxCounsellors,
+    assignments,
+    assignStudentToCounsellor,
+    reassignStudent,
+    unassignStudent,
+    getCounsellorForStudent,
+    getStudentsForCounsellor,
+    stats: ctxStats,
+  } = useDashboard();
+
   // --- STATE ---
   const [activeTab, setActiveTab] = useState('overview');
   const [toast, setToast] = useState(null);
-  
-  // Data
+
+  // Firestore live data (supplements context for real users)
   const [institutions, setInstitutions] = useState([]);
-  const [students, setStudents] = useState([]);
+  const [firestoreStudents, setFirestoreStudents] = useState([]);
+  const [firestoreStaff, setFirestoreStaff] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
   // Profile & RBAC
-  const [profile, setProfile] = useState({ name: user?.displayName || 'User', role: 'super_admin' });
+  const [profile, setProfile] = useState({ name: user?.displayName || 'Admin', role: 'super_admin' });
   const isCounsellor = profile.role === 'counsellor';
   const allowedTabs = ALL_NAV_TABS.filter(t => t.roles.includes(profile.role));
 
-  // --- MY PROFILE STATE ---
+  // My Profile State
   const [personalProfile, setPersonalProfile] = useState({
-    name: user?.displayName || 'Antonio',
+    name: user?.displayName || '',
     email: user?.email || '',
-    title: 'School Counselor',
+    title: '',
     phone: '',
     linkedin: '',
     bio: '',
-    experience: [
-      { id: Date.now(), company: 'The Knowledge Habitat', role: 'School Counsellor', duration: 'Jan 2026 - Present' }
-    ],
-    education: [
-      { id: Date.now()+1, degree: 'Master of Social Work (MSW)', institution: '', year: '2020' }
-    ],
+    experience: [],
+    education: [],
     hobbies: ''
   });
   const [savingProfile, setSavingProfile] = useState(false);
 
-  // Search & Filter (Debounced)
+  // Search & Filter
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' | 'table'
+
   // Modals & Forms
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [modalTab, setModalTab] = useState('overview');
   const [newSession, setNewSession] = useState({ date: '', duration: '30', outcome: '' });
 
-  // Notifications
+  // Inline assignment state: { [studentId]: counsellorId }
+  const [pendingAssignments, setPendingAssignments] = useState({});
+
+  // Dropdowns
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  
+
   const searchRef = useRef(null);
+
+  // ── Merge context students with firestore students ──────────────────────────
+  // Context students are the mock/prototype data; firestoreStudents are real.
+  // We show firestoreStudents if available, else fall back to context students.
+  const students = firestoreStudents.length > 0 ? firestoreStudents : ctxStudents;
+  const counsellorsList = firestoreStaff.length > 0 ? firestoreStaff : ctxCounsellors;
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -195,7 +875,7 @@ export default function AdminDashboard({ user, onBackToApp }) {
     return () => document.head.removeChild(style);
   }, []);
 
-  // 🚀 6. PRO UX: Keyboard Shortcuts
+  // Keyboard shortcut: '/' to focus search
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
@@ -207,87 +887,83 @@ export default function AdminDashboard({ user, onBackToApp }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // 🚀 Debounce Search
+  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchInput), 300);
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Toast Auto-Clear
+  // Toast auto-clear
   useEffect(() => {
     if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
+      const timer = setTimeout(() => setToast(null), 3500);
       return () => clearTimeout(timer);
     }
   }, [toast]);
 
-  // --- FETCH DATA (WITH REAL-TIME UPDATES) ---
+  // --- FETCH FIRESTORE DATA ---
   useEffect(() => {
     let isMounted = true;
-    let unsubscribeStudents = null; // ✅ Listener cleanup variable
+    let unsubscribeStudents = null;
 
     const fetchPlatformData = async () => {
       setLoadingData(true);
       try {
-        // Fetch static configuration/settings
-        const docSnap = await getDoc(doc(db, COLLECTIONS.SETTINGS, "superadmin_profile"));
+        const docSnap = await getDoc(doc(db, COLLECTIONS.SETTINGS, 'superadmin_profile'));
         if (isMounted && docSnap.exists()) setProfile(prev => ({ ...prev, ...docSnap.data() }));
 
-        // Fetch Personal Profile if it exists
-        if(user?.uid) {
-           const profileSnap = await getDoc(doc(db, COLLECTIONS.STAFF, user.uid));
-           if(profileSnap.exists() && isMounted) {
-               setPersonalProfile(prev => ({...prev, ...profileSnap.data()}));
-           }
+        if (user?.uid) {
+          const profileSnap = await getDoc(doc(db, COLLECTIONS.STAFF, user.uid));
+          if (profileSnap.exists() && isMounted) {
+            setPersonalProfile(prev => ({ ...prev, ...profileSnap.data() }));
+          }
+        }
+
+        const staffSnap = await getDocs(collection(db, COLLECTIONS.STAFF));
+        if (isMounted) {
+          setFirestoreStaff(staffSnap.docs.map(d => ({ id: d.id, ...d.data() })));
         }
 
         const instSnap = await getDocs(collection(db, COLLECTIONS.INSTITUTIONS));
         if (isMounted) setInstitutions(instSnap.docs.map(d => ({ id: d.id, ...d.data() })));
 
-        // ✅ REAL-TIME LISTENER FOR STUDENTS
         unsubscribeStudents = onSnapshot(collection(db, COLLECTIONS.USERS), (snapshot) => {
           let allStudents = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          
-          // Role-Based Filtering: If counsellor, only show assigned students
+
           if (isCounsellor) {
             allStudents = allStudents.filter(s => s.assignedCounsellorId === user?.uid);
           }
 
-          // Format defaults
           const formatted = allStudents.map(s => ({
             ...s,
             counsellingStatus: s.counsellingStatus || 'Not Started',
             sessions: s.sessions || [],
             assignedCounsellorId: s.assignedCounsellorId || ''
           }));
-          
-          if (isMounted) setStudents(formatted);
-          
-          // If a student is currently selected in a modal, update their data live too
-          setSelectedStudent(prevSelected => {
-             if (!prevSelected) return null;
-             const updatedCurrent = formatted.find(stu => stu.id === prevSelected.id);
-             return updatedCurrent || prevSelected;
-          });
 
+          if (isMounted) setFirestoreStudents(formatted);
+
+          setSelectedStudent(prevSelected => {
+            if (!prevSelected) return null;
+            const updated = formatted.find(stu => stu.id === prevSelected.id);
+            return updated || prevSelected;
+          });
         }, (error) => {
-          console.error("Real-time listen error: ", error);
-          if (isMounted) setToast({ type: 'error', message: 'Live connection lost.'});
+          console.error('Real-time listen error:', error);
+          if (isMounted) setToast({ type: 'error', message: 'Live connection lost.' });
         });
 
       } catch (e) {
-        console.error("Data fetch error", e);
-        if (isMounted) setToast({ type: 'error', message: 'Failed to load platform data.'});
+        console.error('Data fetch error', e);
+        if (isMounted) setToast({ type: 'error', message: 'Failed to load platform data.' });
       } finally {
         if (isMounted) setLoadingData(false);
       }
     };
-    
+
     fetchPlatformData();
-    
-    // ✅ Cleanup listener when component unmounts
-    return () => { 
-      isMounted = false; 
+    return () => {
+      isMounted = false;
       if (unsubscribeStudents) unsubscribeStudents();
     };
   }, [isCounsellor, user?.uid]);
@@ -295,20 +971,61 @@ export default function AdminDashboard({ user, onBackToApp }) {
   // --- ACTIONS ---
   const handleUpdateStudent = async (studentId, updates) => {
     try {
-      await updateDoc(doc(db, COLLECTIONS.USERS, studentId), updates);
-      // NOTE: We no longer need to manually setStudents() here because onSnapshot will automatically catch the update!
+      // Update Firestore if real data exists
+      if (firestoreStudents.length > 0) {
+        await updateDoc(doc(db, COLLECTIONS.USERS, studentId), updates);
+      }
       setToast({ type: 'success', message: 'Student record updated.' });
     } catch (err) {
       setToast({ type: 'error', message: 'Failed to update record.' });
     }
   };
 
+  /**
+   * Handle counsellor assignment from the Student Roster card.
+   * Uses DashboardContext for prototype data, Firestore for real data.
+   */
+  const handleAssignCounsellor = async (studentId, counsellorId) => {
+    const student = students.find(s => s.id === studentId);
+    const wasAssigned = student?.assignedCounsellorId;
+
+    try {
+      if (firestoreStudents.length > 0) {
+        // Real Firestore path
+        await updateDoc(doc(db, COLLECTIONS.USERS, studentId), {
+          assignedCounsellorId: counsellorId || null,
+          counsellingStatus: !counsellorId
+            ? (student?.counsellingStatus || 'Not Started')
+            : (student?.counsellingStatus === 'Not Started' ? 'In Progress' : student?.counsellingStatus)
+        });
+      } else {
+        // Context (prototype) path
+        if (!counsellorId) {
+          unassignStudent(studentId);
+        } else if (wasAssigned) {
+          reassignStudent(studentId, counsellorId);
+        } else {
+          assignStudentToCounsellor(studentId, counsellorId);
+        }
+      }
+
+      const counsellorName = counsellorsList.find(c => c.id === counsellorId)?.name || 'counsellor';
+      setToast({
+        type: 'success',
+        message: counsellorId
+          ? `${student?.name || 'Student'} assigned to ${counsellorName}.`
+          : `${student?.name || 'Student'} unassigned.`
+      });
+    } catch (err) {
+      console.error('Assignment error:', err);
+      setToast({ type: 'error', message: 'Failed to update assignment.' });
+    }
+  };
+
   const handleAddSession = async () => {
-    if (!newSession.date || !newSession.outcome) return setToast({type: 'error', message: 'Fill date & outcome.'});
+    if (!newSession.date || !newSession.outcome) return setToast({ type: 'error', message: 'Fill date & outcome.' });
     const updatedSessions = [...(selectedStudent.sessions || []), { id: Date.now(), ...newSession }];
-    
-    // Auto-update status to "In Progress" when a session is logged
-    await handleUpdateStudent(selectedStudent.id, { 
+    await handleUpdateStudent(selectedStudent.id, {
       sessions: updatedSessions,
       counsellingStatus: selectedStudent.counsellingStatus === 'Not Started' ? 'In Progress' : selectedStudent.counsellingStatus
     });
@@ -316,355 +1033,795 @@ export default function AdminDashboard({ user, onBackToApp }) {
   };
 
   const handleLogout = async () => {
-      try {
-          await signOut(auth);
-          // Redirect or handle logout state
-      } catch (error) {
-          console.error('Logout failed', error);
-      }
+    try { await signOut(auth); } catch (error) { console.error('Logout failed', error); }
   };
 
-  // --- PROFILE ACTIONS ---
   const handleSaveProfile = async () => {
-      setSavingProfile(true);
-      try {
-          if(user?.uid) {
-             await setDoc(doc(db, COLLECTIONS.STAFF, user.uid), personalProfile, { merge: true });
-             setToast({ type: 'success', message: 'Profile updated successfully!' });
-          } else {
-             setToast({ type: 'error', message: 'No user ID found. Cannot save.' });
-          }
-      } catch (error) {
-          console.error('Error saving profile:', error);
-          setToast({ type: 'error', message: 'Failed to save profile.' });
-      } finally {
-          setSavingProfile(false);
+    setSavingProfile(true);
+    try {
+      if (user?.uid) {
+        await setDoc(doc(db, COLLECTIONS.STAFF, user.uid), personalProfile, { merge: true });
+        setToast({ type: 'success', message: 'Profile updated successfully!' });
+      } else {
+        setToast({ type: 'error', message: 'No user ID found. Cannot save.' });
       }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setToast({ type: 'error', message: 'Failed to save profile.' });
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
-  // Dynamic Array Handlers for Profile
-  const addExperience = () => {
-    setPersonalProfile(prev => ({
-        ...prev,
-        experience: [...prev.experience, { id: Date.now(), company: '', role: '', duration: '' }]
-    }));
-  };
+  const addExperience = () => setPersonalProfile(prev => ({ ...prev, experience: [...prev.experience, { id: Date.now(), company: '', role: '', duration: '' }] }));
+  const removeExperience = (id) => setPersonalProfile(prev => ({ ...prev, experience: prev.experience.filter(e => e.id !== id) }));
+  const updateExperience = (id, field, value) => setPersonalProfile(prev => ({ ...prev, experience: prev.experience.map(e => e.id === id ? { ...e, [field]: value } : e) }));
 
-  const removeExperience = (id) => {
-    setPersonalProfile(prev => ({
-        ...prev,
-        experience: prev.experience.filter(exp => exp.id !== id)
-    }));
-  };
-
-  const updateExperience = (id, field, value) => {
-      setPersonalProfile(prev => ({
-          ...prev,
-          experience: prev.experience.map(exp => exp.id === id ? { ...exp, [field]: value } : exp)
-      }));
-  };
-
-  const addEducation = () => {
-    setPersonalProfile(prev => ({
-        ...prev,
-        education: [...prev.education, { id: Date.now(), degree: '', institution: '', year: '' }]
-    }));
-  };
-
-  const removeEducation = (id) => {
-    setPersonalProfile(prev => ({
-        ...prev,
-        education: prev.education.filter(edu => edu.id !== id)
-    }));
-  };
-
-  const updateEducation = (id, field, value) => {
-      setPersonalProfile(prev => ({
-          ...prev,
-          education: prev.education.map(edu => edu.id === id ? { ...edu, [field]: value } : edu)
-      }));
-  };
+  const addEducation = () => setPersonalProfile(prev => ({ ...prev, education: [...prev.education, { id: Date.now(), degree: '', institution: '', year: '' }] }));
+  const removeEducation = (id) => setPersonalProfile(prev => ({ ...prev, education: prev.education.filter(e => e.id !== id) }));
+  const updateEducation = (id, field, value) => setPersonalProfile(prev => ({ ...prev, education: prev.education.map(e => e.id === id ? { ...e, [field]: value } : e) }));
 
   // --- DERIVED METRICS ---
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
-      const matchesSearch = (s.name || '').toLowerCase().includes(debouncedSearch.toLowerCase()) || (s.email || '').toLowerCase().includes(debouncedSearch.toLowerCase());
+      const matchesSearch =
+        (s.name || '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        (s.email || '').toLowerCase().includes(debouncedSearch.toLowerCase());
       const matchesStatus = statusFilter === 'All' || s.counsellingStatus === statusFilter;
-      return matchesSearch && matchesStatus && s.riasecCode; // Only show assessed in table
+      return matchesSearch && matchesStatus && s.riasecCode;
     });
   }, [students, debouncedSearch, statusFilter]);
 
-  const pendingInterventions = students.filter(s => s.counsellingStatus === 'Not Started' && s.riasecCode).length;
-  
-  // Analytics Funnel
+  const pendingInterventions = students.filter(s => !s.assignedCounsellorId && s.riasecCode).length;
   const totalRegistered = students.length;
   const totalAssessed = students.filter(s => s.riasecCode).length;
   const totalCounselled = students.filter(s => s.counsellingStatus !== 'Not Started').length;
   const totalCompleted = students.filter(s => s.counsellingStatus === 'Completed').length;
 
-  // Notifications Mock
+  // Notifications
   const notifications = [
-    { id: 1, text: `${pendingInterventions} students need counsellor assignment.`, type: 'warning' },
-    { id: 2, text: "System backup completed successfully.", type: 'success' }
-  ].filter(n => n.text[0] !== '0');
+    pendingInterventions > 0 ? { id: 1, text: `${pendingInterventions} students need counsellor assignment.`, type: 'warning' } : null,
+  ].filter(Boolean);
+
+  // Helper: get assigned counsellor for a student (context-aware)
+  const getAssignedCounsellor = (student) => {
+    const id = student.assignedCounsellorId;
+    if (!id) return null;
+    return counsellorsList.find(c => c.id === id) || null;
+  };
 
   // --- RENDERERS ---
+
+  /** Premium Student Roster Card */
+  const StudentRosterCard = ({ student }) => {
+    const assignedCounsellor = getAssignedCounsellor(student);
+    const [localValue, setLocalValue] = useState(student.assignedCounsellorId || '');
+
+    // Sync if parent data changes
+    useEffect(() => {
+      setLocalValue(student.assignedCounsellorId || '');
+    }, [student.assignedCounsellorId]);
+
+    const handleChange = async (e) => {
+      const newVal = e.target.value;
+      setLocalValue(newVal);
+      await handleAssignCounsellor(student.id, newVal);
+    };
+
+    const statusBadgeClass =
+      student.counsellingStatus === 'Completed' ? 'badge-success' :
+      student.counsellingStatus === 'In Progress' ? 'badge-warn' :
+      'badge-danger';
+
+    return (
+      <div className="student-roster-card">
+        {/* Top: Avatar + Name + Email */}
+        <div className="src-top">
+          <div className="src-avatar">
+            {(student.name || '?').charAt(0).toUpperCase()}
+          </div>
+          <div className="src-info">
+            <div className="src-name">{student.name || 'Unknown Student'}</div>
+            <div className="src-email">{student.email || '—'}</div>
+          </div>
+          <button
+            className="admin-btn-sm-outline"
+            onClick={() => { setSelectedStudent(student); setModalTab('overview'); }}
+            title="View full profile"
+          >
+            View
+          </button>
+        </div>
+
+        {/* Meta badges */}
+        <div className="src-meta">
+          <span className="admin-badge badge-primary">{student.riasecCode}</span>
+          <span className={`admin-badge ${statusBadgeClass}`}>{student.counsellingStatus}</span>
+          {student.gradeLevel && (
+            <span className="admin-badge badge-neutral">{student.gradeLevel}</span>
+          )}
+        </div>
+
+        <div className="src-divider" />
+
+        {/* Assignment row */}
+        <div style={{ marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span className="src-assign-label">Assigned Counsellor</span>
+            {assignedCounsellor ? (
+              <span className="counsellor-chip">
+                <span className="counsellor-chip-dot" />
+                {assignedCounsellor.name}
+              </span>
+            ) : (
+              <span className="unassigned-chip">
+                ⚠ Unassigned
+              </span>
+            )}
+          </div>
+
+          {counsellorsList.length === 0 ? (
+            <div style={{
+              padding: '9px 12px',
+              background: 'var(--bg)',
+              border: '1.5px dashed var(--border)',
+              borderRadius: 'var(--r-sm)',
+              fontSize: '0.8rem',
+              color: 'var(--text-muted)',
+              fontStyle: 'italic'
+            }}>
+              No counsellors registered yet.
+            </div>
+          ) : (
+            <div className="src-assign-row">
+              <select
+                className={`src-assign-select ${localValue ? 'assigned' : ''}`}
+                value={localValue}
+                onChange={handleChange}
+              >
+                <option value="">— Select Counsellor —</option>
+                {counsellorsList.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name || c.email}
+                    {c.specialization ? ` · ${c.specialization}` : ''}
+                  </option>
+                ))}
+              </select>
+              {localValue && (
+                <button
+                  className="admin-btn-sm-outline"
+                  style={{ color: 'var(--danger)', borderColor: 'rgba(239,68,68,0.3)', padding: '6px 10px' }}
+                  onClick={() => handleChange({ target: { value: '' } })}
+                  title="Remove assignment"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Sessions count */}
+        {student.sessions && student.sessions.length > 0 && (
+          <div style={{
+            marginTop: '10px',
+            padding: '8px 12px',
+            background: 'var(--bg)',
+            borderRadius: 'var(--r-sm)',
+            fontSize: '0.78rem',
+            color: 'var(--text-muted)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            📋 <strong style={{ color: 'var(--text-main)' }}>{student.sessions.length}</strong> session{student.sessions.length !== 1 ? 's' : ''} logged
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderTabContent = () => {
-    if (loadingData) return <div className="empty-state"><div className="empty-icon">⏳</div><h2>Loading Platform Data...</h2></div>;
+    if (loadingData) return (
+      <div className="empty-state">
+        <div className="empty-icon">⏳</div>
+        <h2 style={{ color: 'var(--text-main)', marginBottom: '8px' }}>Loading Platform Data...</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Connecting to live database</p>
+      </div>
+    );
 
     switch (activeTab) {
       case 'profile':
-          return (
-            <div className="tab-content anim-fade-in">
-              <div className="header-bar">
-                <div>
-                  <h1>My Profile</h1>
-                  <p>Manage your professional details, experience, and interests.</p>
-                </div>
-                <button 
-                  className="admin-btn" 
-                  onClick={handleSaveProfile} 
-                  disabled={savingProfile}
-                >
-                  {savingProfile ? 'Saving...' : '💾 Save Profile'}
-                </button>
+        return (
+          <div>
+            <div className="header-bar">
+              <div>
+                <h1>My Profile</h1>
+                <p>Manage your professional details, experience, and credentials.</p>
               </div>
-              
-              <div className="admin-card" style={{borderTop: '4px solid var(--primary)'}}>
-                <h3>Personal Information</h3>
-                <div className="grid-2col">
-                  <div className="form-group">
-                    <label className="form-label">Full Name</label>
-                    <input 
-                        type="text" 
-                        className="form-input" 
-                        value={personalProfile.name} 
-                        onChange={(e) => setPersonalProfile({...personalProfile, name: e.target.value})}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Registered Email</label>
-                    <input type="text" className="form-input" value={personalProfile.email} disabled style={{opacity: 0.7}} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Professional Title</label>
-                    <input 
-                        type="text" 
-                        className="form-input" 
-                        placeholder="e.g. Senior Career Counsellor" 
-                        value={personalProfile.title}
-                        onChange={(e) => setPersonalProfile({...personalProfile, title: e.target.value})}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Phone Number</label>
-                    <input 
-                        type="text" 
-                        className="form-input" 
-                        placeholder="+91..." 
-                        value={personalProfile.phone}
-                        onChange={(e) => setPersonalProfile({...personalProfile, phone: e.target.value})}
-                    />
-                  </div>
+              <button className="admin-btn" onClick={handleSaveProfile} disabled={savingProfile}>
+                {savingProfile ? '⏳ Saving...' : '💾 Save Profile'}
+              </button>
+            </div>
+
+            <div className="admin-card" style={{ borderTop: '3px solid var(--primary)' }}>
+              <h3>Personal Information</h3>
+              <div className="grid-2col">
+                <div className="form-group">
+                  <label className="form-label">Full Name</label>
+                  <input type="text" className="form-input" value={personalProfile.name} onChange={(e) => setPersonalProfile({ ...personalProfile, name: e.target.value })} placeholder="Your full name" />
                 </div>
                 <div className="form-group">
-                    <label className="form-label">Professional Bio / Summary</label>
-                    <textarea 
-                        className="form-textarea" 
-                        rows="3" 
-                        placeholder="A brief overview of your counselling philosophy..."
-                        value={personalProfile.bio}
-                        onChange={(e) => setPersonalProfile({...personalProfile, bio: e.target.value})}
-                    ></textarea>
+                  <label className="form-label">Registered Email</label>
+                  <input type="text" className="form-input" value={personalProfile.email} disabled style={{ opacity: 0.6 }} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Professional Title</label>
+                  <input type="text" className="form-input" placeholder="e.g. Senior Career Counsellor" value={personalProfile.title} onChange={(e) => setPersonalProfile({ ...personalProfile, title: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Phone Number</label>
+                  <input type="text" className="form-input" placeholder="+91..." value={personalProfile.phone} onChange={(e) => setPersonalProfile({ ...personalProfile, phone: e.target.value })} />
                 </div>
               </div>
+              <div className="form-group">
+                <label className="form-label">Professional Bio</label>
+                <textarea className="form-textarea" rows="3" placeholder="A brief overview of your counselling philosophy..." value={personalProfile.bio} onChange={(e) => setPersonalProfile({ ...personalProfile, bio: e.target.value })}></textarea>
+              </div>
+            </div>
 
-              <div className="admin-card" style={{borderTop: '4px solid var(--secondary)'}}>
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '15px'}}>
-                    <h3 style={{borderBottom: 'none', paddingBottom: 0, margin: 0}}>Work Experience</h3>
-                    <button className="admin-btn-outline" style={{padding: '5px 10px', fontSize: '0.8rem'}} onClick={addExperience}>+ Add Role</button>
+            <div className="admin-card" style={{ borderTop: '3px solid var(--secondary)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '16px' }}>
+                <h3 style={{ borderBottom: 'none', paddingBottom: 0, margin: 0 }}>Work Experience</h3>
+                <button className="admin-btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={addExperience}>+ Add Role</button>
+              </div>
+              {personalProfile.experience.length === 0 && (
+                <div className="empty-state" style={{ padding: '24px' }}>
+                  <div className="empty-icon" style={{ fontSize: '2rem', marginBottom: '8px' }}>💼</div>
+                  <p style={{ margin: 0, fontSize: '0.875rem' }}>No experience added yet. Click "+ Add Role" to begin.</p>
                 </div>
-                
-                {personalProfile.experience.map((exp, index) => (
-                    <div key={exp.id} className="array-item-card">
-                        <button className="remove-item-btn" onClick={() => removeExperience(exp.id)}>✕</button>
-                        <div className="grid-3col">
-                            <div className="form-group">
-                                <label className="form-label">Institution / Company</label>
-                                <input type="text" className="form-input" value={exp.company} onChange={(e) => updateExperience(exp.id, 'company', e.target.value)} placeholder="e.g. St Joseph's School" />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Role / Position</label>
-                                <input type="text" className="form-input" value={exp.role} onChange={(e) => updateExperience(exp.id, 'role', e.target.value)} placeholder="School Counsellor" />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Duration</label>
-                                <input type="text" className="form-input" value={exp.duration} onChange={(e) => updateExperience(exp.id, 'duration', e.target.value)} placeholder="2022 - 2024" />
-                            </div>
-                        </div>
+              )}
+              {personalProfile.experience.map((exp) => (
+                <div key={exp.id} className="array-item-card">
+                  <button className="remove-item-btn" onClick={() => removeExperience(exp.id)}>✕</button>
+                  <div className="grid-3col">
+                    <div className="form-group">
+                      <label className="form-label">Institution / Company</label>
+                      <input type="text" className="form-input" value={exp.company} onChange={(e) => updateExperience(exp.id, 'company', e.target.value)} placeholder="e.g. St Joseph's School" />
                     </div>
-                ))}
-                {personalProfile.experience.length === 0 && <p style={{color: 'var(--text-muted)'}}>No experience added yet.</p>}
-              </div>
-
-              <div className="admin-card" style={{borderTop: '4px solid var(--success)'}}>
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom: '1px solid var(--border)', paddingBottom: '10px', marginBottom: '15px'}}>
-                    <h3 style={{borderBottom: 'none', paddingBottom: 0, margin: 0}}>Education & Certifications</h3>
-                    <button className="admin-btn-outline" style={{padding: '5px 10px', fontSize: '0.8rem'}} onClick={addEducation}>+ Add Degree</button>
-                </div>
-
-                {personalProfile.education.map((edu, index) => (
-                    <div key={edu.id} className="array-item-card">
-                        <button className="remove-item-btn" onClick={() => removeEducation(edu.id)}>✕</button>
-                        <div className="grid-3col">
-                            <div className="form-group">
-                                <label className="form-label">Degree / Certification</label>
-                                <input type="text" className="form-input" value={edu.degree} onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)} placeholder="e.g. MSW (Psychiatric Social Work)" />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Institution</label>
-                                <input type="text" className="form-input" value={edu.institution} onChange={(e) => updateEducation(edu.id, 'institution', e.target.value)} placeholder="University Name" />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Year</label>
-                                <input type="text" className="form-input" value={edu.year} onChange={(e) => updateEducation(edu.id, 'year', e.target.value)} placeholder="2020" />
-                            </div>
-                        </div>
+                    <div className="form-group">
+                      <label className="form-label">Role / Position</label>
+                      <input type="text" className="form-input" value={exp.role} onChange={(e) => updateExperience(exp.id, 'role', e.target.value)} placeholder="School Counsellor" />
                     </div>
-                ))}
-                {personalProfile.education.length === 0 && <p style={{color: 'var(--text-muted)'}}>No education added yet.</p>}
-              </div>
+                    <div className="form-group">
+                      <label className="form-label">Duration</label>
+                      <input type="text" className="form-input" value={exp.duration} onChange={(e) => updateExperience(exp.id, 'duration', e.target.value)} placeholder="2022 – Present" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-              <div className="admin-card" style={{borderTop: '4px solid var(--warning)'}}>
-                <h3>Interests & Links</h3>
-                <div className="grid-2col">
-                   <div className="form-group">
-                    <label className="form-label">LinkedIn Profile URL</label>
-                    <input 
-                        type="text" 
-                        className="form-input" 
-                        placeholder="https://linkedin.com/in/..." 
-                        value={personalProfile.linkedin}
-                        onChange={(e) => setPersonalProfile({...personalProfile, linkedin: e.target.value})}
-                    />
+            <div className="admin-card" style={{ borderTop: '3px solid var(--success)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '16px' }}>
+                <h3 style={{ borderBottom: 'none', paddingBottom: 0, margin: 0 }}>Education & Certifications</h3>
+                <button className="admin-btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={addEducation}>+ Add Degree</button>
+              </div>
+              {personalProfile.education.length === 0 && (
+                <div className="empty-state" style={{ padding: '24px' }}>
+                  <div className="empty-icon" style={{ fontSize: '2rem', marginBottom: '8px' }}>🎓</div>
+                  <p style={{ margin: 0, fontSize: '0.875rem' }}>No education added yet. Click "+ Add Degree" to begin.</p>
+                </div>
+              )}
+              {personalProfile.education.map((edu) => (
+                <div key={edu.id} className="array-item-card">
+                  <button className="remove-item-btn" onClick={() => removeEducation(edu.id)}>✕</button>
+                  <div className="grid-3col">
+                    <div className="form-group">
+                      <label className="form-label">Degree / Certification</label>
+                      <input type="text" className="form-input" value={edu.degree} onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)} placeholder="e.g. MSW (Psychiatric Social Work)" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Institution</label>
+                      <input type="text" className="form-input" value={edu.institution} onChange={(e) => updateEducation(edu.id, 'institution', e.target.value)} placeholder="University Name" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Year</label>
+                      <input type="text" className="form-input" value={edu.year} onChange={(e) => updateEducation(edu.id, 'year', e.target.value)} placeholder="2020" />
+                    </div>
                   </div>
-                  <div className="form-group">
-                      <label className="form-label">Hobbies & Interests</label>
-                      <input 
-                          type="text" 
-                          className="form-input" 
-                          placeholder="e.g. Reading, Cooking, Trekking" 
-                          value={personalProfile.hobbies}
-                          onChange={(e) => setPersonalProfile({...personalProfile, hobbies: e.target.value})}
-                      />
-                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="admin-card" style={{ borderTop: '3px solid var(--warning)' }}>
+              <h3>Links & Interests</h3>
+              <div className="grid-2col">
+                <div className="form-group">
+                  <label className="form-label">LinkedIn Profile URL</label>
+                  <input type="text" className="form-input" placeholder="https://linkedin.com/in/..." value={personalProfile.linkedin} onChange={(e) => setPersonalProfile({ ...personalProfile, linkedin: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Hobbies & Interests</label>
+                  <input type="text" className="form-input" placeholder="e.g. Reading, Trekking, Cooking" value={personalProfile.hobbies} onChange={(e) => setPersonalProfile({ ...personalProfile, hobbies: e.target.value })} />
                 </div>
               </div>
             </div>
-          );
+          </div>
+        );
 
       case 'overview':
         return (
-          <div className="tab-content">
+          <div>
             <div className="header-bar">
-              <div><h1>Overview Dashboard</h1><p>Real-time snapshot of your assigned metrics.</p></div>
+              <div>
+                <h1>Overview Dashboard</h1>
+                <p>Real-time snapshot of your platform metrics.</p>
+              </div>
             </div>
 
             <div className="kpi-grid">
               {!isCounsellor && (
-                <div className="kpi-box" style={{borderTop: '3px solid var(--primary)'}} onClick={() => setActiveTab('institutions')}>
-                  <h4>Institutions</h4><div className="val">{institutions.length}</div>
+                <div className="kpi-box" style={{ borderTop: '3px solid var(--primary)' }} onClick={() => setActiveTab('institutions')}>
+                  <h4>Institutions</h4>
+                  <div className="val">{institutions.length || ctxStats.totalCounsellors}</div>
+                  <div className="val-sub">Registered partners</div>
                 </div>
               )}
-              <div className="kpi-box" style={{borderTop: '3px solid var(--success)'}} onClick={() => setActiveTab('students')}>
-                <h4>Your Students</h4><div className="val">{totalAssessed}</div>
+              <div className="kpi-box" style={{ borderTop: '3px solid var(--success)' }} onClick={() => setActiveTab('students')}>
+                <h4>Assessed Students</h4>
+                <div className="val">{totalAssessed}</div>
+                <div className="val-sub">Completed RIASEC</div>
               </div>
-              <div className="kpi-box" style={{borderTop: '3px solid var(--danger)'}} onClick={() => { setStatusFilter('Not Started'); setActiveTab('students'); }}>
-                <h4>Pending Interventions</h4>
-                <div className="val" style={{color: pendingInterventions > 0 ? 'var(--danger)' : 'white'}}>{pendingInterventions}</div>
+              <div className="kpi-box" style={{ borderTop: '3px solid var(--danger)' }} onClick={() => { setStatusFilter('Not Started'); setActiveTab('students'); }}>
+                <h4>Pending Assignments</h4>
+                <div className="val" style={{ color: pendingInterventions > 0 ? 'var(--danger)' : 'var(--success)' }}>{pendingInterventions}</div>
+                <div className="val-sub">Need counsellor assignment</div>
+              </div>
+              <div className="kpi-box" style={{ borderTop: '3px solid var(--warning)' }} onClick={() => setActiveTab('analytics')}>
+                <h4>Completion Rate</h4>
+                <div className="val">{totalRegistered > 0 ? Math.round((totalCompleted / totalRegistered) * 100) : 0}%</div>
+                <div className="val-sub">{totalCompleted} of {totalRegistered} students</div>
               </div>
             </div>
 
             <div className="grid-2col">
-              <div className="admin-card" style={{borderTop: '4px solid var(--warning)'}}>
-                <h3>Action Queue</h3>
+              <div className="admin-card" style={{ borderTop: '3px solid var(--warning)' }}>
+                <h3>⚡ Action Queue</h3>
                 {pendingInterventions > 0 ? (
-                  <div className="list-item clickable" onClick={() => { setStatusFilter('Not Started'); setActiveTab('students'); }}>
-                    <span>Unassigned Students</span> 
-                    <span className="admin-badge badge-danger">{pendingInterventions} Students</span>
+                  <div
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'rgba(245,158,11,0.06)', borderRadius: 'var(--r-sm)', border: '1px solid rgba(245,158,11,0.15)', cursor: 'pointer' }}
+                    onClick={() => { setStatusFilter('Not Started'); setActiveTab('students'); }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: '600', color: 'var(--text-main)', marginBottom: '2px' }}>Unassigned Students</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Click to view and assign counsellors</div>
+                    </div>
+                    <span className="admin-badge badge-warn">{pendingInterventions} Students</span>
                   </div>
                 ) : (
-                   <div className="empty-state" style={{padding: '20px'}}><div className="empty-icon" style={{fontSize:'2rem', marginBottom: '5px'}}>🎉</div><p style={{margin:0}}>Inbox Zero! All clear.</p></div>
+                  <div className="empty-state" style={{ padding: '24px' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🎉</div>
+                    <p style={{ margin: 0, fontWeight: '600', color: 'var(--success)' }}>All clear! No pending actions.</p>
+                  </div>
                 )}
               </div>
+
+              <div className="admin-card" style={{ borderTop: '3px solid var(--secondary)' }}>
+                <h3>📊 Quick Stats</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {[
+                    { label: 'Total Registered', value: totalRegistered, color: 'var(--text-main)' },
+                    { label: 'Assessed', value: totalAssessed, color: 'var(--primary)' },
+                    { label: 'In Counselling', value: totalCounselled, color: 'var(--warning)' },
+                    { label: 'Completed', value: totalCompleted, color: 'var(--success)' },
+                  ].map((stat, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < 3 ? '1px solid var(--border)' : 'none' }}>
+                      <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{stat.label}</span>
+                      <span style={{ fontSize: '1.1rem', fontWeight: '700', color: stat.color }}>{stat.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
+
+            {/* Counsellor Panel on Overview */}
+            {counsellorsList.length > 0 && (
+              <div className="admin-card" style={{ borderTop: '3px solid var(--primary)' }}>
+                <h3>
+                  👥 Counsellor Team
+                  <span className="admin-badge badge-primary" style={{ fontWeight: '600', fontSize: '0.75rem' }}>{counsellorsList.length} Active</span>
+                </h3>
+                <div className="counsellor-panel-grid">
+                  {counsellorsList.map(c => {
+                    const assignedCount = students.filter(s => s.assignedCounsellorId === c.id).length;
+                    return (
+                      <div key={c.id} className="counsellor-panel-card">
+                        <div className="cpc-header">
+                          <div className="cpc-avatar">{(c.name || 'C').charAt(0).toUpperCase()}</div>
+                          <div>
+                            <div className="cpc-name">{c.name}</div>
+                            <div className="cpc-title">{c.title || c.specialization || 'Counsellor'}</div>
+                          </div>
+                        </div>
+                        {c.availability && (
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                            🕐 {c.availability}
+                          </div>
+                        )}
+                        <div className="cpc-stats">
+                          <div className="cpc-stat">
+                            <div className="cpc-stat-val" style={{ color: 'var(--primary)' }}>{assignedCount}</div>
+                            <div className="cpc-stat-label">Assigned</div>
+                          </div>
+                          {c.totalSessions && (
+                            <div className="cpc-stat">
+                              <div className="cpc-stat-val">{c.totalSessions}</div>
+                              <div className="cpc-stat-label">Sessions</div>
+                            </div>
+                          )}
+                          {c.rating && (
+                            <div className="cpc-stat">
+                              <div className="cpc-stat-val" style={{ color: 'var(--warning)' }}>⭐ {c.rating}</div>
+                              <div className="cpc-stat-label">Rating</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         );
 
       case 'students':
         return (
-          <div className="tab-content">
+          <div>
             <div className="header-bar">
-              <div><h1>Student Master Directory</h1><p>Search, filter, and manage all assessed students.</p></div>
-            </div>
-            
-            <div className="admin-card" style={{ borderTop: '4px solid var(--success)' }}>
-              <div className="search-bar">
-                <input 
-                  type="text" 
-                  id="student-search"
-                  ref={searchRef}
-                  className="form-input" 
-                  placeholder="🔍 Search name (Press '/' to focus)..." 
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  style={{flex: 2}}
-                />
-                <select className="form-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{flex: 1}}>
-                  <option value="All">All Statuses</option>
-                  <option value="Not Started">Not Started</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                </select>
+              <div>
+                <h1>Student Master Directory</h1>
+                <p>
+                  {filteredStudents.length} student{filteredStudents.length !== 1 ? 's' : ''} shown
+                  {statusFilter !== 'All' ? ` · Filtered: ${statusFilter}` : ''}
+                  {debouncedSearch ? ` · Search: "${debouncedSearch}"` : ''}
+                </p>
               </div>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                {/* View toggle */}
+                <div style={{ display: 'flex', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', overflow: 'hidden' }}>
+                  <button
+                    onClick={() => setViewMode('cards')}
+                    style={{
+                      padding: '8px 14px', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                      fontSize: '0.8rem', fontWeight: '600', transition: '0.15s',
+                      background: viewMode === 'cards' ? 'var(--primary)' : 'transparent',
+                      color: viewMode === 'cards' ? 'white' : 'var(--text-muted)',
+                    }}
+                  >
+                    ⊞ Cards
+                  </button>
+                  <button
+                    onClick={() => setViewMode('table')}
+                    style={{
+                      padding: '8px 14px', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                      fontSize: '0.8rem', fontWeight: '600', transition: '0.15s',
+                      background: viewMode === 'table' ? 'var(--primary)' : 'transparent',
+                      color: viewMode === 'table' ? 'white' : 'var(--text-muted)',
+                    }}
+                  >
+                    ☰ Table
+                  </button>
+                </div>
+              </div>
+            </div>
 
-              {filteredStudents.length === 0 ? (
-                <div className="empty-state"><div className="empty-icon">👻</div><h3>No students found</h3><p>Try adjusting your search or filters.</p></div>
-              ) : (
-                <div style={{overflowX: 'auto'}}>
+            {/* Search & Filter Bar */}
+            <div className="search-bar">
+              <input
+                type="text"
+                ref={searchRef}
+                className="form-input"
+                placeholder="🔍 Search by name or email... (Press '/' to focus)"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                style={{ flex: 2 }}
+              />
+              <select className="form-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ flex: 1 }}>
+                <option value="All">All Statuses</option>
+                <option value="Not Started">Not Started</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </select>
+              {(searchInput || statusFilter !== 'All') && (
+                <button
+                  className="admin-btn-outline"
+                  onClick={() => { setSearchInput(''); setStatusFilter('All'); }}
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  ✕ Clear
+                </button>
+              )}
+            </div>
+
+            {filteredStudents.length === 0 ? (
+              <div className="admin-card">
+                <div className="empty-state">
+                  <div className="empty-icon">🔍</div>
+                  <h3 style={{ color: 'var(--text-main)', marginBottom: '8px' }}>No students found</h3>
+                  <p>Try adjusting your search or filters.</p>
+                </div>
+              </div>
+            ) : viewMode === 'cards' ? (
+              /* ── PREMIUM CARD VIEW ── */
+              <div>
+                {/* Summary strip */}
+                <div style={{
+                  display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap'
+                }}>
+                  {[
+                    { label: 'Unassigned', count: filteredStudents.filter(s => !s.assignedCounsellorId).length, color: 'var(--danger)', bg: 'rgba(239,68,68,0.06)', border: 'rgba(239,68,68,0.15)' },
+                    { label: 'Assigned', count: filteredStudents.filter(s => s.assignedCounsellorId).length, color: 'var(--success)', bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.15)' },
+                    { label: 'In Progress', count: filteredStudents.filter(s => s.counsellingStatus === 'In Progress').length, color: 'var(--warning)', bg: 'rgba(245,158,11,0.06)', border: 'rgba(245,158,11,0.15)' },
+                    { label: 'Completed', count: filteredStudents.filter(s => s.counsellingStatus === 'Completed').length, color: 'var(--success)', bg: 'rgba(16,185,129,0.06)', border: 'rgba(16,185,129,0.15)' },
+                  ].map((item, i) => (
+                    <div key={i} style={{
+                      padding: '10px 18px',
+                      background: item.bg,
+                      border: `1px solid ${item.border}`,
+                      borderRadius: 'var(--r-sm)',
+                      display: 'flex', alignItems: 'center', gap: '8px'
+                    }}>
+                      <span style={{ fontSize: '1.1rem', fontWeight: '800', color: item.color }}>{item.count}</span>
+                      <span style={{ fontSize: '0.78rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="student-roster-grid">
+                  {filteredStudents.map(student => (
+                    <StudentRosterCard key={student.id} student={student} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* ── TABLE VIEW ── */
+              <div className="admin-card" style={{ borderTop: '3px solid var(--success)' }}>
+                <div style={{ overflowX: 'auto' }}>
                   <table className="data-table">
                     <thead>
-                      <tr><th>Name</th><th>Email</th><th>RIASEC</th><th>Status</th><th>Counsellor</th></tr>
+                      <tr>
+                        <th>Student</th>
+                        <th>RIASEC</th>
+                        <th>Status</th>
+                        <th>Assigned Counsellor</th>
+                        <th>Reassign</th>
+                        <th>Actions</th>
+                      </tr>
                     </thead>
                     <tbody>
-                      {filteredStudents.map(student => (
-                        <tr key={student.id} className="clickable" onClick={() => { setSelectedStudent(student); setModalTab('overview'); }}>
-                          <td style={{fontWeight: 'bold'}}>{student.name || 'Unknown'}</td>
-                          <td style={{color: 'var(--text-muted)'}}>{student.email}</td>
-                          <td><span className="admin-badge" style={{background: 'rgba(139, 92, 246, 0.2)', color: 'var(--primary)'}}>{student.riasecCode}</span></td>
-                          <td><span className={`admin-badge ${student.counsellingStatus === 'Not Started' ? 'badge-danger' : student.counsellingStatus === 'In Progress' ? 'badge-warn' : 'badge-success'}`}>{student.counsellingStatus}</span></td>
-                          <td style={{color: 'var(--text-muted)'}}>{COUNSELLORS.find(c=>c.id===student.assignedCounsellorId)?.name || 'Unassigned'}</td>
-                        </tr>
-                      ))}
+                      {filteredStudents.map(student => {
+                        const assignedCounsellor = getAssignedCounsellor(student);
+                        return (
+                          <tr key={student.id}>
+                            <td>
+                              <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{student.name || 'Unknown'}</div>
+                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{student.email}</div>
+                            </td>
+                            <td><span className="admin-badge badge-primary">{student.riasecCode}</span></td>
+                            <td>
+                              <span className={`admin-badge ${student.counsellingStatus === 'Not Started' ? 'badge-danger' : student.counsellingStatus === 'In Progress' ? 'badge-warn' : 'badge-success'}`}>
+                                {student.counsellingStatus}
+                              </span>
+                            </td>
+                            <td>
+                              {assignedCounsellor ? (
+                                <span className="counsellor-chip">
+                                  <span className="counsellor-chip-dot" />
+                                  {assignedCounsellor.name}
+                                </span>
+                              ) : (
+                                <span className="unassigned-chip">⚠ Unassigned</span>
+                              )}
+                            </td>
+                            <td style={{ minWidth: '180px' }}>
+                              {counsellorsList.length > 0 ? (
+                                <select
+                                  className="form-select"
+                                  style={{ padding: '6px 10px', fontSize: '0.8rem' }}
+                                  value={student.assignedCounsellorId || ''}
+                                  onChange={(e) => handleAssignCounsellor(student.id, e.target.value)}
+                                >
+                                  <option value="">— Unassigned —</option>
+                                  {counsellorsList.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name || c.email}</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>No counsellors</span>
+                              )}
+                            </td>
+                            <td>
+                              <button
+                                className="admin-btn-sm-outline"
+                                onClick={() => { setSelectedStudent(student); setModalTab('overview'); }}
+                              >
+                                View
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
-              )}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'counselling':
+        return (
+          <div>
+            <div className="header-bar">
+              <div>
+                <h1>Counselling Workflow</h1>
+                <p>Track and manage active counselling relationships.</p>
+              </div>
             </div>
+
+            {counsellorsList.length === 0 ? (
+              <div className="admin-card">
+                <div className="empty-state">
+                  <div className="empty-icon">👥</div>
+                  <h3 style={{ color: 'var(--text-main)', marginBottom: '8px' }}>No Counsellors Registered</h3>
+                  <p>Add counsellors to the Staff collection to begin managing assignments.</p>
+                </div>
+              </div>
+            ) : (
+              counsellorsList.map(counsellor => {
+                const assignedStudents = students.filter(s => s.assignedCounsellorId === counsellor.id);
+                return (
+                  <div key={counsellor.id} className="admin-card" style={{ borderTop: '3px solid var(--primary)' }}>
+                    <h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          width: '36px', height: '36px', borderRadius: '50%',
+                          background: 'linear-gradient(135deg, var(--primary), #7C6EF5)',
+                          color: 'white', fontWeight: '800', fontSize: '0.9rem',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                        }}>
+                          {(counsellor.name || 'C').charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{counsellor.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '400' }}>{counsellor.title || counsellor.specialization || 'Counsellor'}</div>
+                        </div>
+                      </div>
+                      <span className="admin-badge badge-primary">{assignedStudents.length} Students</span>
+                    </h3>
+
+                    {assignedStudents.length === 0 ? (
+                      <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                        No students assigned yet.
+                      </div>
+                    ) : (
+                      <div style={{ overflowX: 'auto' }}>
+                        <table className="data-table">
+                          <thead>
+                            <tr>
+                              <th>Student</th>
+                              <th>RIASEC</th>
+                              <th>Status</th>
+                              <th>Sessions</th>
+                              <th>Reassign To</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {assignedStudents.map(student => (
+                              <tr key={student.id}>
+                                <td>
+                                  <div style={{ fontWeight: '600' }}>{student.name || 'Unknown'}</div>
+                                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{student.email}</div>
+                                </td>
+                                <td><span className="admin-badge badge-primary">{student.riasecCode}</span></td>
+                                <td>
+                                  <span className={`admin-badge ${student.counsellingStatus === 'Not Started' ? 'badge-danger' : student.counsellingStatus === 'In Progress' ? 'badge-warn' : 'badge-success'}`}>
+                                    {student.counsellingStatus}
+                                  </span>
+                                </td>
+                                <td style={{ fontWeight: '600', color: 'var(--text-main)' }}>
+                                  {(student.sessions || []).length}
+                                </td>
+                                <td style={{ minWidth: '180px' }}>
+                                  <select
+                                    className="form-select"
+                                    style={{ padding: '6px 10px', fontSize: '0.8rem' }}
+                                    value={student.assignedCounsellorId || ''}
+                                    onChange={(e) => handleAssignCounsellor(student.id, e.target.value)}
+                                  >
+                                    <option value="">— Unassign —</option>
+                                    {counsellorsList.map(c => (
+                                      <option key={c.id} value={c.id}>{c.name || c.email}</option>
+                                    ))}
+                                  </select>
+                                </td>
+                                <td>
+                                  <button
+                                    className="admin-btn-sm-outline"
+                                    onClick={() => { setSelectedStudent(student); setModalTab('counselling'); }}
+                                  >
+                                    Log Session
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         );
 
       case 'analytics':
         return (
-          <div className="tab-content">
-            <div className="header-bar"><h1>Analytics & Conversion</h1><p>Platform-wide pipeline and completion metrics.</p></div>
-            <div className="admin-card" style={{borderTop: '4px solid var(--secondary)'}}>
+          <div>
+            <div className="header-bar">
+              <div>
+                <h1>Analytics & Conversion</h1>
+                <p>Platform-wide pipeline and completion metrics.</p>
+              </div>
+            </div>
+            <div className="admin-card" style={{ borderTop: '3px solid var(--secondary)' }}>
               <h3>Conversion Funnel</h3>
               <div className="funnel-container">
-                <div className="funnel-step"><div className="funnel-val">{totalRegistered}</div><div className="funnel-label">Registered</div></div>
-                <div className="funnel-step"><div className="funnel-val" style={{color:'var(--primary)'}}>{totalAssessed}</div><div className="funnel-label">Assessed</div></div>
-                <div className="funnel-step"><div className="funnel-val" style={{color:'var(--warning)'}}>{totalCounselled}</div><div className="funnel-label">In Counselling</div></div>
-                <div className="funnel-step"><div className="funnel-val" style={{color:'var(--success)'}}>{totalCompleted}</div><div className="funnel-label">Completed</div></div>
+                <div className="funnel-step">
+                  <div className="funnel-val">{totalRegistered}</div>
+                  <div className="funnel-label">Registered</div>
+                </div>
+                <div className="funnel-step">
+                  <div className="funnel-val" style={{ color: 'var(--primary)' }}>{totalAssessed}</div>
+                  <div className="funnel-label">Assessed</div>
+                </div>
+                <div className="funnel-step">
+                  <div className="funnel-val" style={{ color: 'var(--warning)' }}>{totalCounselled}</div>
+                  <div className="funnel-label">In Counselling</div>
+                </div>
+                <div className="funnel-step">
+                  <div className="funnel-val" style={{ color: 'var(--success)' }}>{totalCompleted}</div>
+                  <div className="funnel-label">Completed</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Assignment breakdown */}
+            <div className="admin-card" style={{ borderTop: '3px solid var(--primary)' }}>
+              <h3>Assignment Breakdown</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {counsellorsList.map(c => {
+                  const count = students.filter(s => s.assignedCounsellorId === c.id).length;
+                  const pct = totalAssessed > 0 ? Math.round((count / totalAssessed) * 100) : 0;
+                  return (
+                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{ width: '160px', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-main)', flexShrink: 0 }}>{c.name}</div>
+                      <div style={{ flex: 1, background: 'var(--bg)', borderRadius: '20px', height: '10px', overflow: 'hidden' }}>
+                        <div style={{ width: `${pct}%`, height: '100%', background: 'var(--primary)', borderRadius: '20px', transition: 'width 0.5s ease' }} />
+                      </div>
+                      <div style={{ width: '60px', textAlign: 'right', fontSize: '0.85rem', fontWeight: '700', color: 'var(--primary)' }}>{count} ({pct}%)</div>
+                    </div>
+                  );
+                })}
+                {counsellorsList.length === 0 && (
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textAlign: 'center', padding: '16px' }}>
+                    No counsellors registered yet.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -672,9 +1829,16 @@ export default function AdminDashboard({ user, onBackToApp }) {
 
       default:
         return (
-          <div className="tab-content">
-            <div className="header-bar"><h1>{allowedTabs.find(t => t.id === activeTab)?.label}</h1><p>Module configuration.</p></div>
-            <div className="empty-state"><div className="empty-icon">🚧</div><h3>Under Construction</h3><p>Enterprise features are locked for your current role tier.</p></div>
+          <div>
+            <div className="header-bar">
+              <h1>{allowedTabs.find(t => t.id === activeTab)?.label}</h1>
+              <p>Module configuration.</p>
+            </div>
+            <div className="empty-state">
+              <div className="empty-icon">🚧</div>
+              <h3 style={{ color: 'var(--text-main)', marginBottom: '8px' }}>Under Construction</h3>
+              <p>This module is being built. Check back soon.</p>
+            </div>
           </div>
         );
     }
@@ -682,55 +1846,101 @@ export default function AdminDashboard({ user, onBackToApp }) {
 
   return (
     <div className="admin-root">
-      
-      {/* 🧩 SIDEBAR */}
+
+      {/* ── SIDEBAR ── */}
       <div className="admin-sidebar">
         <div className="admin-brand" onClick={() => setActiveTab('overview')}>
-          <h2>Career Intel ⚡</h2>
+          <h2>Secret Sharz</h2>
+          <div className="admin-brand-sub">Admin Portal</div>
         </div>
+
+        <div className="nav-section-label">Navigation</div>
         {allowedTabs.map(tab => (
-          <button 
+          <button
             key={tab.id}
             className={`nav-btn ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
           >
-            {tab.icon} {tab.label}
+            <span className="nav-btn-icon">{tab.icon}</span>
+            {tab.label}
           </button>
         ))}
+
+        {/* Portal Switcher */}
+        <div style={{ flex: 1 }} />
+        <div className="portal-switcher">
+          <div className="portal-switcher-label">Switch Portal</div>
+          <button className="portal-btn current">
+            <span className="portal-btn-dot" style={{ background: '#5B6EF5' }} />
+            Admin Portal
+          </button>
+          {navigate && (
+            <button className="portal-btn" onClick={() => navigate('/counsellor')}>
+              <span className="portal-btn-dot" style={{ background: '#10B981' }} />
+              Counsellor Portal
+            </button>
+          )}
+          {navigate && (
+            <button className="portal-btn" onClick={() => navigate('/dashboard')}>
+              <span className="portal-btn-dot" style={{ background: '#F59E0B' }} />
+              Student Portal
+            </button>
+          )}
+        </div>
       </div>
 
+      {/* ── MAIN ── */}
       <div className="admin-main">
-        {/* 🧩 TOP HEADER */}
+        {/* Top Header */}
         <div className="top-header">
-          <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
-            <span className={`admin-badge ${isCounsellor ? 'badge-primary' : 'badge-danger'}`}>
-              Role: {profile.role?.replace('_', ' ').toUpperCase()}
+          <div className="top-header-left">
+            <span className={`admin-badge ${isCounsellor ? 'badge-primary' : 'badge-success'}`}>
+              {profile.role?.replace('_', ' ').toUpperCase()}
+            </span>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: '500' }}>
+              {profile.name || user?.email}
             </span>
           </div>
-          
+
           <div className="header-actions">
-            {/* Notifications Dropdown */}
-            <div style={{position: 'relative'}}>
+            {/* Notifications */}
+            <div style={{ position: 'relative' }}>
               <button className="notify-bell" onClick={() => setNotifyOpen(!notifyOpen)}>
-                🔔 {notifications.length > 0 && <div className="notify-badge">{notifications.length}</div>}
+                🔔
+                {notifications.length > 0 && <div className="notify-badge">{notifications.length}</div>}
               </button>
               {notifyOpen && (
-                <div className="dropdown-content" style={{width: '300px'}}>
-                  <div style={{padding: '10px 15px', borderBottom: '1px solid var(--border)', fontWeight: 'bold'}}>Notifications</div>
-                  {notifications.length === 0 ? <div style={{padding: '15px', color:'var(--text-muted)'}}>No new alerts</div> : 
-                    notifications.map(n => <button key={n.id} className="notify-item" style={{color: n.type==='warning'?'var(--warning)':'var(--success)'}}>{n.text}</button>)
-                  }
+                <div className="dropdown-content" style={{ width: '300px' }}>
+                  <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-main)' }}>
+                    Notifications
+                  </div>
+                  {notifications.length === 0 ? (
+                    <div style={{ padding: '16px', color: 'var(--text-muted)', fontSize: '0.875rem' }}>No new alerts</div>
+                  ) : (
+                    notifications.map(n => (
+                      <button key={n.id} className="notify-item" style={{ color: n.type === 'warning' ? 'var(--warning)' : 'var(--success)' }}>
+                        {n.type === 'warning' ? '⚠️' : '✅'} {n.text}
+                      </button>
+                    ))
+                  )}
                 </div>
               )}
             </div>
 
-            <button onClick={onBackToApp} className="site-link" style={{border:'none', cursor:'pointer', fontFamily:'inherit'}}>🌐 Live Site</button>
-            <div className="profile-menu">
-              <div className="avatar-btn" onClick={() => setProfileOpen(!profileOpen)}>{profile.name.charAt(0).toUpperCase()}</div>
+            <button onClick={onBackToApp} className="site-link">🌐 Live Site</button>
+
+            <div style={{ position: 'relative' }}>
+              <div className="avatar-btn" onClick={() => setProfileOpen(!profileOpen)}>
+                {(profile.name || 'A').charAt(0).toUpperCase()}
+              </div>
               {profileOpen && (
                 <div className="dropdown-content">
-                  <div style={{padding: '15px', borderBottom: '1px solid var(--border)'}}><strong style={{color:'white'}}>{profile.name}</strong></div>
-                  <button style={{color: 'var(--danger)'}} onClick={handleLogout}>🚪 Logout</button>
+                  <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.9rem' }}>{profile.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>{user?.email}</div>
+                  </div>
+                  <button onClick={() => { setProfileOpen(false); setActiveTab('profile'); }}>👤 My Profile</button>
+                  <button style={{ color: 'var(--danger)' }} onClick={handleLogout}>🚪 Sign Out</button>
                 </div>
               )}
             </div>
@@ -742,75 +1952,216 @@ export default function AdminDashboard({ user, onBackToApp }) {
         </div>
       </div>
 
-      {/* 🚀 1. MASSIVE STUDENT MODAL UPGRADE */}
+      {/* ── STUDENT DETAIL MODAL ── */}
       {selectedStudent && (
         <div className="modal-overlay" onClick={() => setSelectedStudent(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            
-            <div className="modal-header" style={{position:'relative'}}>
+            <div className="modal-header" style={{ position: 'relative' }}>
               <button className="close-btn" onClick={() => setSelectedStudent(null)}>✕</button>
-              <h2 style={{fontSize:'1.5rem'}}>🎓 {selectedStudent.name || 'Unknown'}</h2>
-              <span style={{color: 'var(--text-muted)', fontSize: '0.85rem'}}>{selectedStudent.email}</span>
-              
-              {/* MODAL TABS */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '4px' }}>
+                <div style={{
+                  width: '48px', height: '48px', borderRadius: '14px',
+                  background: 'var(--primary-light)', color: 'var(--primary)',
+                  fontWeight: '800', fontSize: '1.2rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  border: '1.5px solid rgba(91,110,245,0.2)'
+                }}>
+                  {(selectedStudent.name || '?').charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: 'var(--text-main)' }}>
+                    {selectedStudent.name || 'Unknown Student'}
+                  </h2>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{selectedStudent.email}</span>
+                </div>
+              </div>
               <div className="modal-tabs">
-                <button className={`modal-tab ${modalTab === 'overview' ? 'active' : ''}`} onClick={()=>setModalTab('overview')}>Overview</button>
-                <button className={`modal-tab ${modalTab === 'counselling' ? 'active' : ''}`} onClick={()=>setModalTab('counselling')}>Counselling Log</button>
-                <button className={`modal-tab ${modalTab === 'documents' ? 'active' : ''}`} onClick={()=>setModalTab('documents')}>Documents</button>
+                <button className={`modal-tab ${modalTab === 'overview' ? 'active' : ''}`} onClick={() => setModalTab('overview')}>Overview</button>
+                <button className={`modal-tab ${modalTab === 'counselling' ? 'active' : ''}`} onClick={() => setModalTab('counselling')}>Counselling Log</button>
+                <button className={`modal-tab ${modalTab === 'documents' ? 'active' : ''}`} onClick={() => setModalTab('documents')}>Documents</button>
               </div>
             </div>
 
             <div className="modal-body">
-              
               {/* OVERVIEW TAB */}
               {modalTab === 'overview' && (
-                <div className="anim-up">
-                  <div className="grid-2col" style={{marginBottom: '20px'}}>
-                    <div style={{background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border)'}}>
+                <div>
+                  {/* Student info grid */}
+                  <div className="grid-2col" style={{ marginBottom: '20px' }}>
+                    <div style={{ background: 'var(--primary-light)', padding: '16px', borderRadius: 'var(--r-md)', border: '1px solid rgba(91,110,245,0.15)' }}>
                       <label className="form-label">RIASEC Profile</label>
-                      <div style={{fontSize: '1.5rem', fontWeight: '900', color: 'var(--primary)', marginBottom: '5px'}}>{selectedStudent.riasecCode}</div>
-                      <div style={{color: 'var(--gold)', fontWeight: 'bold'}}>{selectedStudent.bestCareer || 'Pending Match'}</div>
+                      <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--primary)', marginBottom: '4px' }}>{selectedStudent.riasecCode}</div>
+                      <div style={{ color: 'var(--text-muted)', fontWeight: '500', fontSize: '0.82rem', lineHeight: '1.5' }}>
+                        {selectedStudent.riasecSummary || selectedStudent.bestCareer?.title || 'Pending Match'}
+                      </div>
                     </div>
-                    
-                    <div className="form-group">
-                      <label className="form-label">Assign Counsellor</label>
-                      <select 
-                        className="form-select" 
-                        value={selectedStudent.assignedCounsellorId || ''} 
-                        onChange={(e) => handleUpdateStudent(selectedStudent.id, { assignedCounsellorId: e.target.value })}
-                      >
-                        <option value="">-- Unassigned --</option>
-                        {COUNSELLORS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
+
+                    <div>
+                      <div className="form-group">
+                        <label className="form-label">School / Institution</label>
+                        <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '0.875rem', color: 'var(--text-main)' }}>
+                          {selectedStudent.schoolName || '—'}
+                        </div>
+                      </div>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">Grade / Stream</label>
+                        <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '0.875rem', color: 'var(--text-main)' }}>
+                          {[selectedStudent.gradeLevel, selectedStudent.stream1112].filter(Boolean).join(' · ') || '—'}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
+                  {/* Assign Counsellor */}
+                  <div className="admin-card" style={{ margin: '0 0 16px 0', borderTop: '3px solid var(--primary)', boxShadow: 'none' }}>
+                    <h3 style={{ fontSize: '0.9rem' }}>
+                      🎯 Counsellor Assignment
+                      {selectedStudent.assignedCounsellorId ? (
+                        <span className="counsellor-chip" style={{ marginLeft: '8px' }}>
+                          <span className="counsellor-chip-dot" />
+                          {getAssignedCounsellor(selectedStudent)?.name || 'Assigned'}
+                        </span>
+                      ) : (
+                        <span className="unassigned-chip" style={{ marginLeft: '8px' }}>⚠ Unassigned</span>
+                      )}
+                    </h3>
+
+                    {counsellorsList.length === 0 ? (
+                      <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '1.5px dashed var(--border)', borderRadius: 'var(--r-sm)', fontSize: '0.875rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                        No counsellors registered yet. Add counsellors via the Staff collection.
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="form-label">Select or Reassign Counsellor</label>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                          <select
+                            className="form-select"
+                            style={{ flex: 1 }}
+                            value={selectedStudent.assignedCounsellorId || ''}
+                            onChange={(e) => handleAssignCounsellor(selectedStudent.id, e.target.value)}
+                          >
+                            <option value="">— Unassigned —</option>
+                            {counsellorsList.map(c => (
+                              <option key={c.id} value={c.id}>
+                                {c.name || c.email}
+                                {c.specialization ? ` · ${c.specialization}` : ''}
+                                {c.availability ? ` (${c.availability})` : ''}
+                              </option>
+                            ))}
+                          </select>
+                          {selectedStudent.assignedCounsellorId && (
+                            <button
+                              className="admin-btn-danger"
+                              onClick={() => handleAssignCounsellor(selectedStudent.id, '')}
+                            >
+                              Unassign
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Counsellor detail preview */}
+                        {selectedStudent.assignedCounsellorId && (() => {
+                          const c = getAssignedCounsellor(selectedStudent);
+                          if (!c) return null;
+                          return (
+                            <div style={{
+                              marginTop: '12px', padding: '12px 16px',
+                              background: 'rgba(16,185,129,0.04)',
+                              border: '1px solid rgba(16,185,129,0.15)',
+                              borderRadius: 'var(--r-sm)',
+                              display: 'flex', alignItems: 'center', gap: '12px'
+                            }}>
+                              <div style={{
+                                width: '36px', height: '36px', borderRadius: '50%',
+                                background: 'linear-gradient(135deg, var(--primary), #7C6EF5)',
+                                color: 'white', fontWeight: '800', fontSize: '0.9rem',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                              }}>
+                                {(c.name || 'C').charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-main)' }}>{c.name}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                  {c.title || c.specialization}
+                                  {c.availability ? ` · ${c.availability}` : ''}
+                                </div>
+                              </div>
+                              {c.rating && (
+                                <div style={{ marginLeft: 'auto', fontSize: '0.85rem', fontWeight: '700', color: 'var(--warning)' }}>
+                                  ⭐ {c.rating}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Status */}
                   <div className="form-group">
-                    <label className="form-label">Current Status</label>
-                    <select className="form-select" value={selectedStudent.counsellingStatus} onChange={(e) => handleUpdateStudent(selectedStudent.id, {counsellingStatus: e.target.value})}>
+                    <label className="form-label">Current Counselling Status</label>
+                    <select
+                      className="form-select"
+                      value={selectedStudent.counsellingStatus}
+                      onChange={(e) => handleUpdateStudent(selectedStudent.id, { counsellingStatus: e.target.value })}
+                    >
                       <option value="Not Started">Not Started</option>
                       <option value="In Progress">In Progress</option>
                       <option value="Completed">Completed</option>
                     </select>
                   </div>
+
+                  {/* Career match preview */}
+                  {selectedStudent.bestCareer && (
+                    <div style={{
+                      padding: '14px 16px',
+                      background: 'var(--bg)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--r-sm)',
+                      marginTop: '4px'
+                    }}>
+                      <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+                        Best Career Match
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div>
+                          <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.95rem' }}>{selectedStudent.bestCareer.title}</div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{selectedStudent.bestCareer.subtitle}</div>
+                        </div>
+                        <div style={{
+                          padding: '6px 14px',
+                          background: 'var(--primary-light)',
+                          color: 'var(--primary)',
+                          borderRadius: '20px',
+                          fontWeight: '800',
+                          fontSize: '0.9rem'
+                        }}>
+                          {selectedStudent.bestCareer.matchPercent}%
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* COUNSELLING TAB */}
               {modalTab === 'counselling' && (
-                <div className="anim-up">
-                  {/* Session Timeline */}
-                  <div style={{marginBottom: '30px'}}>
-                    <h3 style={{marginTop: 0, borderBottom: '1px solid var(--border)', paddingBottom: '10px'}}>Session History</h3>
+                <div>
+                  <div style={{ marginBottom: '28px' }}>
+                    <h3 style={{ marginTop: 0, borderBottom: '1px solid var(--border)', paddingBottom: '12px', fontSize: '1rem' }}>Session History</h3>
                     {!selectedStudent.sessions || selectedStudent.sessions.length === 0 ? (
-                      <p style={{color: 'var(--text-muted)', fontStyle: 'italic'}}>No sessions logged yet.</p>
+                      <div className="empty-state" style={{ padding: '24px' }}>
+                        <div className="empty-icon" style={{ fontSize: '2rem', marginBottom: '8px' }}>📋</div>
+                        <p style={{ margin: 0, fontSize: '0.875rem' }}>No sessions logged yet for this student.</p>
+                      </div>
                     ) : (
                       <div className="timeline">
                         {selectedStudent.sessions.map((sess, idx) => (
                           <div key={idx} className="timeline-item">
                             <div className="timeline-dot"></div>
                             <div className="timeline-date">{new Date(sess.date).toLocaleDateString('en-GB')} • {sess.duration} mins</div>
-                            <div style={{background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '5px'}}>
+                            <div style={{ background: 'var(--bg)', padding: '12px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', marginTop: '6px', fontSize: '0.875rem', lineHeight: '1.6' }}>
                               {sess.outcome}
                             </div>
                           </div>
@@ -819,26 +2170,34 @@ export default function AdminDashboard({ user, onBackToApp }) {
                     )}
                   </div>
 
-                  {/* Add Session Form */}
-                  <div style={{background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '12px', border: '1px solid var(--border)'}}>
-                    <h4 style={{marginTop: 0, color: 'var(--primary)'}}>➕ Log New Session</h4>
+                  <div style={{ background: 'var(--bg)', padding: '20px', borderRadius: 'var(--r-md)', border: '1px solid var(--border)' }}>
+                    <h4 style={{ marginTop: 0, color: 'var(--primary)', fontWeight: '700', marginBottom: '16px' }}>➕ Log New Session</h4>
                     <div className="grid-2col">
-                      <div className="form-group"><label className="form-label">Date</label><input type="date" className="form-input" value={newSession.date} onChange={e=>setNewSession({...newSession, date: e.target.value})}/></div>
-                      <div className="form-group"><label className="form-label">Duration (mins)</label><input type="number" className="form-input" value={newSession.duration} onChange={e=>setNewSession({...newSession, duration: e.target.value})}/></div>
+                      <div className="form-group">
+                        <label className="form-label">Date</label>
+                        <input type="date" className="form-input" value={newSession.date} onChange={e => setNewSession({ ...newSession, date: e.target.value })} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Duration (mins)</label>
+                        <input type="number" className="form-input" value={newSession.duration} onChange={e => setNewSession({ ...newSession, duration: e.target.value })} />
+                      </div>
                     </div>
-                    <div className="form-group"><label className="form-label">Session Notes / Outcome</label><textarea className="form-textarea" rows="2" placeholder="Discussed parental pressure regarding science stream..." value={newSession.outcome} onChange={e=>setNewSession({...newSession, outcome: e.target.value})}></textarea></div>
-                    <button className="admin-btn" style={{width:'100%'}} onClick={handleAddSession}>Save Session</button>
+                    <div className="form-group">
+                      <label className="form-label">Session Notes / Outcome</label>
+                      <textarea className="form-textarea" rows="3" placeholder="Discussed parental pressure regarding stream selection..." value={newSession.outcome} onChange={e => setNewSession({ ...newSession, outcome: e.target.value })}></textarea>
+                    </div>
+                    <button className="admin-btn" style={{ width: '100%' }} onClick={handleAddSession}>Save Session</button>
                   </div>
                 </div>
               )}
 
               {/* DOCUMENTS TAB */}
               {modalTab === 'documents' && (
-                <div className="anim-up empty-state">
+                <div className="empty-state">
                   <div className="empty-icon">📄</div>
-                  <h3>Document Vault</h3>
-                  <p>Upload psychometric reports and consent forms here.</p>
-                  <button className="admin-btn-outline" disabled>Cloud Storage Disabled</button>
+                  <h3 style={{ color: 'var(--text-main)', marginBottom: '8px' }}>Document Vault</h3>
+                  <p style={{ marginBottom: '20px' }}>Upload psychometric reports and consent forms here.</p>
+                  <button className="admin-btn-outline" disabled>Cloud Storage — Coming Soon</button>
                 </div>
               )}
             </div>
@@ -846,7 +2205,7 @@ export default function AdminDashboard({ user, onBackToApp }) {
         </div>
       )}
 
-      {/* TOAST */}
+      {/* ── TOAST ── */}
       {toast && (
         <div className={`admin-toast ${toast.type}`}>
           {toast.type === 'success' ? '✅' : '⚠️'} {toast.message}
