@@ -1953,20 +1953,69 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
       </div>
 
       {/* ── STUDENT DETAIL MODAL ── */}
-      {selectedStudent && (
+      {selectedStudent && (() => {
+        // ── Education tier helpers ──
+        const edu = selectedStudent.education || {};
+        const eduTiers = [
+          { key: 'tenth', label: '10th Grade', icon: '🏫' },
+          { key: 'twelfth', label: '12th / PUC', icon: '📚' },
+          { key: 'graduate', label: 'Graduate', icon: '🎓' },
+          { key: 'postGraduate', label: 'Post Graduate', icon: '🏛️' },
+        ];
+        const hasAnyEduTier = eduTiers.some(({ key }) => {
+          const tier = edu[key];
+          return tier && (tier.schoolName || tier.marksValue || tier.marksObtained || (Array.isArray(tier.subjects) && tier.subjects.length > 0));
+        });
+        const renderEduTier = (tierKey, label, icon) => {
+          const tier = edu[tierKey];
+          if (!tier || (!tier.schoolName && !tier.marksValue && !tier.marksObtained && !(Array.isArray(tier.subjects) && tier.subjects.length > 0))) return null;
+          const marksDisplay = (() => {
+            if (!tier.marksType || tier.marksType === 'percentage') return tier.marksValue ? `${String(tier.marksValue)}%` : null;
+            if (tier.marksType === 'cgpa') return tier.marksValue ? `${String(tier.marksValue)} CGPA` : null;
+            if (tier.marksType === 'raw') return (tier.marksObtained && tier.marksMax) ? `${String(tier.marksObtained)} / ${String(tier.marksMax)}` : null;
+            return null;
+          })();
+          const subjectsDisplay = Array.isArray(tier.subjects) && tier.subjects.length > 0
+            ? tier.subjects.map(String).join(', ')
+            : null;
+          return (
+            <div key={tierKey} style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: '10px 12px', border: '1px solid var(--border)', marginBottom: '6px' }}>
+              <div style={{ fontWeight: '700', fontSize: '0.78rem', color: 'var(--primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span>{icon}</span> {label}
+              </div>
+              {tier.schoolName && (
+                <div style={{ fontSize: '0.875rem', color: 'var(--text-main)', fontWeight: '600', marginBottom: '2px' }}>{String(tier.schoolName)}</div>
+              )}
+              {marksDisplay && (
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '2px' }}>📊 {marksDisplay}</div>
+              )}
+              {subjectsDisplay && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>📖 {subjectsDisplay}</div>
+              )}
+            </div>
+          );
+        };
+        const legacySchool = !hasAnyEduTier && (selectedStudent.schoolName || edu.schoolName);
+
+        return (
         <div className="modal-overlay" onClick={() => setSelectedStudent(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header" style={{ position: 'relative' }}>
               <button className="close-btn" onClick={() => setSelectedStudent(null)}>✕</button>
+              {/* ── Profile Picture + Name ── */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '4px' }}>
                 <div style={{
-                  width: '48px', height: '48px', borderRadius: '14px',
-                  background: 'var(--primary-light)', color: 'var(--primary)',
-                  fontWeight: '800', fontSize: '1.2rem',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  border: '1.5px solid rgba(91,110,245,0.2)'
+                  width: '56px', height: '56px', borderRadius: '50%', flexShrink: 0,
+                  background: 'linear-gradient(135deg, var(--primary), #7C6EF5)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: '800', fontSize: '1.3rem', color: 'white',
+                  border: '3px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                  overflow: 'hidden',
                 }}>
-                  {(selectedStudent.name || '?').charAt(0).toUpperCase()}
+                  {selectedStudent.profilePicture
+                    ? <img src={String(selectedStudent.profilePicture)} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : (selectedStudent.name || '?').charAt(0).toUpperCase()
+                  }
                 </div>
                 <div>
                   <h2 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: 'var(--text-main)' }}>
@@ -1977,6 +2026,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
               <div className="modal-tabs">
                 <button className={`modal-tab ${modalTab === 'overview' ? 'active' : ''}`} onClick={() => setModalTab('overview')}>Overview</button>
+                <button className={`modal-tab ${modalTab === 'education' ? 'active' : ''}`} onClick={() => setModalTab('education')}>Education</button>
                 <button className={`modal-tab ${modalTab === 'counselling' ? 'active' : ''}`} onClick={() => setModalTab('counselling')}>Counselling Log</button>
                 <button className={`modal-tab ${modalTab === 'documents' ? 'active' : ''}`} onClick={() => setModalTab('documents')}>Documents</button>
               </div>
@@ -2000,7 +2050,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                       <div className="form-group">
                         <label className="form-label">School / Institution</label>
                         <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '0.875rem', color: 'var(--text-main)' }}>
-                          {selectedStudent.schoolName || '—'}
+                          {legacySchool ? String(legacySchool) : (hasAnyEduTier ? (edu.tenth?.schoolName ? String(edu.tenth.schoolName) : '—') : '—')}
                         </div>
                       </div>
                       <div className="form-group" style={{ marginBottom: 0 }}>
@@ -2191,6 +2241,31 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                 </div>
               )}
 
+              {/* EDUCATION TAB */}
+              {modalTab === 'education' && (
+                <div>
+                  {edu.highestLevel && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '700', marginBottom: '12px' }}>
+                      Highest Level: {String(edu.highestLevel)}
+                    </div>
+                  )}
+                  {hasAnyEduTier
+                    ? eduTiers.map(({ key, label, icon }) => renderEduTier(key, label, icon))
+                    : legacySchool
+                      ? (
+                        <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: '12px 14px', border: '1px solid var(--border)' }}>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--text-main)', fontWeight: '600' }}>{String(legacySchool)}</div>
+                          {selectedStudent.marks10th && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>10th: {String(selectedStudent.marks10th)}%</div>}
+                          {selectedStudent.marks12th && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>12th: {String(selectedStudent.marks12th)}%</div>}
+                        </div>
+                      )
+                      : (
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontStyle: 'italic' }}>No education details provided yet.</div>
+                      )
+                  }
+                </div>
+              )}
+
               {/* DOCUMENTS TAB */}
               {modalTab === 'documents' && (
                 <div className="empty-state">
@@ -2203,7 +2278,8 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ── TOAST ── */}
       {toast && (

@@ -16,21 +16,66 @@ const DEFAULT_USER_PROFILE = {
   games: [],                     // e.g. ['Chess', 'Minecraft']
   sports: [],                    // e.g. ['Cricket', 'Badminton']
 
-  // Education details
+  // Education details — multi-tiered structure
   education: {
-    schoolName: '',              // e.g. 'Delhi Public School'
-    address: '',                 // e.g. 'R.K. Puram, New Delhi'
-    yearOfPassing: '',           // e.g. '2026'
-    isPursuing: true,            // true if currently enrolled
-    highestLevel: '',            // e.g. 'Class 12', 'Graduation'
-    subjects: [],                // e.g. ['Physics', 'Chemistry', 'Maths']
-    electives: [],               // e.g. ['Physical Education', 'Fine Arts']
-    marksType: 'percentage',     // 'percentage' | 'cgpa' | 'grade'
-    marksValue: '',              // e.g. '91.4' or '9.2'
+    highestLevel: '',            // 'Graduate' | 'Post Graduate' | other
+
+    // 10th Grade tier
+    tenth: {
+      schoolName: '',
+      marksType: 'percentage',   // 'percentage' | 'cgpa' | 'raw'
+      marksValue: '',
+      marksMax: '',
+      marksObtained: '',
+      subjects: [],
+    },
+
+    // 12th / PUC tier
+    twelfth: {
+      schoolName: '',
+      marksType: 'percentage',
+      marksValue: '',
+      marksMax: '',
+      marksObtained: '',
+      subjects: [],
+    },
+
+    // Graduate tier
+    graduate: {
+      schoolName: '',
+      marksType: 'percentage',
+      marksValue: '',
+      marksMax: '',
+      marksObtained: '',
+      subjects: [],
+    },
+
+    // Post Graduate tier
+    postGraduate: {
+      schoolName: '',
+      marksType: 'percentage',
+      marksValue: '',
+      marksMax: '',
+      marksObtained: '',
+      subjects: [],
+    },
+
+    // Legacy / general fields (kept for backward-compat with XP calc)
+    schoolName: '',              // mirrors tenth.schoolName for XP calc
+    address: '',
+    yearOfPassing: '',
+    isPursuing: true,
+    subjects: [],                // mirrors active tier subjects for XP calc
+    electives: [],
+    marksType: 'percentage',
+    marksValue: '',              // mirrors active tier marksValue for XP calc
   },
 
   // Gamification
   exPoints: 0,                   // Experience Points — updated by calculateExPoints()
+
+  // Booking
+  sessionsBooked: 0,             // Number of expert sessions booked
 };
 
 // ── MOCK SOCIAL FEED ─────────────────────────────────────────────────────────
@@ -581,6 +626,14 @@ export function DashboardProvider({ children, navigate }) {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   }, []);
 
+  /**
+   * incrementSessions()
+   * Increments the sessionsBooked counter on the userProfile by 1.
+   */
+  const incrementSessions = useCallback(() => {
+    setUserProfile(prev => ({ ...prev, sessionsBooked: (prev.sessionsBooked || 0) + 1 }));
+  }, []);
+
   // ── COUNSELLOR HELPERS ───────────────────────────────────────────────────
 
   /** Update any field(s) on a counsellor record */
@@ -668,6 +721,7 @@ export function DashboardProvider({ children, navigate }) {
     userProfile,
     updateUserProfile,
     calculateExPoints,
+    incrementSessions,
 
     // ── Social / notifications ──────────────────────────────────────────
     socialFeed,

@@ -1,27 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDashboard } from './context/DashboardContext';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const EDUCATION_LEVELS = [
-  '8th Grade',
-  '9th Grade',
-  '10th Grade',
-  '11th Grade',
-  '12th Grade',
-  'Diploma',
-  'Undergraduate (UG)',
-  'Postgraduate (PG)',
-  'Doctorate / PhD',
-];
-
-// Levels that are "10th Grade or below" — cannot select higher options
-const LEVELS_UP_TO_10TH = ['8th Grade', '9th Grade', '10th Grade'];
-
-// Levels where Electives should be hidden
-const HIDE_ELECTIVES_LEVELS = ['9th Grade', '10th Grade'];
+// The two "tiered" levels that trigger multi-section education UI
+const TIERED_LEVELS = ['Graduate', 'Post Graduate'];
 
 // CGPA → Percentage conversion (standard formula: CGPA × 9.5)
 const cgpaToPercentage = (cgpa) => {
@@ -133,6 +118,29 @@ const S = {
     color: '#0D1117',
   },
   sectionBody: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' },
+  // Sub-section card for each education tier
+  tierCard: {
+    background: 'white',
+    borderRadius: '12px',
+    border: '1.5px solid #E1E7EF',
+    overflow: 'hidden',
+    marginTop: '8px',
+  },
+  tierCardHeader: {
+    padding: '12px 16px',
+    background: 'linear-gradient(135deg, #EEF2FF, #E0E7FF)',
+    borderBottom: '1px solid #C7D2FE',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  tierCardTitle: {
+    fontFamily: "'Fraunces', serif",
+    fontSize: '14px',
+    fontWeight: '700',
+    color: '#3730A3',
+  },
+  tierCardBody: { padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' },
   fieldGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', fontWeight: '700', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' },
   input: {
@@ -146,6 +154,7 @@ const S = {
     background: 'white',
     outline: 'none',
     transition: 'border-color 0.2s',
+    boxSizing: 'border-box',
   },
   inputDisabled: {
     background: '#F6F8FA',
@@ -280,7 +289,7 @@ const S = {
     flexShrink: 0,
   },
   picRow: { display: 'flex', alignItems: 'center', gap: '16px' },
-  mockUploadBtn: {
+  uploadBtn: {
     padding: '9px 16px',
     background: 'white',
     border: '1.5px solid #E1E7EF',
@@ -438,6 +447,174 @@ function Toggle({ label, sublabel, checked, onChange }) {
   );
 }
 
+/**
+ * MarksInput — renders the marks format selector + the appropriate input(s)
+ * for a single education tier.
+ */
+function MarksInput({ tierData, onTierChange }) {
+  const { marksType, marksValue, marksMax, marksObtained } = tierData;
+  const cgpaPct = marksType === 'cgpa' ? cgpaToPercentage(marksValue) : null;
+
+  return (
+    <div style={S.fieldGroup}>
+      <label style={S.label}>Marks / Grade Format</label>
+      <div style={S.marksTypeRow}>
+        {[
+          { key: 'percentage', label: '% Percentage' },
+          { key: 'cgpa', label: '🔢 CGPA' },
+          { key: 'raw', label: '📊 Raw Marks' },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            style={S.marksTypeBtn(marksType === key)}
+            onClick={() => onTierChange({ marksType: key, marksValue: '', marksMax: '', marksObtained: '' })}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {marksType === 'percentage' && (
+        <div style={{ marginTop: '10px' }}>
+          <input
+            type="number"
+            value={marksValue}
+            onChange={(e) => onTierChange({ marksValue: e.target.value })}
+            placeholder="e.g. 91.4"
+            min="0"
+            max="100"
+            step="0.01"
+            style={S.input}
+          />
+        </div>
+      )}
+
+      {marksType === 'cgpa' && (
+        <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <input
+            type="number"
+            value={marksValue}
+            onChange={(e) => onTierChange({ marksValue: e.target.value })}
+            placeholder="e.g. 9.2"
+            min="0"
+            max="10"
+            step="0.01"
+            style={S.input}
+          />
+          {cgpaPct !== null && (
+            <div style={S.cgpaHint}>
+              <span>✅</span>
+              <span>
+                Equivalent Percentage: <strong>{cgpaPct}%</strong>
+                <span style={{ fontWeight: 400, marginLeft: '6px', color: '#047857' }}>
+                  (CGPA × 9.5 formula)
+                </span>
+              </span>
+            </div>
+          )}
+          {marksValue && cgpaPct === null && (
+            <div style={{ ...S.disabledNote, color: '#EF4444' }}>
+              <span>⚠️</span>
+              <span>Enter a valid CGPA between 0 and 10.</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {marksType === 'raw' && (
+        <div style={{ ...S.twoCol, marginTop: '10px' }}>
+          <div style={S.fieldGroup}>
+            <label style={S.label}>Max Marks</label>
+            <input
+              type="number"
+              value={marksMax}
+              onChange={(e) => onTierChange({ marksMax: e.target.value })}
+              placeholder="e.g. 500"
+              min="0"
+              style={S.input}
+            />
+          </div>
+          <div style={S.fieldGroup}>
+            <label style={S.label}>Marks Obtained</label>
+            <input
+              type="number"
+              value={marksObtained}
+              onChange={(e) => onTierChange({ marksObtained: e.target.value })}
+              placeholder="e.g. 456"
+              min="0"
+              max={marksMax || undefined}
+              style={S.input}
+            />
+          </div>
+          {marksMax && marksObtained && (
+            <div style={{ ...S.cgpaHint, gridColumn: '1 / -1' }}>
+              <span>📊</span>
+              <span>
+                Equivalent Percentage:{' '}
+                <strong>
+                  {((parseFloat(marksObtained) / parseFloat(marksMax)) * 100).toFixed(2)}%
+                </strong>
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * EducationTierCard — renders a collapsible card for one education tier
+ * (10th, 12th, Graduate, Post Graduate).
+ */
+function EducationTierCard({ icon, title, tierData, onTierChange }) {
+  return (
+    <div style={S.tierCard}>
+      <div style={S.tierCardHeader}>
+        <span style={{ fontSize: '16px' }}>{icon}</span>
+        <span style={S.tierCardTitle}>{title}</span>
+      </div>
+      <div style={S.tierCardBody}>
+        {/* School Name */}
+        <div style={S.fieldGroup}>
+          <label style={S.label}>School / Institution Name</label>
+          <input
+            type="text"
+            value={tierData.schoolName}
+            onChange={(e) => onTierChange({ schoolName: e.target.value })}
+            placeholder="e.g. Delhi Public School"
+            style={S.input}
+          />
+        </div>
+
+        {/* Marks */}
+        <MarksInput tierData={tierData} onTierChange={onTierChange} />
+
+        {/* Subjects */}
+        <TagInput
+          label="Subjects"
+          values={Array.isArray(tierData.subjects) ? tierData.subjects : []}
+          onChange={(val) => onTierChange({ subjects: val })}
+          placeholder="e.g. Physics, Chemistry, Maths..."
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EMPTY TIER FACTORY
+// ─────────────────────────────────────────────────────────────────────────────
+const emptyTier = () => ({
+  schoolName: '',
+  marksType: 'percentage',
+  marksValue: '',
+  marksMax: '',
+  marksObtained: '',
+  subjects: [],
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -445,9 +622,11 @@ function Toggle({ label, sublabel, checked, onChange }) {
 export default function ProfileEditor({ onClose }) {
   const { userProfile, updateUserProfile } = useDashboard();
 
-  // ── Local form state (mirrors userProfile shape) ──────────────────────────
+  // ── Hidden file input ref ─────────────────────────────────────────────────
+  const fileInputRef = useRef(null);
+
+  // ── Local form state ──────────────────────────────────────────────────────
   const [profilePicture, setProfilePicture] = useState(userProfile.profilePicture || '');
-  const [picUrlInput, setPicUrlInput] = useState(userProfile.profilePicture || '');
 
   const [interests, setInterests] = useState(Array.isArray(userProfile.interests) ? userProfile.interests : []);
   const [hobbies, setHobbies] = useState(Array.isArray(userProfile.hobbies) ? userProfile.hobbies : []);
@@ -456,74 +635,99 @@ export default function ProfileEditor({ onClose }) {
   const [games, setGames] = useState(Array.isArray(userProfile.games) ? userProfile.games : []);
   const [sports, setSports] = useState(Array.isArray(userProfile.sports) ? userProfile.sports : []);
 
-  // Education
+  // Education — top-level
   const edu = userProfile.education || {};
-  const [schoolName, setSchoolName] = useState(edu.schoolName || '');
+  const [highestLevel, setHighestLevel] = useState(edu.highestLevel || '');
   const [address, setAddress] = useState(edu.address || '');
   const [yearOfPassing, setYearOfPassing] = useState(edu.yearOfPassing || '');
   const [isPursuing, setIsPursuing] = useState(typeof edu.isPursuing === 'boolean' ? edu.isPursuing : true);
-  const [highestLevel, setHighestLevel] = useState(edu.highestLevel || '');
-  const [subjects, setSubjects] = useState(Array.isArray(edu.subjects) ? edu.subjects : []);
   const [electives, setElectives] = useState(Array.isArray(edu.electives) ? edu.electives : []);
-  const [marksType, setMarksType] = useState(edu.marksType || 'percentage');
-  const [marksValue, setMarksValue] = useState(edu.marksValue || '');
-  const [marksMax, setMarksMax] = useState(edu.marksMax || '');
-  const [marksObtained, setMarksObtained] = useState(edu.marksObtained || '');
+
+  // Education tiers
+  const [tenth, setTenth] = useState({ ...emptyTier(), ...(edu.tenth || {}) });
+  const [twelfth, setTwelfth] = useState({ ...emptyTier(), ...(edu.twelfth || {}) });
+  const [graduate, setGraduate] = useState({ ...emptyTier(), ...(edu.graduate || {}) });
+  const [postGraduate, setPostGraduate] = useState({ ...emptyTier(), ...(edu.postGraduate || {}) });
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   // ── Derived flags ─────────────────────────────────────────────────────────
+  const isTiered = TIERED_LEVELS.includes(highestLevel);
+  const showPostGrad = highestLevel === 'Post Graduate';
 
-  /** True if the selected level is 10th Grade or below */
-  const isUpTo10th = LEVELS_UP_TO_10TH.includes(highestLevel);
-
-  /** True if electives should be hidden */
-  const hideElectives = HIDE_ELECTIVES_LEVELS.includes(highestLevel);
-
-  /** Live CGPA → % conversion */
-  const cgpaPct = marksType === 'cgpa' ? cgpaToPercentage(marksValue) : null;
-
-  // ── Sync profile picture URL on blur ─────────────────────────────────────
-  const applyPicUrl = () => {
-    setProfilePicture(picUrlInput.trim());
+  // ── Profile picture: FileReader upload ───────────────────────────────────
+  const handleFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const base64 = evt.target.result;
+      setProfilePicture(base64);
+    };
+    reader.readAsDataURL(file);
+    // Reset input so the same file can be re-selected if needed
+    e.target.value = '';
   };
 
-  // ── Handle highestLevel change with 10th-grade lock ───────────────────────
-  const handleHighestLevelChange = (e) => {
-    const selected = e.target.value;
-    // If currently locked at 10th, only allow selecting 10th or below
-    if (isUpTo10th && selected && !LEVELS_UP_TO_10TH.includes(selected)) {
-      // Silently ignore — the select options are already disabled, but guard here too
-      return;
-    }
-    setHighestLevel(selected);
-    // If new level hides electives, clear them
-    if (HIDE_ELECTIVES_LEVELS.includes(selected)) {
-      setElectives([]);
-    }
-  };
+  // ── Tier updater helpers ──────────────────────────────────────────────────
+  const updateTier = (setter) => (patch) => setter((prev) => ({ ...prev, ...patch }));
 
   // ── Save handler ──────────────────────────────────────────────────────────
   const handleSave = useCallback(() => {
     setSaving(true);
 
+    // Build the education payload — always include all tiers so context shape is stable
     const educationPayload = {
-      schoolName: schoolName.trim(),
+      highestLevel,
       address: address.trim(),
       yearOfPassing: String(yearOfPassing).trim(),
       isPursuing,
-      highestLevel,
-      subjects: subjects.map(String),
-      electives: hideElectives ? [] : electives.map(String),
-      marksType,
-      marksValue: marksType === 'raw' ? '' : String(marksValue).trim(),
-      marksMax: marksType === 'raw' ? String(marksMax).trim() : '',
-      marksObtained: marksType === 'raw' ? String(marksObtained).trim() : '',
+      electives: electives.map(String),
+
+      // Tiers — always serialise as plain objects with primitive values only
+      tenth: {
+        schoolName: String(tenth.schoolName || '').trim(),
+        marksType: String(tenth.marksType || 'percentage'),
+        marksValue: String(tenth.marksValue || '').trim(),
+        marksMax: String(tenth.marksMax || '').trim(),
+        marksObtained: String(tenth.marksObtained || '').trim(),
+        subjects: (Array.isArray(tenth.subjects) ? tenth.subjects : []).map(String),
+      },
+      twelfth: {
+        schoolName: String(twelfth.schoolName || '').trim(),
+        marksType: String(twelfth.marksType || 'percentage'),
+        marksValue: String(twelfth.marksValue || '').trim(),
+        marksMax: String(twelfth.marksMax || '').trim(),
+        marksObtained: String(twelfth.marksObtained || '').trim(),
+        subjects: (Array.isArray(twelfth.subjects) ? twelfth.subjects : []).map(String),
+      },
+      graduate: {
+        schoolName: String(graduate.schoolName || '').trim(),
+        marksType: String(graduate.marksType || 'percentage'),
+        marksValue: String(graduate.marksValue || '').trim(),
+        marksMax: String(graduate.marksMax || '').trim(),
+        marksObtained: String(graduate.marksObtained || '').trim(),
+        subjects: (Array.isArray(graduate.subjects) ? graduate.subjects : []).map(String),
+      },
+      postGraduate: {
+        schoolName: String(postGraduate.schoolName || '').trim(),
+        marksType: String(postGraduate.marksType || 'percentage'),
+        marksValue: String(postGraduate.marksValue || '').trim(),
+        marksMax: String(postGraduate.marksMax || '').trim(),
+        marksObtained: String(postGraduate.marksObtained || '').trim(),
+        subjects: (Array.isArray(postGraduate.subjects) ? postGraduate.subjects : []).map(String),
+      },
+
+      // Legacy mirror fields for XP calc backward-compat
+      schoolName: String(tenth.schoolName || '').trim(),
+      subjects: (Array.isArray(tenth.subjects) ? tenth.subjects : []).map(String),
+      marksType: String(tenth.marksType || 'percentage'),
+      marksValue: String(tenth.marksValue || '').trim(),
     };
 
     const profilePayload = {
-      profilePicture: profilePicture.trim() || null,
+      profilePicture: profilePicture || null,
       interests: interests.map(String),
       hobbies: hobbies.map(String),
       tvShows: tvShows.map(String),
@@ -543,9 +747,9 @@ export default function ProfileEditor({ onClose }) {
     }, 1200);
   }, [
     profilePicture, interests, hobbies, tvShows, movies, games, sports,
-    schoolName, address, yearOfPassing, isPursuing, highestLevel,
-    subjects, electives, marksType, marksValue, marksMax, marksObtained,
-    hideElectives, updateUserProfile, onClose,
+    highestLevel, address, yearOfPassing, isPursuing, electives,
+    tenth, twelfth, graduate, postGraduate,
+    updateUserProfile, onClose,
   ]);
 
   // ── Prevent body scroll while modal is open ───────────────────────────────
@@ -565,21 +769,23 @@ export default function ProfileEditor({ onClose }) {
   // ── Live XP preview ───────────────────────────────────────────────────────
   const previewXp = (() => {
     let pts = 0;
-    if (profilePicture.trim()) pts += 50;
+    if (profilePicture) pts += 50;
     if (interests.length > 0) pts += 30;
     if (hobbies.length > 0) pts += 20;
     if (tvShows.length > 0) pts += 15;
     if (movies.length > 0) pts += 15;
     if (games.length > 0) pts += 15;
     if (sports.length > 0) pts += 15;
-    const eduCoreComplete = schoolName.trim() && highestLevel && (
-      marksType === 'raw' ? (marksMax.trim() && marksObtained.trim()) : marksValue.toString().trim()
-    );
+    // Core education: 10th school name + highestLevel + 10th marks
+    const tenthMarksOk = tenth.marksType === 'raw'
+      ? (tenth.marksMax.trim() && tenth.marksObtained.trim())
+      : String(tenth.marksValue).trim();
+    const eduCoreComplete = tenth.schoolName.trim() && highestLevel && tenthMarksOk;
     if (eduCoreComplete) pts += 100;
     if (address.trim()) pts += 10;
     if (String(yearOfPassing).trim()) pts += 10;
-    if (subjects.length > 0) pts += 20;
-    if (!hideElectives && electives.length > 0) pts += 10;
+    if (tenth.subjects.length > 0) pts += 20;
+    if (electives.length > 0) pts += 10;
     return pts;
   })();
 
@@ -619,7 +825,7 @@ export default function ProfileEditor({ onClose }) {
         <div style={S.body}>
 
           {/* ════════════════════════════════════════════════════════════════
-              SECTION 1 — FUN
+              SECTION 1 — FUN & PERSONALITY
           ════════════════════════════════════════════════════════════════ */}
           <div style={S.section}>
             <div style={S.sectionHeader}>
@@ -628,9 +834,9 @@ export default function ProfileEditor({ onClose }) {
             </div>
             <div style={S.sectionBody}>
 
-              {/* Profile Picture */}
+              {/* ── Profile Picture ── */}
               <div style={S.fieldGroup}>
-                <label style={S.label}>Profile Picture</label>
+                <label style={S.label}>Profile Picture (+50 XP)</label>
                 <div style={S.picRow}>
                   {profilePicture ? (
                     <img
@@ -643,38 +849,35 @@ export default function ProfileEditor({ onClose }) {
                     <div style={S.picPlaceholder}>👤</div>
                   )}
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* Hidden real file input */}
                     <input
-                      type="url"
-                      value={picUrlInput}
-                      onChange={(e) => setPicUrlInput(e.target.value)}
-                      onBlur={applyPicUrl}
-                      placeholder="Paste image URL (e.g. https://...)"
-                      style={S.input}
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleFileChange}
                     />
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       <button
                         type="button"
-                        style={S.mockUploadBtn}
-                        onClick={() => {
-                          // Mock upload — in production this would open a file picker
-                          const demo = 'https://api.dicebear.com/7.x/avataaars/svg?seed=SecretSharz';
-                          setPicUrlInput(demo);
-                          setProfilePicture(demo);
-                        }}
+                        style={S.uploadBtn}
+                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
                       >
-                        📁 Mock Upload
+                        📁 Upload Image
                       </button>
                       {profilePicture && (
                         <button
                           type="button"
-                          style={{ ...S.mockUploadBtn, color: '#EF4444', borderColor: '#FECDD3' }}
-                          onClick={() => { setProfilePicture(''); setPicUrlInput(''); }}
+                          style={{ ...S.uploadBtn, color: '#EF4444', borderColor: '#FECDD3' }}
+                          onClick={() => setProfilePicture('')}
                         >
                           🗑 Remove
                         </button>
                       )}
                     </div>
-                    <div style={S.infoNote}>+50 XP for adding a profile picture</div>
+                    <div style={S.infoNote}>
+                      Select a JPG, PNG, GIF, or WebP image from your device. It will be stored as Base64.
+                    </div>
                   </div>
                 </div>
               </div>
@@ -696,14 +899,12 @@ export default function ProfileEditor({ onClose }) {
               />
 
               <div style={S.twoCol}>
-                {/* TV Shows */}
                 <TagInput
                   label="TV Shows (+15 XP)"
                   values={tvShows}
                   onChange={setTvShows}
                   placeholder="e.g. Breaking Bad..."
                 />
-                {/* Movies */}
                 <TagInput
                   label="Movies (+15 XP)"
                   values={movies}
@@ -713,14 +914,12 @@ export default function ProfileEditor({ onClose }) {
               </div>
 
               <div style={S.twoCol}>
-                {/* Games */}
                 <TagInput
                   label="Games (+15 XP)"
                   values={games}
                   onChange={setGames}
                   placeholder="e.g. Chess, Minecraft..."
                 />
-                {/* Sports */}
                 <TagInput
                   label="Sports (+15 XP)"
                   values={sports}
@@ -742,21 +941,86 @@ export default function ProfileEditor({ onClose }) {
             </div>
             <div style={S.sectionBody}>
 
-              {/* School Name */}
+              {/* Highest Level of Education */}
               <div style={S.fieldGroup}>
-                <label style={S.label}>School / Institution Name (+100 XP core)</label>
-                <input
-                  type="text"
-                  value={schoolName}
-                  onChange={(e) => setSchoolName(e.target.value)}
-                  placeholder="e.g. Delhi Public School, R.K. Puram"
-                  style={S.input}
-                />
+                <label style={S.label}>Highest Level of Education (+100 XP core)</label>
+                <select
+                  value={highestLevel}
+                  onChange={(e) => setHighestLevel(e.target.value)}
+                  style={S.select}
+                >
+                  <option value="">— Select Level —</option>
+                  <option value="8th Grade">8th Grade</option>
+                  <option value="9th Grade">9th Grade</option>
+                  <option value="10th Grade">10th Grade</option>
+                  <option value="11th Grade">11th Grade</option>
+                  <option value="12th Grade / PUC">12th Grade / PUC</option>
+                  <option value="Diploma">Diploma</option>
+                  <option value="Graduate">Graduate (UG)</option>
+                  <option value="Post Graduate">Post Graduate (PG)</option>
+                  <option value="Doctorate / PhD">Doctorate / PhD</option>
+                </select>
+                {isTiered && (
+                  <div style={S.infoNote}>
+                    ℹ️ Fill in each education tier below — School Name, Marks, and Subjects for every level.
+                  </div>
+                )}
               </div>
+
+              {/* ── TIERED EDUCATION SECTIONS ── */}
+              {isTiered ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+                  {/* 10th Grade */}
+                  <EducationTierCard
+                    icon="📘"
+                    title="10th Grade"
+                    tierData={tenth}
+                    onTierChange={updateTier(setTenth)}
+                  />
+
+                  {/* 12th / PUC */}
+                  <EducationTierCard
+                    icon="📗"
+                    title="12th Grade / PUC"
+                    tierData={twelfth}
+                    onTierChange={updateTier(setTwelfth)}
+                  />
+
+                  {/* Graduate */}
+                  <EducationTierCard
+                    icon="📙"
+                    title="Graduate (UG)"
+                    tierData={graduate}
+                    onTierChange={updateTier(setGraduate)}
+                  />
+
+                  {/* Post Graduate — only shown when highestLevel === 'Post Graduate' */}
+                  {showPostGrad && (
+                    <EducationTierCard
+                      icon="📕"
+                      title="Post Graduate (PG)"
+                      tierData={postGraduate}
+                      onTierChange={updateTier(setPostGraduate)}
+                    />
+                  )}
+
+                </div>
+              ) : (
+                /* ── NON-TIERED: single school / marks block ── */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <EducationTierCard
+                    icon="🏫"
+                    title="Current / Most Recent Institution"
+                    tierData={tenth}
+                    onTierChange={updateTier(setTenth)}
+                  />
+                </div>
+              )}
 
               {/* Address */}
               <div style={S.fieldGroup}>
-                <label style={S.label}>School Address (+10 XP)</label>
+                <label style={S.label}>School / Institution Address (+10 XP)</label>
                 <input
                   type="text"
                   value={address}
@@ -799,180 +1063,13 @@ export default function ProfileEditor({ onClose }) {
                 </div>
               </div>
 
-              {/* Highest Level of Education */}
-              <div style={S.fieldGroup}>
-                <label style={S.label}>Highest Level of Education (+100 XP core)</label>
-                <select
-                  value={highestLevel}
-                  onChange={handleHighestLevelChange}
-                  style={S.select}
-                >
-                  <option value="">— Select Level —</option>
-                  {EDUCATION_LEVELS.map((lvl) => {
-                    // If current selection is 10th or below, disable all higher options
-                    const isDisabled = isUpTo10th && !LEVELS_UP_TO_10TH.includes(lvl) && lvl !== '';
-                    return (
-                      <option key={lvl} value={lvl} disabled={isDisabled}>
-                        {lvl}{isDisabled ? ' (locked — complete 10th first)' : ''}
-                      </option>
-                    );
-                  })}
-                </select>
-                {isUpTo10th && (
-                  <div style={S.disabledNote}>
-                    <span>🔒</span>
-                    <span>Higher education levels are locked until you progress past 10th Grade.</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Subjects */}
+              {/* Electives */}
               <TagInput
-                label="Subjects (+20 XP)"
-                values={subjects}
-                onChange={setSubjects}
-                placeholder="e.g. Physics, Chemistry, Maths..."
+                label="Electives (+10 XP)"
+                values={electives}
+                onChange={setElectives}
+                placeholder="e.g. Physical Education, Fine Arts..."
               />
-
-              {/* Electives — hidden for 9th/10th grade */}
-              {hideElectives ? (
-                <div style={{ ...S.fieldGroup }}>
-                  <label style={{ ...S.label, color: '#9CA3AF' }}>Electives</label>
-                  <div style={{
-                    padding: '12px 16px',
-                    background: '#F9FAFB',
-                    border: '1.5px dashed #D1D5DB',
-                    borderRadius: '10px',
-                    fontSize: '13px',
-                    color: '#9CA3AF',
-                    fontWeight: '500',
-                  }}>
-                    🚫 Electives are not applicable for {highestLevel || '9th/10th Grade'} students.
-                  </div>
-                </div>
-              ) : (
-                <TagInput
-                  label="Electives (+10 XP)"
-                  values={electives}
-                  onChange={setElectives}
-                  placeholder="e.g. Physical Education, Fine Arts..."
-                />
-              )}
-
-              {/* Marks Type Toggle */}
-              <div style={S.fieldGroup}>
-                <label style={S.label}>Marks / Grade Format (+100 XP core)</label>
-                <div style={S.marksTypeRow}>
-                  {[
-                    { key: 'percentage', label: '% Percentage' },
-                    { key: 'cgpa', label: '🔢 CGPA' },
-                    { key: 'raw', label: '📊 Raw Marks' },
-                  ].map(({ key, label }) => (
-                    <button
-                      key={key}
-                      type="button"
-                      style={S.marksTypeBtn(marksType === key)}
-                      onClick={() => {
-                        setMarksType(key);
-                        setMarksValue('');
-                        setMarksMax('');
-                        setMarksObtained('');
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Marks Input — conditional on type */}
-              {marksType === 'percentage' && (
-                <div style={S.fieldGroup}>
-                  <label style={S.label}>Percentage (%)</label>
-                  <input
-                    type="number"
-                    value={marksValue}
-                    onChange={(e) => setMarksValue(e.target.value)}
-                    placeholder="e.g. 91.4"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    style={S.input}
-                  />
-                </div>
-              )}
-
-              {marksType === 'cgpa' && (
-                <div style={S.fieldGroup}>
-                  <label style={S.label}>CGPA (out of 10)</label>
-                  <input
-                    type="number"
-                    value={marksValue}
-                    onChange={(e) => setMarksValue(e.target.value)}
-                    placeholder="e.g. 9.2"
-                    min="0"
-                    max="10"
-                    step="0.01"
-                    style={S.input}
-                  />
-                  {cgpaPct !== null && (
-                    <div style={S.cgpaHint}>
-                      <span>✅</span>
-                      <span>
-                        Equivalent Percentage: <strong>{cgpaPct}%</strong>
-                        <span style={{ fontWeight: 400, marginLeft: '6px', color: '#047857' }}>
-                          (CGPA × 9.5 formula)
-                        </span>
-                      </span>
-                    </div>
-                  )}
-                  {marksValue && cgpaPct === null && (
-                    <div style={{ ...S.disabledNote, color: '#EF4444' }}>
-                      <span>⚠️</span>
-                      <span>Enter a valid CGPA between 0 and 10.</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {marksType === 'raw' && (
-                <div style={S.twoCol}>
-                  <div style={S.fieldGroup}>
-                    <label style={S.label}>Max Marks</label>
-                    <input
-                      type="number"
-                      value={marksMax}
-                      onChange={(e) => setMarksMax(e.target.value)}
-                      placeholder="e.g. 500"
-                      min="0"
-                      style={S.input}
-                    />
-                  </div>
-                  <div style={S.fieldGroup}>
-                    <label style={S.label}>Marks Obtained</label>
-                    <input
-                      type="number"
-                      value={marksObtained}
-                      onChange={(e) => setMarksObtained(e.target.value)}
-                      placeholder="e.g. 456"
-                      min="0"
-                      max={marksMax || undefined}
-                      style={S.input}
-                    />
-                  </div>
-                  {marksMax && marksObtained && (
-                    <div style={{ ...S.cgpaHint, gridColumn: '1 / -1' }}>
-                      <span>📊</span>
-                      <span>
-                        Equivalent Percentage:{' '}
-                        <strong>
-                          {((parseFloat(marksObtained) / parseFloat(marksMax)) * 100).toFixed(2)}%
-                        </strong>
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
 
             </div>
           </div>

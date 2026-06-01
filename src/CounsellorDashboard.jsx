@@ -1341,15 +1341,82 @@ export default function CounsellorDashboard({ navigate }) {
     const stages = ['Assessment', 'Exploration', 'Decision', 'Finalisation'];
     const currentStageIdx = stages.indexOf(studentModal.counsellingStage || 'Assessment');
 
+    // ── Education tier helper ──
+    const edu = studentModal.education || {};
+    const eduTiers = [
+      { key: 'tenth', label: '10th Grade', icon: '🏫' },
+      { key: 'twelfth', label: '12th / PUC', icon: '📚' },
+      { key: 'graduate', label: 'Graduate', icon: '🎓' },
+      { key: 'postGraduate', label: 'Post Graduate', icon: '🏛️' },
+    ];
+
+    const renderEduTier = (tierKey, label, icon) => {
+      const tier = edu[tierKey];
+      if (!tier || (!tier.schoolName && !tier.marksValue && !tier.marksObtained && !(Array.isArray(tier.subjects) && tier.subjects.length > 0))) return null;
+      const marksDisplay = (() => {
+        if (!tier.marksType || tier.marksType === 'percentage') return tier.marksValue ? `${String(tier.marksValue)}%` : null;
+        if (tier.marksType === 'cgpa') return tier.marksValue ? `${String(tier.marksValue)} CGPA` : null;
+        if (tier.marksType === 'raw') return (tier.marksObtained && tier.marksMax) ? `${String(tier.marksObtained)} / ${String(tier.marksMax)}` : null;
+        return null;
+      })();
+      const subjectsDisplay = Array.isArray(tier.subjects) && tier.subjects.length > 0
+        ? tier.subjects.map(String).join(', ')
+        : null;
+      return (
+        <div key={tierKey} style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: '12px 14px', border: '1px solid var(--border)', marginBottom: '8px' }}>
+          <div style={{ fontWeight: '700', fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>{icon}</span> {label}
+          </div>
+          {tier.schoolName && (
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-main)', fontWeight: '600', marginBottom: '3px' }}>{String(tier.schoolName)}</div>
+          )}
+          {marksDisplay && (
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '3px' }}>📊 {marksDisplay}</div>
+          )}
+          {subjectsDisplay && (
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>📖 {subjectsDisplay}</div>
+          )}
+        </div>
+      );
+    };
+
+    const hasAnyEduTier = eduTiers.some(({ key }) => {
+      const tier = edu[key];
+      return tier && (tier.schoolName || tier.marksValue || tier.marksObtained || (Array.isArray(tier.subjects) && tier.subjects.length > 0));
+    });
+
+    // Legacy flat education fields (for students who haven't used the new editor)
+    const legacySchool = !hasAnyEduTier && (studentModal.schoolName || edu.schoolName);
+
     return (
       <div className="c-modal-overlay" onClick={() => setStudentModal(null)}>
         <div className="c-modal" onClick={e => e.stopPropagation()}>
           <div className="c-modal-header">
             <button className="c-close-btn" onClick={() => setStudentModal(null)}>✕</button>
-            <h2 style={{ margin: '0 0 4px 0', fontSize: '1.3rem', fontWeight: '700' }}>{String(studentModal.name || '')}</h2>
-            <span className={`c-badge ${studentModal.priority === 'high' ? 'c-badge-danger' : studentModal.priority === 'medium' ? 'c-badge-warn' : 'c-badge-success'}`}>
-              {String(studentModal.priority || 'low')} priority
-            </span>
+
+            {/* ── Profile Picture + Name ── */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '8px' }}>
+              <div style={{
+                width: '56px', height: '56px', borderRadius: '50%', flexShrink: 0,
+                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: '800', fontSize: '1.3rem', color: 'white',
+                border: '3px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                overflow: 'hidden',
+              }}>
+                {studentModal.profilePicture
+                  ? <img src={String(studentModal.profilePicture)} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : String(studentModal.name || '?').charAt(0).toUpperCase()
+                }
+              </div>
+              <div>
+                <h2 style={{ margin: '0 0 4px 0', fontSize: '1.3rem', fontWeight: '700' }}>{String(studentModal.name || '')}</h2>
+                <span className={`c-badge ${studentModal.priority === 'high' ? 'c-badge-danger' : studentModal.priority === 'medium' ? 'c-badge-warn' : 'c-badge-success'}`}>
+                  {String(studentModal.priority || 'low')} priority
+                </span>
+              </div>
+            </div>
+
             <div className="c-journey" style={{ marginTop: '20px' }}>
               {stages.map((stage, idx) => (
                 <div key={stage} className="c-journey-step">
@@ -1362,6 +1429,7 @@ export default function CounsellorDashboard({ navigate }) {
             </div>
             <div className="c-modal-tabs">
               <button className={`c-modal-tab ${studentModalTab === 'timeline' ? 'active' : ''}`} onClick={() => setStudentModalTab('timeline')}>Session Timeline</button>
+              <button className={`c-modal-tab ${studentModalTab === 'profile' ? 'active' : ''}`} onClick={() => setStudentModalTab('profile')}>Student Profile</button>
               <button className={`c-modal-tab ${studentModalTab === 'documents' ? 'active' : ''}`} onClick={() => setStudentModalTab('documents')}>Documents</button>
             </div>
           </div>
@@ -1391,6 +1459,85 @@ export default function CounsellorDashboard({ navigate }) {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {studentModalTab === 'profile' && (
+              <div>
+                {/* Basic Info */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>
+                    📋 Basic Information
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    {[
+                      { label: 'Email', value: studentModal.email },
+                      { label: 'Grade Level', value: studentModal.gradeLevel },
+                      { label: 'Stream', value: studentModal.stream1112 },
+                      { label: 'RIASEC Code', value: studentModal.riasecCode },
+                    ].map(({ label, value }) => value ? (
+                      <div key={label} style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: '10px 12px', border: '1px solid var(--border)' }}>
+                        <div style={{ fontSize: '0.68rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '3px' }}>{label}</div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-main)' }}>{String(value)}</div>
+                      </div>
+                    ) : null)}
+                  </div>
+                </div>
+
+                {/* Education */}
+                <div>
+                  <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>
+                    🎓 Education
+                  </div>
+                  {edu.highestLevel && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '700', marginBottom: '8px' }}>
+                      Highest Level: {String(edu.highestLevel)}
+                    </div>
+                  )}
+                  {hasAnyEduTier
+                    ? eduTiers.map(({ key, label, icon }) => renderEduTier(key, label, icon))
+                    : legacySchool
+                      ? (
+                        <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: '12px 14px', border: '1px solid var(--border)' }}>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--text-main)', fontWeight: '600' }}>{String(legacySchool)}</div>
+                          {studentModal.marks10th && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>10th: {String(studentModal.marks10th)}%</div>}
+                          {studentModal.marks12th && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>12th: {String(studentModal.marks12th)}%</div>}
+                        </div>
+                      )
+                      : (
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontStyle: 'italic' }}>No education details provided yet.</div>
+                      )
+                  }
+                </div>
+
+                {/* Interests & Hobbies */}
+                {(Array.isArray(studentModal.interests) && studentModal.interests.length > 0) && (
+                  <div style={{ marginTop: '16px' }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                      ✨ Interests
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {studentModal.interests.map((interest, i) => (
+                        <span key={i} style={{ background: 'var(--primary-light)', color: 'var(--primary)', fontSize: '0.78rem', fontWeight: '600', padding: '3px 10px', borderRadius: '20px' }}>
+                          {String(interest)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(Array.isArray(studentModal.hobbies) && studentModal.hobbies.length > 0) && (
+                  <div style={{ marginTop: '12px' }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                      🎯 Hobbies
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {studentModal.hobbies.map((hobby, i) => (
+                        <span key={i} style={{ background: 'rgba(16,185,129,0.08)', color: 'var(--accent)', fontSize: '0.78rem', fontWeight: '600', padding: '3px 10px', borderRadius: '20px', border: '1px solid rgba(16,185,129,0.2)' }}>
+                          {String(hobby)}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

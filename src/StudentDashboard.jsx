@@ -19,6 +19,7 @@ const CSS = `
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
   --shadow-lg: 0 12px 40px rgba(0,0,0,0.10);
+  --transition-base: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -93,8 +94,8 @@ const CSS = `
 .db-btn-ghost { background: transparent; color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.15); padding: 9px 18px; border-radius: 50px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; }
 
 /* ── SOCIAL FEED POST CARD ── */
-.db-post-card { background: white; border-radius: var(--r-lg); border: 1.5px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden; transition: box-shadow 0.2s; }
-.db-post-card:hover { box-shadow: var(--shadow-md); }
+.db-post-card { background: white; border-radius: var(--r-lg); border: 1.5px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden; transition: var(--transition-base); }
+.db-post-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: rgba(14,165,233,0.2); }
 .db-post-header { padding: 16px 20px 12px; display: flex; align-items: center; gap: 12px; }
 .db-post-author-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
 .db-post-author-info { flex: 1; }
@@ -126,7 +127,8 @@ const CSS = `
 
 /* ── STATS STRIP ── */
 .db-stats-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.db-stat-mini { background: white; border-radius: var(--r-md); padding: 16px; border: 1.5px solid var(--border); box-shadow: var(--shadow-sm); text-align: center; }
+.db-stat-mini { background: white; border-radius: var(--r-md); padding: 16px; border: 1.5px solid var(--border); box-shadow: var(--shadow-sm); text-align: center; transition: var(--transition-base); }
+.db-stat-mini:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: rgba(232,101,10,0.25); }
 .db-stat-mini-icon { font-size: 22px; margin-bottom: 8px; display: block; }
 .db-stat-mini-val { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1; }
 .db-stat-mini-lbl { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
@@ -272,7 +274,7 @@ function getNotifColor(priority, isRead) {
 }
 
 export default function StudentDashboard({ user, userData, initialTab = "home", onBack, onLogout }) {
-  const { userProfile, socialFeed, notifications, markNotificationRead, markAllNotificationsRead } = useDashboard();
+  const { userProfile, socialFeed, notifications, markNotificationRead, markAllNotificationsRead, incrementSessions } = useDashboard();
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isParentMode, setIsParentMode] = useState(false);
@@ -1065,12 +1067,40 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   );
 
   // ── COUNSELLOR TAB ──
+  const sessionsBooked = Number(userProfile.sessionsBooked || 0);
   const renderCounsellorTab = () => (
     <div className="db-tab">
       <div className="db-two-col">
         <div className="db-card" style={{ marginBottom: 0 }}>
           <div className="db-card-header"><div className="db-card-title">📅 Book Expert Session</div></div>
           <div className="db-card-body">
+            {/* Dynamic Pricing Banner */}
+            <div style={{
+              background: sessionsBooked === 0
+                ? 'linear-gradient(135deg, #D1FAE5, #A7F3D0)'
+                : 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
+              border: sessionsBooked === 0 ? '1.5px solid #6EE7B7' : '1.5px solid #FCD34D',
+              borderRadius: 'var(--r-md)',
+              padding: '14px 18px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: '800', color: sessionsBooked === 0 ? '#065F46' : '#92400E', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '3px' }}>
+                  {sessionsBooked === 0 ? '🎁 Special Offer' : '💳 Session Pricing'}
+                </div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: '900', color: sessionsBooked === 0 ? '#059669' : '#B45309' }}>
+                  {sessionsBooked === 0 ? '1st Session FREE!' : '₹700 per session'}
+                </div>
+                <div style={{ fontSize: '12px', color: sessionsBooked === 0 ? '#065F46' : '#92400E', marginTop: '2px', fontWeight: '500' }}>
+                  {sessionsBooked === 0 ? 'No credit card required. Book your free intro session now.' : `You have booked ${sessionsBooked} session${sessionsBooked > 1 ? 's' : ''} so far.`}
+                </div>
+              </div>
+              <div style={{ fontSize: '32px', flexShrink: 0 }}>{sessionsBooked === 0 ? '🎉' : '📅'}</div>
+            </div>
+
             <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "16px", marginBottom: "16px", borderBottom: "1px solid var(--border)" }}>
               {["Today", "Tomorrow", "Thu 26", "Fri 27"].map((d, i) => (
                 <div key={i} style={{ padding: "10px 16px", border: i === 0 ? "1.5px solid var(--saffron)" : "1px solid var(--border)", borderRadius: "var(--r-sm)", background: i === 0 ? "#FFFBEB" : "white", textAlign: "center", cursor: "pointer", minWidth: "80px" }}>
@@ -1089,7 +1119,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                   <div style={{ fontSize: "12px", color: "var(--muted)" }}>{c.spec}</div>
                   <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--saffron)", marginTop: "4px" }}>🎥 {c.type}</div>
                 </div>
-                <button className="db-btn-outline" onClick={() => showToast("Booking portal loading...")}>Select Time</button>
+                <button className="db-btn-outline" onClick={() => { incrementSessions(); showToast("✅ Session booked! Check your email for confirmation."); }}>Select Time</button>
               </div>
             ))}
           </div>
