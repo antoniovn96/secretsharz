@@ -1,7 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { auth, db } from './firebase'; // ✅ Added Firebase auth and db import
+import { auth, db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import {
+  demographicQuestions,
+  realisticQuestions,
+  investigativeQuestions,
+  artisticQuestions,
+  socialQuestions,
+  enterprisingQuestions,
+  conventionalQuestions,
+  extracurricularQuestions,
+  sectionMeta as SECTION_META,
+} from './data/assessmentQuestions';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// STYLES
+// ─────────────────────────────────────────────────────────────────────────────
 const GOOGLE_FONTS = `@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');`;
 
 const STYLES = `
@@ -12,58 +26,72 @@ const STYLES = `
     --danger:#8B1A1A;--shadow:0 8px 32px rgba(28,18,8,0.12);--radius:16px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  .vv-root{font-family:'DM Sans',sans-serif;min-height:100vh;background:var(--cream);color:var(--dark);background-image:radial-gradient(ellipse at 10% 20%,rgba(232,101,10,0.06) 0%,transparent 50%),radial-gradient(ellipse at 90% 80%,rgba(10,92,99,0.06) 0%,transparent 50%);}
+  .ca-root{font-family:'DM Sans',sans-serif;min-height:100vh;background:var(--cream);color:var(--dark);background-image:radial-gradient(ellipse at 10% 20%,rgba(232,101,10,0.06) 0%,transparent 50%),radial-gradient(ellipse at 90% 80%,rgba(10,92,99,0.06) 0%,transparent 50%);}
 
-  .vv-header{background:var(--dark);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--saffron);}
-  .vv-logo{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--white);letter-spacing:-0.5px;}
-  .vv-logo span{color:var(--gold);}
-  .vv-badge{background:var(--saffron);color:white;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;}
-  .vv-header-nav{display:flex;align-items:center;gap:12px;}
-  .vv-nav-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
-  .vv-nav-btn:hover{background:rgba(240,165,0,0.2);border-color:var(--gold);color:var(--gold);}
-  .vv-nav-btn.active{background:var(--saffron);border-color:var(--saffron);color:white;}
+  /* HEADER */
+  .ca-header{background:var(--dark);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--saffron);}
+  .ca-logo{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--white);letter-spacing:-0.5px;cursor:pointer;}
+  .ca-logo span{color:var(--gold);}
+  .ca-badge{background:var(--saffron);color:white;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;}
 
-  .vv-progress-wrap{background:var(--dark);padding:14px 40px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
-  .vv-section-pills{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
-  .vv-section-pills::-webkit-scrollbar{display:none;}
-  .vv-section-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;white-space:nowrap;border:1px solid;transition:all .2s;}
-  .vv-section-pill.done{background:rgba(45,125,70,.25);color:#4ABA78;border-color:rgba(45,125,70,.4);}
-  .vv-section-pill.active{background:rgba(232,101,10,.25);color:var(--gold);border-color:rgba(232,101,10,.5);}
-  .vv-section-pill.todo{background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);border-color:rgba(255,255,255,.1);}
-  .vv-progress-right{display:flex;align-items:center;gap:14px;margin-left:auto;flex-shrink:0;}
-  .vv-progress-bar-bg{width:120px;height:5px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;}
-  .vv-progress-fill{height:100%;background:linear-gradient(90deg,var(--saffron),var(--gold));border-radius:10px;transition:width 0.5s ease;}
-  .vv-progress-pct{color:var(--gold);font-size:12px;font-weight:700;white-space:nowrap;}
+  /* PROGRESS BAR */
+  .ca-progress-wrap{background:var(--dark);padding:14px 40px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,0.06);}
+  .ca-step-pills{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex:1;}
+  .ca-step-pills::-webkit-scrollbar{display:none;}
+  .ca-step-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;white-space:nowrap;border:1px solid;transition:all .2s;cursor:default;}
+  .ca-step-pill.done{background:rgba(45,125,70,.25);color:#4ABA78;border-color:rgba(45,125,70,.4);}
+  .ca-step-pill.active{background:rgba(232,101,10,.25);color:var(--gold);border-color:rgba(232,101,10,.5);}
+  .ca-step-pill.todo{background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);border-color:rgba(255,255,255,.1);}
+  .ca-progress-right{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+  .ca-progress-bar-bg{width:120px;height:5px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;}
+  .ca-progress-fill{height:100%;background:linear-gradient(90deg,var(--saffron),var(--gold));border-radius:10px;transition:width 0.5s ease;}
+  .ca-progress-pct{color:var(--gold);font-size:12px;font-weight:700;white-space:nowrap;}
 
-  .vv-form-card{max-width:800px;margin:40px auto;padding:0 20px 60px;}
-  .vv-section-header{text-align:center;margin-bottom:36px;}
-  .vv-section-header h2{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:var(--dark);margin-bottom:8px;}
-  .vv-section-header p{color:var(--muted);font-size:15px;line-height:1.6;max-width:580px;margin:0 auto;}
-  .vv-section-badge{display:inline-block;background:rgba(232,101,10,.12);color:var(--saffron);padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
+  /* FORM CARD */
+  .ca-form-card{max-width:820px;margin:40px auto;padding:0 20px 80px;}
+  .ca-section-header{text-align:center;margin-bottom:36px;}
+  .ca-section-badge{display:inline-block;background:rgba(232,101,10,.12);color:var(--saffron);padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
+  .ca-section-header h2{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:var(--dark);margin-bottom:8px;}
+  .ca-section-header p{color:var(--muted);font-size:15px;line-height:1.6;max-width:580px;margin:0 auto;}
+  .ca-section-icon{font-size:40px;margin-bottom:10px;display:block;}
 
-  .vv-field{margin-bottom:22px;}
-  .vv-field label{display:block;font-size:14px;font-weight:600;color:var(--brown);margin-bottom:8px;}
-  .vv-field input,.vv-field select,.vv-field textarea{width:100%;padding:14px 18px;border:2px solid rgba(61,34,5,0.15);border-radius:12px;font-size:15px;font-family:'DM Sans',sans-serif;background:white;color:var(--dark);transition:border-color 0.2s;outline:none;resize:vertical;}
-  .vv-field input:focus,.vv-field select:focus,.vv-field textarea:focus{border-color:var(--saffron);}
-  .vv-two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  /* FIELDS */
+  .ca-field{margin-bottom:22px;}
+  .ca-field label{display:block;font-size:14px;font-weight:600;color:var(--brown);margin-bottom:8px;}
+  .ca-field input,.ca-field select,.ca-field textarea{width:100%;padding:14px 18px;border:2px solid rgba(61,34,5,0.15);border-radius:12px;font-size:15px;font-family:'DM Sans',sans-serif;background:white;color:var(--dark);transition:border-color 0.2s;outline:none;resize:vertical;}
+  .ca-field input:focus,.ca-field select:focus,.ca-field textarea:focus{border-color:var(--saffron);}
+  .ca-two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .ca-autofill-box{padding:14px 18px;background:#f8fafc;border-radius:12px;border:2px solid rgba(45,125,70,0.2);color:var(--dark);font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:center;}
+  .ca-autofill-tag{color:var(--success);font-size:12px;font-weight:700;}
 
+  /* MULTI-SELECT CHIPS */
+  .ca-chips-wrap{display:flex;flex-wrap:wrap;gap:10px;}
+  .ca-chip{padding:10px 16px;border:2px solid rgba(61,34,5,0.12);border-radius:30px;background:white;font-size:13px;font-weight:500;color:var(--brown);cursor:pointer;transition:all 0.18s;font-family:'DM Sans',sans-serif;}
+  .ca-chip:hover{border-color:var(--teal);color:var(--teal);}
+  .ca-chip.selected{background:linear-gradient(135deg,var(--teal),var(--teal-light));border-color:transparent;color:white;box-shadow:0 3px 10px rgba(10,92,99,0.25);}
+
+  /* QUESTION CARDS */
   .q-card{background:white;border-radius:var(--radius);padding:24px 28px;margin-bottom:18px;border:2px solid transparent;box-shadow:0 2px 12px rgba(28,18,8,0.06);transition:border-color 0.2s;}
   .q-card.answered{border-color:rgba(45,125,70,.2);}
-  .q-card:hover{border-color:rgba(232,101,10,0.2);}
+  .q-card:hover{border-color:rgba(232,101,10,0.15);}
   .q-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px;}
   .q-number{font-size:11px;font-weight:700;color:var(--saffron);letter-spacing:1.5px;text-transform:uppercase;}
-  .q-check{width:18px;height:18px;border-radius:50%;background:rgba(45,125,70,.15);border:2px solid rgba(45,125,70,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;color:var(--success);transition:all .2s;}
+  .q-check{width:20px;height:20px;border-radius:50%;background:rgba(45,125,70,.1);border:2px solid rgba(45,125,70,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:var(--success);transition:all .2s;}
   .q-card.answered .q-check{background:var(--success);border-color:var(--success);color:white;}
-  .q-text{font-size:15px;font-weight:500;color:var(--dark);line-height:1.55;margin-bottom:18px;}
+  .q-text{font-size:15px;font-weight:500;color:var(--dark);line-height:1.6;margin-bottom:18px;}
 
-  .q-scale-wrap{display:flex;flex-direction:column;gap:8px;}
+  /* LIKERT SCALE */
+  .q-scale-wrap{display:flex;flex-direction:column;gap:10px;}
   .q-scale-labels{display:flex;justify-content:space-between;}
-  .q-scale-label{font-size:11px;color:var(--muted);font-weight:600;}
+  .q-scale-label{font-size:11px;color:var(--muted);font-weight:600;max-width:140px;}
+  .q-scale-label.right{text-align:right;}
   .q-scale{display:flex;gap:8px;}
-  .scale-btn{flex:1;padding:12px 6px;border:2px solid rgba(61,34,5,0.12);border-radius:10px;background:white;font-size:15px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.18s;font-family:'DM Sans',sans-serif;text-align:center;}
+  .scale-btn{flex:1;padding:12px 4px;border:2px solid rgba(61,34,5,0.12);border-radius:10px;background:white;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.18s;font-family:'DM Sans',sans-serif;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .scale-btn .scale-label-text{font-size:9px;font-weight:600;letter-spacing:0.3px;line-height:1.2;text-align:center;}
   .scale-btn:hover{border-color:var(--saffron);color:var(--saffron);}
   .scale-btn.selected{background:linear-gradient(135deg,var(--saffron),var(--gold));border-color:transparent;color:white;box-shadow:0 4px 12px rgba(232,101,10,0.3);transform:scale(1.06);}
 
+  /* CHOICE GRID */
   .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .choice-grid.single-col{grid-template-columns:1fr;}
   .choice-btn{padding:13px 16px;border:2px solid rgba(61,34,5,0.12);border-radius:12px;background:white;font-size:14px;font-weight:500;color:var(--brown);cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;text-align:left;line-height:1.4;display:flex;align-items:flex-start;gap:9px;}
@@ -71,65 +99,193 @@ const STYLES = `
   .choice-btn:hover{border-color:var(--teal);background:rgba(10,92,99,0.04);color:var(--teal);}
   .choice-btn.selected{background:linear-gradient(135deg,var(--teal),var(--teal-light));border-color:transparent;color:white;box-shadow:0 4px 12px rgba(10,92,99,0.25);}
 
-  .vv-nav{display:flex;justify-content:space-between;align-items:center;margin-top:36px;padding-top:24px;border-top:1px solid rgba(61,34,5,0.1);}
-  .btn-back{padding:12px 28px;border:2px solid rgba(61,34,5,0.2);border-radius:50px;background:transparent;font-size:15px;font-weight:600;color:var(--brown);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
-  .btn-next{padding:14px 36px;border:none;border-radius:50px;background:linear-gradient(135deg,var(--saffron),var(--gold));font-size:15px;font-weight:600;color:white;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 6px 20px rgba(232,101,10,0.3);transition:all 0.25s;}
-  .btn-next:hover{transform:translateY(-1px);}
-  .btn-next:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
-  .section-progress-note{font-size:12px;color:var(--muted);font-weight:600;}
+  /* RANKING */
+  .ranking-list{display:flex;flex-direction:column;gap:8px;}
+  .ranking-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:white;border:2px solid rgba(61,34,5,0.1);border-radius:12px;cursor:grab;user-select:none;transition:all 0.2s;}
+  .ranking-item:hover{border-color:var(--saffron);box-shadow:0 2px 8px rgba(232,101,10,0.1);}
+  .ranking-item.dragging{opacity:0.5;border-color:var(--saffron);}
+  .rank-num{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--gold));color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .rank-text{font-size:14px;font-weight:500;color:var(--brown);flex:1;}
+  .rank-handle{color:var(--muted);font-size:16px;}
+  .rank-arrows{display:flex;flex-direction:column;gap:2px;}
+  .rank-arrow{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px 4px;line-height:1;transition:color 0.15s;}
+  .rank-arrow:hover{color:var(--saffron);}
 
+  /* SCALE 1-10 */
+  .scale10-wrap{display:flex;flex-direction:column;gap:10px;}
+  .scale10-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .scale10-btn{width:52px;height:52px;border:2px solid rgba(61,34,5,0.12);border-radius:10px;background:white;font-size:16px;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.18px;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;}
+  .scale10-btn:hover{border-color:var(--saffron);color:var(--saffron);}
+  .scale10-btn.selected{background:linear-gradient(135deg,var(--saffron),var(--gold));border-color:transparent;color:white;box-shadow:0 4px 12px rgba(232,101,10,0.3);transform:scale(1.08);}
+  .scale10-labels{display:flex;justify-content:space-between;}
+  .scale10-label{font-size:11px;color:var(--muted);font-weight:600;max-width:180px;line-height:1.3;}
+  .scale10-label.right{text-align:right;}
+
+  /* NAV */
+  .ca-nav{display:flex;justify-content:space-between;align-items:center;margin-top:36px;padding-top:24px;border-top:1px solid rgba(61,34,5,0.1);}
+  .btn-back{padding:12px 28px;border:2px solid rgba(61,34,5,0.2);border-radius:50px;background:transparent;font-size:15px;font-weight:600;color:var(--brown);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+  .btn-back:hover{border-color:var(--brown);background:rgba(61,34,5,0.04);}
+  .btn-next{padding:14px 36px;border:none;border-radius:50px;background:linear-gradient(135deg,var(--saffron),var(--gold));font-size:15px;font-weight:600;color:white;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 6px 20px rgba(232,101,10,0.3);transition:all 0.25s;}
+  .btn-next:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(232,101,10,0.4);}
+  .btn-next:disabled{opacity:0.45;cursor:not-allowed;transform:none;box-shadow:none;}
+  .btn-calculate{padding:16px 40px;border:none;border-radius:50px;background:linear-gradient(135deg,#2D7D46,#3DAA5E);font-size:16px;font-weight:700;color:white;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 6px 20px rgba(45,125,70,0.35);transition:all 0.25s;}
+  .btn-calculate:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(45,125,70,0.45);}
+  .btn-calculate:disabled{opacity:0.45;cursor:not-allowed;transform:none;box-shadow:none;}
+  .ca-progress-note{font-size:12px;color:var(--muted);font-weight:600;}
+
+  /* ERROR */
   .error-box{background:rgba(139,26,26,0.07);border:1px solid rgba(139,26,26,0.25);color:var(--danger);padding:16px 20px;border-radius:12px;margin-bottom:24px;font-weight:600;font-size:14px;line-height:1.5;}
 
-  /* LOADING */
-  .vv-loading{text-align:center;padding:80px 40px;max-width:600px;margin:0 auto;}
-  .vv-loading-spinner{width:64px;height:64px;border:4px solid rgba(232,101,10,0.15);border-top-color:var(--saffron);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 32px;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  .vv-loading h3{font-family:'Playfair Display',serif;font-size:26px;color:var(--dark);margin-bottom:12px;}
-  .vv-loading-steps{margin-top:32px;text-align:left;display:inline-block;}
-  .loading-step{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:14px;color:var(--muted);transition:color 0.3s;}
-  .loading-step.active{color:var(--saffron);font-weight:600;}
-  .loading-step.done{color:var(--success);}
-  .step-dot{width:8px;height:8px;border-radius:50%;background:rgba(61,34,5,0.15);flex-shrink:0;}
-  .loading-step.active .step-dot{background:var(--saffron);}
-  .loading-step.done .step-dot{background:var(--success);}
+  /* INFO CARD */
+  .ca-info-card{background:white;border-radius:var(--radius);padding:28px;margin-bottom:20px;box-shadow:0 2px 12px rgba(28,18,8,0.06);border:1px solid rgba(61,34,5,0.08);}
+  .ca-info-card h4{font-family:'Playfair Display',serif;font-size:18px;color:var(--dark);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(61,34,5,0.08);}
 
-  /* RESULTS (PRIMARY REPORT) */
-  .vv-results{max-width:800px;margin:0 auto;padding:40px 20px 80px;}
-  .results-hero{text-align:center;padding:52px 32px 44px;background:linear-gradient(135deg,var(--dark) 0%,var(--brown) 100%);border-radius:24px;margin-bottom:32px;position:relative;overflow:hidden;}
-  .results-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(232,101,10,0.15),transparent 70%);pointer-events:none;}
-  .results-name{font-size:12px;color:rgba(255,255,255,0.45);letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:10px;}
-  .riasec-code-display{font-family:'Playfair Display',serif;font-size:56px;font-weight:700;color:var(--gold);letter-spacing:8px;margin:6px 0 16px;line-height:1;}
-  .riasec-code-label{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:24px;letter-spacing:1px;}
-  .riasec-result-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:24px;}
-  .riasec-chip{padding:8px 18px;border-radius:30px;font-size:13px;font-weight:700;}
-  .results-summary{color:rgba(255,255,255,0.72);font-size:15px;max-width:580px;margin:0 auto;line-height:1.75;font-family:'Cormorant Garamond',serif;font-size:18px;}
+  /* SECTION DIVIDER */
+  .ca-section-divider{display:flex;align-items:center;gap:12px;margin:28px 0 20px;}
+  .ca-section-divider-line{flex:1;height:1px;background:rgba(61,34,5,0.1);}
+  .ca-section-divider-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
 
-  .riasec-radar{background:white;border-radius:20px;padding:32px;margin-bottom:24px;box-shadow:var(--shadow);}
-  .riasec-radar h4{font-family:'Playfair Display',serif;font-size:22px;color:var(--dark);margin-bottom:6px;}
-  .riasec-radar p{font-size:14px;color:var(--muted);margin-bottom:24px;}
-  .riasec-bars{display:flex;flex-direction:column;gap:12px;}
-  .riasec-bar-row{display:flex;align-items:center;gap:16px;}
-  .riasec-bar-label{width:110px;font-size:14px;font-weight:700;color:var(--brown);flex-shrink:0;}
-  .riasec-bar-label span{font-size:11px;font-weight:500;color:var(--muted);display:block;margin-top:2px;}
-  .riasec-bar-bg{flex:1;height:12px;background:rgba(61,34,5,0.07);border-radius:10px;overflow:hidden;}
+  /* MATURITY SCENARIO */
+  .maturity-card{background:white;border-radius:var(--radius);padding:24px 28px;margin-bottom:18px;border:2px solid transparent;box-shadow:0 2px 12px rgba(28,18,8,0.06);transition:border-color 0.2s;}
+  .maturity-card.answered{border-color:rgba(45,125,70,.2);}
+  .maturity-scenario{background:var(--parchment);border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:14px;color:var(--brown);line-height:1.65;font-style:italic;border-left:3px solid var(--saffron);}
+
+  /* ── RESULTS UI ─────────────────────────────────────────────────────────── */
+  .res-root{max-width:900px;margin:0 auto;padding:40px 20px 100px;}
+
+  /* Hero */
+  .res-hero{background:linear-gradient(135deg,var(--dark) 0%,#2C1A0A 100%);border-radius:24px;padding:48px 40px;text-align:center;margin-bottom:32px;position:relative;overflow:hidden;}
+  .res-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(232,101,10,0.08);pointer-events:none;}
+  .res-hero::after{content:'';position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;border-radius:50%;background:rgba(10,92,99,0.1);pointer-events:none;}
+  .res-hero-eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;}
+  .res-hero-name{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:white;margin-bottom:6px;}
+  .res-hero-sub{font-size:15px;color:rgba(255,255,255,0.55);margin-bottom:28px;}
+  .res-holland-code{display:inline-flex;gap:10px;margin-bottom:20px;}
+  .res-holland-letter{width:72px;height:72px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:white;position:relative;box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+  .res-holland-letter .hl-rank{position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--dark);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
+  .res-holland-label{font-size:13px;color:rgba(255,255,255,0.7);font-weight:500;}
+  .res-hero-tagline{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:rgba(255,255,255,0.75);max-width:520px;margin:0 auto;}
+
+  /* Section cards */
+  .res-card{background:white;border-radius:20px;padding:32px;margin-bottom:24px;box-shadow:0 4px 20px rgba(28,18,8,0.07);border:1px solid rgba(61,34,5,0.07);}
+  .res-card-header{display:flex;align-items:center;gap:14px;margin-bottom:24px;}
+  .res-card-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .res-card-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--dark);}
+  .res-card-subtitle{font-size:13px;color:var(--muted);margin-top:2px;}
+
+  /* RIASEC breakdown bars */
+  .riasec-bars{display:flex;flex-direction:column;gap:14px;}
+  .riasec-bar-row{display:flex;align-items:center;gap:14px;}
+  .riasec-bar-key{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:white;flex-shrink:0;}
+  .riasec-bar-info{flex:1;}
+  .riasec-bar-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
+  .riasec-bar-name{font-size:13px;font-weight:600;color:var(--dark);}
+  .riasec-bar-pct{font-size:12px;font-weight:700;color:var(--muted);}
+  .riasec-bar-track{height:8px;background:rgba(61,34,5,0.07);border-radius:10px;overflow:hidden;}
   .riasec-bar-fill{height:100%;border-radius:10px;transition:width 1s ease;}
-  .riasec-bar-score{width:32px;font-size:15px;font-weight:700;text-align:right;flex-shrink:0;}
+  .riasec-bar-desc{font-size:11px;color:var(--muted);margin-top:3px;}
 
-  .unlock-dashboard-cta{background:linear-gradient(135deg,var(--dark),var(--brown));border-radius:24px;padding:48px 32px;text-align:center;color:white;margin-top:40px;box-shadow:var(--shadow);}
-  .unlock-dashboard-cta h3{font-family:'Playfair Display',serif;font-size:28px;margin-bottom:12px;}
-  .unlock-dashboard-cta p{color:rgba(255,255,255,0.7);font-size:16px;line-height:1.6;margin-bottom:28px;}
-  .btn-unlock{background:linear-gradient(135deg,var(--saffron),var(--gold));border:none;color:white;padding:16px 40px;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 8px 24px rgba(232,101,10,0.35);transition:all 0.25s;}
-  .btn-unlock:hover{transform:translateY(-2px);}
+  /* Trait breakdown */
+  .trait-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  .trait-card{border-radius:16px;padding:20px;text-align:center;}
+  .trait-card-letter{font-family:'Playfair Display',serif;font-size:40px;font-weight:700;margin-bottom:4px;}
+  .trait-card-name{font-size:13px;font-weight:700;margin-bottom:6px;}
+  .trait-card-archetype{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;opacity:0.7;margin-bottom:10px;}
+  .trait-card-desc{font-size:12px;line-height:1.6;opacity:0.85;}
+
+  /* Stream recommendation */
+  .stream-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+  .stream-card{border-radius:16px;padding:20px 16px;text-align:center;border:2px solid transparent;transition:all 0.2s;cursor:default;}
+  .stream-card.recommended{border-color:var(--saffron);box-shadow:0 6px 20px rgba(232,101,10,0.15);}
+  .stream-card.secondary{opacity:0.7;}
+  .stream-card.not-recommended{opacity:0.4;}
+  .stream-emoji{font-size:32px;margin-bottom:8px;}
+  .stream-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;margin-bottom:4px;}
+  .stream-tag{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:8px;}
+  .stream-tag.best{background:rgba(232,101,10,0.12);color:var(--saffron);}
+  .stream-tag.good{background:rgba(10,92,99,0.1);color:var(--teal);}
+  .stream-tag.possible{background:rgba(61,34,5,0.07);color:var(--muted);}
+  .stream-subjects{font-size:11px;color:var(--muted);line-height:1.6;}
+  .stream-reason{background:rgba(232,101,10,0.05);border:1px solid rgba(232,101,10,0.15);border-radius:12px;padding:14px 18px;font-size:14px;color:var(--brown);line-height:1.65;}
+
+  /* Career matches */
+  .career-list{display:flex;flex-direction:column;gap:16px;}
+  .career-item{border-radius:16px;padding:22px 24px;border:1px solid rgba(61,34,5,0.08);background:white;box-shadow:0 2px 10px rgba(28,18,8,0.05);transition:box-shadow 0.2s;}
+  .career-item:hover{box-shadow:0 6px 20px rgba(28,18,8,0.1);}
+  .career-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+  .career-rank-badge{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--saffron),var(--gold));color:white;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .career-name{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--dark);flex:1;}
+  .career-match-pct{font-size:13px;font-weight:700;color:var(--success);background:rgba(45,125,70,0.08);padding:4px 12px;border-radius:20px;white-space:nowrap;}
+  .career-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .career-tag{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(10,92,99,0.08);color:var(--teal);}
+  .career-desc{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:10px;}
+  .career-why{background:var(--parchment);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--brown);line-height:1.6;border-left:3px solid var(--gold);}
+  .career-why-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--saffron);margin-bottom:4px;}
+
+  /* Maturity indicator */
+  .maturity-gauge-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:24px;}
+  .maturity-gauge-arc{position:relative;width:180px;height:90px;overflow:hidden;}
+  .maturity-gauge-bg{width:180px;height:180px;border-radius:50%;border:16px solid rgba(61,34,5,0.08);position:absolute;top:0;left:0;clip-path:polygon(0 50%,100% 50%,100% 100%,0 100%);}
+  .maturity-gauge-fill{width:180px;height:180px;border-radius:50%;border:16px solid transparent;position:absolute;top:0;left:0;clip-path:polygon(0 50%,100% 50%,100% 100%,0 100%);}
+  .maturity-score-num{font-family:'Playfair Display',serif;font-size:42px;font-weight:700;color:var(--dark);text-align:center;}
+  .maturity-score-label{font-size:13px;color:var(--muted);font-weight:600;text-align:center;}
+  .maturity-level-badge{padding:6px 18px;border-radius:20px;font-size:13px;font-weight:700;display:inline-block;margin-bottom:16px;}
+  .maturity-traits{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .maturity-trait-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(61,34,5,0.03);border-radius:10px;}
+  .maturity-trait-icon{font-size:18px;flex-shrink:0;}
+  .maturity-trait-info{flex:1;}
+  .maturity-trait-name{font-size:12px;font-weight:700;color:var(--dark);}
+  .maturity-trait-val{font-size:11px;color:var(--muted);}
+
+  /* Why these match */
+  .why-match-list{display:flex;flex-direction:column;gap:12px;}
+  .why-match-item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:rgba(10,92,99,0.04);border-radius:12px;border:1px solid rgba(10,92,99,0.1);}
+  .why-match-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);flex-shrink:0;margin-top:6px;}
+  .why-match-text{font-size:14px;color:var(--brown);line-height:1.6;}
+
+  /* CTA */
+  .res-cta{background:linear-gradient(135deg,var(--teal),var(--teal-light));border-radius:20px;padding:36px;text-align:center;margin-top:32px;}
+  .res-cta h3{font-family:'Playfair Display',serif;font-size:24px;color:white;margin-bottom:8px;}
+  .res-cta p{font-size:15px;color:rgba(255,255,255,0.8);margin-bottom:24px;}
+  .res-cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .btn-cta-primary{padding:14px 32px;border:none;border-radius:50px;background:white;color:var(--teal);font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+  .btn-cta-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.15);}
+  .btn-cta-secondary{padding:14px 32px;border:2px solid rgba(255,255,255,0.4);border-radius:50px;background:transparent;color:white;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+  .btn-cta-secondary:hover{background:rgba(255,255,255,0.1);}
 
   @media(max-width:900px){
-    .vv-two-col{grid-template-columns:1fr;}
+    .ca-two-col{grid-template-columns:1fr;}
     .choice-grid{grid-template-columns:1fr;}
-    .vv-header{padding:14px 20px;}
-    .vv-progress-wrap{padding:12px 20px;}
-    .vv-progress-bar-bg{width:80px;}
-    .riasec-code-display{font-size:42px;}
+    .ca-header{padding:14px 20px;}
+    .ca-progress-wrap{padding:12px 20px;}
+    .ca-progress-bar-bg{width:80px;}
+    .scale10-row{gap:4px;}
+    .scale10-btn{width:44px;height:44px;font-size:14px;}
+    .trait-grid{grid-template-columns:1fr;}
+    .stream-grid{grid-template-columns:1fr;}
+    .maturity-traits{grid-template-columns:1fr;}
+    .res-hero{padding:32px 20px;}
+    .res-hero-name{font-size:26px;}
+    .res-card{padding:22px 18px;}
+  }
+  @media(max-width:480px){
+    .q-scale{gap:4px;}
+    .scale-btn{padding:10px 2px;font-size:13px;}
+    .scale10-btn{width:36px;height:36px;font-size:13px;}
+    .res-holland-letter{width:58px;height:58px;font-size:24px;}
   }
 `;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────────────────────────────────────
+const LIKERT_LABELS = {
+  1: 'Strongly\nDisagree',
+  2: 'Disagree',
+  3: 'Neutral',
+  4: 'Agree',
+  5: 'Strongly\nAgree',
+};
 
 const RIASEC_COLORS = {
   R: { bg:'#FFF3E0', color:'#E65100', bar:'#E65100', label:'Realistic',     desc:'The Doer' },
@@ -140,381 +296,1063 @@ const RIASEC_COLORS = {
   C: { bg:'#E0F2F1', color:'#00695C', bar:'#00695C', label:'Conventional',  desc:'The Organiser' },
 };
 
-const CLASS_LEVELS = [
-  'Class 8','Class 9','Class 10',
-  'Class 11 (Science)','Class 11 (Commerce)','Class 11 (Arts)',
-  'Class 12 (Science)','Class 12 (Commerce)','Class 12 (Arts)',
-  '1st Year UG','2nd Year UG','3rd Year UG','4th Year UG',
-  'Postgraduate','Working Professional / Career Change',
-];
+// ─────────────────────────────────────────────────────────────────────────────
+// SCORING ENGINE
+// ─────────────────────────────────────────────────────────────────────────────
 
-const ACTIVITY_QUESTIONS = [
-  { id:'a1',  riasec:'R', text:'How much do you enjoy building, fixing, or assembling physical things — tools, gadgets, furniture, engines?' },
-  { id:'a2',  riasec:'R', text:'How much do you enjoy outdoor physical activities — sports, farming, working in nature, or operating machinery?' },
-  { id:'a3',  riasec:'I', text:'How much do you enjoy solving complex logical puzzles or scientific problems for the sheer satisfaction of it?' },
-  { id:'a4',  riasec:'I', text:'How much do you enjoy independently researching a topic that fascinates you — reading papers, forming your own theories?' },
-  { id:'a5',  riasec:'A', text:'How much do you enjoy drawing, painting, writing fiction or poetry, or creating music?' },
-  { id:'a6',  riasec:'A', text:'How much do you enjoy coming up with completely original ideas and expressing yourself in ways that feel uniquely yours?' },
-  { id:'a7',  riasec:'S', text:'How much do you enjoy listening to others and helping them process their personal problems or emotional struggles?' },
-  { id:'a8',  riasec:'S', text:'How much do you enjoy teaching, tutoring, or explaining difficult concepts to people until they genuinely understand?' },
-  { id:'a9',  riasec:'E', text:'How much do you enjoy leading a group, organising people toward a goal, or taking initiative when nobody else does?' },
-  { id:'a10', riasec:'E', text:'How much do you enjoy negotiating, pitching ideas, or convincing others to see things your way?' },
-  { id:'a11', riasec:'C', text:'How much do you enjoy organising information, managing records, or creating systems that keep things accurate and orderly?' },
-  { id:'a12', riasec:'C', text:'How much do you enjoy following well-defined procedures, verifying details, and making sure nothing falls through the cracks?' },
-];
+// Maps marks band → numeric weight multiplier
+const MARKS_WEIGHT = {
+  'Below 50%':    0.6,
+  '50% – 59%':   0.7,
+  '60% – 69%':   0.8,
+  '70% – 79%':   0.9,
+  '80% – 89%':   1.0,
+  '90% and above': 1.1,
+};
 
-const SKILLS_QUESTIONS = [
-  { id:'s1',  riasec:'R', text:'Working with mechanical, electrical, or technical systems — understanding how things physically work.' },
-  { id:'s2',  riasec:'R', text:'Physical coordination, craftsmanship, athletics, or any task requiring manual precision.' },
-  { id:'s3',  riasec:'I', text:'Mathematical or logical reasoning — spotting patterns in complex data or abstract problems.' },
-  { id:'s4',  riasec:'I', text:'Scientific thinking — formulating hypotheses, evaluating evidence, and drawing conclusions systematically.' },
-  { id:'s5',  riasec:'A', text:'Creative output — writing, visual art, music, design, photography, or performance.' },
-  { id:'s6',  riasec:'A', text:'Generating ideas that others have not thought of — lateral thinking and imaginative leaps.' },
-  { id:'s7',  riasec:'S', text:'Reading people\'s emotions and responding with genuine empathy and sensitivity.' },
-  { id:'s8',  riasec:'S', text:'Explaining things clearly so that different kinds of people actually understand — teaching and coaching.' },
-  { id:'s9',  riasec:'E', text:'Motivating and influencing others to take action toward a shared goal — natural leadership.' },
-  { id:'s10', riasec:'E', text:'Managing strategy, resources, and competing priorities under pressure — organising people at scale.' },
-  { id:'s11', riasec:'C', text:'Spotting errors and maintaining accuracy — detail-orientation and quality control.' },
-  { id:'s12', riasec:'C', text:'Creating and maintaining efficient systems, schedules, and workflows that other people can follow.' },
-];
+// Subject → RIASEC affinity boosts
+const SUBJECT_RIASEC_BOOST = {
+  'Mathematics':                    { I: 8, C: 6 },
+  'Physics':                        { R: 6, I: 8 },
+  'Chemistry':                      { I: 8, R: 4 },
+  'Biology / Life Sciences':        { I: 7, S: 5 },
+  'Computer Science / IT':          { I: 8, R: 6, C: 4 },
+  'History / Political Science':    { S: 5, E: 6, A: 4 },
+  'Geography / Environmental Studies': { R: 5, I: 5 },
+  'Economics / Business Studies':   { E: 8, C: 6, I: 4 },
+  'Accountancy / Commerce':         { C: 9, E: 5 },
+  'English / Literature':           { A: 8, S: 4 },
+  'Hindi / Regional Language':      { A: 6, S: 4 },
+  'Fine Arts / Music / Drama':      { A: 10 },
+  'Physical Education / Sports':    { R: 8, S: 4 },
+  'Psychology / Sociology':         { S: 8, I: 5 },
+  'Philosophy / Ethics':            { I: 6, A: 5, S: 4 },
+};
 
-const ACADEMIC_QUESTIONS = [
-  {
-    id:'b1', text:'Which subject area feels the most natural and genuinely enjoyable to you?',
-    choices:[
-      {icon:'⚗️', text:'Science & Mathematics', riasec:'I'},
-      {icon:'📊', text:'Commerce & Economics',  riasec:'E'},
-      {icon:'🎨', text:'Arts & Humanities',      riasec:'A'},
-      {icon:'💻', text:'Computers & Technology', riasec:'I'},
-      {icon:'🤸', text:'Physical Education & Sports', riasec:'R'},
-      {icon:'📜', text:'Languages & Literature', riasec:'A'},
-    ],
-  },
-  {
-    id:'b2', text:'How do you learn best? Which environment produces your deepest understanding?',
-    choices:[
-      {icon:'🔧', text:'Hands-on doing — building, experimenting, touching', riasec:'R'},
-      {icon:'📖', text:'Independent reading and self-directed research',       riasec:'I'},
-      {icon:'🗣️', text:'Group discussions, debates, and collaborative work',  riasec:'S'},
-      {icon:'🎭', text:'Creative projects, role-plays, and presentations',     riasec:'A'},
-      {icon:'📋', text:'Structured notes, clear syllabi, and organised study', riasec:'C'},
-      {icon:'🏆', text:'Competitive challenges, mock tests, and pitch events', riasec:'E'},
-    ],
-  },
-  {
-    id:'b3', text:'What type of work or assignment consistently earns you the best outcomes?',
-    choices:[
-      {icon:'📐', text:'Technical reports, calculations, or lab work',   riasec:'R'},
-      {icon:'🔬', text:'Research essays with deep analysis and evidence', riasec:'I'},
-      {icon:'🖌️', text:'Creative writing, visual art, or original projects', riasec:'A'},
-      {icon:'📊', text:'Organised plans, spreadsheets, or financial analysis', riasec:'C'},
-      {icon:'🎙️', text:'Group presentations, debates, or leadership roles',   riasec:'E'},
-      {icon:'🤝', text:'Collaborative tasks where you support your teammates', riasec:'S'},
-    ],
-  },
-  {
-    id:'b4', text:'Which of these best describes your academic journey so far?',
-    choices:[
-      {icon:'📈', text:'Consistently strong across most subjects',         riasec:'C'},
-      {icon:'🎯', text:'Outstanding in one or two subjects, average in others', riasec:'I'},
-      {icon:'💡', text:'Ideas come easily, but execution and deadlines are hard', riasec:'A'},
-      {icon:'🧩', text:'Strong when interested, disengaged when bored',    riasec:'E'},
-      {icon:'🌱', text:'Late bloomer — improving more every semester',     riasec:'S'},
-      {icon:'🏃', text:'Better at practical skills than written exams',    riasec:'R'},
-    ],
-  },
-  {
-    id:'b5', text:'If you could design one new class that your school or college does not yet offer, it would be:',
-    choices:[
-      {icon:'🤖', text:'Artificial Intelligence & Ethics',            riasec:'I'},
-      {icon:'🌿', text:'Environmental Sustainability & Climate Action', riasec:'R'},
-      {icon:'💰', text:'Personal Finance & Investment for Youth',   riasec:'E'},
-      {icon:'🧠', text:'Psychology & Mental Health Studies',        riasec:'S'},
-      {icon:'📱', text:'Digital Content Creation & Media',          riasec:'A'},
-      {icon:'📦', text:'Logistics, Supply Chain & Business Systems',riasec:'C'},
-    ],
-  },
-  {
-    id:'b6', text:'When a school project allows you complete freedom, you most naturally produce:',
-    choices:[
-      {icon:'🛠️', text:'Something physical — a model, prototype, or demo',  riasec:'R'},
-      {icon:'📑', text:'A detailed research report backed by real data',     riasec:'I'},
-      {icon:'🎬', text:'A creative piece — video, story, design, or artwork',riasec:'A'},
-      {icon:'📣', text:'A campaign, pitch, or initiative that rallies people',riasec:'E'},
-      {icon:'🗂️', text:'A comprehensive plan, template, or organised system',riasec:'C'},
-      {icon:'💬', text:'An interview series, guide, or community resource',  riasec:'S'},
-    ],
-  },
-];
+// Hobby → RIASEC affinity boosts
+const HOBBY_RIASEC_BOOST = {
+  'Sports / Athletics':                    { R: 8, S: 3 },
+  'Music (instrument, singing, composing)':{ A: 10 },
+  'Visual Arts (drawing, painting, sculpture)': { A: 10 },
+  'Drama / Theatre / Dance':               { A: 9, S: 4 },
+  'Coding / App / Game Development':       { I: 8, R: 5, C: 4 },
+  'Robotics / Science Olympiad':           { R: 7, I: 8 },
+  'Debate / MUN / Public Speaking':        { E: 9, S: 5 },
+  'Writing / Journalism / Blogging':       { A: 8, I: 4 },
+  'Photography / Videography / Filmmaking':{ A: 9, R: 3 },
+  'Community Service / NGO Work':          { S: 9, E: 4 },
+  'Student Government / Leadership Roles': { E: 9, S: 5 },
+  'Cooking / Culinary Arts':               { R: 6, A: 5 },
+  'Gaming (competitive or casual)':        { I: 5, R: 3 },
+  'Reading / Book Clubs':                  { I: 7, A: 5 },
+  'Fitness / Yoga / Martial Arts':         { R: 7 },
+  'Travel / Adventure / Trekking':         { R: 6, E: 4 },
+};
 
-const VALUES_QUESTIONS = [
-  {
-    id:'c1', text:'What matters most to you in your future career — choose the one that feels truly non-negotiable:',
-    choices:[
-      {icon:'💸', text:'High salary and financial independence',       riasec:'E'},
-      {icon:'🌍', text:'Making a meaningful positive impact on society',riasec:'S'},
-      {icon:'🎨', text:'Creative freedom and self-expression',          riasec:'A'},
-      {icon:'🔍', text:'Continuous intellectual challenge and learning',riasec:'I'},
-      {icon:'🏆', text:'Status, recognition, and industry influence',   riasec:'E'},
-      {icon:'⚖️', text:'Stability, security, and a clear career path', riasec:'C'},
-    ],
-  },
-  {
-    id:'c2', text:'Which work environment would make you feel most energised every morning?',
-    choices:[
-      {icon:'🌳', text:'Outdoors, field sites, or physical workspace',  riasec:'R'},
-      {icon:'🔬', text:'Lab, research centre, or technical environment',riasec:'I'},
-      {icon:'🖥️', text:'Creative studio, design space, or media set',   riasec:'A'},
-      {icon:'👥', text:'Busy collaborative office with constant people-interaction', riasec:'S'},
-      {icon:'📈', text:'Fast-paced corporate or startup environment',   riasec:'E'},
-      {icon:'🗂️', text:'Structured workspace with clear systems and minimal chaos', riasec:'C'},
-    ],
-  },
-  {
-    id:'c3', text:'How do you feel about the balance between income and personal meaning?',
-    choices:[
-      {icon:'💎', text:'Income comes first — financial freedom enables everything else',  riasec:'E'},
-      {icon:'❤️', text:'Meaning comes first — I will take less money for work I believe in', riasec:'S'},
-      {icon:'🧮', text:'I want both — I will not sacrifice one completely for the other',  riasec:'C'},
-      {icon:'🚀', text:'If I build something great, income will follow the passion',       riasec:'A'},
-      {icon:'🏡', text:'Enough to live comfortably — I value time over money',             riasec:'R'},
-    ],
-  },
-  {
-    id:'c4', text:'Where would you ideally like to live and work within the next 10 years?',
-    choices:[
-      {icon:'🏘️', text:'My home city or state — roots matter most to me',   riasec:'C'},
-      {icon:'🌆', text:'A major Indian metro — Mumbai, Delhi, Bengaluru',    riasec:'E'},
-      {icon:'🌐', text:'Internationally, if the right opportunity comes',    riasec:'I'},
-      {icon:'🏡', text:'Remotely from anywhere — location independence',     riasec:'A'},
-      {icon:'✈️', text:'A mix — some travel, some base, always evolving',    riasec:'E'},
-    ],
-  },
-  {
-    id:'c5', text:'How comfortable are you with risk and uncertainty in your career?',
-    choices:[
-      {icon:'🎲', text:'Love big risks — high risk, high reward is my style',  riasec:'E'},
-      {icon:'📐', text:'Calculated risks — I research before I leap',          riasec:'I'},
-      {icon:'🛡️', text:'Prefer stability — I want a proven, reliable path',   riasec:'C'},
-      {icon:'💚', text:'Risk is fine if the cause or purpose is meaningful enough', riasec:'S'},
-      {icon:'🌊', text:'I go where inspiration leads, even if it is uncertain', riasec:'A'},
-    ],
-  },
-  {
-    id:'c6', text:'When thinking about work-life integration over a long career, which matters most to you?',
-    choices:[
-      {icon:'⏰', text:'Strict work hours — after 6pm is my time, always',   riasec:'C'},
-      {icon:'🔥', text:'I will work insane hours now to build something great',riasec:'E'},
-      {icon:'🧘', text:'Flexibility — I want to blend work and life fluidly', riasec:'A'},
-      {icon:'👨‍👩‍👧', text:'Family and community time are sacred and non-negotiable', riasec:'S'},
-      {icon:'🌿', text:'Sustainable pace — I want to do this for 40 years',   riasec:'R'},
-    ],
-  },
-];
+// RIASEC question banks keyed by letter
+const RIASEC_QUESTION_BANKS = {
+  R: realisticQuestions,
+  I: investigativeQuestions,
+  A: artisticQuestions,
+  S: socialQuestions,
+  E: enterprisingQuestions,
+  C: conventionalQuestions,
+};
 
-const PERSONALITY_QUESTIONS = [
-  {
-    id:'d1', text:'When you face a significant setback — a failed exam, a rejected project, a broken friendship — your first instinct is to:',
-    choices:[
-      {icon:'📊', text:'Analyse what went wrong methodically before reacting',  riasec:'I'},
-      {icon:'💪', text:'Get back on track immediately — action over reflection', riasec:'R'},
-      {icon:'📝', text:'Express it — write, create, or talk it through',        riasec:'A'},
-      {icon:'🤝', text:'Talk to someone you trust and process it together',      riasec:'S'},
-      {icon:'🎯', text:'Reframe it as a lesson and quickly build a new plan',    riasec:'E'},
-      {icon:'📋', text:'Revisit your original plan and identify exactly where it broke', riasec:'C'},
-    ],
-  },
-  {
-    id:'d2', text:'In a team project, the role you naturally and most comfortably gravitate toward is:',
-    choices:[
-      {icon:'⚙️', text:'The person who physically builds or executes the work',  riasec:'R'},
-      {icon:'🔭', text:'The researcher who digs deep and ensures the content is accurate', riasec:'I'},
-      {icon:'🎨', text:'The creative director who shapes what it looks and feels like', riasec:'A'},
-      {icon:'🌟', text:'The energiser who keeps morale high and rallies the group', riasec:'S'},
-      {icon:'🗺️', text:'The leader who sets the vision and makes the key decisions', riasec:'E'},
-      {icon:'📅', text:'The project manager who coordinates timeline, quality, and logistics', riasec:'C'},
-    ],
-  },
-  {
-    id:'d3', text:'Which best describes your social energy — how you recharge and engage with the world?',
-    choices:[
-      {icon:'🔇', text:'Deeply introverted — I think inward and recharge in solitude',  riasec:'I'},
-      {icon:'📚', text:'Mostly introverted — small, deep conversations over big crowds', riasec:'A'},
-      {icon:'🌊', text:'Ambivert — I adjust naturally depending on the situation',       riasec:'C'},
-      {icon:'☀️', text:'Mostly extroverted — I think by talking and love collaboration', riasec:'S'},
-      {icon:'🎉', text:'Deeply extroverted — energy from crowds, ideas from interaction',riasec:'E'},
-    ],
-  },
-  {
-    id:'d4', text:'How do you typically make important decisions?',
-    choices:[
-      {icon:'📈', text:'Data-first — I research, compare options, and decide logically', riasec:'I'},
-      {icon:'🫀', text:'Gut-first — strong intuition that I mostly trust',               riasec:'A'},
-      {icon:'🔮', text:'Vision-first — I ask "what is the best possible outcome?" and work back', riasec:'E'},
-      {icon:'👥', text:'Consensus-first — I consult others before committing',            riasec:'S'},
-      {icon:'📋', text:'Process-first — I follow a systematic checklist and trust the system', riasec:'C'},
-    ],
-  },
-  {
-    id:'d5', text:'Which emerging global shift in 2025-2026 excites you most and makes you think "I want to be part of this"?',
-    choices:[
-      {icon:'🤖', text:'AI, machine learning, and the automation of knowledge work', riasec:'I'},
-      {icon:'🌍', text:'Climate solutions, renewable energy, and sustainable tech',  riasec:'R'},
-      {icon:'🧬', text:'Biotech, genetic medicine, and longevity science',            riasec:'I'},
-      {icon:'🎥', text:'Creator economy, digital content, and personalised media',   riasec:'A'},
-      {icon:'🧠', text:'Mental health, emotional intelligence, and wellness tech',   riasec:'S'},
-      {icon:'🏗️', text:'Infrastructure, smart cities, and physical world innovation',riasec:'R'},
-    ],
-  },
-  {
-    id:'d6', text:'What motivates you most deeply — the thing that pulls you out of bed on hard days?',
-    choices:[
-      {icon:'💡', text:'The satisfaction of solving something genuinely difficult',   riasec:'I'},
-      {icon:'🛠️', text:'Creating something tangible that did not exist before',       riasec:'R'},
-      {icon:'🌟', text:'The recognition and influence that comes from succeeding',    riasec:'E'},
-      {icon:'🎨', text:'The freedom to express exactly who you are through your work',riasec:'A'},
-      {icon:'💙', text:'Knowing you made a real difference in someone\'s life',       riasec:'S'},
-      {icon:'📊', text:'The clarity and progress that comes from a well-executed plan',riasec:'C'},
-    ],
-  },
-];
+// Single-question "correct" option index per RIASEC key (index 0 = most aligned)
+const SINGLE_Q_RIASEC_OPTION_IDX = {
+  R: 0, // "Assembling a complex piece of furniture" / "Outdoors / Field-based"
+  I: 0, // "Designing a controlled experiment"
+  A: 0, // "Sketch, paint, or work on a creative project"
+  S: 0, // "Immediately introduce yourself"
+  E: 0, // "Lead the entire event"
+  C: 0, // "Systematically go through each entry"
+};
 
-const FUTURE_QUESTIONS = [
-  {
-    id:'e1', text:'If you imagine yourself at 35, fulfilled and doing meaningful work — which image resonates most?',
-    choices:[
-      {icon:'🏗️', text:'Running a company I built from scratch',                      riasec:'E'},
-      {icon:'🔬', text:'Leading a research lab or publishing work that changes a field', riasec:'I'},
-      {icon:'🎬', text:'Creating art, content, or design that reaches millions',     riasec:'A'},
-      {icon:'🏥', text:'Healing, counselling, or educating people who need it',      riasec:'S'},
-      {icon:'⚙️', text:'Engineering systems or infrastructure that people rely on', riasec:'R'},
-      {icon:'🌐', text:'Managing a large organisation or department with precision',riasec:'C'},
-    ],
-  },
-  {
-    id:'e2', text:'Which of these industries do you feel most drawn to right now — even if it is just a feeling?',
-    choices:[
-      {icon:'💻', text:'Technology, AI, and software development',         riasec:'I'},
-      {icon:'🏥', text:'Healthcare, medicine, and mental wellness',        riasec:'S'},
-      {icon:'🌿', text:'Environment, climate tech, and green energy',      riasec:'R'},
-      {icon:'📺', text:'Media, entertainment, and creative industries',    riasec:'A'},
-      {icon:'💼', text:'Business, finance, law, and entrepreneurship',     riasec:'E'},
-      {icon:'🎓', text:'Education, research, and public institutions',     riasec:'S'},
-    ],
-  },
-  {
-    id:'e3', text:'If AI handles 60% of routine analytical and administrative tasks in 10 years — where would you want to invest your uniquely human energy?',
-    choices:[
-      {icon:'🤝', text:'Emotional intelligence, empathy, and human connection', riasec:'S'},
-      {icon:'🎨', text:'Original creative thinking, storytelling, and aesthetics', riasec:'A'},
-      {icon:'🔭', text:'Complex research and frontier scientific discovery',    riasec:'I'},
-      {icon:'🏛️', text:'Ethical leadership, governance, and policy design',     riasec:'E'},
-      {icon:'🛠️', text:'Physical skills, craftsmanship, and real-world engineering', riasec:'R'},
-      {icon:'🧭', text:'Systems design, coordination, and making complex things work at scale', riasec:'C'},
-    ],
-  },
-  {
-    id:'e4', text:'What kind of career model feels most aligned with how you want to live and work?',
-    choices:[
-      {icon:'🏢', text:'Traditional employment — growth within a stable organisation', riasec:'C'},
-      {icon:'🚀', text:'Startup — building something fast, scrappy, and disruptive',  riasec:'E'},
-      {icon:'🎓', text:'Academia or research — long-form thinking with deep expertise',riasec:'I'},
-      {icon:'🌍', text:'NGO / Social enterprise — mission-driven impact at scale',    riasec:'S'},
-      {icon:'🖥️', text:'Freelance or creator — independent work, personal brand',    riasec:'A'},
-      {icon:'👷', text:'Skilled trade or technical specialist — expertise in a craft', riasec:'R'},
-    ],
-  },
-  {
-    id:'e5', text:'What kind of legacy do you most want to leave in your lifetime?',
-    choices:[
-      {icon:'💡', text:'An invention, discovery, or idea that changes how the world works', riasec:'I'},
-      {icon:'🌿', text:'A healthier, safer, or more sustainable planet',                    riasec:'R'},
-      {icon:'🖼️', text:'Art, writing, or creative work that outlives you',                 riasec:'A'},
-      {icon:'❤️', text:'Thousands of lives improved through direct care or service',       riasec:'S'},
-      {icon:'🏆', text:'An organisation or movement that creates opportunity for others',  riasec:'E'},
-      {icon:'⚙️', text:'Systems and structures that run reliably long after you are gone', riasec:'C'},
-    ],
-  },
-  {
-    id:'e6', text:'Which of these real-world skills would you most like to master in the next 2 years?',
-    choices:[
-      {icon:'🤖', text:'AI tools, data analysis, and prompt engineering',        riasec:'I'},
-      {icon:'📸', text:'Video creation, editing, design, or storytelling',       riasec:'A'},
-      {icon:'💰', text:'Sales, negotiation, or fundraising — people persuasion', riasec:'E'},
-      {icon:'🧘', text:'Counselling, coaching, or active listening skills',      riasec:'S'},
-      {icon:'🔩', text:'Technical trade skills — coding, welding, electronics',  riasec:'R'},
-      {icon:'📋', text:'Project management, finance, or organisational systems', riasec:'C'},
-    ],
-  },
-];
+function computeRiasecScores(profile) {
+  const raw = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+  const maxPossible = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
 
-const ALL_SECTIONS = [
-  { id:'info',        label:'Profile',        emoji:'👤', questions:[] },
-  { id:'activities',  label:'Interests',        emoji:'🎯', questions:ACTIVITY_QUESTIONS },
-  { id:'skills',      label:'Abilities',        emoji:'⚡', questions:SKILLS_QUESTIONS },
-  { id:'academics',   label:'Academics',        emoji:'📚', questions:ACADEMIC_QUESTIONS },
-  { id:'values',      label:'Values',           emoji:'🧭', questions:VALUES_QUESTIONS },
-  { id:'personality', label:'Personality',      emoji:'🧠', questions:PERSONALITY_QUESTIONS },
-  { id:'future',      label:'Future Vision',    emoji:'🚀', questions:FUTURE_QUESTIONS },
-];
-
-function computeRIASEC(answers, dynamicSkills = null, dynamicAcademics = null) {
-  const interest = { R:0, I:0, A:0, S:0, E:0, C:0 };
-  const ability  = { R:0, I:0, A:0, S:0, E:0, C:0 };
-
-  ACTIVITY_QUESTIONS.forEach(q => {
-    if (answers[q.id]) interest[q.riasec] += answers[q.id];
-  });
-  
-  // Use dynamic skills questions if available, otherwise use static
-  const skillsQuestions = dynamicSkills || SKILLS_QUESTIONS;
-  skillsQuestions.forEach(q => {
-    if (answers[q.id]) ability[q.riasec] += answers[q.id] * 0.85;
-  });
-
-  const combined = { R:0, I:0, A:0, S:0, E:0, C:0 };
-  Object.keys(combined).forEach(k => {
-    combined[k] = (interest[k] || 0) + (ability[k] || 0);
-  });
-
-  // Use dynamic academic questions if available
-  const academicQuestions = dynamicAcademics || ACADEMIC_QUESTIONS;
-  const choiceGroups = [academicQuestions, VALUES_QUESTIONS, PERSONALITY_QUESTIONS, FUTURE_QUESTIONS];
-  choiceGroups.forEach(group => {
-    group.forEach(q => {
-      if (answers[q.id] !== undefined) {
-        const chosen = q.choices.find(c => c.text === answers[q.id]);
-        if (chosen?.riasec) combined[chosen.riasec] += 2.5;
+  Object.entries(RIASEC_QUESTION_BANKS).forEach(([key, questions]) => {
+    questions.forEach(q => {
+      const w = q.weight || 1;
+      if (q.type === 'scale') {
+        const val = profile[q.id];
+        const scaleMax = q.scaleMax || 5;
+        maxPossible[key] += (scaleMax - 1) * w;
+        if (val !== undefined && val !== null) {
+          raw[key] += (Number(val) - 1) * w;
+        }
+      } else if (q.type === 'single') {
+        maxPossible[key] += w * 4;
+        const val = profile[q.id];
+        if (val !== undefined && val !== null) {
+          const idx = (q.options || []).indexOf(val);
+          if (idx === SINGLE_Q_RIASEC_OPTION_IDX[key]) {
+            raw[key] += w * 4;
+          } else if (idx === 1) {
+            raw[key] += w * 2;
+          }
+        }
       }
     });
   });
 
-  const max = Math.max(...Object.values(combined));
-  const scores = {};
-  Object.keys(combined).forEach(k => {
-    scores[k] = max > 0 ? Math.round((combined[k] / max) * 10) : 0;
+  // Normalise to 0–100
+  const normalised = {};
+  Object.keys(raw).forEach(k => {
+    normalised[k] = maxPossible[k] > 0
+      ? Math.round((raw[k] / maxPossible[k]) * 100)
+      : 0;
   });
 
-  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-  const code   = sorted.slice(0, 3).map(x => x[0]).join('');
-
-  return { scores, interest, ability, sorted, code };
+  return normalised;
 }
 
+function applySubjectBoosts(scores, subjects) {
+  if (!Array.isArray(subjects)) return scores;
+  const boosted = { ...scores };
+  subjects.forEach(subj => {
+    const boosts = SUBJECT_RIASEC_BOOST[subj];
+    if (boosts) {
+      Object.entries(boosts).forEach(([k, v]) => {
+        boosted[k] = Math.min(100, (boosted[k] || 0) + v);
+      });
+    }
+  });
+  return boosted;
+}
+
+function applyHobbyBoosts(scores, hobbies) {
+  if (!Array.isArray(hobbies)) return scores;
+  const boosted = { ...scores };
+  hobbies.forEach(h => {
+    const boosts = HOBBY_RIASEC_BOOST[h];
+    if (boosts) {
+      Object.entries(boosts).forEach(([k, v]) => {
+        boosted[k] = Math.min(100, (boosted[k] || 0) + v * 0.5);
+      });
+    }
+  });
+  return boosted;
+}
+
+function getTop3(scores) {
+  return Object.entries(scores)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([k]) => k);
+}
+
+// ── Maturity scoring ──────────────────────────────────────────────────────────
+const MATURITY_SCORE_MAP = {
+  dem_05: {
+    'Take charge immediately — divide tasks, set mini-deadlines, and track progress': 5,
+    'Suggest a quick meeting to align everyone before starting': 4,
+    'Focus on your own portion and trust others to manage theirs': 3,
+    'Ask the teacher/supervisor for an extension': 2,
+    'Feel overwhelmed but push through on your own': 1,
+  },
+  dem_06: {
+    'Firmly decline and explain why it is wrong': 5,
+    'Decline but offer to help them study instead': 5,
+    'Feel conflicted but ultimately refuse': 3,
+    'Help them because friendship matters more': 1,
+    'Ignore the request and hope they figure it out': 2,
+  },
+  dem_07: {
+    'Intervene directly and stand up for the classmate': 5,
+    'Report it to a teacher or authority figure': 4,
+    'Comfort the classmate privately after the incident': 3,
+    'Stay silent to avoid conflict': 2,
+    'Join others in ignoring it': 1,
+  },
+  dem_08: {
+    'Create a detailed schedule with milestones from day one': 5,
+    'Work steadily but without a strict plan': 4,
+    'Start early but lose momentum midway': 3,
+    'Work intensively only near the deadline': 2,
+    'Struggle to start without external pressure': 1,
+  },
+  dem_09: {
+    'Analyse what went wrong and immediately plan a correction': 5,
+    'Feel bad briefly, then move on and learn from it': 4,
+    'Seek advice from someone more experienced': 3,
+    'Dwell on it for a while before recovering': 2,
+    'Blame external circumstances': 1,
+  },
+};
+
+function computeMaturityScore(profile) {
+  let total = 0;
+  let maxTotal = 0;
+
+  // Scenario questions dem_05–dem_09
+  Object.entries(MATURITY_SCORE_MAP).forEach(([qid, map]) => {
+    maxTotal += 5;
+    const val = profile[qid];
+    if (val && map[val] !== undefined) {
+      total += map[val];
+    }
+  });
+
+  // dem_10: self-discipline scale (1–10)
+  const selfDisc = Number(profile['dem_10'] || 0);
+  maxTotal += 10;
+  total += selfDisc;
+
+  const pct = maxTotal > 0 ? Math.round((total / maxTotal) * 100) : 0;
+  return pct;
+}
+
+function getMaturityLevel(pct) {
+  if (pct >= 85) return { label: 'Highly Mature', color: '#2D7D46', bg: 'rgba(45,125,70,0.1)', emoji: '🌟' };
+  if (pct >= 70) return { label: 'Mature & Reflective', color: '#0A5C63', bg: 'rgba(10,92,99,0.1)', emoji: '✨' };
+  if (pct >= 55) return { label: 'Developing Maturity', color: '#E8650A', bg: 'rgba(232,101,10,0.1)', emoji: '🌱' };
+  if (pct >= 40) return { label: 'Early Stage', color: '#B85C00', bg: 'rgba(184,92,0,0.1)', emoji: '🔆' };
+  return { label: 'Needs Guidance', color: '#8B1A1A', bg: 'rgba(139,26,26,0.1)', emoji: '💡' };
+}
+
+// ── Stream recommendation ─────────────────────────────────────────────────────
+function recommendStream(hollandCode, marks, subjects) {
+  const marksNum = {
+    'Below 50%': 1, '50% – 59%': 2, '60% – 69%': 3,
+    '70% – 79%': 4, '80% – 89%': 5, '90% and above': 6,
+  }[marks] || 3;
+
+  const scienceSubjects = ['Mathematics','Physics','Chemistry','Biology / Life Sciences','Computer Science / IT'];
+  const commerceSubjects = ['Economics / Business Studies','Accountancy / Commerce','Mathematics'];
+  const artsSubjects = ['History / Political Science','Geography / Environmental Studies','English / Literature','Hindi / Regional Language','Fine Arts / Music / Drama','Psychology / Sociology','Philosophy / Ethics'];
+
+  const subjectArr = Array.isArray(subjects) ? subjects : [];
+  const scienceCount = subjectArr.filter(s => scienceSubjects.includes(s)).length;
+  const commerceCount = subjectArr.filter(s => commerceSubjects.includes(s)).length;
+  const artsCount = subjectArr.filter(s => artsSubjects.includes(s)).length;
+
+  const scienceRiasec = hollandCode.filter(k => ['R','I'].includes(k)).length;
+  const commerceRiasec = hollandCode.filter(k => ['E','C'].includes(k)).length;
+  const artsRiasec = hollandCode.filter(k => ['A','S'].includes(k)).length;
+
+  const scienceScore = scienceRiasec * 3 + scienceCount * 2 + (marksNum >= 4 ? 2 : 0);
+  const commerceScore = commerceRiasec * 3 + commerceCount * 2 + (marksNum >= 3 ? 1 : 0);
+  const artsScore = artsRiasec * 3 + artsCount * 2 + 1;
+
+  const streams = [
+    { id: 'Science', score: scienceScore, emoji: '🔬', subjects: 'Physics, Chemistry, Maths, Biology, CS' },
+    { id: 'Commerce', score: commerceScore, emoji: '📈', subjects: 'Accountancy, Economics, Business Studies, Maths' },
+    { id: 'Arts / Humanities', score: artsScore, emoji: '🎭', subjects: 'History, Geography, English, Psychology, Fine Arts' },
+  ].sort((a, b) => b.score - a.score);
+
+  return streams;
+}
+
+// ── Career database ───────────────────────────────────────────────────────────
+const CAREER_DATABASE = [
+  // Science / R+I
+  {
+    name: 'Software Engineer / Developer',
+    riasec: ['I','R','C'],
+    stream: 'Science',
+    subjects: ['Mathematics','Computer Science / IT','Physics'],
+    hobbies: ['Coding / App / Game Development','Robotics / Science Olympiad'],
+    tags: ['Tech','High Growth','Remote-Friendly'],
+    desc: 'Design, build, and maintain software systems — from mobile apps to enterprise platforms. One of the highest-demand careers globally.',
+    whyTemplate: 'Your strong Investigative and Realistic traits show you love solving complex problems with precision. Your interest in {subjects} and {hobbies} directly maps to the core skills of software development.',
+  },
+  {
+    name: 'Medical Doctor / Physician',
+    riasec: ['I','S','R'],
+    stream: 'Science',
+    subjects: ['Biology / Life Sciences','Chemistry','Physics'],
+    hobbies: ['Community Service / NGO Work','Reading / Book Clubs'],
+    tags: ['Healthcare','High Impact','Prestigious'],
+    desc: 'Diagnose and treat illnesses, combining deep scientific knowledge with compassionate patient care. A highly respected and impactful profession.',
+    whyTemplate: 'Your Investigative curiosity and Social empathy are the twin pillars of medicine. Your aptitude in {subjects} and your drive to help others make this a natural fit.',
+  },
+  {
+    name: 'Data Scientist / AI Engineer',
+    riasec: ['I','C','R'],
+    stream: 'Science',
+    subjects: ['Mathematics','Computer Science / IT','Physics'],
+    hobbies: ['Coding / App / Game Development','Reading / Book Clubs'],
+    tags: ['AI/ML','Future-Proof','Analytical'],
+    desc: 'Extract insights from massive datasets using statistics, machine learning, and programming. One of the most sought-after roles in the 21st century.',
+    whyTemplate: 'Your top Investigative score signals a mind that thrives on patterns and evidence. Combined with your strength in {subjects}, you are built for the data-driven world.',
+  },
+  {
+    name: 'Civil / Mechanical Engineer',
+    riasec: ['R','I','C'],
+    stream: 'Science',
+    subjects: ['Mathematics','Physics','Computer Science / IT'],
+    hobbies: ['Robotics / Science Olympiad','Coding / App / Game Development'],
+    tags: ['Infrastructure','Hands-On','Stable'],
+    desc: 'Design and build the physical world — bridges, buildings, machines, and systems that society depends on.',
+    whyTemplate: 'Your Realistic and Investigative combination is the classic engineering profile. Your love for {subjects} and hands-on activities like {hobbies} confirm this path.',
+  },
+  {
+    name: 'Research Scientist',
+    riasec: ['I','R','A'],
+    stream: 'Science',
+    subjects: ['Biology / Life Sciences','Chemistry','Physics','Mathematics'],
+    hobbies: ['Reading / Book Clubs','Robotics / Science Olympiad'],
+    tags: ['Academia','Discovery','Intellectual'],
+    desc: 'Push the boundaries of human knowledge through rigorous experimentation and analysis in fields like biology, chemistry, physics, or neuroscience.',
+    whyTemplate: 'Your deep Investigative drive and comfort with independent intellectual work are hallmarks of a researcher. Your passion for {subjects} fuels the curiosity that science demands.',
+  },
+  // Commerce / E+C
+  {
+    name: 'Chartered Accountant (CA) / Finance Professional',
+    riasec: ['C','E','I'],
+    stream: 'Commerce',
+    subjects: ['Accountancy / Commerce','Mathematics','Economics / Business Studies'],
+    hobbies: ['Student Government / Leadership Roles','Reading / Book Clubs'],
+    tags: ['Finance','High Earning','Structured'],
+    desc: 'Manage financial records, audits, taxation, and strategic financial planning for organisations. One of India\'s most prestigious professional qualifications.',
+    whyTemplate: 'Your Conventional precision and Enterprising ambition are the perfect CA combination. Your strength in {subjects} gives you the analytical foundation this career demands.',
+  },
+  {
+    name: 'Entrepreneur / Business Founder',
+    riasec: ['E','I','R'],
+    stream: 'Commerce',
+    subjects: ['Economics / Business Studies','Mathematics','Computer Science / IT'],
+    hobbies: ['Student Government / Leadership Roles','Debate / MUN / Public Speaking'],
+    tags: ['High Risk/Reward','Leadership','Creative Freedom'],
+    desc: 'Build and scale your own venture — identifying market gaps, assembling teams, and creating value from scratch.',
+    whyTemplate: 'Your dominant Enterprising trait, combined with your leadership activities like {hobbies}, signals an entrepreneurial spirit. Your interest in {subjects} gives you the business acumen to execute.',
+  },
+  {
+    name: 'Marketing & Brand Manager',
+    riasec: ['E','A','S'],
+    stream: 'Commerce',
+    subjects: ['Economics / Business Studies','English / Literature','Psychology / Sociology'],
+    hobbies: ['Debate / MUN / Public Speaking','Photography / Videography / Filmmaking','Writing / Journalism / Blogging'],
+    tags: ['Creative','People-Facing','Dynamic'],
+    desc: 'Craft compelling brand stories, run campaigns, and connect products with the right audiences across digital and traditional channels.',
+    whyTemplate: 'Your Enterprising persuasion and Artistic creativity are the twin engines of great marketing. Your engagement with {hobbies} shows you already think like a storyteller.',
+  },
+  {
+    name: 'Investment Banker / Financial Analyst',
+    riasec: ['E','C','I'],
+    stream: 'Commerce',
+    subjects: ['Economics / Business Studies','Accountancy / Commerce','Mathematics'],
+    hobbies: ['Debate / MUN / Public Speaking','Reading / Book Clubs'],
+    tags: ['High Earning','Competitive','Analytical'],
+    desc: 'Advise corporations on mergers, acquisitions, and capital raising. Analyse markets and financial data to drive billion-dollar decisions.',
+    whyTemplate: 'Your Enterprising ambition and Conventional precision are exactly what investment banking demands. Your aptitude in {subjects} provides the quantitative edge needed.',
+  },
+  // Arts / A+S
+  {
+    name: 'Graphic Designer / UX Designer',
+    riasec: ['A','I','R'],
+    stream: 'Arts / Humanities',
+    subjects: ['Fine Arts / Music / Drama','Computer Science / IT','English / Literature'],
+    hobbies: ['Visual Arts (drawing, painting, sculpture)','Photography / Videography / Filmmaking','Coding / App / Game Development'],
+    tags: ['Creative','Digital','Portfolio-Based'],
+    desc: 'Create visual identities, user interfaces, and digital experiences that are both beautiful and functional.',
+    whyTemplate: 'Your Artistic score is a clear signal — you see the world in shapes, colours, and compositions. Your involvement in {hobbies} is already building your design portfolio.',
+  },
+  {
+    name: 'Psychologist / Counsellor',
+    riasec: ['S','I','A'],
+    stream: 'Arts / Humanities',
+    subjects: ['Psychology / Sociology','Biology / Life Sciences','English / Literature'],
+    hobbies: ['Community Service / NGO Work','Reading / Book Clubs','Drama / Theatre / Dance'],
+    tags: ['High Impact','Empathy-Driven','Growing Field'],
+    desc: 'Help individuals navigate mental health challenges, trauma, and personal growth through evidence-based therapeutic approaches.',
+    whyTemplate: 'Your Social empathy and Investigative curiosity about human behaviour are the core of psychology. Your interest in {subjects} and {hobbies} shows you already engage deeply with people.',
+  },
+  {
+    name: 'Journalist / Content Creator',
+    riasec: ['A','E','S'],
+    stream: 'Arts / Humanities',
+    subjects: ['English / Literature','History / Political Science','Psychology / Sociology'],
+    hobbies: ['Writing / Journalism / Blogging','Photography / Videography / Filmmaking','Debate / MUN / Public Speaking'],
+    tags: ['Creative','Impactful','Flexible'],
+    desc: 'Investigate, write, and broadcast stories that inform and shape public opinion — across print, digital, video, and social media.',
+    whyTemplate: 'Your Artistic expression and Social awareness make you a natural storyteller. Your participation in {hobbies} shows you are already practising the craft.',
+  },
+  {
+    name: 'Teacher / Educator / Academic',
+    riasec: ['S','I','A'],
+    stream: 'Arts / Humanities',
+    subjects: ['English / Literature','History / Political Science','Psychology / Sociology','Mathematics'],
+    hobbies: ['Community Service / NGO Work','Reading / Book Clubs','Debate / MUN / Public Speaking'],
+    tags: ['High Impact','Stable','Meaningful'],
+    desc: 'Shape the next generation through inspiring teaching, curriculum design, and academic research.',
+    whyTemplate: 'Your Social drive to help others and Investigative love of knowledge are the hallmarks of a great educator. Your strength in {subjects} gives you deep subject expertise.',
+  },
+  {
+    name: 'Lawyer / Legal Professional',
+    riasec: ['E','I','S'],
+    stream: 'Arts / Humanities',
+    subjects: ['History / Political Science','English / Literature','Economics / Business Studies'],
+    hobbies: ['Debate / MUN / Public Speaking','Reading / Book Clubs','Student Government / Leadership Roles'],
+    tags: ['Prestigious','Analytical','Advocacy'],
+    desc: 'Argue cases, draft legislation, advise clients, and uphold justice across criminal, civil, corporate, or constitutional law.',
+    whyTemplate: 'Your Enterprising persuasion and Investigative analytical mind are the foundation of legal excellence. Your debate and MUN experience in {hobbies} is direct preparation.',
+  },
+  // Cross-stream
+  {
+    name: 'Architect',
+    riasec: ['A','R','I'],
+    stream: 'Science',
+    subjects: ['Mathematics','Physics','Fine Arts / Music / Drama'],
+    hobbies: ['Visual Arts (drawing, painting, sculpture)','Photography / Videography / Filmmaking'],
+    tags: ['Creative','Technical','Prestigious'],
+    desc: 'Design buildings and spaces that are structurally sound, aesthetically compelling, and functionally excellent.',
+    whyTemplate: 'Architecture is the perfect marriage of your Artistic vision and Realistic technical skill. Your interest in {subjects} and creative hobbies like {hobbies} are exactly the right foundation.',
+  },
+  {
+    name: 'Sports Professional / Coach',
+    riasec: ['R','S','E'],
+    stream: 'Arts / Humanities',
+    subjects: ['Physical Education / Sports','Biology / Life Sciences'],
+    hobbies: ['Sports / Athletics','Fitness / Yoga / Martial Arts'],
+    tags: ['Passion-Driven','Active','Growing Industry'],
+    desc: 'Compete at the highest level or coach others to peak performance — in cricket, football, athletics, or any sport you love.',
+    whyTemplate: 'Your Realistic physicality and Social leadership are the core of sports excellence. Your dedication to {hobbies} shows this is not just a hobby — it is a calling.',
+  },
+  {
+    name: 'Film Director / Creative Director',
+    riasec: ['A','E','S'],
+    stream: 'Arts / Humanities',
+    subjects: ['Fine Arts / Music / Drama','English / Literature','History / Political Science'],
+    hobbies: ['Drama / Theatre / Dance','Photography / Videography / Filmmaking','Writing / Journalism / Blogging'],
+    tags: ['Creative','Visionary','High Visibility'],
+    desc: 'Lead the creative vision of films, advertisements, or brand campaigns — translating ideas into powerful visual narratives.',
+    whyTemplate: 'Your Artistic imagination and Enterprising leadership are the director\'s toolkit. Your involvement in {hobbies} shows you are already telling stories and leading creative teams.',
+  },
+];
+
+function scoreCareerMatch(career, hollandCode, subjects, hobbies, marks) {
+  const subjectArr = Array.isArray(subjects) ? subjects : [];
+  const hobbyArr = Array.isArray(hobbies) ? hobbies : [];
+  const marksW = MARKS_WEIGHT[marks] || 0.85;
+
+  // RIASEC overlap
+  let riasecScore = 0;
+  hollandCode.forEach((k, rank) => {
+    const idx = career.riasec.indexOf(k);
+    if (idx === 0) riasecScore += (3 - rank) * 15;
+    else if (idx === 1) riasecScore += (3 - rank) * 8;
+    else if (idx === 2) riasecScore += (3 - rank) * 4;
+  });
+
+  // Subject overlap
+  const subjectOverlap = subjectArr.filter(s => career.subjects.includes(s)).length;
+  const subjectScore = Math.min(subjectOverlap * 10, 25);
+
+  // Hobby overlap
+  const hobbyOverlap = hobbyArr.filter(h => career.hobbies.includes(h)).length;
+  const hobbyScore = Math.min(hobbyOverlap * 8, 20);
+
+  const raw = (riasecScore + subjectScore + hobbyScore) * marksW;
+  return Math.min(Math.round(raw), 99);
+}
+
+function buildWhyText(career, subjects, hobbies) {
+  const subjectArr = Array.isArray(subjects) ? subjects : [];
+  const hobbyArr = Array.isArray(hobbies) ? hobbies : [];
+
+  const matchedSubjects = subjectArr.filter(s => career.subjects.includes(s));
+  const matchedHobbies = hobbyArr.filter(h => career.hobbies.includes(h));
+
+  const subjectStr = matchedSubjects.length > 0
+    ? matchedSubjects.slice(0, 2).join(' & ')
+    : 'your academic subjects';
+  const hobbyStr = matchedHobbies.length > 0
+    ? matchedHobbies.slice(0, 2).join(' & ')
+    : 'your extracurricular interests';
+
+  return career.whyTemplate
+    .replace('{subjects}', subjectStr)
+    .replace('{hobbies}', hobbyStr);
+}
+
+function getTop5Careers(hollandCode, subjects, hobbies, marks) {
+  return CAREER_DATABASE
+    .map(c => ({
+      ...c,
+      matchScore: scoreCareerMatch(c, hollandCode, subjects, hobbies, marks),
+      whyText: buildWhyText(c, subjects, hobbies),
+    }))
+    .sort((a, b) => b.matchScore - a.matchScore)
+    .slice(0, 5);
+}
+
+// ── Psychological breakdown per RIASEC letter ─────────────────────────────────
+const RIASEC_PSYCHOLOGY = {
+  R: {
+    archetype: 'The Doer',
+    core: 'You are grounded in the physical world. You think with your hands, trust tangible results, and find deep satisfaction in making things work.',
+    strengths: ['Practical problem-solving', 'Technical aptitude', 'Physical coordination', 'Reliability under pressure'],
+    growthAreas: ['Abstract thinking', 'Emotional expression', 'Navigating ambiguity'],
+    famousPeople: 'Elon Musk (engineering), Sachin Tendulkar (sports mastery)',
+  },
+  I: {
+    archetype: 'The Thinker',
+    core: 'You are driven by curiosity and the need to understand. You ask "why" before "how", and you are most alive when solving a problem no one else has cracked.',
+    strengths: ['Deep analytical thinking', 'Research & synthesis', 'Independent focus', 'Pattern recognition'],
+    growthAreas: ['Social engagement', 'Practical execution', 'Tolerating ambiguity without data'],
+    famousPeople: 'APJ Abdul Kalam (science), Marie Curie (research)',
+  },
+  A: {
+    archetype: 'The Creator',
+    core: 'You experience the world through aesthetics, emotion, and imagination. You need creative freedom to thrive and feel stifled by rigid structures.',
+    strengths: ['Original thinking', 'Aesthetic sensitivity', 'Emotional intelligence', 'Storytelling'],
+    growthAreas: ['Structure and routine', 'Financial planning', 'Accepting constructive criticism'],
+    famousPeople: 'A.R. Rahman (music), Satyajit Ray (film)',
+  },
+  S: {
+    archetype: 'The Helper',
+    core: 'You are energised by human connection. You listen deeply, empathise naturally, and find your greatest purpose in making a positive difference in others\' lives.',
+    strengths: ['Empathy & emotional intelligence', 'Communication', 'Conflict resolution', 'Team collaboration'],
+    growthAreas: ['Setting personal boundaries', 'Assertiveness', 'Data-driven decision making'],
+    famousPeople: 'Mother Teresa (service), Kiran Bedi (social leadership)',
+  },
+  E: {
+    archetype: 'The Persuader',
+    core: 'You are a natural leader and influencer. You think big, move fast, and have an innate ability to inspire others to follow your vision.',
+    strengths: ['Leadership & vision', 'Persuasion & negotiation', 'Risk tolerance', 'Strategic thinking'],
+    growthAreas: ['Patience with detail', 'Listening before acting', 'Emotional regulation under pressure'],
+    famousPeople: 'Ratan Tata (business), Indra Nooyi (corporate leadership)',
+  },
+  C: {
+    archetype: 'The Organiser',
+    core: 'You bring order to chaos. You are the person who makes systems work, catches errors others miss, and ensures everything runs with precision.',
+    strengths: ['Attention to detail', 'Systematic thinking', 'Reliability', 'Data management'],
+    growthAreas: ['Embracing change', 'Creative risk-taking', 'Big-picture thinking'],
+    famousPeople: 'N.R. Narayana Murthy (systems & process), Warren Buffett (financial discipline)',
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WIZARD STEP DEFINITIONS
+// ─────────────────────────────────────────────────────────────────────────────
+const STEPS = [
+  {
+    id: 'intake',
+    label: 'Profile',
+    emoji: '👤',
+    badge: 'Step 1 of 9 — Initial Intake',
+    title: 'Tell Us About Yourself',
+    desc: 'A few quick details so we can personalise your assessment and results.',
+  },
+  {
+    id: 'maturity',
+    label: 'Maturity',
+    emoji: '🧠',
+    badge: 'Step 2 of 9 — Cognitive & Maturity',
+    title: 'Cognitive & Maturity Assessment',
+    desc: 'These scenario-based questions help us understand how you think, plan, and handle real-world challenges.',
+  },
+  {
+    id: 'realistic',
+    label: 'Realistic',
+    emoji: '🔧',
+    badge: 'Step 3 of 9 — RIASEC: Realistic',
+    title: 'Realistic — The Doer',
+    desc: 'Rate how strongly you agree or disagree with each statement. Be honest — there are no right or wrong answers.',
+    riasecKey: 'R',
+  },
+  {
+    id: 'investigative',
+    label: 'Investigative',
+    emoji: '🔬',
+    badge: 'Step 4 of 9 — RIASEC: Investigative',
+    title: 'Investigative — The Thinker',
+    desc: 'Rate how strongly you agree or disagree with each statement.',
+    riasecKey: 'I',
+  },
+  {
+    id: 'artistic',
+    label: 'Artistic',
+    emoji: '🎨',
+    badge: 'Step 5 of 9 — RIASEC: Artistic',
+    title: 'Artistic — The Creator',
+    desc: 'Rate how strongly you agree or disagree with each statement.',
+    riasecKey: 'A',
+  },
+  {
+    id: 'social',
+    label: 'Social',
+    emoji: '🤝',
+    badge: 'Step 6 of 9 — RIASEC: Social',
+    title: 'Social — The Helper',
+    desc: 'Rate how strongly you agree or disagree with each statement.',
+    riasecKey: 'S',
+  },
+  {
+    id: 'enterprising',
+    label: 'Enterprising',
+    emoji: '🚀',
+    badge: 'Step 7 of 9 — RIASEC: Enterprising',
+    title: 'Enterprising — The Persuader',
+    desc: 'Rate how strongly you agree or disagree with each statement.',
+    riasecKey: 'E',
+  },
+  {
+    id: 'conventional',
+    label: 'Conventional',
+    emoji: '📊',
+    badge: 'Step 8 of 9 — RIASEC: Conventional',
+    title: 'Conventional — The Organiser',
+    desc: 'Rate how strongly you agree or disagree with each statement.',
+    riasecKey: 'C',
+  },
+  {
+    id: 'values',
+    label: 'Values',
+    emoji: '🌟',
+    badge: 'Step 9 of 9 — Work Values & Environment',
+    title: 'Interests, Values & Work Environment',
+    desc: 'Tell us about your hobbies, what you value in a career, and how you handle stress. This rounds out your full profile.',
+  },
+];
+
+// Questions per step
+const STEP_QUESTIONS = {
+  intake:        demographicQuestions.slice(0, 4),
+  maturity:      demographicQuestions.slice(4),
+  realistic:     realisticQuestions,
+  investigative: investigativeQuestions,
+  artistic:      artisticQuestions,
+  social:        socialQuestions,
+  enterprising:  enterprisingQuestions,
+  conventional:  conventionalQuestions,
+  values:        extracurricularQuestions,
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPER: count answered questions for a step
+// ─────────────────────────────────────────────────────────────────────────────
+function countAnswered(questions, profile) {
+  return questions.filter(q => {
+    const v = profile[q.id];
+    if (q.type === 'multiple') return Array.isArray(v) && v.length > 0;
+    if (q.type === 'ranking')  return Array.isArray(v) && v.length === q.options.length;
+    return v !== undefined && v !== '' && v !== null;
+  }).length;
+}
+
+function isStepComplete(stepId, profile) {
+  if (stepId === 'intake') {
+    return (
+      profile['dem_01'] &&
+      profile['dem_02'] &&
+      profile['dem_03'] &&
+      Array.isArray(profile['dem_04']) && profile['dem_04'].length > 0
+    );
+  }
+  const qs = STEP_QUESTIONS[stepId] || [];
+  return qs.every(q => {
+    const v = profile[q.id];
+    if (q.type === 'multiple') return Array.isArray(v) && v.length > 0;
+    if (q.type === 'ranking')  return Array.isArray(v) && v.length === q.options.length;
+    if (q.type === 'text')     return true;
+    return v !== undefined && v !== '' && v !== null;
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESULTS COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+function ResultsScreen({ results, onBack, onExplore }) {
+  const { hollandCode, riasecScores, streams, top5Careers, maturityPct, profile } = results;
+
+  const name = String(profile['_name'] || profile['_autofill_name'] || 'Your');
+  const marks = String(profile['dem_03'] || '');
+  const subjects = Array.isArray(profile['dem_04']) ? profile['dem_04'] : [];
+  const hobbies = Array.isArray(profile['ext_01']) ? profile['ext_01'] : [];
+  const maturityLevel = getMaturityLevel(maturityPct);
+
+  const codeStr = hollandCode.join('');
+
+  // Build tagline from top 2 traits
+  const trait1 = RIASEC_COLORS[hollandCode[0]];
+  const trait2 = RIASEC_COLORS[hollandCode[1]];
+  const tagline = trait1 && trait2
+    ? `${String(trait1.desc)} meets ${String(trait2.desc)} — a rare and powerful combination.`
+    : 'A unique and powerful personality profile.';
+
+  const recommendedStream = streams[0] || { id: '', emoji: '', subjects: '' };
+  const secondStream = streams[1] || { id: '', emoji: '', subjects: '' };
+  const thirdStream = streams[2] || { id: '', emoji: '', subjects: '' };
+
+  // Build "why these match" bullets from profile
+  const whyMatchPoints = [];
+  if (subjects.length > 0) {
+    whyMatchPoints.push(`Your strongest subjects — ${subjects.slice(0, 3).join(', ')} — directly align with the academic requirements of your top career matches.`);
+  }
+  if (hobbies.length > 0) {
+    const filteredHobbies = hobbies.filter(h => h !== 'None of the above');
+    if (filteredHobbies.length > 0) {
+      whyMatchPoints.push(`Your extracurricular activities (${filteredHobbies.slice(0, 2).join(', ')}) demonstrate real-world engagement with skills your top careers demand.`);
+    }
+  }
+  if (marks) {
+    whyMatchPoints.push(`Your academic performance (${marks}) has been factored in to ensure these recommendations are realistic and achievable for you.`);
+  }
+  whyMatchPoints.push(`Your Holland Code ${codeStr} places you in a distinct personality cluster — the careers above are statistically the strongest matches for this profile.`);
+  if (maturityPct >= 70) {
+    whyMatchPoints.push(`Your high maturity score (${maturityPct}%) indicates you are ready to pursue demanding, high-growth career paths that require self-direction and resilience.`);
+  }
+
+  // Maturity trait breakdown
+  const maturityTraits = [
+    {
+      icon: '🎯',
+      name: 'Leadership & Initiative',
+      val: profile['dem_05']
+        ? (profile['dem_05'].includes('Take charge') ? 'Strong' : profile['dem_05'].includes('Suggest') ? 'Good' : 'Developing')
+        : 'N/A',
+    },
+    {
+      icon: '⚖️',
+      name: 'Ethical Reasoning',
+      val: profile['dem_06']
+        ? (profile['dem_06'].includes('Firmly decline') || profile['dem_06'].includes('Decline but offer') ? 'Strong' : 'Developing')
+        : 'N/A',
+    },
+    {
+      icon: '🛡️',
+      name: 'Moral Courage',
+      val: profile['dem_07']
+        ? (profile['dem_07'].includes('Intervene') ? 'Strong' : profile['dem_07'].includes('Report') ? 'Good' : 'Developing')
+        : 'N/A',
+    },
+    {
+      icon: '📅',
+      name: 'Self-Management',
+      val: profile['dem_08']
+        ? (profile['dem_08'].includes('detailed schedule') ? 'Strong' : profile['dem_08'].includes('steadily') ? 'Good' : 'Developing')
+        : 'N/A',
+    },
+    {
+      icon: '🔄',
+      name: 'Resilience & Growth',
+      val: profile['dem_09']
+        ? (profile['dem_09'].includes('Analyse') ? 'Strong' : profile['dem_09'].includes('Feel bad briefly') ? 'Good' : 'Developing')
+        : 'N/A',
+    },
+    {
+      icon: '💪',
+      name: 'Self-Discipline',
+      val: profile['dem_10']
+        ? (Number(profile['dem_10']) >= 8 ? 'Strong' : Number(profile['dem_10']) >= 5 ? 'Good' : 'Developing')
+        : 'N/A',
+    },
+  ];
+
+  return (
+    <div className="res-root">
+      {/* ── HERO ── */}
+      <div className="res-hero">
+        <div className="res-hero-eyebrow">🎉 Your Career Assessment Results</div>
+        <div className="res-hero-name">
+          {name !== 'Your' ? `${name}'s Profile` : 'Your Profile'}
+        </div>
+        <div className="res-hero-sub">Holland Code · RIASEC Psychometric Assessment</div>
+
+        <div className="res-holland-code">
+          {hollandCode.map((letter, idx) => {
+            const meta = RIASEC_COLORS[letter];
+            if (!meta) return null;
+            return (
+              <div
+                key={String(letter)}
+                className="res-holland-letter"
+                style={{ background: String(meta.bar) }}
+              >
+                <span className="hl-rank">{idx + 1}</span>
+                {String(letter)}
+                <div style={{ fontSize: '9px', fontWeight: 600, opacity: 0.85, marginTop: '2px', fontFamily: "'DM Sans', sans-serif" }}>
+                  {String(meta.label)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="res-holland-label" style={{ marginBottom: '16px' }}>
+          Your 3-Letter Holland Code: <strong style={{ color: 'var(--gold)', fontSize: '18px' }}>{codeStr}</strong>
+        </div>
+        <div className="res-hero-tagline">{tagline}</div>
+      </div>
+
+      {/* ── RIASEC SCORES ── */}
+      <div className="res-card">
+        <div className="res-card-header">
+          <div className="res-card-icon" style={{ background: 'rgba(232,101,10,0.1)' }}>📊</div>
+          <div>
+            <div className="res-card-title">Your RIASEC Score Breakdown</div>
+            <div className="res-card-subtitle">How strongly each Holland dimension resonates with you</div>
+          </div>
+        </div>
+        <div className="riasec-bars">
+          {Object.entries(riasecScores)
+            .sort((a, b) => b[1] - a[1])
+            .map(([key, pct]) => {
+              const meta = RIASEC_COLORS[key];
+              if (!meta) return null;
+              return (
+                <div key={String(key)} className="riasec-bar-row">
+                  <div className="riasec-bar-key" style={{ background: String(meta.bar) }}>
+                    {String(key)}
+                  </div>
+                  <div className="riasec-bar-info">
+                    <div className="riasec-bar-top">
+                      <span className="riasec-bar-name">{String(meta.label)} — {String(meta.desc)}</span>
+                      <span className="riasec-bar-pct">{Number(pct)}%</span>
+                    </div>
+                    <div className="riasec-bar-track">
+                      <div
+                        className="riasec-bar-fill"
+                        style={{ width: `${Number(pct)}%`, background: String(meta.bar) }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      </div>
+
+      {/* ── PSYCHOLOGICAL BREAKDOWN ── */}
+      <div className="res-card">
+        <div className="res-card-header">
+          <div className="res-card-icon" style={{ background: 'rgba(106,27,154,0.1)' }}>🧬</div>
+          <div>
+            <div className="res-card-title">Your Psychological Profile — Code {codeStr}</div>
+            <div className="res-card-subtitle">A deep dive into what your top 3 traits mean about you</div>
+          </div>
+        </div>
+        <div className="trait-grid">
+          {hollandCode.map((letter, idx) => {
+            const meta = RIASEC_COLORS[letter];
+            const psych = RIASEC_PSYCHOLOGY[letter];
+            if (!meta || !psych) return null;
+            return (
+              <div
+                key={String(letter)}
+                className="trait-card"
+                style={{ background: String(meta.bg), border: `1px solid ${String(meta.color)}22` }}
+              >
+                <div className="trait-card-letter" style={{ color: String(meta.color) }}>
+                  {String(letter)}
+                </div>
+                <div className="trait-card-name" style={{ color: String(meta.color) }}>
+                  {String(meta.label)}
+                </div>
+                <div className="trait-card-archetype" style={{ color: String(meta.color) }}>
+                  #{idx + 1} · {String(psych.archetype)}
+                </div>
+                <div className="trait-card-desc" style={{ color: String(meta.color) }}>
+                  {String(psych.core)}
+                </div>
+                <div style={{ marginTop: '12px', textAlign: 'left' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: String(meta.color), letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '6px' }}>
+                    Key Strengths
+                  </div>
+                  {psych.strengths.map((s, i) => (
+                    <div key={i} style={{ fontSize: '11px', color: String(meta.color), opacity: 0.85, marginBottom: '3px', display: 'flex', alignItems: 'flex-start', gap: '5px' }}>
+                      <span>✓</span><span>{String(s)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: '10px', textAlign: 'left' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: String(meta.color), letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px', opacity: 0.7 }}>
+                    Inspired by
+                  </div>
+                  <div style={{ fontSize: '11px', color: String(meta.color), opacity: 0.75, fontStyle: 'italic' }}>
+                    {String(psych.famousPeople)}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── STREAM RECOMMENDATION ── */}
+      <div className="res-card">
+        <div className="res-card-header">
+          <div className="res-card-icon" style={{ background: 'rgba(10,92,99,0.1)' }}>🎓</div>
+          <div>
+            <div className="res-card-title">Ideal Stream Recommendation</div>
+            <div className="res-card-subtitle">Based on your Holland Code + Academic Marks + Best Subjects</div>
+          </div>
+        </div>
+        <div className="stream-grid">
+          {[
+            { stream: recommendedStream, tier: 'recommended', tagLabel: '⭐ Best Fit', tagClass: 'best' },
+            { stream: secondStream, tier: 'secondary', tagLabel: '✓ Good Fit', tagClass: 'good' },
+            { stream: thirdStream, tier: 'not-recommended', tagLabel: 'Possible', tagClass: 'possible' },
+          ].map(({ stream, tier, tagLabel, tagClass }) => (
+            <div key={String(stream.id)} className={`stream-card ${tier}`} style={{
+              background: tier === 'recommended' ? 'linear-gradient(135deg,rgba(232,101,10,0.06),rgba(240,165,0,0.06))' : 'rgba(61,34,5,0.03)',
+            }}>
+              <div className="stream-emoji">{String(stream.emoji)}</div>
+              <div className="stream-name">{String(stream.id)}</div>
+              <div className={`stream-tag ${tagClass}`}>{tagLabel}</div>
+              <div className="stream-subjects">{String(stream.subjects)}</div>
+            </div>
+          ))}
+        </div>
+        <div className="stream-reason">
+          <strong>Why {String(recommendedStream.id)}?</strong> Your Holland Code <strong>{codeStr}</strong> combined with your
+          {subjects.length > 0 ? ` strength in ${subjects.slice(0, 2).join(' & ')}` : ' academic profile'}
+          {marks ? ` and ${marks} marks` : ''} makes <strong>{String(recommendedStream.id)}</strong> the stream where you are most likely to excel and find fulfilment.
+          {String(recommendedStream.id) === 'Science' && ' Science opens doors to engineering, medicine, research, and technology — all fields that reward your analytical and practical strengths.'}
+          {String(recommendedStream.id) === 'Commerce' && ' Commerce equips you with the business, financial, and leadership skills that your Enterprising and Conventional traits are built for.'}
+          {String(recommendedStream.id) === 'Arts / Humanities' && ' Arts & Humanities gives your creative, social, and expressive strengths the academic framework to flourish into a meaningful career.'}
+        </div>
+      </div>
+
+      {/* ── TOP 5 CAREERS ── */}
+      <div className="res-card">
+        <div className="res-card-header">
+          <div className="res-card-icon" style={{ background: 'rgba(45,125,70,0.1)' }}>🚀</div>
+          <div>
+            <div className="res-card-title">Your Top 5 Career Matches</div>
+            <div className="res-card-subtitle">Ranked by compatibility with your RIASEC profile, subjects, and interests</div>
+          </div>
+        </div>
+        <div className="career-list">
+          {top5Careers.map((career, idx) => (
+            <div key={String(career.name)} className="career-item">
+              <div className="career-item-top">
+                <div className="career-rank-badge">#{idx + 1}</div>
+                <div className="career-name">{String(career.name)}</div>
+                <div className="career-match-pct">{Number(career.matchScore)}% match</div>
+              </div>
+              <div className="career-tags">
+                {career.tags.map(tag => (
+                  <span key={String(tag)} className="career-tag">{String(tag)}</span>
+                ))}
+                <span className="career-tag" style={{ background: 'rgba(232,101,10,0.08)', color: 'var(--saffron)' }}>
+                  {career.riasec.join('')}
+                </span>
+              </div>
+              <div className="career-desc">{String(career.desc)}</div>
+              <div className="career-why">
+                <div className="career-why-label">✨ Why this matches you</div>
+                {String(career.whyText)}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── WHY THESE MATCH ── */}
+      <div className="res-card">
+        <div className="res-card-header">
+          <div className="res-card-icon" style={{ background: 'rgba(240,165,0,0.12)' }}>🔗</div>
+          <div>
+            <div className="res-card-title">Why These Careers Match You</div>
+            <div className="res-card-subtitle">The specific connections between your profile and your results</div>
+          </div>
+        </div>
+        <div className="why-match-list">
+          {whyMatchPoints.map((point, i) => (
+            <div key={i} className="why-match-item">
+              <div className="why-match-dot" />
+              <div className="why-match-text">{String(point)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── MATURITY INDICATOR ── */}
+      <div className="res-card">
+        <div className="res-card-header">
+          <div className="res-card-icon" style={{ background: 'rgba(28,18,8,0.06)' }}>🧠</div>
+          <div>
+            <div className="res-card-title">Maturity & Readiness Indicator</div>
+            <div className="res-card-subtitle">Based on your cognitive scenario responses and self-discipline rating</div>
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: '120px', height: '120px', borderRadius: '50%',
+            background: `conic-gradient(${String(maturityLevel.color)} ${maturityPct * 3.6}deg, rgba(61,34,5,0.08) 0deg)`,
+            marginBottom: '12px',
+          }}>
+            <div style={{
+              width: '90px', height: '90px', borderRadius: '50%', background: 'white',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '28px', fontWeight: 700, color: String(maturityLevel.color), lineHeight: 1 }}>
+                {maturityPct}
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: 600 }}>/ 100</div>
+            </div>
+          </div>
+          <div>
+            <span
+              className="maturity-level-badge"
+              style={{ background: String(maturityLevel.bg), color: String(maturityLevel.color) }}
+            >
+              {String(maturityLevel.emoji)} {String(maturityLevel.label)}
+            </span>
+          </div>
+          <div style={{ fontSize: '14px', color: 'var(--muted)', maxWidth: '480px', margin: '0 auto', lineHeight: 1.65 }}>
+            {maturityPct >= 85 && 'You demonstrate exceptional self-awareness, ethical reasoning, and self-direction. You are ready to pursue ambitious, high-responsibility career paths.'}
+            {maturityPct >= 70 && maturityPct < 85 && 'You show strong maturity and reflective thinking. With continued self-development, you are well-positioned for demanding careers.'}
+            {maturityPct >= 55 && maturityPct < 70 && 'You are developing well. Focus on building self-discipline and proactive decision-making to unlock your full potential.'}
+            {maturityPct >= 40 && maturityPct < 55 && 'You are in an early stage of maturity development. Seek mentorship and challenge yourself with leadership opportunities.'}
+            {maturityPct < 40 && 'This is a great starting point. Focus on self-awareness, responsibility, and resilience — these are learnable skills that will transform your career prospects.'}
+          </div>
+        </div>
+        <div className="maturity-traits">
+          {maturityTraits.map((trait, i) => (
+            <div key={i} className="maturity-trait-row">
+              <div className="maturity-trait-icon">{String(trait.icon)}</div>
+              <div className="maturity-trait-info">
+                <div className="maturity-trait-name">{String(trait.name)}</div>
+                <div className="maturity-trait-val" style={{
+                  color: trait.val === 'Strong' ? 'var(--success)' : trait.val === 'Good' ? 'var(--teal)' : 'var(--muted)',
+                  fontWeight: 600,
+                }}>
+                  {String(trait.val)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── CTA ── */}
+      <div className="res-cta">
+        <h3>Ready to Take the Next Step?</h3>
+        <p>Explore detailed career paths, college options, and resources tailored to your Holland Code.</p>
+        <div className="res-cta-btns">
+          {onExplore && (
+            <button className="btn-cta-primary" onClick={onExplore}>
+              🔎 Explore Career Paths
+            </button>
+          )}
+          <button className="btn-cta-secondary" onClick={onBack}>
+            ← Retake Assessment
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
 export default function CareerAssessment({ onBack, onExplore, savedResults, onSaveResults }) {
-  const [screen,          setScreen]         = useState(savedResults ? 'results' : 'form');
-  const [currentSection,  setCurrentSection] = useState(0);
-  const [info,            setInfo]           = useState({ name:'', class:'', city:'', aspiration:'', boards:'' });
-  const [answers,         setAnswers]        = useState({});
-  const [results,         setResults]        = useState(savedResults || null);
-  const [loadingStep,     setLoadingStep]    = useState(0);
-  const [error,           setError]          = useState(null);
-  const [generatingQuestions, setGeneratingQuestions] = useState(false);
-  const [dynamicSkillsQuestions, setDynamicSkillsQuestions] = useState(null);
-  const [dynamicAcademicQuestions, setDynamicAcademicQuestions] = useState(null);
-  const [userAcademicData, setUserAcademicData] = useState(null);
+  const [step, setStep]               = useState(0);
+  const [studentProfile, setStudentProfile] = useState({});
+  const [error, setError]             = useState(null);
+  const [results, setResults]         = useState(null);
   const topRef = useRef(null);
 
+  // Inject styles
   useEffect(() => {
     const s = document.createElement('style');
     s.textContent = GOOGLE_FONTS + STYLES;
@@ -522,1016 +1360,725 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
     return () => document.head.removeChild(s);
   }, []);
 
+  // Scroll to top on step change
   useEffect(() => {
-    topRef.current?.scrollIntoView({ behavior:'smooth' });
-  }, [screen, currentSection]);
+    topRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [step, results]);
 
-  // ✅ Auto-fill name and fetch academic data if user is logged in
+  // Auto-fill name from Firebase auth
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchUser = async () => {
       if (auth?.currentUser) {
-        // Auto-fill name
+        const updates = {};
         if (auth.currentUser.displayName) {
-          setInfo(prev => ({ ...prev, name: auth.currentUser.displayName }));
+          updates['_name'] = auth.currentUser.displayName;
         }
-        
-        // Fetch academic data from Firebase
         try {
-          const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            setUserAcademicData({
-              grade: data.grade || data.class || '',
-              subjects: data.subjects || [],
-              marks: data.marks || {},
-              weakSubjects: data.weakSubjects || [],
-              strengths: data.strengths || []
-            });
+          const snap = await getDoc(doc(db, 'users', auth.currentUser.uid));
+          if (snap.exists()) {
+            const d = snap.data();
+            if (d.grade || d.class) updates['_class'] = d.grade || d.class;
+            if (d.city)             updates['_city']  = d.city;
           }
         } catch (e) {
-          console.error('Error fetching user academic data:', e);
+          // silently ignore
+        }
+        if (Object.keys(updates).length) {
+          setStudentProfile(prev => ({ ...prev, ...updates }));
         }
       }
     };
-    fetchUserData();
+    fetchUser();
   }, []);
 
-  const isSectionComplete = (idx) => {
-    const sec = ALL_SECTIONS[idx];
-    if (sec.id === 'info') return info.name.trim() && info.class;
-    
-    // Use dynamic questions if available
-    const questionsToCheck = 
-      sec.id === 'skills' && dynamicSkillsQuestions ? dynamicSkillsQuestions :
-      sec.id === 'academics' && dynamicAcademicQuestions ? dynamicAcademicQuestions :
-      sec.questions;
-    
-    return questionsToCheck.every(q => answers[q.id] !== undefined);
+  // ── Profile setter ──────────────────────────────────────────────────────────
+  const setField = (id, value) =>
+    setStudentProfile(prev => ({ ...prev, [id]: value }));
+
+  const toggleMulti = (id, option) => {
+    setStudentProfile(prev => {
+      const current = Array.isArray(prev[id]) ? prev[id] : [];
+      const next = current.includes(option)
+        ? current.filter(x => x !== option)
+        : [...current, option];
+      return { ...prev, [id]: next };
+    });
   };
 
-  const generateDynamicQuestions = async () => {
-    setGeneratingQuestions(true);
-    setError(null);
+  const moveRankItem = (id, options, fromIdx, toIdx) => {
+    if (toIdx < 0 || toIdx >= options.length) return;
+    const current = Array.isArray(studentProfile[id])
+      ? [...studentProfile[id]]
+      : [...options];
+    const [moved] = current.splice(fromIdx, 1);
+    current.splice(toIdx, 0, moved);
+    setField(id, current);
+  };
 
-    const academicInfo = userAcademicData || {
-      grade: info.class,
-      subjects: [],
-      marks: {},
-      weakSubjects: [],
-      strengths: []
+  // ── Navigation ──────────────────────────────────────────────────────────────
+  const currentStep = STEPS[step];
+  const isFirst     = step === 0;
+  const isLast      = step === STEPS.length - 1;
+  const stepDone    = isStepComplete(currentStep.id, studentProfile);
+
+  const goNext = () => {
+    setError(null);
+    if (!stepDone) {
+      setError('Please answer all required questions before continuing.');
+      return;
+    }
+    setStep(s => s + 1);
+  };
+
+  const goBack = () => {
+    setError(null);
+    setStep(s => Math.max(0, s - 1));
+  };
+
+  // ── CALCULATE RESULTS ───────────────────────────────────────────────────────
+  const handleCalculate = () => {
+    setError(null);
+    if (!stepDone) {
+      setError('Please answer all required questions before calculating your results.');
+      return;
+    }
+
+    const profile = studentProfile;
+    const marks    = String(profile['dem_03'] || '');
+    const subjects = Array.isArray(profile['dem_04']) ? profile['dem_04'] : [];
+    const hobbies  = Array.isArray(profile['ext_01']) ? profile['ext_01'] : [];
+
+    // 1. Compute raw RIASEC scores (0–100 normalised)
+    let riasecScores = computeRiasecScores(profile);
+
+    // 2. Apply subject boosts (weighted by marks)
+    const marksW = MARKS_WEIGHT[marks] || 0.85;
+    const boostedBySubjects = applySubjectBoosts(riasecScores, subjects);
+    // Blend: 70% raw + 30% subject-boosted, scaled by marks weight
+    const blended = {};
+    Object.keys(riasecScores).forEach(k => {
+      blended[k] = Math.min(100, Math.round(
+        (riasecScores[k] * 0.7 + boostedBySubjects[k] * 0.3) * marksW
+      ));
+    });
+
+    // 3. Apply hobby boosts (lighter weight)
+    const finalScores = applyHobbyBoosts(blended, hobbies);
+
+    // 4. Get top 3 → Holland Code
+    const hollandCode = getTop3(finalScores);
+
+    // 5. Stream recommendation
+    const streams = recommendStream(hollandCode, marks, subjects);
+
+    // 6. Top 5 careers
+    const top5Careers = getTop5Careers(hollandCode, subjects, hobbies, marks);
+
+    // 7. Maturity score
+    const maturityPct = computeMaturityScore(profile);
+
+    const computedResults = {
+      hollandCode,
+      riasecScores: finalScores,
+      streams,
+      top5Careers,
+      maturityPct,
+      profile,
     };
 
-    // Determine developmental stage for question generation
-    const classLevel = academicInfo.grade.toLowerCase();
-    let questionTone = 'exploratory and curiosity-driven';
-    let scenarioContext = 'school activities and hobbies';
-    
-    if (classLevel.includes('class 8') || classLevel.includes('class 9') || classLevel.includes('class 10')) {
-      questionTone = 'exploratory, non-pressuring, and curiosity-driven';
-      scenarioContext = 'school clubs, hobbies, weekend activities, and things they enjoy doing';
-    } else if (classLevel.includes('class 11') || classLevel.includes('class 12') || classLevel.includes('puc')) {
-      questionTone = 'decision-focused but supportive';
-      scenarioContext = 'stream subjects, entrance exam preparation, and future college plans';
-    } else if (classLevel.includes('year ug') || classLevel.includes('undergraduate')) {
-      questionTone = 'practical and employability-focused';
-      scenarioContext = 'internships, projects, skill-building, and career preparation';
-    } else {
-      questionTone = 'strategic and specialization-focused';
-      scenarioContext = 'professional work, networking, and career positioning';
-    }
-
-    const prompt = `You are an expert educational psychologist designing a personalized career assessment for an Indian student, following stage-based developmental counseling principles.
-
-STUDENT PROFILE:
-- Grade/Class: ${academicInfo.grade}
-- Subjects: ${academicInfo.subjects.length > 0 ? academicInfo.subjects.join(', ') : 'Not specified'}
-- Academic Performance: ${Object.keys(academicInfo.marks).length > 0 ? JSON.stringify(academicInfo.marks) : 'Not available'}
-- Weak Areas: ${academicInfo.weakSubjects.length > 0 ? academicInfo.weakSubjects.join(', ') : 'None specified'}
-- Strengths: ${academicInfo.strengths.length > 0 ? academicInfo.strengths.join(', ') : 'None specified'}
-
-DEVELOPMENTAL CONTEXT:
-- Question Tone: ${questionTone}
-- Scenario Context: ${scenarioContext}
-
-TASK: Generate TWO arrays of questions tailored to this student's developmental stage and academic context:
-
-1. **dynamicSkillsQuestions** (12 questions): Self-assessment of natural abilities across RIASEC dimensions
-2. **dynamicAcademicQuestions** (6 questions): Multiple-choice questions about academic preferences and learning style
-
-CRITICAL REQUIREMENTS:
-- Use age-appropriate language matching the ${questionTone} tone
-- Reference ${scenarioContext} that they actually encounter
-- For weak subjects, probe alternative strengths (e.g., if weak in Math, test spatial/creative reasoning or pattern recognition in non-mathematical contexts)
-- Each question must map to RIASEC codes: R (Realistic), I (Investigative), A (Artistic), S (Social), E (Enterprising), C (Conventional)
-- Questions should feel natural and non-threatening, avoiding academic pressure language
-- For younger students (Class 8-10), focus on discovery and exploration, NOT career commitment
-
-RESPONSE FORMAT (valid JSON only, no markdown):
-{
-  "dynamicSkillsQuestions": [
-    {
-      "id": "ds1",
-      "riasec": "R",
-      "text": "Age-appropriate skill assessment question here"
-    },
-    ... (12 total)
-  ],
-  "dynamicAcademicQuestions": [
-    {
-      "id": "da1",
-      "text": "Age-appropriate academic preference question",
-      "choices": [
-        {"icon": "📐", "text": "Choice text", "riasec": "I"},
-        {"icon": "🎨", "text": "Choice text", "riasec": "A"},
-        ... (4-6 choices per question)
-      ]
-    },
-    ... (6 total)
-  ]
-}
-
-Ensure all strings are properly escaped for JSON parsing. Make questions engaging and relevant to Indian students in ${academicInfo.grade}.`;
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7
-        }),
-        signal: AbortSignal.timeout(45000)
-      });
-
-      if (!res.ok) {
-        throw new Error(`API error: ${res.status}`);
-      }
-
-      const data = await res.json();
-      const text = data.content?.map(b => b.text || '').join('') || '';
-      let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-      
-      const parsed = JSON.parse(clean);
-
-      if (!parsed.dynamicSkillsQuestions || !parsed.dynamicAcademicQuestions) {
-        throw new Error('Invalid response structure from AI');
-      }
-
-      setDynamicSkillsQuestions(parsed.dynamicSkillsQuestions);
-      setDynamicAcademicQuestions(parsed.dynamicAcademicQuestions);
-      setGeneratingQuestions(false);
-      
-      // Move to next section after successful generation
-      setCurrentSection(1);
-      
-    } catch (err) {
-      console.error('Dynamic question generation failed:', err);
-      setError('Could not personalize questions. Using standard assessment.');
-      setGeneratingQuestions(false);
-      
-      // Fallback: continue with static questions
-      setTimeout(() => {
-        setError(null);
-        setCurrentSection(1);
-      }, 2000);
-    }
+    setResults(computedResults);
+    if (onSaveResults) onSaveResults(computedResults);
   };
 
-  const totalQ    = ALL_SECTIONS.slice(1).reduce((s, sec) => s + sec.questions.length, 0);
-  const answeredQ = Object.keys(answers).length;
-  const progress  = Math.round((answeredQ / totalQ) * 100);
+  // ── Progress ────────────────────────────────────────────────────────────────
+  const totalAnswerable = Object.values(STEP_QUESTIONS)
+    .flat()
+    .filter(q => q.type !== 'text').length;
+  const totalAnswered = Object.values(STEP_QUESTIONS)
+    .flat()
+    .filter(q => q.type !== 'text')
+    .filter(q => {
+      const v = studentProfile[q.id];
+      if (q.type === 'multiple') return Array.isArray(v) && v.length > 0;
+      if (q.type === 'ranking')  return Array.isArray(v) && v.length === q.options.length;
+      return v !== undefined && v !== '' && v !== null;
+    }).length;
+  const progressPct = Math.round((totalAnswered / totalAnswerable) * 100);
 
-  const buildPersonalityProfile = () => {
-    const get = id => answers[id] || 'not answered';
-    return {
-      setbackResponse:     get('d1'),
-      teamRole:            get('d2'),
-      socialEnergy:        get('d3'),
-      decisionStyle:       get('d4'),
-      trendInterest:       get('d5'),
-      coreMotivation:      get('d6'),
-      academicPattern:     get('b4'),
-      incomeVsMeaning:     get('c3'),
-      workLifeBalance:     get('c6'),
-      riskTolerance:       get('c5'),
-      futureWorkModel:     get('e4'),
-      aiEraFocus:          get('e3'),
-      legacyGoal:          get('e5'),
-      skillBuildGoal:      get('e6'),
-    };
-  };
+  // ── Render helpers ──────────────────────────────────────────────────────────
 
-  const fetchAnalysis = async () => {
-    const sectionBeforeSubmit = currentSection;
-    setScreen('loading');
-    setLoadingStep(0);
-    setError(null);
-
-    const riasec      = computeRIASEC(answers, dynamicSkillsQuestions, dynamicAcademicQuestions);
-    const personality = buildPersonalityProfile();
-
-    const steps = [
-      'Mapping RIASEC interest profile',
-      'Analysing skills and abilities',
-      'Processing personality indicators',
-      'Researching 2025–26 career trends',
-      'Matching Indian college landscape',
-      'Generating personalised recommendations',
-    ];
-    for (let i = 0; i < steps.length; i++) {
-      await new Promise(r => setTimeout(r, 800));
-      setLoadingStep(i + 1);
-    }
-
-    // Determine student's developmental stage
-    const classLevel = info.class.toLowerCase();
-    let studentStage = 'EXPLORATION'; // Default
-    let stageGoal = '';
-    let approachStyle = '';
-    let nextStepsGuidance = '';
-    
-    if (classLevel.includes('class 8') || classLevel.includes('class 9') || classLevel.includes('class 10')) {
-      studentStage = 'EXPLORATION';
-      stageGoal = 'Build self-awareness and exposure, not force career decisions';
-      approachStyle = 'Non-directive (guide, do not prescribe). Focus on curiosity and skill sampling.';
-      nextStepsGuidance = 'Include: Skill sampling activities, reflective journaling prompts, career exposure opportunities. DO NOT push them to pick Science/Commerce/Arts yet. Encourage exploration across multiple domains.';
-    } else if (classLevel.includes('class 11') || classLevel.includes('class 12') || classLevel.includes('puc')) {
-      studentStage = 'DECISION';
-      stageGoal = 'Make an informed stream and career direction decision';
-      approachStyle = 'Semi-directive (guide with data and clarity). Help narrow down 2-3 strong options based on SWOT and stream-career alignment.';
-      nextStepsGuidance = 'Include: Reality testing exercises, entrance exam preparation roadmap, stream alignment verification. Provide clear decision-making frameworks.';
-    } else if (classLevel.includes('year ug') || classLevel.includes('undergraduate') || classLevel.includes('1st year') || classLevel.includes('2nd year') || classLevel.includes('3rd year') || classLevel.includes('4th year')) {
-      studentStage = 'REFINEMENT';
-      stageGoal = 'Convert degree into a viable career path';
-      approachStyle = 'Directive and strategy-based. Focus on employability and career clarity.';
-      nextStepsGuidance = 'Include: Internship hunting strategies, skill gap analysis with specific courses, portfolio building roadmap. Be concrete and actionable.';
-    } else if (classLevel.includes('postgraduate') || classLevel.includes('pg') || classLevel.includes('masters') || classLevel.includes('mba')) {
-      studentStage = 'SPECIALIZATION';
-      stageGoal = 'Achieve career positioning and niche specialization';
-      approachStyle = 'Highly directive and strategic. Focus on ROI, personal branding, and competitive positioning.';
-      nextStepsGuidance = 'Include: LinkedIn networking tactics, interview readiness drills, career transition planning with timeline. Focus on market differentiation.';
-    }
-
-    // Check for stream mismatch crisis indicators
-    const streamMismatchIndicators = [
-      personality.academicPattern?.toLowerCase().includes('disengaged'),
-      personality.academicPattern?.toLowerCase().includes('bored'),
-      personality.setbackResponse?.toLowerCase().includes('wrong'),
-      personality.coreMotivation?.toLowerCase().includes('hate'),
-      (info.aspiration || '').toLowerCase().includes('confused'),
-      (info.aspiration || '').toLowerCase().includes('wrong stream')
-    ].filter(Boolean).length;
-
-    const isStreamMismatch = streamMismatchIndicators >= 2;
-    const streamMismatchProtocol = isStreamMismatch ? `
-CRITICAL: STREAM MISMATCH PROTOCOL ACTIVATED
-This student shows signs of being in the wrong stream or struggling with their current path. You MUST:
-1. Use 3-Layer Analysis: Analyze Interest vs Aptitude vs Values separately and identify the disconnect.
-2. Recommend "Adjacent Careers" (e.g., Engineering → UX Design, Medicine → Healthcare Management) or "Hybrid Paths" that leverage existing investment.
-3. In riasecSummary, provide emotional support and normalize that changing direction is a CORRECTION, not a failure. Use phrases like "recognizing a mismatch early is wisdom, not weakness" and "your past choices were made with the information you had then."
-4. In bestCareer and recommendedCareer, prioritize paths that allow pivoting without complete restart.
-5. In nextSteps, include one step specifically about "exploring adjacent options" or "validating the pivot."
-` : '';
-
-    const prompt = `You are VidyaVantage, an expert AI career counsellor specializing in Indian education (2025–2026), using Holland's RIASEC theory combined with stage-based developmental career counseling.
-
-STUDENT PROFILE:
-- Name: ${info.name.replace(/"/g, '\\"')}
-- Class/Level: ${info.class.replace(/"/g, '\\"')}
-- City: ${info.city.replace(/"/g, '\\"')}
-- Career aspiration (if any): ${(info.aspiration || 'Not specified').replace(/"/g, '\\"')}
-- Boards: ${(info.boards || 'Not specified').replace(/"/g, '\\"')}
-
-RIASEC SCORES (0–10, from dual interest + ability assessment):
-R (Realistic/Doer)=${riasec.scores.R}, I (Investigative/Thinker)=${riasec.scores.I}, A (Artistic/Creator)=${riasec.scores.A}, S (Social/Helper)=${riasec.scores.S}, E (Enterprising/Persuader)=${riasec.scores.E}, C (Conventional/Organiser)=${riasec.scores.C}
-3-Letter Code: ${riasec.code}
-
-PERSONALITY INDICATORS:
-- Setback response: ${(personality.setbackResponse || '').replace(/"/g, '\\"')}
-- Natural team role: ${(personality.teamRole || '').replace(/"/g, '\\"')}
-- Social energy: ${(personality.socialEnergy || '').replace(/"/g, '\\"')}
-- Decision-making style: ${(personality.decisionStyle || '').replace(/"/g, '\\"')}
-- Core motivation: ${(personality.coreMotivation || '').replace(/"/g, '\\"')}
-- Academic pattern: ${(personality.academicPattern || '').replace(/"/g, '\\"')}
-- Income vs meaning: ${(personality.incomeVsMeaning || '').replace(/"/g, '\\"')}
-- Risk tolerance: ${(personality.riskTolerance || '').replace(/"/g, '\\"')}
-- Work-life balance: ${(personality.workLifeBalance || '').replace(/"/g, '\\"')}
-
-FUTURE VISION:
-- Emerging trend that excites them: ${(personality.trendInterest || '').replace(/"/g, '\\"')}
-- Career model preference: ${(personality.futureWorkModel || '').replace(/"/g, '\\"')}
-- AI-era focus: ${(personality.aiEraFocus || '').replace(/"/g, '\\"')}
-- Legacy goal: ${(personality.legacyGoal || '').replace(/"/g, '\\"')}
-- Skill they want to build: ${(personality.skillBuildGoal || '').replace(/"/g, '\\"')}
-
-DEVELOPMENTAL STAGE FRAMEWORK:
-Student is in: ${studentStage} STAGE
-Stage Goal: ${stageGoal}
-Counseling Approach: ${approachStyle}
-Next Steps Guidance: ${nextStepsGuidance}
-
-${streamMismatchProtocol}
-
-MANDATORY INSTRUCTIONS — READ CAREFULLY:
-
-1. **RIASEC FOUNDATION**: Apply Holland's RIASEC theory as the scientific foundation. You MUST analyze ALL SIX dimensions (R, I, A, S, E, C) and explain how their specific score pattern creates their unique profile.
-
-2. **DEVELOPMENTAL STAGE COMPLIANCE**: You are counseling a student in the **${studentStage} STAGE**. Your entire response must strictly follow the stage-specific approach:
-   - Goal: ${stageGoal}
-   - Counseling Style: ${approachStyle}
-   - Next Steps Requirements: ${nextStepsGuidance}
-   
-   **CRITICAL**: Do NOT give exploration-stage students (Grade 8-10) premature career commitments. Do NOT give specialization-stage students (PG) vague exploration advice. Match your directiveness to their stage.
-
-3. **STREAM MISMATCH PROTOCOL**: ${isStreamMismatch ? 'ACTIVATED — This student shows signs of stream/path misalignment. You MUST:' : 'Not triggered.'}
-   ${isStreamMismatch ? `
-   - Conduct 3-Layer Analysis: Separate Interest, Aptitude, and Values to identify the disconnect
-   - Recommend "Adjacent Careers" (e.g., Engineering → UX Design) or "Hybrid Paths" that leverage existing investment
-   - In riasecSummary and bestCareer, provide emotional validation: "Recognizing a mismatch early is wisdom, not weakness"
-   - In nextSteps, include at least one action about exploring adjacent options or validating the pivot
-   - Prioritize paths that allow course correction without complete restart` : ''}
-
-4. **FULL RIASEC ANALYSIS REQUIREMENT**: In the fullRiasecAnalysis section, you must:
-   - Analyze each of the 6 RIASEC dimensions individually with their specific score
-   - Explain what HIGH scores mean (strengths, natural fits)
-   - Explain what LOW scores mean (challenges, misalignments) — be honest but not discouraging
-   - In "interactionPattern", synthesize how their unique combination of highs and lows creates their working style
-   - Example: "Your R=2, I=9, A=7 pattern suggests you thrive in abstract creative problem-solving but may struggle with hands-on mechanical tasks"
-
-5. **CAREER RECOMMENDATIONS**: 
-   - bestCareer must have 85%+ RIASEC compatibility AND stage-appropriateness
-   - Explicitly reference which RIASEC dimensions make it a strong match
-   - If stream mismatch is active, explain how this path allows pivoting
-   - Be specific about Indian colleges, entrance exams, and realistic timelines for their stage
-
-6. **NEXT STEPS PRECISION**: Each of the 3 next steps must:
-   - Be stage-appropriate (exploration vs decision vs execution)
-   - Be actionable with a clear timeline (1 week, 1 month, 3-6 months)
-   - If stream mismatch detected, include one step about validating the new direction
-
-7. **TONE CALIBRATION**: 
-   - For Exploration Stage (8-10): Encouraging, curiosity-driven, non-pressuring
-   - For Decision Stage (11-12): Supportive but clear, data-backed, narrowing options
-   - For Refinement Stage (UG): Directive, employability-focused, skill-gap honest
-   - For Specialization Stage (PG): Strategic, ROI-focused, market-positioning sharp
-
-8. **JSON VALIDITY**: Respond ONLY with valid JSON (no markdown, no backticks). Ensure all internal strings are properly escaped to prevent JSON parse errors.
-
-9. **INDIAN CONTEXT**: All recommendations must be specific to the Indian education system, 2025-2026 career landscape, and realistic for a student in ${info.city || 'India'}.
-
-CRITICAL: You must return ONLY valid, parseable JSON. Do NOT use unescaped double quotes (") or newlines (\n) inside your text strings. Keep your sentences concise to ensure the JSON does not get truncated. Use single quotes or apostrophes within text instead of double quotes. Replace any newlines with spaces.
-
-JSON Structure:
-
-{
-  "riasecSummary": "3-4 sentences describing this student's unique RIASEC personality in warm, specific, encouraging language. Must reflect their developmental stage and any stream mismatch concerns.",
-  "codeBreakdown": {
-    "primary": "1 sentence about the dominant letter and what it means for this student specifically",
-    "secondary": "1 sentence about the second letter and how it adds nuance",
-    "tertiary": "1 sentence about the third letter and how all three together create a unique profile"
-  },
-  "fullRiasecAnalysis": {
-    "R_Realistic": {
-      "score": ${riasec.scores.R},
-      "interpretation": "2-3 sentences explaining what this score means for hands-on work, technical skills, and physical problem-solving. Reference their actual answers.",
-      "careerImplication": "How this score shapes their relationship with practical, mechanical, or outdoor careers."
-    },
-    "I_Investigative": {
-      "score": ${riasec.scores.I},
-      "interpretation": "2-3 sentences explaining what this score means for analytical thinking, research, and intellectual curiosity.",
-      "careerImplication": "How this score influences their fit for scientific, academic, or data-driven careers."
-    },
-    "A_Artistic": {
-      "score": ${riasec.scores.A},
-      "interpretation": "2-3 sentences explaining what this score means for creativity, self-expression, and originality.",
-      "careerImplication": "How this score affects their potential in creative, design, or media careers."
-    },
-    "S_Social": {
-      "score": ${riasec.scores.S},
-      "interpretation": "2-3 sentences explaining what this score means for empathy, teaching, and helping others.",
-      "careerImplication": "How this score determines their alignment with counseling, education, or healthcare careers."
-    },
-    "E_Enterprising": {
-      "score": ${riasec.scores.E},
-      "interpretation": "2-3 sentences explaining what this score means for leadership, persuasion, and business acumen.",
-      "careerImplication": "How this score impacts their suitability for management, sales, or entrepreneurial careers."
-    },
-    "C_Conventional": {
-      "score": ${riasec.scores.C},
-      "interpretation": "2-3 sentences explaining what this score means for organization, detail-orientation, and systematic work.",
-      "careerImplication": "How this score relates to administrative, financial, or process-driven careers."
-    },
-    "interactionPattern": "2-3 sentences explaining how their HIGH and LOW scores across all six dimensions interact to create their unique working style. Example: 'Your high I and low E suggests you prefer independent research over team leadership.'"
-  },
-  "personalityInsights": {
-    "workStyle": "How this student naturally works — specific, based on their answers and RIASEC profile",
-    "strengthZone": "Where they are most likely to excel and why — must reference specific RIASEC dimensions",
-    "growthEdge": "The one area that will require the most intentional development — must be stage-appropriate (exploration vs execution)",
-    "leadershipStyle": "How they lead or influence others — based on E and S scores",
-    "decisionMakingStyle": "How they make important choices — based on personality indicators and I/C scores",
-    "stressResponse": "How they handle pressure and setbacks — based on their setback response answer and RIASEC profile"
-  },
-  "bestCareer": {
-    "title": "Career Path Name — must be stage-appropriate and consider stream mismatch if applicable",
-    "subtitle": "3-4 specific roles within this path",
-    "matchPercent": 92,
-    "analysis": "4-5 sentences: why this is the best match using their RIASEC code (reference specific dimension scores), personality indicators, stated preferences, AND developmental stage. If stream mismatch detected, explain how this path allows pivoting.",
-    "pros": ["Pro 1 — specific to this student and their RIASEC profile", "Pro 2 — reference their high scores", "Pro 3 — stage-appropriate benefit"],
-    "cons": ["Real challenge 1 — reference their low RIASEC scores", "Real challenge 2 — honest about developmental stage barriers"],
-    "colleges": ["Top Indian college 1 for this path", "Top Indian college 2", "Top Indian college 3"],
-    "skillsToBuild": ["Specific skill 1 — addresses a RIASEC gap", "Specific skill 2 — stage-appropriate"],
-    "entryPath": "The most realistic step-by-step entry path for an Indian student at their current level (${studentStage} stage). Must be concrete and actionable."
-  },
-  "recommendedCareer": {
-    "title": "Career Path Name — a solid secondary match that complements their RIASEC profile differently",
-    "subtitle": "Specific roles",
-    "matchPercent": 76,
-    "analysis": "3-4 sentences on why this is a strong secondary match. Explain which RIASEC dimensions this path leverages vs the primary recommendation.",
-    "pros": ["Pro 1 — different RIASEC strength utilized", "Pro 2 — stage-appropriate"],
-    "cons": ["Challenge 1 — RIASEC dimension gap", "Challenge 2 — realistic barrier"],
-    "colleges": ["College 1", "College 2"],
-    "skillsToBuild": ["Skill 1 — addresses gap", "Skill 2"],
-    "entryPath": "Step-by-step entry for this student at ${studentStage} stage"
-  },
-  "leastCareer": {
-    "title": "Career Path Name — lowest RIASEC compatibility",
-    "subtitle": "Why the RIASEC mismatch is significant — reference specific dimension gaps",
-    "matchPercent": 21,
-    "analysis": "2-3 sentences — gentle, honest, non-discouraging. Explicitly state which RIASEC dimensions are misaligned (e.g., 'This path requires high E and C, but your scores are 2 and 3 respectively'). Frame as incompatibility, not inadequacy.",
-    "pros": ["One genuine redeeming overlap if any — be honest if there is none"],
-    "cons": ["Key RIASEC mismatch 1 — specific dimension", "Key RIASEC mismatch 2 — specific dimension"],
-    "colleges": []
-  },
-  "nextSteps": [
-    "STAGE-SPECIFIC Step 1 — must align with ${studentStage} stage guidance (${nextStepsGuidance}). Actionable within 1 week.",
-    "STAGE-SPECIFIC Step 2 — achievable within 1 month. Must respect developmental stage (no premature career locking for exploration stage).",
-    "STAGE-SPECIFIC Step 3 — 3-6 month goal. If stream mismatch detected, include one step about exploring adjacent options or validating the pivot."
-  ],
-  "developmentalStageNote": "1-2 sentences acknowledging the student's current stage (${studentStage}) and what that means for their timeline. Example: 'You're in the Exploration Stage — this is the time to sample widely, not commit narrowly. Your next 6 months should prioritize curiosity over certainty.'"
-}`;
-
-    const controller = new AbortController();
-    const timeoutId  = setTimeout(() => controller.abort(), 60000);
-
-    try {
-      const res = await fetch('/api/chat', {
-        method : 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body   : JSON.stringify({ messages:[{ role:'user', content:prompt }] }),
-        signal : controller.signal,
-      });
-      clearTimeout(timeoutId);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.details || data.error || `Server error ${res.status}`);
-
-      const text   = data.content?.map(b => b.text || '').join('') || '';
-      let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-      
-      let parsed;
-      try {
-        parsed = JSON.parse(clean);
-      } catch (parseError) {
-        console.error('JSON PARSE ERROR:', parseError.message);
-        console.error('RAW AI OUTPUT:', clean);
-        console.error('OUTPUT LENGTH:', clean.length);
-        throw new Error(`Failed to parse AI response: ${parseError.message}. Check console for raw output.`);
-      }
-
-      const finalResults = { ...parsed, riasec, studentInfo:info, personalityProfile:personality };
-      setResults(finalResults);
-      setScreen('results');
-    } catch (err) {
-      clearTimeout(timeoutId);
-      setError(err.name === 'AbortError'
-        ? 'The analysis timed out. Please check your connection and try again.'
-        : `Could not generate your analysis: ${err.message}`);
-      setScreen('form');
-      setCurrentSection(sectionBeforeSubmit);
-    }
-  };
-
-  const Header = ({ badge, showNav=true }) => (
-    <header className="vv-header">
-      <div className="vv-logo" onClick={onBack} style={{ cursor:'pointer' }}>Vidya<span>Vantage</span></div>
-      {showNav ? (
-        <div className="vv-header-nav">
-          {onExplore && <button className="vv-nav-btn" onClick={onExplore}>🔎 Explore Careers</button>}
-          <button className="vv-nav-btn active">📝 Assessment</button>
-          {badge && <div className="vv-badge">{badge}</div>}
-        </div>
-      ) : badge ? (
-        <div className="vv-badge">{badge}</div>
-      ) : null}
-    </header>
-  );
-
-  const setAnswer = (id, val) => setAnswers(prev => ({ ...prev, [id]:val }));
-
-  if (screen === 'loading') {
-    const loadingLabels = [
-      'Mapping RIASEC interest profile',
-      'Analysing your skills and abilities',
-      'Processing personality indicators',
-      'Researching 2025–26 career trends',
-      'Matching Indian college landscape',
-      'Generating personalised recommendations',
-    ];
-    return (
-      <div className="vv-root">
-        <Header badge="Analysing…" showNav={false} />
-        <div className="vv-loading" ref={topRef}>
-          <div className="vv-loading-spinner" />
-          <h3>Building your career profile, {info.name.split(' ')[0]}…</h3>
-          <p style={{ color:'var(--muted)', fontSize:'15px', marginTop:'8px', lineHeight:1.6 }}>
-            Our AI is cross-referencing your RIASEC personality with 2025–26 Indian career trends across {totalQ} data points from your assessment.
-          </p>
-          <div className="vv-loading-steps">
-            {loadingLabels.map((step, i) => (
-              <div key={i} className={`loading-step ${loadingStep > i ? 'done' : loadingStep === i ? 'active' : ''}`}>
-                <div className="step-dot" />{step}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (screen === 'results' && results) {
-    const { riasec, riasecSummary, codeBreakdown, studentInfo } = results;
-    const isAuthenticated = auth?.currentUser;
+  const renderScaleQuestion = (q, idx, total) => {
+    const answered = studentProfile[q.id] !== undefined;
+    const isScale10 = q.scaleMax === 10;
 
     return (
-      <div className="vv-root">
-        <Header badge={isAuthenticated ? "Primary Report" : "Free Preview"} showNav={false} />
-        <div className="vv-results" ref={topRef}>
+      <div key={q.id} className={`q-card ${answered ? 'answered' : ''}`}>
+        <div className="q-card-top">
+          <div className="q-number">Q{idx + 1} of {total}</div>
+          <div className="q-check">{answered ? '✓' : ''}</div>
+        </div>
+        <div className="q-text">{q.question}</div>
 
-          <div className="results-hero">
-            <div className="results-name">Primary Report for {studentInfo?.name} · {studentInfo?.class}</div>
-            <div className="riasec-code-display">{riasec.code}</div>
-            <div className="riasec-code-label">YOUR RIASEC CODE</div>
-            <div className="riasec-result-row">
-              {riasec.sorted.slice(0, 3).map(([k, v]) => (
-                <div key={k} className="riasec-chip" style={{ background:RIASEC_COLORS[k].bg, color:RIASEC_COLORS[k].color }}>
-                  {RIASEC_COLORS[k].label} — {RIASEC_COLORS[k].desc} ({v}/10)
-                </div>
+        {isScale10 ? (
+          <div className="scale10-wrap">
+            <div className="scale10-row">
+              {Array.from({ length: 10 }, (_, i) => i + 1).map(v => (
+                <button
+                  key={v}
+                  className={`scale10-btn ${studentProfile[q.id] === v ? 'selected' : ''}`}
+                  onClick={() => setField(q.id, v)}
+                >
+                  {v}
+                </button>
               ))}
             </div>
-            <div className="results-summary">{riasecSummary}</div>
+            <div className="scale10-labels">
+              <span className="scale10-label">{q.scaleLabels?.min}</span>
+              <span className="scale10-label right">{q.scaleLabels?.max}</span>
+            </div>
           </div>
-
-          <div className="riasec-radar">
-            <h4>Your Full RIASEC Profile</h4>
-            <p>Dual-scored from both your interest levels and self-assessed abilities across {totalQ} questions.</p>
-            <div className="riasec-bars">
-              {riasec.sorted.map(([k, v]) => (
-                <div key={k} className="riasec-bar-row">
-                  <div className="riasec-bar-label">
-                    {RIASEC_COLORS[k].label}
-                    <span>{RIASEC_COLORS[k].desc}</span>
-                  </div>
-                  <div className="riasec-bar-bg">
-                    <div className="riasec-bar-fill" style={{ width:`${v * 10}%`, background:RIASEC_COLORS[k].bar }} />
-                  </div>
-                  <div className="riasec-bar-score" style={{ color:RIASEC_COLORS[k].color }}>{v}</div>
-                </div>
+        ) : (
+          <div className="q-scale-wrap">
+            <div className="q-scale">
+              {[1, 2, 3, 4, 5].map(v => (
+                <button
+                  key={v}
+                  className={`scale-btn ${studentProfile[q.id] === v ? 'selected' : ''}`}
+                  onClick={() => setField(q.id, v)}
+                >
+                  {v}
+                  <span className="scale-label-text">{LIKERT_LABELS[v]}</span>
+                </button>
               ))}
             </div>
-          </div>
-
-          {codeBreakdown && (
-            <div className="riasec-radar" style={{ marginBottom:'24px' }}>
-              <h4>Understanding Your {riasec.code} Code</h4>
-              <p>What each letter in your code means for your career direction.</p>
-              <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
-                {[
-                  { label:`Primary — ${RIASEC_COLORS[riasec.code[0]]?.label}`, text:codeBreakdown.primary, color:RIASEC_COLORS[riasec.code[0]]?.color },
-                  { label:`Secondary — ${RIASEC_COLORS[riasec.code[1]]?.label}`, text:codeBreakdown.secondary, color:RIASEC_COLORS[riasec.code[1]]?.color },
-                  { label:`Tertiary — ${RIASEC_COLORS[riasec.code[2]]?.label}`, text:codeBreakdown.tertiary, color:RIASEC_COLORS[riasec.code[2]]?.color },
-                ].map((item, i) => (
-                  <div key={i} style={{ background:'var(--parchment)', borderRadius:'12px', padding:'14px 18px', borderLeft:`3px solid ${item.color}` }}>
-                    <div style={{ fontSize:'11px', fontWeight:'700', textTransform:'uppercase', letterSpacing:'1px', color:item.color, marginBottom:'5px' }}>{item.label}</div>
-                    <p style={{ margin:0, fontSize:'14px', color:'var(--brown)', lineHeight:1.6 }}>{item.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {!isAuthenticated && (
-            <div style={{
-              background: 'linear-gradient(135deg, var(--saffron), var(--gold))',
-              borderRadius: '24px',
-              padding: '40px',
-              textAlign: 'center',
-              color: 'white',
-              marginBottom: '24px'
-            }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔒</div>
-              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: '28px', marginBottom: '12px' }}>
-                Unlock Your Complete Career Blueprint
-              </h3>
-              <p style={{ fontSize: '16px', opacity: 0.9, marginBottom: '24px', maxWidth: '600px', margin: '0 auto 24px' }}>
-                Sign up now to access your full 6-dimensional RIASEC analysis, personalized career matches, college recommendations, and 30-day action roadmap.
-              </p>
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button 
-                  style={{
-                    background: 'white',
-                    color: 'var(--saffron)',
-                    border: 'none',
-                    padding: '16px 32px',
-                    borderRadius: '50px',
-                    fontSize: '16px',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit'
-                  }}
-                  onClick={() => window.location.href = '/auth'}
-                >
-                  Sign Up Free →
-                </button>
-                <button 
-                  style={{
-                    background: 'transparent',
-                    color: 'white',
-                    border: '2px solid white',
-                    padding: '14px 28px',
-                    borderRadius: '50px',
-                    fontSize: '16px',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit'
-                  }}
-                  onClick={() => window.location.href = '/auth'}
-                >
-                  Log In
-                </button>
-              </div>
-            </div>
-          )}
-
-          {isAuthenticated && results.fullRiasecAnalysis && (
-            <div className="riasec-radar" style={{ marginBottom:'24px' }}>
-              <h4>Your 6-Dimensional Analysis</h4>
-              <p>Deep dive into how each RIASEC dimension shapes your unique working style and career fit.</p>
-              <div style={{ display:'flex', flexDirection:'column', gap:'16px', marginTop:'20px' }}>
-                {Object.entries(results.fullRiasecAnalysis).map(([key, data]) => {
-                  if (key === 'interactionPattern') return null;
-                  const letter = key.split('_')[0];
-                  const dimension = RIASEC_COLORS[letter];
-                  if (!dimension) return null;
-                  
-                  return (
-                    <div key={key} style={{ 
-                      background:'white', 
-                      borderRadius:'16px', 
-                      padding:'20px 24px', 
-                      border:`2px solid ${dimension.bg}`,
-                      boxShadow:'0 2px 8px rgba(0,0,0,0.04)'
-                    }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px' }}>
-                        <div style={{ 
-                          width:'48px', 
-                          height:'48px', 
-                          borderRadius:'12px', 
-                          background:dimension.bg, 
-                          color:dimension.color,
-                          display:'flex',
-                          alignItems:'center',
-                          justifyContent:'center',
-                          fontSize:'24px',
-                          fontWeight:'700',
-                          fontFamily:"'Playfair Display', serif"
-                        }}>
-                          {letter}
-                        </div>
-                        <div style={{ flex:1 }}>
-                          <div style={{ 
-                            fontSize:'18px', 
-                            fontWeight:'700', 
-                            color:'var(--dark)',
-                            fontFamily:"'Playfair Display', serif",
-                            marginBottom:'2px'
-                          }}>
-                            {dimension.label} — {dimension.desc}
-                          </div>
-                          <div style={{ 
-                            fontSize:'13px', 
-                            fontWeight:'700', 
-                            color:dimension.color,
-                            letterSpacing:'0.5px'
-                          }}>
-                            Your Score: {data.score}/10
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div style={{ 
-                        background:'var(--parchment)', 
-                        borderRadius:'10px', 
-                        padding:'14px 16px',
-                        marginBottom:'10px'
-                      }}>
-                        <div style={{ 
-                          fontSize:'11px', 
-                          fontWeight:'700', 
-                          textTransform:'uppercase', 
-                          letterSpacing:'1px', 
-                          color:'var(--muted)',
-                          marginBottom:'6px'
-                        }}>
-                          What This Score Means
-                        </div>
-                        <p style={{ 
-                          margin:0, 
-                          fontSize:'14px', 
-                          color:'var(--brown)', 
-                          lineHeight:1.7 
-                        }}>
-                          {data.interpretation}
-                        </p>
-                      </div>
-
-                      <div style={{ 
-                        fontSize:'11px', 
-                        fontWeight:'700', 
-                        textTransform:'uppercase', 
-                        letterSpacing:'1px', 
-                        color:'var(--muted)',
-                        marginBottom:'6px'
-                      }}>
-                        Career Implication
-                      </div>
-                      <p style={{ 
-                        margin:0, 
-                        fontSize:'14px', 
-                        color:'var(--dark)', 
-                        lineHeight:1.7,
-                        fontWeight:'500'
-                      }}>
-                        {data.careerImplication}
-                      </p>
-                    </div>
-                  );
-                })}
-
-                {results.fullRiasecAnalysis.interactionPattern && (
-                  <div style={{ 
-                    background:'linear-gradient(135deg, var(--dark), var(--brown))', 
-                    borderRadius:'16px', 
-                    padding:'24px', 
-                    color:'white',
-                    marginTop:'8px'
-                  }}>
-                    <div style={{ 
-                      fontSize:'11px', 
-                      fontWeight:'700', 
-                      textTransform:'uppercase', 
-                      letterSpacing:'1px', 
-                      color:'var(--gold)',
-                      marginBottom:'10px'
-                    }}>
-                      🔗 Your Unique Pattern
-                    </div>
-                    <p style={{ 
-                      margin:0, 
-                      fontSize:'16px', 
-                      lineHeight:1.7,
-                      fontFamily:"'Cormorant Garamond', serif",
-                      fontStyle:'italic'
-                    }}>
-                      {results.fullRiasecAnalysis.interactionPattern}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {isAuthenticated && (
-            <div className="unlock-dashboard-cta">
-              <h3>Your Blueprint is Ready</h3>
-              <p>We've mapped your personality to the Indian career landscape. Discover your top career matches, skills gaps, recommended colleges, and your personalised execution plan.</p>
-              <button 
-                className="btn-unlock" 
-                onClick={() => {
-                  if (onSaveResults) {
-                    onSaveResults(results);
-                  }
-                }}
-              >
-                Unlock My Comprehensive Dashboard →
-              </button>
-            </div>
-          )}
-
-        </div>
-      </div>
-    );
-  }
-
-  // Show dynamic question generation screen
-  if (generatingQuestions) {
-    return (
-      <div className="vv-root">
-        <Header badge="Personalizing..." showNav={false} />
-        <div className="vv-loading" ref={topRef}>
-          <div className="vv-loading-spinner" />
-          <h3>Tailoring your assessment, {info.name.split(' ')[0]}...</h3>
-          <p style={{ color:'var(--muted)', fontSize:'15px', marginTop:'8px', lineHeight:1.6 }}>
-            Our AI is analyzing your academic profile to create questions specifically designed for your grade level and learning style.
-          </p>
-          <div className="vv-loading-steps" style={{ marginTop: '32px' }}>
-            <div className="loading-step active">
-              <div className="step-dot" />Analyzing your grade level and subjects
-            </div>
-            <div className="loading-step active">
-              <div className="step-dot" />Identifying your academic strengths
-            </div>
-            <div className="loading-step active">
-              <div className="step-dot" />Generating personalized questions
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const section     = ALL_SECTIONS[currentSection];
-  const isLast      = currentSection === ALL_SECTIONS.length - 1;
-  const isFirst     = currentSection === 0;
-  const sectionDone = isSectionComplete(currentSection);
-  
-  // Get the appropriate questions for current section
-  const getCurrentSectionQuestions = () => {
-    if (section.id === 'skills' && dynamicSkillsQuestions) {
-      return dynamicSkillsQuestions;
-    }
-    if (section.id === 'academics' && dynamicAcademicQuestions) {
-      return dynamicAcademicQuestions;
-    }
-    return section.questions;
-  };
-  
-  const currentQuestions = getCurrentSectionQuestions();
-
-  const sectionMeta = {
-    info:        { badge:'Your Profile',                    desc:'Tell us about yourself so we can personalise everything.' },
-    activities:  { badge:'Interest Assessment — 12 Questions', desc:'Rate how much you genuinely enjoy each activity on a scale of 1 (not at all) to 5 (absolutely love it). Be honest — there are no right answers.' },
-    skills:      { badge:'Abilities Assessment — 12 Questions', desc:'Rate how naturally skilled you consider yourself at each area. 1 = not naturally strong here, 5 = this comes very easily to me.' },
-    academics:   { badge:'Academic Profile — 6 Questions',  desc:'Tell us about your academic strengths and how you learn best.' },
-    values:      { badge:'Values & Work Life — 6 Questions',desc:'What matters most to you in a career and life? Choose the option that feels truly honest.' },
-    personality: { badge:'Personality Profile — 6 Questions', desc:'How do you actually think, feel, and behave under pressure? This helps us understand your working style.' },
-    future:      { badge:'Future Vision — 6 Questions',     desc:'Where are you heading? These questions connect your RIASEC profile to 2025–26 career trends.' },
-  };
-
-  const sm = sectionMeta[section.id];
-
-  return (
-    <div className="vv-root">
-      <Header badge={`${currentSection + 1} of ${ALL_SECTIONS.length}`} showNav={false} />
-
-      {currentSection > 0 && (
-        <div className="vv-progress-wrap">
-          <div className="vv-section-pills">
-            {ALL_SECTIONS.slice(1).map((s, i) => {
-              const realIdx = i + 1;
-              const st = realIdx < currentSection ? 'done' : realIdx === currentSection ? 'active' : 'todo';
-              return (
-                <div key={s.id} className={`vv-section-pill ${st}`}>
-                  {st === 'done' ? '✓' : s.emoji} {s.label}
-                </div>
-              );
-            })}
-          </div>
-          <div className="vv-progress-right">
-            <div className="vv-progress-bar-bg">
-              <div className="vv-progress-fill" style={{ width:`${progress}%` }} />
-            </div>
-            <span className="vv-progress-pct">{progress}%</span>
-          </div>
-        </div>
-      )}
-
-      <div className="vv-form-card" ref={topRef}>
-        {error && <div className="error-box">⚠️ {error}</div>}
-
-        <div className="vv-section-header">
-          <div className="vv-section-badge">{sm.badge}</div>
-          <h2>{section.label}</h2>
-          <p>{sm.desc}</p>
-        </div>
-
-        {section.id === 'info' && (
-          <div>
-            <div className="vv-two-col">
-              {auth?.currentUser?.displayName ? (
-                <div className="vv-field">
-                  <label>Your Full Name *</label>
-                  <div style={{ padding: '14px 18px', background: '#f8fafc', borderRadius: '12px', border: '2px solid rgba(45,125,70,0.2)', color: 'var(--dark)', fontWeight: 600, fontSize: '15px' }}>
-                    {info.name} <span style={{color: 'var(--success)', float: 'right', fontSize: '12px'}}>✓ Auto-filled</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="vv-field">
-                  <label>Your Full Name *</label>
-                  <input value={info.name} onChange={e => setInfo({...info, name:e.target.value})} placeholder="e.g. Arjun Sharma" />
-                </div>
-              )}
-              <div className="vv-field">
-                <label>Current Class / Level *</label>
-                <select value={info.class} onChange={e => setInfo({...info, class:e.target.value})}>
-                  <option value="">Select your level</option>
-                  {CLASS_LEVELS.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="vv-two-col">
-              <div className="vv-field">
-                <label>Your City &amp; State</label>
-                <input value={info.city} onChange={e => setInfo({...info, city:e.target.value})} placeholder="e.g. Pune, Maharashtra" />
-              </div>
-              <div className="vv-field">
-                <label>Board / University</label>
-                <input value={info.boards} onChange={e => setInfo({...info, boards:e.target.value})} placeholder="e.g. CBSE, Maharashtra Board" />
-              </div>
-            </div>
-            <div className="vv-field">
-              <label>Any career dream you already have? (Optional)</label>
-              <input value={info.aspiration} onChange={e => setInfo({...info, aspiration:e.target.value})} placeholder="e.g. I want to work in AI, or I'm considering medicine" />
+            <div className="q-scale-labels">
+              <span className="q-scale-label">{q.scaleLabels?.min || 'Strongly Disagree'}</span>
+              <span className="q-scale-label right">{q.scaleLabels?.max || 'Strongly Agree'}</span>
             </div>
           </div>
         )}
+      </div>
+    );
+  };
 
-        {(section.id === 'activities' || section.id === 'skills') && currentQuestions.map((q, idx) => (
-          <div key={q.id} className={`q-card ${answers[q.id] !== undefined ? 'answered' : ''}`}>
-            <div className="q-card-top">
-              <div className="q-number">Question {idx + 1} of {section.questions.length}</div>
-              <div className="q-check">{answers[q.id] !== undefined ? '✓' : ''}</div>
+  const renderSingleQuestion = (q, idx, total) => {
+    const answered = studentProfile[q.id] !== undefined;
+    return (
+      <div key={q.id} className={`q-card ${answered ? 'answered' : ''}`}>
+        <div className="q-card-top">
+          <div className="q-number">Q{idx + 1} of {total}</div>
+          <div className="q-check">{answered ? '✓' : ''}</div>
+        </div>
+        <div className="q-text">{q.question}</div>
+        <div className={`choice-grid ${(q.options || []).length <= 4 ? 'single-col' : ''}`}>
+          {(q.options || []).map((opt, i) => (
+            <button
+              key={i}
+              className={`choice-btn ${studentProfile[q.id] === opt ? 'selected' : ''}`}
+              onClick={() => setField(q.id, opt)}
+            >
+              <span>{opt}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderMultipleQuestion = (q, idx, total) => {
+    const selected = Array.isArray(studentProfile[q.id]) ? studentProfile[q.id] : [];
+    const answered = selected.length > 0;
+    return (
+      <div key={q.id} className={`q-card ${answered ? 'answered' : ''}`}>
+        <div className="q-card-top">
+          <div className="q-number">Q{idx + 1} of {total}</div>
+          <div className="q-check">{answered ? '✓' : ''}</div>
+        </div>
+        <div className="q-text">{q.question}</div>
+        <div className="ca-chips-wrap">
+          {(q.options || []).map((opt, i) => (
+            <button
+              key={i}
+              className={`ca-chip ${selected.includes(opt) ? 'selected' : ''}`}
+              onClick={() => toggleMulti(q.id, opt)}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+        {selected.length > 0 && (
+          <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--success)', fontWeight: 600 }}>
+            ✓ {selected.length} selected
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderRankingQuestion = (q, idx, total) => {
+    const currentOrder = Array.isArray(studentProfile[q.id])
+      ? studentProfile[q.id]
+      : q.options;
+    const answered = Array.isArray(studentProfile[q.id]) && studentProfile[q.id].length === q.options.length;
+
+    return (
+      <div key={q.id} className={`q-card ${answered ? 'answered' : ''}`}>
+        <div className="q-card-top">
+          <div className="q-number">Q{idx + 1} of {total}</div>
+          <div className="q-check">{answered ? '✓' : ''}</div>
+        </div>
+        <div className="q-text">{q.question}</div>
+        <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '12px', fontWeight: 600 }}>
+          Use the arrows to reorder — #1 is most important to you.
+        </div>
+        <div className="ranking-list">
+          {currentOrder.map((item, i) => (
+            <div key={String(item)} className="ranking-item">
+              <div className="rank-num">{i + 1}</div>
+              <div className="rank-text">{String(item)}</div>
+              <div className="rank-arrows">
+                <button
+                  className="rank-arrow"
+                  onClick={() => moveRankItem(q.id, currentOrder, i, i - 1)}
+                  disabled={i === 0}
+                  title="Move up"
+                >▲</button>
+                <button
+                  className="rank-arrow"
+                  onClick={() => moveRankItem(q.id, currentOrder, i, i + 1)}
+                  disabled={i === currentOrder.length - 1}
+                  title="Move down"
+                >▼</button>
+              </div>
             </div>
-            <div className="q-text">{q.text}</div>
-            <div className="q-scale-wrap">
-              <div className="q-scale-labels">
-                <span className="q-scale-label">{section.id === 'activities' ? 'Not at all' : 'Not naturally skilled'}</span>
-                <span className="q-scale-label">{section.id === 'activities' ? 'Absolutely love it' : 'Comes very naturally'}</span>
-              </div>
-              <div className="q-scale">
-                {[1, 2, 3, 4, 5].map(v => (
-                  <button key={v} className={`scale-btn ${answers[q.id] === v ? 'selected' : ''}`} onClick={() => setAnswer(q.id, v)}>{v}</button>
-                ))}
-              </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderQuestion = (q, idx, total) => {
+    switch (q.type) {
+      case 'scale':    return renderScaleQuestion(q, idx, total);
+      case 'single':   return renderSingleQuestion(q, idx, total);
+      case 'multiple': return renderMultipleQuestion(q, idx, total);
+      case 'ranking':  return renderRankingQuestion(q, idx, total);
+      default:         return null;
+    }
+  };
+
+  // ── STEP CONTENT ────────────────────────────────────────────────────────────
+
+  const renderIntakeStep = () => {
+    const ageQ      = demographicQuestions[0];
+    const levelQ    = demographicQuestions[1];
+    const marksQ    = demographicQuestions[2];
+    const subjectsQ = demographicQuestions[3];
+
+    const selectedSubjects = Array.isArray(studentProfile['dem_04']) ? studentProfile['dem_04'] : [];
+
+    return (
+      <div>
+        <div className="ca-info-card">
+          <h4>📅 Age & Education Level</h4>
+          <div className="ca-two-col">
+            <div className="ca-field">
+              <label>{ageQ.question} *</label>
+              <select
+                value={studentProfile['dem_01'] || ''}
+                onChange={e => setField('dem_01', e.target.value)}
+              >
+                <option value="">Select your age range</option>
+                {ageQ.options.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+            <div className="ca-field">
+              <label>{levelQ.question} *</label>
+              <select
+                value={studentProfile['dem_02'] || ''}
+                onChange={e => setField('dem_02', e.target.value)}
+              >
+                <option value="">Select your level</option>
+                {levelQ.options.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
             </div>
           </div>
-        ))}
+        </div>
 
-        {['academics','values','personality','future'].includes(section.id) && currentQuestions.map((q, idx) => (
-          <div key={q.id} className={`q-card ${answers[q.id] !== undefined ? 'answered' : ''}`}>
-            <div className="q-card-top">
-              <div className="q-number">Question {idx + 1} of {section.questions.length}</div>
-              <div className="q-check">{answers[q.id] !== undefined ? '✓' : ''}</div>
-            </div>
-            <div className="q-text">{q.text}</div>
-            <div className={`choice-grid ${q.choices.length <= 4 ? 'single-col' : ''}`}>
-              {q.choices.map((c, i) => (
+        <div className="ca-info-card">
+          <h4>📊 Academic Performance</h4>
+          <div className="ca-field">
+            <label>{marksQ.question} *</label>
+            <div className="choice-grid">
+              {marksQ.options.map(opt => (
                 <button
-                  key={i}
-                  className={`choice-btn ${answers[q.id] === c.text ? 'selected' : ''}`}
-                  onClick={() => setAnswer(q.id, c.text)}
+                  key={opt}
+                  className={`choice-btn ${studentProfile['dem_03'] === opt ? 'selected' : ''}`}
+                  onClick={() => setField('dem_03', opt)}
                 >
-                  <span className="cb-icon">{c.icon}</span>
-                  <span>{c.text}</span>
+                  <span>{opt}</span>
                 </button>
               ))}
             </div>
           </div>
-        ))}
+        </div>
 
-        <div className="vv-nav">
-          <button className="btn-back" onClick={() => setCurrentSection(Math.max(0, currentSection - 1))} style={{ visibility:isFirst ? 'hidden' : 'visible' }}>
+        <div className="ca-info-card">
+          <h4>📚 Best Subjects & Interests</h4>
+          <div className="ca-field">
+            <label>{subjectsQ.question} *</label>
+            <div className="ca-chips-wrap">
+              {subjectsQ.options.map(opt => (
+                <button
+                  key={opt}
+                  className={`ca-chip ${selectedSubjects.includes(opt) ? 'selected' : ''}`}
+                  onClick={() => toggleMulti('dem_04', opt)}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+            {selectedSubjects.length > 0 && (
+              <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--success)', fontWeight: 600 }}>
+                ✓ {selectedSubjects.length} subject{selectedSubjects.length > 1 ? 's' : ''} selected
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="ca-info-card">
+          <h4>✨ A Little More About You (Optional)</h4>
+          <div className="ca-two-col">
+            <div className="ca-field">
+              <label>Your Name</label>
+              {auth?.currentUser?.displayName ? (
+                <div className="ca-autofill-box">
+                  {studentProfile['_name'] || auth.currentUser.displayName}
+                  <span className="ca-autofill-tag">✓ Auto-filled</span>
+                </div>
+              ) : (
+                <input
+                  value={studentProfile['_name'] || ''}
+                  onChange={e => setField('_name', e.target.value)}
+                  placeholder="e.g. Arjun Sharma"
+                />
+              )}
+            </div>
+            <div className="ca-field">
+              <label>City &amp; State</label>
+              <input
+                value={studentProfile['_city'] || ''}
+                onChange={e => setField('_city', e.target.value)}
+                placeholder="e.g. Pune, Maharashtra"
+              />
+            </div>
+          </div>
+          <div className="ca-field">
+            <label>Any career dream or aspiration you already have?</label>
+            <input
+              value={studentProfile['_aspiration'] || ''}
+              onChange={e => setField('_aspiration', e.target.value)}
+              placeholder="e.g. I want to work in AI, or I'm considering medicine"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMaturityStep = () => {
+    const qs = STEP_QUESTIONS['maturity'];
+    return (
+      <div>
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(232,101,10,0.06), rgba(10,92,99,0.06))',
+          border: '1px solid rgba(232,101,10,0.15)',
+          borderRadius: '14px',
+          padding: '16px 20px',
+          marginBottom: '24px',
+          fontSize: '14px',
+          color: 'var(--brown)',
+          lineHeight: 1.65,
+        }}>
+          <strong>💡 How to answer:</strong> These are scenario-based questions. Choose the response that most honestly reflects how you would actually behave — not the "ideal" answer.
+        </div>
+        {qs.map((q, idx) => {
+          const answered = studentProfile[q.id] !== undefined && studentProfile[q.id] !== '';
+          if (q.type === 'scale') {
+            return renderScaleQuestion(q, idx, qs.length);
+          }
+          return (
+            <div key={q.id} className={`maturity-card ${answered ? 'answered' : ''}`}>
+              <div className="q-card-top">
+                <div className="q-number">Scenario {idx + 1} of {qs.length}</div>
+                <div className="q-check">{answered ? '✓' : ''}</div>
+              </div>
+              <div className="maturity-scenario">{q.question}</div>
+              <div className="choice-grid single-col">
+                {(q.options || []).map((opt, i) => (
+                  <button
+                    key={i}
+                    className={`choice-btn ${studentProfile[q.id] === opt ? 'selected' : ''}`}
+                    onClick={() => setField(q.id, opt)}
+                  >
+                    <span>{opt}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderRiasecStep = (stepId) => {
+    const qs = STEP_QUESTIONS[stepId];
+    const riasecKey = currentStep.riasecKey;
+    const meta = RIASEC_COLORS[riasecKey];
+
+    const scaleQs  = qs.filter(q => q.type === 'scale');
+    const singleQs = qs.filter(q => q.type === 'single');
+
+    const answeredScale  = scaleQs.filter(q => studentProfile[q.id] !== undefined).length;
+    const answeredSingle = singleQs.filter(q => studentProfile[q.id] !== undefined).length;
+
+    return (
+      <div>
+        <div style={{
+          background: meta.bg,
+          border: `2px solid ${meta.color}22`,
+          borderRadius: '16px',
+          padding: '20px 24px',
+          marginBottom: '28px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+        }}>
+          <div style={{
+            width: '56px', height: '56px', borderRadius: '14px',
+            background: meta.color, color: 'white',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '28px', fontWeight: '700',
+            fontFamily: "'Playfair Display', serif",
+            flexShrink: 0,
+          }}>
+            {riasecKey}
+          </div>
+          <div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: meta.color, fontFamily: "'Playfair Display', serif" }}>
+              {meta.label} — {meta.desc}
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '3px' }}>
+              {SECTION_META[stepId]?.description}
+            </div>
+          </div>
+        </div>
+
+        {scaleQs.length > 0 && (
+          <>
+            <div className="ca-section-divider">
+              <div className="ca-section-divider-line" />
+              <div className="ca-section-divider-label">
+                Likert Scale — {answeredScale}/{scaleQs.length} answered
+              </div>
+              <div className="ca-section-divider-line" />
+            </div>
+            {scaleQs.map((q, idx) => renderScaleQuestion(q, idx, scaleQs.length))}
+          </>
+        )}
+
+        {singleQs.length > 0 && (
+          <>
+            <div className="ca-section-divider">
+              <div className="ca-section-divider-line" />
+              <div className="ca-section-divider-label">
+                Scenario Question — {answeredSingle}/{singleQs.length} answered
+              </div>
+              <div className="ca-section-divider-line" />
+            </div>
+            {singleQs.map((q, idx) => renderSingleQuestion(q, idx, singleQs.length))}
+          </>
+        )}
+      </div>
+    );
+  };
+
+  const renderValuesStep = () => {
+    const qs = STEP_QUESTIONS['values'];
+
+    const hobbiesQs  = qs.filter(q => ['ext_01','ext_02','ext_03'].includes(q.id));
+    const envQs      = qs.filter(q => ['ext_04','ext_05','ext_06','ext_07','ext_08','ext_09','ext_10'].includes(q.id));
+    const stressQs   = qs.filter(q => ['ext_11','ext_12','ext_13','ext_14','ext_15','ext_16','ext_17','ext_18'].includes(q.id));
+
+    const renderGroup = (groupQs, startIdx) =>
+      groupQs.map((q, i) => renderQuestion(q, startIdx + i, qs.length));
+
+    return (
+      <div>
+        <div className="ca-section-divider">
+          <div className="ca-section-divider-line" />
+          <div className="ca-section-divider-label">🎯 Hobbies & Extracurriculars</div>
+          <div className="ca-section-divider-line" />
+        </div>
+        {renderGroup(hobbiesQs, 0)}
+
+        <div className="ca-section-divider">
+          <div className="ca-section-divider-line" />
+          <div className="ca-section-divider-label">🏢 Work Environment & Values</div>
+          <div className="ca-section-divider-line" />
+        </div>
+        {renderGroup(envQs, hobbiesQs.length)}
+
+        <div className="ca-section-divider">
+          <div className="ca-section-divider-line" />
+          <div className="ca-section-divider-label">💪 Stress Tolerance & Resilience</div>
+          <div className="ca-section-divider-line" />
+        </div>
+        {renderGroup(stressQs, hobbiesQs.length + envQs.length)}
+      </div>
+    );
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep.id) {
+      case 'intake':        return renderIntakeStep();
+      case 'maturity':      return renderMaturityStep();
+      case 'realistic':
+      case 'investigative':
+      case 'artistic':
+      case 'social':
+      case 'enterprising':
+      case 'conventional':  return renderRiasecStep(currentStep.id);
+      case 'values':        return renderValuesStep();
+      default:              return null;
+    }
+  };
+
+  // ── ANSWERED COUNT for current step ────────────────────────────────────────
+  const currentStepQs = STEP_QUESTIONS[currentStep.id] || [];
+  const currentAnswered = countAnswered(currentStepQs, studentProfile);
+
+  // ── RENDER ──────────────────────────────────────────────────────────────────
+
+  // If results are computed, show results screen
+  if (results) {
+    return (
+      <div className="ca-root">
+        <header className="ca-header">
+          <div className="ca-logo" onClick={onBack}>Vidya<span>Vantage</span></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {onExplore && (
+              <button
+                onClick={onExplore}
+                style={{
+                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                  color: 'rgba(255,255,255,0.8)', padding: '8px 18px', borderRadius: '20px',
+                  fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                🔎 Explore Careers
+              </button>
+            )}
+            <div className="ca-badge">Results Ready ✓</div>
+          </div>
+        </header>
+        <div ref={topRef} />
+        <ResultsScreen
+          results={results}
+          onBack={() => { setResults(null); setStep(0); setStudentProfile({}); }}
+          onExplore={onExplore}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="ca-root">
+      {/* Header */}
+      <header className="ca-header">
+        <div className="ca-logo" onClick={onBack}>Vidya<span>Vantage</span></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {onExplore && (
+            <button
+              onClick={onExplore}
+              style={{
+                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                color: 'rgba(255,255,255,0.8)', padding: '8px 18px', borderRadius: '20px',
+                fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              🔎 Explore Careers
+            </button>
+          )}
+          <div className="ca-badge">Step {step + 1} of {STEPS.length}</div>
+        </div>
+      </header>
+
+      {/* Progress bar */}
+      <div className="ca-progress-wrap">
+        <div className="ca-step-pills">
+          {STEPS.map((s, i) => {
+            const status = i < step ? 'done' : i === step ? 'active' : 'todo';
+            return (
+              <div key={s.id} className={`ca-step-pill ${status}`}>
+                {status === 'done' ? '✓' : s.emoji} {s.label}
+              </div>
+            );
+          })}
+        </div>
+        <div className="ca-progress-right">
+          <div className="ca-progress-bar-bg">
+            <div className="ca-progress-fill" style={{ width: `${progressPct}%` }} />
+          </div>
+          <span className="ca-progress-pct">{progressPct}%</span>
+        </div>
+      </div>
+
+      {/* Form */}
+      <div className="ca-form-card" ref={topRef}>
+        {error && <div className="error-box">⚠️ {error}</div>}
+
+        {/* Section header */}
+        <div className="ca-section-header">
+          <div className="ca-section-badge">{currentStep.badge}</div>
+          <span className="ca-section-icon">{currentStep.emoji}</span>
+          <h2>{currentStep.title}</h2>
+          <p>{currentStep.desc}</p>
+        </div>
+
+        {/* Step content */}
+        {renderStepContent()}
+
+        {/* Navigation */}
+        <div className="ca-nav">
+          <button
+            className="btn-back"
+            onClick={goBack}
+            style={{ visibility: isFirst ? 'hidden' : 'visible' }}
+          >
             ← Back
           </button>
-          {currentSection > 0 && (
-            <span className="section-progress-note">
-              {currentQuestions.filter(q => answers[q.id] !== undefined).length} / {currentQuestions.length} answered
+
+          {currentStepQs.length > 0 && (
+            <span className="ca-progress-note">
+              {currentAnswered} / {currentStepQs.length} answered
             </span>
           )}
+
           {isLast ? (
-            <button className="btn-next" onClick={fetchAnalysis} disabled={!sectionDone}>
-              Analyse My Career Profile 🚀
+            <button
+              className="btn-calculate"
+              onClick={handleCalculate}
+              disabled={!stepDone}
+            >
+              🚀 Calculate My Results
             </button>
           ) : (
-            <button 
-              className="btn-next" 
-              onClick={() => {
-                // Trigger dynamic generation after profile section
-                if (currentSection === 0 && !dynamicSkillsQuestions && !dynamicAcademicQuestions) {
-                  generateDynamicQuestions();
-                } else {
-                  setCurrentSection(currentSection + 1);
-                }
-              }} 
-              disabled={!sectionDone}
+            <button
+              className="btn-next"
+              onClick={goNext}
+              disabled={!stepDone}
             >
               Continue →
             </button>
