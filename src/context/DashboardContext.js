@@ -4,6 +4,137 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 // MOCK DATA — Realistic seed data for frontend prototype
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── DEFAULT USER PROFILE STATE ───────────────────────────────────────────────
+// Used as the base shape for any logged-in student's gamified profile.
+const DEFAULT_USER_PROFILE = {
+  // Basic identity
+  profilePicture: null,          // URL string or null
+  interests: [],                 // e.g. ['Technology', 'Music']
+  hobbies: [],                   // e.g. ['Reading', 'Sketching']
+  tvShows: [],                   // e.g. ['Breaking Bad', 'Dark']
+  movies: [],                    // e.g. ['Interstellar', '3 Idiots']
+  games: [],                     // e.g. ['Chess', 'Minecraft']
+  sports: [],                    // e.g. ['Cricket', 'Badminton']
+
+  // Education details
+  education: {
+    schoolName: '',              // e.g. 'Delhi Public School'
+    address: '',                 // e.g. 'R.K. Puram, New Delhi'
+    yearOfPassing: '',           // e.g. '2026'
+    isPursuing: true,            // true if currently enrolled
+    highestLevel: '',            // e.g. 'Class 12', 'Graduation'
+    subjects: [],                // e.g. ['Physics', 'Chemistry', 'Maths']
+    electives: [],               // e.g. ['Physical Education', 'Fine Arts']
+    marksType: 'percentage',     // 'percentage' | 'cgpa' | 'grade'
+    marksValue: '',              // e.g. '91.4' or '9.2'
+  },
+
+  // Gamification
+  exPoints: 0,                   // Experience Points — updated by calculateExPoints()
+};
+
+// ── MOCK SOCIAL FEED ─────────────────────────────────────────────────────────
+const INITIAL_SOCIAL_FEED = [
+  {
+    id: 'feed-001',
+    type: 'platform_update',
+    title: '🚀 Secret Sharz 2.0 is Live!',
+    body: 'We have rolled out a brand-new gamified dashboard experience. Earn XP, unlock badges, and track your career journey like never before!',
+    author: 'Secret Sharz Team',
+    authorAvatar: null,
+    timestamp: '2026-05-30T09:00:00.000Z',
+    likes: 142,
+    comments: 18,
+    tags: ['platform', 'update', 'gamification'],
+  },
+  {
+    id: 'feed-002',
+    type: 'blog_post',
+    title: '📚 Top 10 Career Paths After Class 12 Science',
+    body: 'Confused about what to do after your boards? Our latest blog breaks down the top 10 career options for PCB and PCM students with real salary data and growth projections.',
+    author: 'Dr. Meera Nair',
+    authorAvatar: null,
+    timestamp: '2026-05-28T11:30:00.000Z',
+    likes: 89,
+    comments: 34,
+    tags: ['blog', 'career', 'science', 'class12'],
+    readUrl: '/blog/top-10-careers-after-class-12-science',
+  },
+  {
+    id: 'feed-003',
+    type: 'blog_post',
+    title: '🎓 How to Choose the Right College: A Step-by-Step Guide',
+    body: 'Choosing a college is one of the most important decisions of your life. In this post, Prof. Arjun Kapoor walks you through a structured framework to evaluate colleges beyond just rankings.',
+    author: 'Prof. Arjun Kapoor',
+    authorAvatar: null,
+    timestamp: '2026-05-25T08:00:00.000Z',
+    likes: 67,
+    comments: 22,
+    tags: ['blog', 'college', 'admissions', 'guide'],
+    readUrl: '/blog/how-to-choose-the-right-college',
+  },
+  {
+    id: 'feed-004',
+    type: 'platform_update',
+    title: '🧠 New Feature: RIASEC Career Assessment v2',
+    body: 'Our upgraded career assessment now includes 60 questions, a detailed personality breakdown, and AI-powered career match scores. Retake your assessment to see your updated results!',
+    author: 'Secret Sharz Team',
+    authorAvatar: null,
+    timestamp: '2026-05-20T10:00:00.000Z',
+    likes: 203,
+    comments: 41,
+    tags: ['platform', 'feature', 'assessment', 'riasec'],
+  },
+];
+
+// ── MOCK NOTIFICATIONS ───────────────────────────────────────────────────────
+const INITIAL_NOTIFICATIONS = [
+  {
+    id: 'notif-001',
+    type: 'system_alert',
+    title: 'Complete Your Profile to Earn 200 XP!',
+    message: 'Your profile is 40% complete. Add your education details, hobbies, and a profile picture to unlock bonus experience points and get better career recommendations.',
+    isRead: false,
+    priority: 'high',
+    timestamp: '2026-06-01T08:00:00.000Z',
+    actionLabel: 'Complete Profile',
+    actionUrl: '/student-dashboard/profile',
+  },
+  {
+    id: 'notif-002',
+    type: 'counsellor_message',
+    title: 'Dr. Meera Nair sent you a message',
+    message: 'Hi! I have reviewed your RIASEC results. Please check your homework task for this week — research 3 psychology colleges and their admission criteria.',
+    isRead: false,
+    priority: 'medium',
+    timestamp: '2026-05-31T14:30:00.000Z',
+    actionLabel: 'View Message',
+    actionUrl: '/student-dashboard/counsellor',
+  },
+  {
+    id: 'notif-003',
+    type: 'platform_update',
+    title: 'New Blog Post: Top 10 Careers After Class 12',
+    message: 'A new article has been published that matches your interests. Check out the top career paths for Science students.',
+    isRead: true,
+    priority: 'low',
+    timestamp: '2026-05-28T11:30:00.000Z',
+    actionLabel: 'Read Now',
+    actionUrl: '/blog/top-10-careers-after-class-12-science',
+  },
+  {
+    id: 'notif-004',
+    type: 'achievement',
+    title: '🏆 Achievement Unlocked: First Assessment!',
+    message: 'Congratulations! You completed your first RIASEC Career Assessment. You have earned 100 XP. Keep going to unlock more achievements!',
+    isRead: true,
+    priority: 'low',
+    timestamp: '2026-05-15T16:00:00.000Z',
+    actionLabel: 'View Achievements',
+    actionUrl: '/student-dashboard/achievements',
+  },
+];
+
 const INITIAL_STUDENTS = [
   {
     id: 'student-001',
@@ -175,6 +306,11 @@ export function DashboardProvider({ children, navigate }) {
   const [counsellors, setCounsellors] = useState(INITIAL_COUNSELLORS);
   const [assignments, setAssignments] = useState(INITIAL_ASSIGNMENTS);
 
+  // ── GAMIFIED USER PROFILE STATE ──────────────────────────────────────────
+  const [userProfile, setUserProfile] = useState(DEFAULT_USER_PROFILE);
+  const [socialFeed] = useState(INITIAL_SOCIAL_FEED);
+  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+
   // ── STUDENT HELPERS ──────────────────────────────────────────────────────
 
   /** Returns the counsellor object assigned to a given student, or null */
@@ -321,6 +457,130 @@ export function DashboardProvider({ children, navigate }) {
     );
   }, []);
 
+  // ── GAMIFIED PROFILE HELPERS ─────────────────────────────────────────────
+
+  /**
+   * calculateExPoints(profileData)
+   *
+   * Evaluates how many gamified profile fields are filled out and updates
+   * the `exPoints` value on the userProfile state.
+   *
+   * Point breakdown:
+   *   +100  Education section fully filled (schoolName + highestLevel + marksValue)
+   *   +50   Profile picture uploaded
+   *   +30   Interests list has at least one entry
+   *   +20   Hobbies list has at least one entry
+   *   +15   TV Shows list has at least one entry
+   *   +15   Movies list has at least one entry
+   *   +15   Games list has at least one entry
+   *   +15   Sports list has at least one entry
+   *   +20   Education subjects filled (at least one subject)
+   *   +10   Education electives filled (at least one elective)
+   *   +10   Education address filled
+   *   +10   Education yearOfPassing filled
+   *
+   * @param {object} profileData - A profile object matching DEFAULT_USER_PROFILE shape.
+   *                               If omitted, the current userProfile state is used.
+   * @returns {number} The newly calculated exPoints total.
+   */
+  const calculateExPoints = useCallback((profileData) => {
+    const data = profileData || userProfile;
+    let points = 0;
+
+    // ── Profile picture ──────────────────────────────────────────────────
+    if (data.profilePicture) points += 50;
+
+    // ── Interests ────────────────────────────────────────────────────────
+    if (Array.isArray(data.interests) && data.interests.length > 0) points += 30;
+
+    // ── Hobbies ──────────────────────────────────────────────────────────
+    if (Array.isArray(data.hobbies) && data.hobbies.length > 0) points += 20;
+
+    // ── TV Shows ─────────────────────────────────────────────────────────
+    if (Array.isArray(data.tvShows) && data.tvShows.length > 0) points += 15;
+
+    // ── Movies ───────────────────────────────────────────────────────────
+    if (Array.isArray(data.movies) && data.movies.length > 0) points += 15;
+
+    // ── Games ────────────────────────────────────────────────────────────
+    if (Array.isArray(data.games) && data.games.length > 0) points += 15;
+
+    // ── Sports ───────────────────────────────────────────────────────────
+    if (Array.isArray(data.sports) && data.sports.length > 0) points += 15;
+
+    // ── Education ────────────────────────────────────────────────────────
+    const edu = data.education || {};
+
+    // Core education completion: schoolName + highestLevel + marksValue = +100
+    const eduCoreComplete =
+      edu.schoolName && edu.schoolName.trim() !== '' &&
+      edu.highestLevel && edu.highestLevel.trim() !== '' &&
+      edu.marksValue && String(edu.marksValue).trim() !== '';
+    if (eduCoreComplete) points += 100;
+
+    // Address filled
+    if (edu.address && edu.address.trim() !== '') points += 10;
+
+    // Year of passing filled
+    if (edu.yearOfPassing && String(edu.yearOfPassing).trim() !== '') points += 10;
+
+    // Subjects filled
+    if (Array.isArray(edu.subjects) && edu.subjects.length > 0) points += 20;
+
+    // Electives filled
+    if (Array.isArray(edu.electives) && edu.electives.length > 0) points += 10;
+
+    // ── Persist to state ─────────────────────────────────────────────────
+    setUserProfile(prev => ({ ...prev, exPoints: points }));
+
+    return points;
+  }, [userProfile]);
+
+  /**
+   * updateUserProfile(updates)
+   * Merges partial updates into the userProfile state.
+   * Automatically recalculates exPoints after every update.
+   *
+   * @param {Partial<DEFAULT_USER_PROFILE>} updates
+   */
+  const updateUserProfile = useCallback((updates) => {
+    setUserProfile(prev => {
+      const merged = { ...prev, ...updates };
+      // Deep-merge education sub-object if provided
+      if (updates.education) {
+        merged.education = { ...prev.education, ...updates.education };
+      }
+      return merged;
+    });
+    // Re-run XP calculation after state settles (next tick)
+    setTimeout(() => {
+      setUserProfile(prev => {
+        const points = calculateExPoints(prev);
+        return { ...prev, exPoints: points };
+      });
+    }, 0);
+  }, [calculateExPoints]);
+
+  /**
+   * markNotificationRead(notifId)
+   * Marks a single notification as read.
+   *
+   * @param {string} notifId
+   */
+  const markNotificationRead = useCallback((notifId) => {
+    setNotifications(prev =>
+      prev.map(n => n.id === notifId ? { ...n, isRead: true } : n)
+    );
+  }, []);
+
+  /**
+   * markAllNotificationsRead()
+   * Marks all notifications as read.
+   */
+  const markAllNotificationsRead = useCallback(() => {
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  }, []);
+
   // ── COUNSELLOR HELPERS ───────────────────────────────────────────────────
 
   /** Update any field(s) on a counsellor record */
@@ -403,6 +663,17 @@ export function DashboardProvider({ children, navigate }) {
 
     // Derived
     stats,
+
+    // ── Gamified profile ────────────────────────────────────────────────
+    userProfile,
+    updateUserProfile,
+    calculateExPoints,
+
+    // ── Social / notifications ──────────────────────────────────────────
+    socialFeed,
+    notifications,
+    markNotificationRead,
+    markAllNotificationsRead,
   };
 
   return (
