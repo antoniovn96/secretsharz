@@ -236,6 +236,74 @@ export function DashboardProvider({ children, navigate }) {
     );
   }, []);
 
+  /**
+   * Save a student's completed RIASEC assessment results to their profile.
+   * Persists the Holland Code, recommended stream, and top career matches
+   * both in the in-memory context state and (if Firebase is available) to
+   * the Firestore `users` collection.
+   *
+   * @param {string} studentId  - The authenticated user's UID / student id.
+   * @param {{ hollandCode: string[], riasecScores: object, streams: object[], top5Careers: object[], maturityPct: number, profile: object }} assessmentResults
+   */
+  const saveAssessmentResults = useCallback(async (studentId, assessmentResults) => {
+    const { hollandCode, riasecScores, streams, top5Careers, maturityPct } = assessmentResults;
+
+    // Derive the three-letter code string (e.g. "ISA")
+    const riasecCode = Array.isArray(hollandCode) ? hollandCode.join('') : String(hollandCode || '');
+
+    // Recommended stream is the highest-scoring stream
+    const recommendedStream = Array.isArray(streams) && streams.length > 0
+      ? String(streams[0].id || '')
+      : '';
+
+    // Top career matches — store only serialisable primitives (no object blobs in JSX)
+    const topCareerMatches = Array.isArray(top5Careers)
+      ? top5Careers.map(c => ({
+          name: String(c.name || ''),
+          matchScore: Number(c.matchScore || 0),
+          tags: Array.isArray(c.tags) ? c.tags.map(String) : [],
+          stream: String(c.stream || ''),
+          riasec: Array.isArray(c.riasec) ? c.riasec.map(String) : [],
+        }))
+      : [];
+
+    const updates = {
+      riasecCode,
+      riasecScores: riasecScores || {},
+      recommendedStream,
+      topCareerMatches,
+      maturityPct: Number(maturityPct || 0),
+      assessmentCompletedAt: new Date().toISOString(),
+    };
+
+    // 1. Update in-memory context state so dashboards reflect results immediately
+    setStudents(prev => {
+      const exists = prev.some(s => s.id === studentId);
+      if (exists) {
+        return prev.map(s => s.id === studentId ? { ...s, ...updates } : s);
+      }
+      // If the student isn't in the seed list yet (e.g. a real Firebase user),
+      // add a minimal record so counsellor/admin dashboards can see them.
+      return [...prev, { id: studentId, ...updates }];
+    });
+
+    // 2. Persist to Firebase Firestore (if available at runtime)
+    try {
+      const { db: firestoreDb } = await import('../firebase');
+      const { doc, setDoc } = await import('firebase/firestore');
+      if (firestoreDb) {
+        await setDoc(
+          doc(firestoreDb, 'users', studentId),
+          updates,
+          { merge: true }
+        );
+      }
+    } catch (err) {
+      // Firebase may not be configured in all environments — fail silently
+      console.warn('[saveAssessmentResults] Firestore write skipped:', err?.message || err);
+    }
+  }, []);
+
   /** Add a session note to a student */
   const addSessionToStudent = useCallback((studentId, sessionPayload) => {
     setStudents(prev =>
@@ -325,6 +393,7 @@ export function DashboardProvider({ children, navigate }) {
     unassignStudent,
     updateStudent,
     addSessionToStudent,
+    saveAssessmentResults,
 
     // Counsellor operations
     updateCounsellor,

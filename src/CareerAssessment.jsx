@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { useDashboard } from './context/DashboardContext';
 import {
   demographicQuestions,
   realisticQuestions,
@@ -1352,6 +1353,17 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
   const [results, setResults]         = useState(null);
   const topRef = useRef(null);
 
+  // Pull saveAssessmentResults from the dashboard context.
+  // useDashboard() throws if there is no provider, so we guard with a try/catch
+  // to keep CareerAssessment usable even when rendered outside a DashboardProvider.
+  let saveAssessmentResults = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    ({ saveAssessmentResults } = useDashboard());
+  } catch (_) {
+    // No DashboardProvider in tree — saving will be skipped
+  }
+
   // Inject styles
   useEffect(() => {
     const s = document.createElement('style');
@@ -1487,6 +1499,16 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
     };
 
     setResults(computedResults);
+
+    // ── Persist results to the dashboard context + Firebase ──────────────────
+    // Use the authenticated user's UID as the student ID when available,
+    // otherwise fall back to a stable anonymous key so the data is still saved.
+    const studentId = auth?.currentUser?.uid || '_anonymous';
+    if (saveAssessmentResults) {
+      saveAssessmentResults(studentId, computedResults);
+    }
+
+    // Also call the legacy prop callback if the parent still uses it
     if (onSaveResults) onSaveResults(computedResults);
   };
 

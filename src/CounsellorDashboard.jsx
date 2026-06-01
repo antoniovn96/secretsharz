@@ -848,6 +848,194 @@ export default function CounsellorDashboard({ navigate }) {
           </div>
         );
 
+      case 'intelligence':
+        return (
+          <div>
+            <div className="c-header-bar">
+              <div>
+                <h1>Career Intelligence Reports</h1>
+                <p>RIASEC assessment results for all assigned students.</p>
+              </div>
+            </div>
+
+            {students.length === 0 ? (
+              <div className="c-card"><PremiumEmptyState /></div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {students.map(student => {
+                  const hasAssessment = !!student.riasecCode;
+                  return (
+                    <div key={student.id} style={{
+                      background: hasAssessment
+                        ? 'linear-gradient(135deg, #0F2027 0%, #1a2f4a 60%, #0a2e22 100%)'
+                        : 'var(--card-bg)',
+                      borderRadius: 'var(--r-lg)',
+                      border: hasAssessment ? '1.5px solid rgba(14,165,233,0.25)' : '1.5px dashed var(--border)',
+                      padding: '24px 28px',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      boxShadow: hasAssessment ? '0 8px 32px rgba(0,0,0,0.15)' : 'var(--shadow-sm)'
+                    }}>
+                      {hasAssessment && (
+                        <>
+                          <div style={{ position: 'absolute', top: '-30px', right: '-30px', width: '140px', height: '140px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,233,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                          <div style={{ position: 'absolute', bottom: '-20px', left: '20%', width: '100px', height: '100px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                        </>
+                      )}
+
+                      {/* Student header row */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: hasAssessment ? '20px' : '0', position: 'relative', zIndex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                          <div style={{
+                            width: '44px', height: '44px', borderRadius: '50%',
+                            background: hasAssessment ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'var(--bg)',
+                            border: hasAssessment ? 'none' : '1.5px solid var(--border)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontWeight: '800', fontSize: '1rem',
+                            color: hasAssessment ? 'white' : 'var(--text-muted)'
+                          }}>
+                            {String(student.name || '?').charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: '700', fontSize: '1rem', color: hasAssessment ? 'white' : 'var(--text-main)' }}>
+                              {String(student.name || 'Unknown Student')}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: hasAssessment ? 'rgba(255,255,255,0.45)' : 'var(--text-muted)', marginTop: '2px' }}>
+                              {String(student.gradeLevel || '')} {student.stream1112 ? `• ${String(student.stream1112)}` : ''}
+                            </div>
+                          </div>
+                        </div>
+
+                        {hasAssessment ? (
+                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            <div style={{ fontFamily: 'Inter', fontSize: '32px', fontWeight: '900', color: '#0EA5E9', lineHeight: '1', letterSpacing: '3px' }}>
+                              {String(student.riasecCode || '')}
+                            </div>
+                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', fontWeight: '600', marginTop: '3px', letterSpacing: '1px', textTransform: 'uppercase' }}>Holland Code</div>
+                          </div>
+                        ) : (
+                          <span className="c-badge c-badge-warn">No Assessment</span>
+                        )}
+                      </div>
+
+                      {/* Assessment data */}
+                      {hasAssessment && (
+                        <>
+                          <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', marginBottom: '20px', position: 'relative', zIndex: 1 }} />
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', position: 'relative', zIndex: 1 }}>
+
+                            {/* Recommended Stream */}
+                            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '14px', border: '1px solid rgba(255,255,255,0.07)' }}>
+                              <div style={{ fontSize: '9px', fontWeight: '700', color: '#14B8A6', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>
+                                📚 Recommended Stream
+                              </div>
+                              <div style={{ fontSize: '14px', fontWeight: '700', color: 'white', lineHeight: '1.3' }}>
+                                {String(student.recommendedStream || student.streamRec?.name || student.stream1112 || 'Pending')}
+                              </div>
+                              {(student.maturityPct || student.streamRec?.match) && (
+                                <div style={{ marginTop: '8px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', fontWeight: '600' }}>Match</span>
+                                    <span style={{ fontSize: '11px', color: '#14B8A6', fontWeight: '800' }}>
+                                      {student.streamRec?.match ? `${student.streamRec.match}%` : `${Number(student.maturityPct || 0)}%`}
+                                    </span>
+                                  </div>
+                                  <div style={{ height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                                    <div style={{ height: '100%', width: `${student.streamRec?.match || student.maturityPct || 0}%`, background: 'linear-gradient(90deg, #0A7C6E, #14B8A6)', borderRadius: '3px' }} />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Top Career Match */}
+                            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '14px', border: '1px solid rgba(255,255,255,0.07)' }}>
+                              <div style={{ fontSize: '9px', fontWeight: '700', color: '#F59E0B', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>
+                                🏆 Top Career Match
+                              </div>
+                              <div style={{ fontSize: '14px', fontWeight: '700', color: 'white', lineHeight: '1.3' }}>
+                                {String(
+                                  (student.topCareerMatches && student.topCareerMatches.length > 0)
+                                    ? student.topCareerMatches[0].name
+                                    : (student.bestCareer?.title || 'Pending')
+                                )}
+                              </div>
+                              {(student.topCareerMatches?.[0]?.matchScore || student.bestCareer?.matchPercent) && (
+                                <div style={{ marginTop: '8px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', fontWeight: '600' }}>Fit</span>
+                                    <span style={{ fontSize: '11px', color: '#F59E0B', fontWeight: '800' }}>
+                                      {student.topCareerMatches?.[0]?.matchScore
+                                        ? `${Number(student.topCareerMatches[0].matchScore)}%`
+                                        : `${Number(student.bestCareer?.matchPercent || 0)}%`}
+                                    </span>
+                                  </div>
+                                  <div style={{ height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                                    <div style={{ height: '100%', width: `${student.topCareerMatches?.[0]?.matchScore || student.bestCareer?.matchPercent || 0}%`, background: 'linear-gradient(90deg, #D97706, #F59E0B)', borderRadius: '3px' }} />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* More Matches */}
+                            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '14px', border: '1px solid rgba(255,255,255,0.07)' }}>
+                              <div style={{ fontSize: '9px', fontWeight: '700', color: '#A78BFA', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>
+                                🎯 More Matches
+                              </div>
+                              {(student.topCareerMatches && student.topCareerMatches.length > 1)
+                                ? student.topCareerMatches.slice(1, 4).map((c, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.65)', fontWeight: '600', flex: 1, marginRight: '6px' }}>{String(c.name || '')}</span>
+                                      <span style={{ fontSize: '10px', color: '#A78BFA', fontWeight: '800', flexShrink: 0 }}>{Number(c.matchScore || 0)}%</span>
+                                    </div>
+                                  ))
+                                : [student.recommendedCareer, student.leastCareer].filter(Boolean).map((c, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.65)', fontWeight: '600', flex: 1, marginRight: '6px' }}>{String(c.title || '')}</span>
+                                      <span style={{ fontSize: '10px', color: '#A78BFA', fontWeight: '800', flexShrink: 0 }}>{Number(c.matchPercent || 0)}%</span>
+                                    </div>
+                                  ))
+                              }
+                            </div>
+                          </div>
+
+                          {/* RIASEC Summary */}
+                          {student.riasecSummary && (
+                            <div style={{ marginTop: '16px', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)', position: 'relative', zIndex: 1 }}>
+                              <div style={{ fontSize: '9px', fontWeight: '700', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '5px' }}>Profile Summary</div>
+                              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', lineHeight: '1.65' }}>
+                                {String(student.riasecSummary)}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Footer */}
+                          <div style={{ display: 'flex', gap: '10px', marginTop: '16px', position: 'relative', zIndex: 1 }}>
+                            <button className="c-btn" style={{ padding: '7px 16px', fontSize: '0.8rem' }} onClick={() => setStudentModal(student)}>
+                              Open Full File
+                            </button>
+                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              ✅ Assessed {student.assessmentCompletedAt ? new Date(student.assessmentCompletedAt).toLocaleDateString('en-GB') : ''}
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* No assessment placeholder */}
+                      {!hasAssessment && (
+                        <div style={{ marginTop: '12px', fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span>⏳</span>
+                          <span>This student has not completed the RIASEC assessment yet. Direct them to <strong>/vidyavantage</strong> to get started.</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+
       case 'queue':
         return (
           <div>
@@ -1216,10 +1404,11 @@ export default function CounsellorDashboard({ navigate }) {
 
         <div className="c-nav-label">Navigation</div>
         {[
-          { id: 'overview', icon: '🏠', label: 'Overview' },
-          { id: 'queue',    icon: '🎓', label: 'Roster & Priority' },
-          { id: 'sessions', icon: '📅', label: 'Session Logger' },
-          { id: 'chat',     icon: '💬', label: 'Messages' },
+          { id: 'overview',      icon: '🏠', label: 'Overview' },
+          { id: 'intelligence',  icon: '🧠', label: 'Career Intelligence' },
+          { id: 'queue',         icon: '🎓', label: 'Roster & Priority' },
+          { id: 'sessions',      icon: '📅', label: 'Session Logger' },
+          { id: 'chat',          icon: '💬', label: 'Messages' },
         ].map(tab => (
           <button
             key={tab.id}

@@ -1037,7 +1037,8 @@ export default function App() {
           currentUser={currentUser} 
           handleLogout={handleLogout} 
           isAdmin={isAdmin} 
-          setModal={setModal} 
+          setModal={setModal}
+          userData={userData}
         />
       );
     }

@@ -806,6 +806,172 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 </div>
               </div>
 
+              {/* ── CAREER INTELLIGENCE REPORT CARD ── */}
+              {hasAssessment ? (
+                <div style={{
+                  background: 'linear-gradient(135deg, #0D1117 0%, #1C2850 60%, #0A3D2E 100%)',
+                  borderRadius: 'var(--r-xl)',
+                  padding: '32px 36px',
+                  marginBottom: '28px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  border: '1.5px solid rgba(240,165,0,0.2)',
+                  boxShadow: '0 16px 48px rgba(0,0,0,0.18)'
+                }}>
+                  {/* Decorative glow */}
+                  <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(240,165,0,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                  <div style={{ position: 'absolute', bottom: '-30px', left: '30%', width: '160px', height: '160px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(20,184,166,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px', position: 'relative', zIndex: 1 }}>
+                    <div>
+                      <div style={{ fontSize: '10px', fontWeight: '800', color: 'var(--gold)', letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: '6px' }}>
+                        🧠 Career Intelligence Report
+                      </div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: '700', color: 'white', lineHeight: '1.2' }}>
+                        Your RIASEC Profile
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: '48px', fontWeight: '900', color: 'var(--gold)', lineHeight: '1', letterSpacing: '4px' }}>
+                        {String(localUserData?.riasecCode || '')}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600', marginTop: '4px' }}>Holland Code</div>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', marginBottom: '24px', position: 'relative', zIndex: 1 }} />
+
+                  {/* Three columns */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', position: 'relative', zIndex: 1 }}>
+
+                    {/* Recommended Stream */}
+                    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--r-md)', padding: '18px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--teal-light)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>
+                        📚 Recommended Stream
+                      </div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: '700', color: 'white', lineHeight: '1.3' }}>
+                        {String(localUserData?.recommendedStream || localUserData?.streamRec?.name || 'Pending')}
+                      </div>
+                      {(localUserData?.streamRec?.match || localUserData?.maturityPct) && (
+                        <div style={{ marginTop: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>Match</span>
+                            <span style={{ fontSize: '12px', color: 'var(--teal-light)', fontWeight: '800' }}>
+                              {localUserData?.streamRec?.match ? `${localUserData.streamRec.match}%` : `${localUserData?.maturityPct || 0}%`}
+                            </span>
+                          </div>
+                          <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${localUserData?.streamRec?.match || localUserData?.maturityPct || 0}%`, background: 'linear-gradient(90deg, var(--teal), var(--teal-light))', borderRadius: '4px' }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Top Career Match */}
+                    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--r-md)', padding: '18px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--gold)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>
+                        🏆 Top Career Match
+                      </div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: '700', color: 'white', lineHeight: '1.3' }}>
+                        {String(
+                          (localUserData?.topCareerMatches && localUserData.topCareerMatches.length > 0)
+                            ? localUserData.topCareerMatches[0].name
+                            : (localUserData?.bestCareer?.title || 'Pending')
+                        )}
+                      </div>
+                      {(localUserData?.topCareerMatches?.[0]?.matchScore || localUserData?.bestCareer?.matchPercent) && (
+                        <div style={{ marginTop: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>Fit Score</span>
+                            <span style={{ fontSize: '12px', color: 'var(--gold)', fontWeight: '800' }}>
+                              {localUserData?.topCareerMatches?.[0]?.matchScore
+                                ? `${localUserData.topCareerMatches[0].matchScore}%`
+                                : `${localUserData?.bestCareer?.matchPercent || 0}%`}
+                            </span>
+                          </div>
+                          <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${localUserData?.topCareerMatches?.[0]?.matchScore || localUserData?.bestCareer?.matchPercent || 0}%`, background: 'linear-gradient(90deg, var(--saffron), var(--gold))', borderRadius: '4px' }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* More Career Matches */}
+                    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--r-md)', padding: '18px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--lav-light)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>
+                        🎯 More Matches
+                      </div>
+                      {(localUserData?.topCareerMatches && localUserData.topCareerMatches.length > 1)
+                        ? localUserData.topCareerMatches.slice(1, 4).map((c, i) => (
+                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', fontWeight: '600', flex: 1, marginRight: '8px' }}>{String(c.name || '')}</span>
+                              <span style={{ fontSize: '11px', color: 'var(--lav-light)', fontWeight: '800', flexShrink: 0 }}>{Number(c.matchScore || 0)}%</span>
+                            </div>
+                          ))
+                        : [localUserData?.recommendedCareer, localUserData?.leastCareer].filter(Boolean).map((c, i) => (
+                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', fontWeight: '600', flex: 1, marginRight: '8px' }}>{String(c.title || '')}</span>
+                              <span style={{ fontSize: '11px', color: 'var(--lav-light)', fontWeight: '800', flexShrink: 0 }}>{Number(c.matchPercent || 0)}%</span>
+                            </div>
+                          ))
+                      }
+                    </div>
+                  </div>
+
+                  {/* RIASEC Summary */}
+                  {(localUserData?.riasecSummary) && (
+                    <div style={{ marginTop: '20px', padding: '16px 20px', background: 'rgba(255,255,255,0.04)', borderRadius: 'var(--r-md)', border: '1px solid rgba(255,255,255,0.07)', position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '6px' }}>Profile Summary</div>
+                      <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)', lineHeight: '1.7', fontWeight: '400' }}>
+                        {String(localUserData.riasecSummary)}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Footer actions */}
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '20px', position: 'relative', zIndex: 1 }}>
+                    <button className="db-btn" onClick={() => setActiveTab("careers")} style={{ fontSize: '13px', padding: '10px 20px' }}>
+                      🎯 View Career Matches
+                    </button>
+                    <button className="db-btn-outline" onClick={() => setActiveTab("report")} style={{ fontSize: '13px', padding: '10px 20px', background: 'transparent', color: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.15)' }}>
+                      📄 Full Report
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* ── NO ASSESSMENT YET — CTA PLACEHOLDER ── */
+                <div style={{
+                  background: 'white',
+                  borderRadius: 'var(--r-xl)',
+                  padding: '40px 36px',
+                  marginBottom: '28px',
+                  border: '2px dashed var(--border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '32px'
+                }}>
+                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #EEF2FF, #E0E7FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', flexShrink: 0 }}>
+                    🧠
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--lavender)', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '6px' }}>Career Intelligence Report</div>
+                    <div style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: '700', color: 'var(--ink)', marginBottom: '8px' }}>Unlock Your RIASEC Profile</div>
+                    <div style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6', maxWidth: '480px' }}>
+                      Take the free 15-minute VidyaVantage assessment to discover your Holland Code, recommended stream, and top career matches — personalised just for you.
+                    </div>
+                  </div>
+                  <button
+                    className="db-btn"
+                    onClick={() => setShowAssessment(true)}
+                    style={{ flexShrink: 0, fontSize: '15px', padding: '14px 28px', background: 'linear-gradient(135deg, var(--lavender), var(--lav-light))' }}
+                  >
+                    Take Assessment 🚀
+                  </button>
+                </div>
+              )}
+
               {hasAssessment && streamRec && (
                 <div className="db-stream-box">
                   <div>
