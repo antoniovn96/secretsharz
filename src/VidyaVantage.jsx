@@ -204,9 +204,29 @@ const STYLES = `
   }
 `;
 
+// Extracted Header to prevent re-rendering bugs
+const Header = ({ badge, showNav = true, onBack, setScreen, navigate, screen }) => (
+  <header className="vv-header">
+    <div>
+      <div className="vv-logo" onClick={onBack || (() => setScreen('hero'))} style={{ cursor: 'pointer' }}>Vidya<span>Vantage</span></div>
+      {screen !== 'form' && screen !== 'loading' && screen !== 'results' && (
+        <div className="vv-tagline">Discover your calling</div>
+      )}
+    </div>
+    {showNav && (
+      <div className="vv-header-nav">
+        <button className={`vv-nav-btn`} onClick={() => navigate('/career-paths')}>🔎 Explore Careers</button>
+        <button className={`vv-nav-btn`} onClick={() => setScreen('assessment')}>📝 Take Assessment</button>
+        <button className="vv-nav-btn" onClick={() => navigate('/colleges')}>🏫 Top Colleges</button>
+        {badge && <div className="vv-badge">{badge}</div>}
+      </div>
+    )}
+    {!showNav && badge && <div className="vv-badge">{badge}</div>}
+  </header>
+);
 
-// ─── MAIN APP COMPONENT ───────────────────────────────────────────────────────
-export default function VidyaVantage({ onBack, navigate }) {
+// Changed to const variable so we can safely export it at the bottom
+const VidyaVantage = ({ onBack, navigate }) => {
   const [screen, setScreen] = useState('hero');
   const [assessmentResults, setAssessmentResults] = useState(null);
   const topRef = useRef(null);
@@ -233,29 +253,9 @@ export default function VidyaVantage({ onBack, navigate }) {
     );
   }
 
-  const Header = ({ badge, showNav = true }) => (
-    <header className="vv-header">
-      <div>
-        <div className="vv-logo" onClick={onBack || (() => setScreen('hero'))} style={{ cursor: 'pointer' }}>Vidya<span>Vantage</span></div>
-        {screen !== 'form' && screen !== 'loading' && screen !== 'results' && (
-          <div className="vv-tagline">Discover your calling</div>
-        )}
-      </div>
-      {showNav && (
-        <div className="vv-header-nav">
-          <button className={`vv-nav-btn`} onClick={() => navigate('/career-paths')}>🔎 Explore Careers</button>
-          <button className={`vv-nav-btn`} onClick={() => setScreen('assessment')}>📝 Take Assessment</button>
-          <button className="vv-nav-btn" onClick={() => navigate('/colleges')}>🏫 Top Colleges</button>
-          {badge && <div className="vv-badge">{badge}</div>}
-        </div>
-      )}
-      {!showNav && badge && <div className="vv-badge">{badge}</div>}
-    </header>
-  );
-
   if (screen === 'explorer') return (
     <div className="vv-root" ref={topRef}>
-      <Header badge="🇮🇳 India's Career AI" />
+      <Header badge="🇮🇳 India's Career AI" onBack={onBack} setScreen={setScreen} navigate={navigate} screen={screen} />
       <CareerPaths 
         assessmentRiasec={assessmentResults?.riasec?.code || null} 
         navigate={navigate}
@@ -266,7 +266,7 @@ export default function VidyaVantage({ onBack, navigate }) {
 
   return (
     <div className="vv-root" ref={topRef}>
-      <Header badge="🇮🇳 India's Career AI" />
+      <Header badge="🇮🇳 India's Career AI" onBack={onBack} setScreen={setScreen} navigate={navigate} screen={screen} />
 
       {/* HERO */}
       <div className="vv-hero-new">
@@ -474,4 +474,6 @@ export default function VidyaVantage({ onBack, navigate }) {
       </div>
     </div>
   );
-}
+};
+
+export default VidyaVantage;

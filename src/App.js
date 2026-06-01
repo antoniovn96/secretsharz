@@ -1071,7 +1071,6 @@ export default function App() {
 
     // ✅ FIXED 404 BUTTON PLACEHOLDERS HERE
     if (currentPath.startsWith('/wall')) return <SharzWall Maps={navigate} />;
-    if (currentPath.startsWith('/safe')) return <div style={{minHeight:'60vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}><h2 style={{fontFamily:"'Fraunces', serif", fontSize:'32px', color:'var(--ink)'}}>Safe Corner (Coming Soon)</h2><button className="btn-primary" style={{marginTop:'20px'}} onClick={() => navigate('/')}>← Back</button></div>;
 
     if (currentPath === '/') return <HomePage currentUser={currentUser} isAdmin={isAdmin} setModal={setModal} setShowQuiz={setShowQuiz} navigate={navigate} />;
     
