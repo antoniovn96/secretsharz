@@ -1111,7 +1111,6 @@ export default function ProfileEditor({ onClose }) {
                     <span>You must tick the consent checkbox above before you can save your profile.</span>
                   </div>
                 )}
-
               </div>
             </div>
           </div>
