@@ -1022,26 +1022,19 @@ export default function ProfileEditor({ onClose }) {
               SECTION 0B — COUNSELLING CONSENT (track set by admin)
           ════════════════════════════════════════════════════════════════ */}
           {showDisclaimer && (
-          <div style={S.section}>
-            <div style={S.sectionHeader}>
-              <span style={S.sectionIcon}>🛤️</span>
-              <span style={S.sectionTitle}>Counselling Consent</span>
-            </div>
-            <div style={S.sectionBody}>
-
-              {/* ── CONDITIONAL MEDICAL DISCLAIMER ── */}
-              {showDisclaimer && (
+            <div style={S.section}>
+              <div style={S.sectionHeader}>
+                <span style={S.sectionIcon}>🛤️</span>
+                <span style={S.sectionTitle}>Counselling Consent</span>
+              </div>
+              <div style={S.sectionBody}>
                 <div style={S.disclaimerBox} role="alert" aria-live="polite">
-
-                  {/* Header */}
                   <div style={S.disclaimerHeader}>
                     <span style={S.disclaimerIcon}>⚠️</span>
                     <span style={S.disclaimerTitle}>Important Legal &amp; Medical Disclaimer</span>
                   </div>
-
-                  {/* Body points */}
+                  
                   <div style={S.disclaimerBody}>
-
                     <div style={S.disclaimerPoint}>
                       <span style={S.disclaimerBullet}>🔹</span>
                       <span>
@@ -1072,7 +1065,6 @@ export default function ProfileEditor({ onClose }) {
                       </span>
                     </div>
 
-                    {/* Emergency contacts box */}
                     <div style={S.disclaimerEmergency}>
                       <div style={S.disclaimerEmergencyTitle}>🚨 For Immediate Psychiatric Emergencies, Contact:</div>
                       <div style={S.disclaimerEmergencyItem}>
@@ -1086,10 +1078,8 @@ export default function ProfileEditor({ onClose }) {
                         🏥 Fortis Hospital — Emergency Services
                       </div>
                     </div>
-
                   </div>
 
-                  {/* Mandatory consent checkbox */}
                   <label style={S.consentRow}>
                     <input
                       type="checkbox"
@@ -1104,21 +1094,21 @@ export default function ProfileEditor({ onClose }) {
                     </span>
                   </label>
 
-                  {/* Warning if not yet agreed */}
-                {!counsellingConsentAgreed && (
-                  <div style={{ ...S.disabledNote, color: '#DC2626', fontSize: '12px' }}>
-                    <span>🔒</span>
-                    <span>You must tick the consent checkbox above before you can save your profile.</span>
-                  </div>
-                )}
+                  {!counsellingConsentAgreed && (
+                    <div style={{ ...S.disabledNote, color: '#DC2626', fontSize: '12px' }}>
+                      <span>🔒</span>
+                      <span>You must tick the consent checkbox above before you can save your profile.</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
           )}
 
           {/* ════════════════════════════════════════════════════════════════
               SECTION 1 — FUN & PERSONALITY
           ════════════════════════════════════════════════════════════════ */}
+          
           <div style={S.section}>
             <div style={S.sectionHeader}>
               <span style={S.sectionIcon}>🎉</span>
