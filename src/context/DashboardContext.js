@@ -11,7 +11,11 @@ const DEFAULT_USER_PROFILE = {
   profilePicture: null,          // URL string or null
   gender: '',                    // e.g. 'Male' | 'Female' | 'Non-binary' | 'Prefer not to say'
   motherName: '',                // Mother's full name
+  motherPhone: '',               // Mother's phone number
+  motherEmail: '',               // Mother's email address
   fatherName: '',                // Father's full name
+  fatherPhone: '',               // Father's phone number
+  fatherEmail: '',               // Father's email address
   phone: '',                     // Contact phone number
   email: '',                     // Contact email address
 
@@ -89,6 +93,7 @@ const DEFAULT_USER_PROFILE = {
 
   // Booking
   sessionsBooked: 0,             // Number of expert sessions booked
+  bookings: [],                  // Array of booked session records
 };
 
 // ── MOCK SOCIAL FEED ─────────────────────────────────────────────────────────
@@ -359,10 +364,51 @@ const INITIAL_ASSIGNMENTS = {
 
 const DashboardContext = createContext(null);
 
+// ── INSTITUTION HELPERS ──────────────────────────────────────────────────────
+
+/**
+ * generateAccountNumber()
+ * Generates a unique 12-digit account number prefixed with "SS-".
+ */
+function generateAccountNumber() {
+  const digits = Math.floor(100000000000 + Math.random() * 900000000000);
+  return `SS-${digits}`;
+}
+
+/**
+ * generateSecurePassword(length)
+ * Generates a secure random password of the given length using uppercase,
+ * lowercase, digits, and symbols.
+ */
+function generateSecurePassword(length = 13) {
+  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lower = 'abcdefghijklmnopqrstuvwxyz';
+  const digits = '0123456789';
+  const symbols = '!@#$%^&*()-_=+';
+  const all = upper + lower + digits + symbols;
+  // Guarantee at least one of each category
+  let pwd = [
+    upper[Math.floor(Math.random() * upper.length)],
+    lower[Math.floor(Math.random() * lower.length)],
+    digits[Math.floor(Math.random() * digits.length)],
+    symbols[Math.floor(Math.random() * symbols.length)],
+  ];
+  for (let i = pwd.length; i < length; i++) {
+    pwd.push(all[Math.floor(Math.random() * all.length)]);
+  }
+  // Shuffle
+  for (let i = pwd.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pwd[i], pwd[j]] = [pwd[j], pwd[i]];
+  }
+  return pwd.join('');
+}
+
 export function DashboardProvider({ children, navigate }) {
   const [students, setStudents] = useState(INITIAL_STUDENTS);
   const [counsellors, setCounsellors] = useState(INITIAL_COUNSELLORS);
   const [assignments, setAssignments] = useState(INITIAL_ASSIGNMENTS);
+  const [institutions, setInstitutions] = useState([]);
 
   // ── GAMIFIED USER PROFILE STATE ──────────────────────────────────────────
   const [userProfile, setUserProfile] = useState(DEFAULT_USER_PROFILE);
@@ -647,6 +693,104 @@ export function DashboardProvider({ children, navigate }) {
     setUserProfile(prev => ({ ...prev, sessionsBooked: (prev.sessionsBooked || 0) + 1 }));
   }, []);
 
+  /**
+   * submitBooking(studentId, bookingDetails)
+   * Saves a booking record to the student's userProfile bookings array
+   * AND pushes an admin notification with the student name, transaction ID, and amount.
+   *
+   * @param {string} studentId - The student's ID or name (used for admin notification)
+   * @param {{ date: string, timeSlot: string, amount: number, transactionId: string, counsellorName: string }} bookingDetails
+   */
+  const submitBooking = useCallback((studentId, bookingDetails) => {
+    const { date, timeSlot, amount, transactionId, counsellorName } = bookingDetails;
+
+    // Build the booking record
+    const newBooking = {
+      id: `booking-${Date.now()}`,
+      studentId: String(studentId || ''),
+      date: String(date || ''),
+      timeSlot: String(timeSlot || ''),
+      amount: Number(amount || 0),
+      transactionId: String(transactionId || ''),
+      counsellorName: String(counsellorName || ''),
+      bookedAt: new Date().toISOString(),
+      status: 'pending_verification',
+    };
+
+    // 1. Save booking to userProfile
+    setUserProfile(prev => ({
+      ...prev,
+      sessionsBooked: (prev.sessionsBooked || 0) + 1,
+      bookings: [...(Array.isArray(prev.bookings) ? prev.bookings : []), newBooking],
+    }));
+
+    // 2. Push admin notification
+    const adminNotif = {
+      id: `notif-booking-${Date.now()}`,
+      type: 'booking_payment',
+      title: `💳 New Booking: ${String(studentId || 'Student')}`,
+      message: `Student: ${String(studentId || 'Unknown')} | Counsellor: ${String(counsellorName || 'N/A')} | Date: ${String(date || '')} ${String(timeSlot || '')} | Amount: ₹${Number(amount || 0)} | Transaction ID: ${String(transactionId || '')}`,
+      isRead: false,
+      priority: 'high',
+      timestamp: new Date().toISOString(),
+      actionLabel: 'Verify Payment',
+      actionUrl: '/admin',
+      // Structured fields for admin dashboard parsing
+      studentName: String(studentId || ''),
+      transactionId: String(transactionId || ''),
+      amount: Number(amount || 0),
+    };
+
+    setNotifications(prev => [adminNotif, ...prev]);
+  }, []);
+
+  // ── INSTITUTION HELPERS ──────────────────────────────────────────────────
+
+  /**
+   * registerInstitution(data)
+   * Registers a new institution with an auto-generated account number,
+   * secure password, and calculated billing amount.
+   *
+   * @param {object} data - Institution form data
+   * @returns {object} The newly created institution record
+   */
+  const registerInstitution = useCallback((data) => {
+    const accountNumber = generateAccountNumber();
+    const password = generateSecurePassword(13);
+    const totalStudents = Number(data.totalStudents) || 0;
+    const totalBill = totalStudents * 200;
+
+    const newInstitution = {
+      id: `inst-${Date.now()}`,
+      accountNumber,
+      password,
+      totalBill,
+      registeredAt: new Date().toISOString(),
+      // Scalar fields — all coerced to strings/numbers to prevent React Error #306
+      schoolName: String(data.schoolName || ''),
+      officialEmail: String(data.officialEmail || ''),
+      phone: String(data.phone || ''),
+      address: String(data.address || ''),
+      maxEducationLevel: String(data.maxEducationLevel || ''),
+      totalStaff: Number(data.totalStaff) || 0,
+      totalStudents,
+      // Contact persons — stored as flat strings
+      contact1Name: String(data.contact1Name || ''),
+      contact1Phone: String(data.contact1Phone || ''),
+      contact2Name: String(data.contact2Name || ''),
+      contact2Phone: String(data.contact2Phone || ''),
+      contact3Name: String(data.contact3Name || ''),
+      contact3Phone: String(data.contact3Phone || ''),
+      // School counsellor
+      counsellorName: String(data.counsellorName || ''),
+      counsellorPhone: String(data.counsellorPhone || ''),
+      counsellorEmail: String(data.counsellorEmail || ''),
+    };
+
+    setInstitutions(prev => [newInstitution, ...prev]);
+    return newInstitution;
+  }, []);
+
   // ── COUNSELLOR HELPERS ───────────────────────────────────────────────────
 
   /** Update any field(s) on a counsellor record */
@@ -710,6 +854,7 @@ export function DashboardProvider({ children, navigate }) {
     students,
     counsellors,
     assignments,
+    institutions,
 
     // Student operations
     getCounsellorForStudent,
@@ -720,6 +865,9 @@ export function DashboardProvider({ children, navigate }) {
     updateStudent,
     addSessionToStudent,
     saveAssessmentResults,
+
+    // Institution operations
+    registerInstitution,
 
     // Counsellor operations
     updateCounsellor,
@@ -735,6 +883,7 @@ export function DashboardProvider({ children, navigate }) {
     updateUserProfile,
     calculateExPoints,
     incrementSessions,
+    submitBooking,
 
     // ── Social / notifications ──────────────────────────────────────────
     socialFeed,

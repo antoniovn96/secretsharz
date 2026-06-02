@@ -1,5 +1,16 @@
- import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDashboard } from './context/DashboardContext';
+import AutocompleteInput from './components/AutocompleteInput';
+import {
+  SCHOOLS,
+  COLLEGES,
+  INTERESTS,
+  HOBBIES,
+  TV_SHOWS,
+  MOVIES,
+  GAMES,
+  SPORTS,
+} from './data/platformData';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
@@ -447,7 +458,7 @@ const S = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** A controlled tag-input: shows existing tags + an input to add new ones */
-function TagInput({ label, values, onChange, placeholder, disabled }) {
+function TagInput({ label, values, onChange, placeholder, disabled, options = [] }) {
   const [inputVal, setInputVal] = useState('');
 
   const addTag = () => {
@@ -457,17 +468,6 @@ function TagInput({ label, values, onChange, placeholder, disabled }) {
       onChange([...values, trimmed]);
     }
     setInputVal('');
-  };
-
-  const removeTag = (idx) => {
-    onChange(values.filter((_, i) => i !== idx));
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addTag();
-    }
   };
 
   return (
@@ -482,7 +482,7 @@ function TagInput({ label, values, onChange, placeholder, disabled }) {
                 <button
                   type="button"
                   style={S.tagRemove}
-                  onClick={() => removeTag(i)}
+                  onClick={() => onChange(values.filter((_, idx) => idx !== i))}
                   aria-label={`Remove ${v}`}
                 >
                   ×
@@ -494,14 +494,14 @@ function TagInput({ label, values, onChange, placeholder, disabled }) {
       )}
       {!disabled && (
         <div style={S.tagInputRow}>
-          <input
-            type="text"
-            value={inputVal}
-            onChange={(e) => setInputVal(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder || `Add ${label.toLowerCase()}...`}
-            style={S.input}
-          />
+          <div style={{ flex: 1 }}>
+            <AutocompleteInput
+              options={options}
+              value={inputVal}
+              onChange={setInputVal}
+              placeholder={placeholder || `Add ${label.toLowerCase()}...`}
+            />
+          </div>
           <button type="button" style={S.tagAddBtn} onClick={addTag}>
             + Add
           </button>
@@ -652,7 +652,7 @@ function MarksInput({ tierData, onTierChange }) {
  * EducationTierCard — renders a collapsible card for one education tier
  * (10th, 12th, Graduate, Post Graduate).
  */
-function EducationTierCard({ icon, title, tierData, onTierChange }) {
+function EducationTierCard({ icon, title, tierData, onTierChange, options = [] }) {
   return (
     <div style={S.tierCard}>
       <div style={S.tierCardHeader}>
@@ -663,12 +663,11 @@ function EducationTierCard({ icon, title, tierData, onTierChange }) {
         {/* School Name */}
         <div style={S.fieldGroup}>
           <label style={S.label}>School / Institution Name</label>
-          <input
-            type="text"
+          <AutocompleteInput
+            options={options}
             value={tierData.schoolName}
-            onChange={(e) => onTierChange({ schoolName: e.target.value })}
-            placeholder="e.g. Delhi Public School"
-            style={S.input}
+            onChange={(val) => onTierChange({ schoolName: val })}
+            placeholder="Type 3 letters to search schools/colleges..."
           />
         </div>
 
@@ -715,7 +714,11 @@ export default function ProfileEditor({ onClose }) {
   // ── Demographics ──────────────────────────────────────────────────────────
   const [gender, setGender] = useState(userProfile.gender || '');
   const [fatherName, setFatherName] = useState(userProfile.fatherName || '');
+  const [fatherPhone, setFatherPhone] = useState(userProfile.fatherPhone || '');
+  const [fatherEmail, setFatherEmail] = useState(userProfile.fatherEmail || '');
   const [motherName, setMotherName] = useState(userProfile.motherName || '');
+  const [motherPhone, setMotherPhone] = useState(userProfile.motherPhone || '');
+  const [motherEmail, setMotherEmail] = useState(userProfile.motherEmail || '');
   const [phone, setPhone] = useState(userProfile.phone || '');
   const [email, setEmail] = useState(userProfile.email || '');
 
@@ -1015,39 +1018,16 @@ export default function ProfileEditor({ onClose }) {
             </div>
           </div>
 
-          {/* ════════════════════════════════════════════════════════════════
-              SECTION 0B — TRACK SELECTION
+      {/* ════════════════════════════════════════════════════════════════
+              SECTION 0B — COUNSELLING CONSENT (track set by admin)
           ════════════════════════════════════════════════════════════════ */}
+          {showDisclaimer && (
           <div style={S.section}>
             <div style={S.sectionHeader}>
               <span style={S.sectionIcon}>🛤️</span>
-              <span style={S.sectionTitle}>Your Track</span>
+              <span style={S.sectionTitle}>Counselling Consent</span>
             </div>
             <div style={S.sectionBody}>
-
-              <div style={S.fieldGroup}>
-                <label style={S.label}>Select Your Track <span style={{ color: '#EF4444' }}>*</span></label>
-                <select
-                  value={studentTrack}
-                  onChange={(e) => {
-                    setStudentTrack(e.target.value);
-                    // Reset consent if track no longer requires it
-                    if (e.target.value !== 'counselling' && e.target.value !== 'both') {
-                      setCounsellingConsentAgreed(false);
-                    }
-                  }}
-                  style={S.select}
-                  required
-                >
-                  <option value="unassigned">— Select a Track —</option>
-                  <option value="counselling">Counselling</option>
-                  <option value="guidance">Career Guidance</option>
-                  <option value="both">Both</option>
-                </select>
-                <div style={S.infoNote}>
-                  Choose the service(s) you wish to access. This determines which features are enabled for you.
-                </div>
-              </div>
 
               {/* ── CONDITIONAL MEDICAL DISCLAIMER ── */}
               {showDisclaimer && (
@@ -1196,11 +1176,70 @@ export default function ProfileEditor({ onClose }) {
                 </div>
               </div>
 
+              {/* ════════════════════════════════════════════════════════════════
+              SECTION 1 — FUN & PERSONALITY
+          ════════════════════════════════════════════════════════════════ */}
+          <div style={S.section}>
+            <div style={S.sectionHeader}>
+              <span style={S.sectionIcon}>🎉</span>
+              <span style={S.sectionTitle}>Fun &amp; Personality</span>
+            </div>
+            <div style={S.sectionBody}>
+
+              {/* ── Profile Picture ── */}
+              <div style={S.fieldGroup}>
+                <label style={S.label}>Profile Picture (+50 XP)</label>
+                <div style={S.picRow}>
+                  {profilePicture ? (
+                    <img
+                      src={profilePicture}
+                      alt="Profile"
+                      style={S.picPreview}
+                      onError={() => setProfilePicture('')}
+                    />
+                  ) : (
+                    <div style={S.picPlaceholder}>👤</div>
+                  )}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* Hidden real file input */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleFileChange}
+                    />
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        style={S.uploadBtn}
+                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                      >
+                        📁 Upload Image
+                      </button>
+                      {profilePicture && (
+                        <button
+                          type="button"
+                          style={{ ...S.uploadBtn, color: '#EF4444', borderColor: '#FECDD3' }}
+                          onClick={() => setProfilePicture('')}
+                        >
+                          🗑 Remove
+                        </button>
+                      )}
+                    </div>
+                    <div style={S.infoNote}>
+                      Select a JPG, PNG, GIF, or WebP image from your device. It will be stored as Base64.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Interests */}
               <TagInput
                 label="Interests (+30 XP)"
                 values={interests}
                 onChange={setInterests}
+                options={INTERESTS}
                 placeholder="e.g. Technology, Music, Art..."
               />
 
@@ -1209,6 +1248,7 @@ export default function ProfileEditor({ onClose }) {
                 label="Hobbies (+20 XP)"
                 values={hobbies}
                 onChange={setHobbies}
+                options={HOBBIES}
                 placeholder="e.g. Reading, Sketching, Cooking..."
               />
 
@@ -1217,12 +1257,14 @@ export default function ProfileEditor({ onClose }) {
                   label="TV Shows (+15 XP)"
                   values={tvShows}
                   onChange={setTvShows}
+                  options={TV_SHOWS}
                   placeholder="e.g. Breaking Bad..."
                 />
                 <TagInput
                   label="Movies (+15 XP)"
                   values={movies}
                   onChange={setMovies}
+                  options={MOVIES}
                   placeholder="e.g. Interstellar..."
                 />
               </div>
@@ -1232,15 +1274,20 @@ export default function ProfileEditor({ onClose }) {
                   label="Games (+15 XP)"
                   values={games}
                   onChange={setGames}
+                  options={GAMES}
                   placeholder="e.g. Chess, Minecraft..."
                 />
                 <TagInput
                   label="Sports (+15 XP)"
                   values={sports}
                   onChange={setSports}
+                  options={SPORTS}
                   placeholder="e.g. Cricket, Badminton..."
                 />
               </div>
+
+            </div>
+          </div>
 
             </div>
           </div>
@@ -1291,6 +1338,7 @@ export default function ProfileEditor({ onClose }) {
                     title="10th Grade"
                     tierData={tenth}
                     onTierChange={updateTier(setTenth)}
+                    options={SCHOOLS}
                   />
 
                   {/* 12th / PUC */}
@@ -1299,6 +1347,7 @@ export default function ProfileEditor({ onClose }) {
                     title="12th Grade / PUC"
                     tierData={twelfth}
                     onTierChange={updateTier(setTwelfth)}
+                    options={SCHOOLS}
                   />
 
                   {/* Graduate */}
@@ -1307,15 +1356,17 @@ export default function ProfileEditor({ onClose }) {
                     title="Graduate (UG)"
                     tierData={graduate}
                     onTierChange={updateTier(setGraduate)}
+                    options={COLLEGES}
                   />
 
-                  {/* Post Graduate — only shown when highestLevel === 'Post Graduate' */}
+                  {/* Post Graduate */}
                   {showPostGrad && (
                     <EducationTierCard
                       icon="📕"
                       title="Post Graduate (PG)"
                       tierData={postGraduate}
                       onTierChange={updateTier(setPostGraduate)}
+                      options={COLLEGES}
                     />
                   )}
 
@@ -1328,6 +1379,7 @@ export default function ProfileEditor({ onClose }) {
                     title="Current / Most Recent Institution"
                     tierData={tenth}
                     onTierChange={updateTier(setTenth)}
+                    options={SCHOOLS}
                   />
                 </div>
               )}

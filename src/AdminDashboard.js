@@ -346,15 +346,6 @@ const STYLES = `
     outline: none;
     background: white;
   }
-  .search-bar {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-    background: var(--bg);
-    padding: 16px;
-    border-radius: var(--r-md);
-    border: 1px solid var(--border);
-  }
 
   /* ── BUTTONS ── */
   .admin-btn {
@@ -788,6 +779,235 @@ const STYLES = `
   @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 `;
 
+// ─────────────────────────────────────────────────────────────────────────────
+// INSTITUTIONS TAB — Self-contained component to avoid closure issues
+// ─────────────────────────────────────────────────────────────────────────────
+const EMPTY_INST_FORM = {
+  schoolName: '', officialEmail: '', phone: '', address: '',
+  maxEducationLevel: '', totalStaff: '', totalStudents: '',
+  contact1Name: '', contact1Phone: '',
+  contact2Name: '', contact2Phone: '',
+  contact3Name: '', contact3Phone: '',
+  counsellorName: '', counsellorPhone: '', counsellorEmail: '',
+};
+
+function InstitutionsTab({ ctxInstitutions, registerInstitution, setToast }) {
+  const [form, setForm] = useState(EMPTY_INST_FORM);
+  const [submitting, setSubmitting] = useState(false);
+
+  const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.schoolName.trim()) {
+      setToast({ type: 'error', message: 'School Name is required.' });
+      return;
+    }
+    if (!form.totalStudents || isNaN(Number(form.totalStudents))) {
+      setToast({ type: 'error', message: 'Total Students must be a valid number.' });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      registerInstitution(form);
+      setForm(EMPTY_INST_FORM);
+      setToast({ type: 'success', message: '🏫 Institution registered successfully!' });
+    } catch (err) {
+      setToast({ type: 'error', message: 'Failed to register institution.' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const allInstitutions = Array.isArray(ctxInstitutions) ? ctxInstitutions : [];
+
+  return (
+    <div>
+      <div className="header-bar">
+        <div>
+          <h1>Institution Control</h1>
+          <p>Register B2B partner schools and manage their billing accounts.</p>
+        </div>
+        <span className="admin-badge badge-primary" style={{ fontSize: '0.85rem', padding: '6px 14px' }}>
+          {allInstitutions.length} Registered
+        </span>
+      </div>
+
+      {/* ── REGISTRATION FORM ── */}
+      <div className="admin-card" style={{ borderTop: '3px solid var(--primary)' }}>
+        <h3>🏫 Register New Institution</h3>
+        <form onSubmit={handleSubmit}>
+          {/* Row 1: School Name + Email */}
+          <div className="grid-2col">
+            <div className="form-group">
+              <label className="form-label">School Name *</label>
+              <input className="form-input" type="text" placeholder="e.g. Delhi Public School, R.K. Puram" value={form.schoolName} onChange={e => set('schoolName', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Official Email *</label>
+              <input className="form-input" type="email" placeholder="principal@school.edu.in" value={form.officialEmail} onChange={e => set('officialEmail', e.target.value)} />
+            </div>
+          </div>
+
+          {/* Row 2: Phone + Max Education Level */}
+          <div className="grid-2col">
+            <div className="form-group">
+              <label className="form-label">Phone Number</label>
+              <input className="form-input" type="text" placeholder="+91 98765 43210" value={form.phone} onChange={e => set('phone', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Max Education Level</label>
+              <select className="form-select" value={form.maxEducationLevel} onChange={e => set('maxEducationLevel', e.target.value)}>
+                <option value="">— Select Level —</option>
+                <option value="4th">Up to 4th Grade</option>
+                <option value="5th">Up to 5th Grade</option>
+                <option value="10th">Up to 10th Grade</option>
+                <option value="12th">Up to 12th Grade</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Address */}
+          <div className="form-group">
+            <label className="form-label">Full Address</label>
+            <textarea className="form-textarea" rows="2" placeholder="Street, City, State, PIN" value={form.address} onChange={e => set('address', e.target.value)} />
+          </div>
+
+          {/* Row 3: Staff + Students */}
+          <div className="grid-2col">
+            <div className="form-group">
+              <label className="form-label">Total Staff</label>
+              <input className="form-input" type="number" min="0" placeholder="e.g. 80" value={form.totalStaff} onChange={e => set('totalStaff', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Total Students *</label>
+              <input className="form-input" type="number" min="0" placeholder="e.g. 1200" value={form.totalStudents} onChange={e => set('totalStudents', e.target.value)} />
+            </div>
+          </div>
+
+          {/* Billing Preview */}
+          {form.totalStudents && !isNaN(Number(form.totalStudents)) && Number(form.totalStudents) > 0 && (
+            <div style={{ background: 'rgba(91,110,245,0.06)', border: '1px solid rgba(91,110,245,0.2)', borderRadius: 'var(--r-sm)', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '600' }}>Estimated Total Bill (₹200 × {Number(form.totalStudents)} students)</span>
+              <span style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--primary)' }}>₹{(Number(form.totalStudents) * 200).toLocaleString('en-IN')}</span>
+            </div>
+          )}
+
+          {/* Contact Persons */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>Contact Persons (up to 3)</div>
+            {[1, 2, 3].map(n => (
+              <div key={n} className="grid-2col" style={{ marginBottom: '8px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Contact {n} Name</label>
+                  <input className="form-input" type="text" placeholder={`Contact Person ${n}`} value={form[`contact${n}Name`]} onChange={e => set(`contact${n}Name`, e.target.value)} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Contact {n} Phone</label>
+                  <input className="form-input" type="text" placeholder="+91..." value={form[`contact${n}Phone`]} onChange={e => set(`contact${n}Phone`, e.target.value)} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* School Counsellor */}
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '16px', marginBottom: '20px' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>School Counsellor Details</div>
+            <div className="grid-2col">
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Counsellor Name</label>
+                <input className="form-input" type="text" placeholder="Full Name" value={form.counsellorName} onChange={e => set('counsellorName', e.target.value)} />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Counsellor Phone</label>
+                <input className="form-input" type="text" placeholder="+91..." value={form.counsellorPhone} onChange={e => set('counsellorPhone', e.target.value)} />
+              </div>
+            </div>
+            <div className="form-group" style={{ marginTop: '12px', marginBottom: 0 }}>
+              <label className="form-label">Counsellor Email</label>
+              <input className="form-input" type="email" placeholder="counsellor@school.edu.in" value={form.counsellorEmail} onChange={e => set('counsellorEmail', e.target.value)} />
+            </div>
+          </div>
+
+          <button type="submit" className="admin-btn" style={{ width: '100%' }} disabled={submitting}>
+            {submitting ? '⏳ Registering...' : '🏫 Register Institution'}
+          </button>
+        </form>
+      </div>
+
+      {/* ── REGISTERED INSTITUTIONS TABLE ── */}
+      <div className="admin-card" style={{ borderTop: '3px solid var(--success)' }}>
+        <h3>
+          📋 Registered Institutions
+          <span className="admin-badge badge-success">{allInstitutions.length} Total</span>
+        </h3>
+        {allInstitutions.length === 0 ? (
+          <div className="empty-state" style={{ padding: '32px' }}>
+            <div className="empty-icon">🏫</div>
+            <p style={{ margin: 0, fontSize: '0.875rem' }}>No institutions registered yet. Use the form above to add your first partner school.</p>
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>School</th>
+                  <th>Account No.</th>
+                  <th>🔑 Password</th>
+                  <th>Level</th>
+                  <th>Students</th>
+                  <th>Total Bill</th>
+                  <th>Registered</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allInstitutions.map((inst) => {
+                  const billStr = typeof inst.totalBill === 'number'
+                    ? '₹' + inst.totalBill.toLocaleString('en-IN')
+                    : '—';
+                  const regDate = inst.registeredAt
+                    ? new Date(inst.registeredAt).toLocaleDateString('en-GB')
+                    : '—';
+                  return (
+                    <tr key={String(inst.id)}>
+                      <td>
+                        <div style={{ fontWeight: '700', color: 'var(--text-main)', marginBottom: '2px' }}>{String(inst.schoolName || '—')}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{String(inst.officialEmail || '—')}</div>
+                        {inst.phone ? <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{String(inst.phone)}</div> : null}
+                      </td>
+                      <td>
+                        <span style={{ fontFamily: 'monospace', fontWeight: '700', color: 'var(--primary)', fontSize: '0.85rem', background: 'var(--primary-light)', padding: '3px 8px', borderRadius: '6px' }}>
+                          {String(inst.accountNumber || '—')}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ fontFamily: 'monospace', fontWeight: '700', color: 'var(--danger)', fontSize: '0.85rem', background: 'rgba(239,68,68,0.08)', padding: '3px 8px', borderRadius: '6px', letterSpacing: '1px' }}>
+                          {String(inst.password || '—')}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="admin-badge badge-neutral">{String(inst.maxEducationLevel || '—')}</span>
+                      </td>
+                      <td style={{ fontWeight: '700', color: 'var(--text-main)', textAlign: 'center' }}>
+                        {String(inst.totalStudents || 0)}
+                      </td>
+                      <td>
+                        <span style={{ fontWeight: '800', color: 'var(--success)', fontSize: '1rem' }}>{billStr}</span>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>₹200 × {String(inst.totalStudents || 0)}</div>
+                      </td>
+                      <td style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{regDate}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const ALL_NAV_TABS = [
   { id: 'profile', icon: '👤', label: 'My Profile', roles: ['super_admin', 'counsellor'] },
   { id: 'overview', icon: '🏠', label: 'Overview', roles: ['super_admin', 'counsellor'] },
@@ -810,6 +1030,8 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
     getCounsellorForStudent,
     getStudentsForCounsellor,
     stats: ctxStats,
+    institutions: ctxInstitutions,
+    registerInstitution,
   } = useDashboard();
 
   // --- STATE ---
@@ -970,6 +1192,23 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   }, [isCounsellor, user?.uid]);
 
   // --- ACTIONS ---
+  const downloadStudentData = () => {
+    if (!students || students.length === 0) return;
+    const headers = ["Name,Email,Phone,Track,Mother Name,Mother Phone,Father Name,Father Phone,10th Marks,12th Marks\n"];
+    const csvRows = students.map(s => {
+      return `"${s.name || ''}","${s.email || ''}","${s.phone || ''}","${s.studentTrack || 'Unassigned'}","${s.motherName || ''}","${s.motherPhone || ''}","${s.fatherName || ''}","${s.fatherPhone || ''}","${s?.education?.tenth?.marksValue || ''}","${s?.education?.twelfth?.marksValue || ''}"`;
+    });
+    const csvString = headers + csvRows.join("\n");
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'SecretSharz_Students.csv');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
   const handleUpdateStudent = async (studentId, updates) => {
     try {
       // Update Firestore if real data exists
@@ -1813,6 +2052,13 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           </div>
         );
 
+      case 'institutions':
+        return <InstitutionsTab
+          ctxInstitutions={ctxInstitutions}
+          registerInstitution={registerInstitution}
+          setToast={setToast}
+        />;
+
       case 'analytics':
         return (
           <div>
@@ -1947,6 +2193,15 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           </div>
 
           <div className="header-actions">
+            {/* New Download Button */}
+            <button 
+              onClick={downloadStudentData}
+              className="admin-btn-outline"
+              style={{ borderColor: 'var(--success)', color: 'var(--success)' }}
+            >
+              📥 Export CSV
+            </button>
+            
             {/* Notifications */}
             <div style={{ position: 'relative' }}>
               <button className="notify-bell" onClick={() => setNotifyOpen(!notifyOpen)}>
@@ -2152,6 +2407,29 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                             </button>
                           )}
                         </div>
+                        {/* ── ADMIN TRACK CONTROL ── */}
+                  <div style={{
+                    marginTop: '16px',
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--r-md)',
+                    padding: '16px'
+                  }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '8px' }}>
+                      🎯 Assign Student Track (Admin Control)
+                    </label>
+                    <select 
+                      value={selectedStudent.studentTrack || 'unassigned'}
+                      onChange={(e) => handleUpdateStudent(selectedStudent.id, { studentTrack: e.target.value })}
+                      className="form-select"
+                      style={{ padding: '8px 12px', fontSize: '0.875rem' }}
+                    >
+                      <option value="unassigned">-- Select a Track --</option>
+                      <option value="Counselling">Counselling (Rs. 200/session)</option>
+                      <option value="Career Guidance">Career Guidance</option>
+                      <option value="Both">Both (Counselling & Guidance)</option>
+                    </select>
+                  </div>
 
                         {/* Counsellor detail preview */}
                         {selectedStudent.assignedCounsellorId && (() => {

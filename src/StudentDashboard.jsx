@@ -274,7 +274,7 @@ function getNotifColor(priority, isRead) {
 }
 
 export default function StudentDashboard({ user, userData, initialTab = "home", onBack, onLogout }) {
-  const { userProfile, socialFeed, notifications, markNotificationRead, markAllNotificationsRead, incrementSessions } = useDashboard();
+  const { userProfile, socialFeed, notifications, markNotificationRead, markAllNotificationsRead, incrementSessions, submitBooking } = useDashboard();
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isParentMode, setIsParentMode] = useState(false);
@@ -1068,61 +1068,226 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
 
   // ── COUNSELLOR TAB ──
   const sessionsBooked = Number(userProfile.sessionsBooked || 0);
-  const renderCounsellorTab = () => (
-    <div className="db-tab">
-      <div className="db-two-col">
-        <div className="db-card" style={{ marginBottom: 0 }}>
-          <div className="db-card-header"><div className="db-card-title">📅 Book Expert Session</div></div>
-          <div className="db-card-body">
-            {/* Dynamic Pricing Banner */}
-            <div style={{
-              background: sessionsBooked === 0
-                ? 'linear-gradient(135deg, #D1FAE5, #A7F3D0)'
-                : 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
-              border: sessionsBooked === 0 ? '1.5px solid #6EE7B7' : '1.5px solid #FCD34D',
-              borderRadius: 'var(--r-md)',
-              padding: '14px 18px',
-              marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}>
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: '800', color: sessionsBooked === 0 ? '#065F46' : '#92400E', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '3px' }}>
-                  {sessionsBooked === 0 ? '🎁 Special Offer' : '💳 Session Pricing'}
-                </div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: '900', color: sessionsBooked === 0 ? '#059669' : '#B45309' }}>
-                  {sessionsBooked === 0 ? '1st Session FREE!' : '₹700 per session'}
-                </div>
-                <div style={{ fontSize: '12px', color: sessionsBooked === 0 ? '#065F46' : '#92400E', marginTop: '2px', fontWeight: '500' }}>
-                  {sessionsBooked === 0 ? 'No credit card required. Book your free intro session now.' : `You have booked ${sessionsBooked} session${sessionsBooked > 1 ? 's' : ''} so far.`}
-                </div>
-              </div>
-              <div style={{ fontSize: '32px', flexShrink: 0 }}>{sessionsBooked === 0 ? '🎉' : '📅'}</div>
-            </div>
+  const BookingEngine = () => {
+    const SESSION_PRICE = sessionsBooked === 0 ? 0 : 700;
+    const [selectedDate, setSelectedDate] = React.useState('');
+    const [selectedSlot, setSelectedSlot] = React.useState('');
+    const [selectedCounsellor, setSelectedCounsellor] = React.useState('');
+    const [transactionId, setTransactionId] = React.useState('');
+    const [bookingSuccess, setBookingSuccess] = React.useState(false);
+    const [bookingError, setBookingError] = React.useState('');
 
-            <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "16px", marginBottom: "16px", borderBottom: "1px solid var(--border)" }}>
-              {["Today", "Tomorrow", "Thu 26", "Fri 27"].map((d, i) => (
-                <div key={i} style={{ padding: "10px 16px", border: i === 0 ? "1.5px solid var(--saffron)" : "1px solid var(--border)", borderRadius: "var(--r-sm)", background: i === 0 ? "#FFFBEB" : "white", textAlign: "center", cursor: "pointer", minWidth: "80px" }}>
-                  <div style={{ fontSize: "12px", color: i === 0 ? "var(--saffron)" : "var(--muted)", fontWeight: "600" }}>{d}</div>
-                </div>
-              ))}
+    const TIME_SLOTS = [
+      '09:00 AM – 09:45 AM',
+      '10:00 AM – 10:45 AM',
+      '11:00 AM – 11:45 AM',
+      '12:00 PM – 12:45 PM',
+      '02:00 PM – 02:45 PM',
+      '03:00 PM – 03:45 PM',
+      '04:00 PM – 04:45 PM',
+      '05:00 PM – 05:45 PM',
+    ];
+
+    const COUNSELLORS = [
+      { id: 'dr-meera', name: 'Dr. Meera Nair', spec: 'Clinical Psych', emoji: '👩‍⚕️' },
+      { id: 'prof-arjun', name: 'Prof. Arjun Kapoor', spec: 'Career Coach', emoji: '👨‍🏫' },
+    ];
+
+    const handleSubmit = () => {
+      if (!selectedDate) { setBookingError('Please select a date.'); return; }
+      if (!selectedSlot) { setBookingError('Please select a time slot.'); return; }
+      if (!selectedCounsellor) { setBookingError('Please select a counsellor.'); return; }
+      if (SESSION_PRICE > 0 && transactionId.trim().length !== 12) {
+        setBookingError('Please enter a valid 12-digit UPI Transaction ID.');
+        return;
+      }
+      setBookingError('');
+      const counsellorObj = COUNSELLORS.find(c => c.id === selectedCounsellor);
+      submitBooking(studentName, {
+        date: selectedDate,
+        timeSlot: selectedSlot,
+        amount: SESSION_PRICE,
+        transactionId: SESSION_PRICE === 0 ? 'FREE_SESSION' : transactionId.trim(),
+        counsellorName: counsellorObj ? counsellorObj.name : selectedCounsellor,
+      });
+      setBookingSuccess(true);
+      showToast('🎉 Booking submitted! We will confirm within 24 hours.');
+    };
+
+    if (bookingSuccess) {
+      return (
+        <div style={{ background: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)', border: '2px solid #6EE7B7', borderRadius: 'var(--r-lg)', padding: '32px', textAlign: 'center' }}>
+          <div style={{ fontSize: '56px', marginBottom: '16px' }}>🎉</div>
+          <div style={{ fontFamily: "'Fraunces', serif", fontSize: '24px', fontWeight: '700', color: '#065F46', marginBottom: '8px' }}>Booking Confirmed!</div>
+          <div style={{ fontSize: '14px', color: '#047857', lineHeight: '1.7', marginBottom: '20px' }}>
+            Your session with <strong>{COUNSELLORS.find(c => c.id === selectedCounsellor)?.name || 'your counsellor'}</strong> on <strong>{selectedDate}</strong> at <strong>{selectedSlot}</strong> has been submitted.
+            {SESSION_PRICE > 0 && (
+              <span> Transaction ID <strong>{transactionId}</strong> received. Our team will verify your payment within 24 hours.</span>
+            )}
+          </div>
+          <button className="db-btn" onClick={() => { setBookingSuccess(false); setSelectedDate(''); setSelectedSlot(''); setSelectedCounsellor(''); setTransactionId(''); }}>
+            Book Another Session
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Pricing Banner */}
+        <div style={{
+          background: SESSION_PRICE === 0 ? 'linear-gradient(135deg, #D1FAE5, #A7F3D0)' : 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
+          border: SESSION_PRICE === 0 ? '1.5px solid #6EE7B7' : '1.5px solid #FCD34D',
+          borderRadius: 'var(--r-md)', padding: '14px 18px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <div>
+            <div style={{ fontSize: '11px', fontWeight: '800', color: SESSION_PRICE === 0 ? '#065F46' : '#92400E', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '3px' }}>
+              {SESSION_PRICE === 0 ? '🎁 Special Offer' : '💳 Session Pricing'}
             </div>
-            {[
-              { name: "Dr. Meera", spec: "Clinical Psych", type: "Free 15-min Video Call" },
-              { name: "Prof. Arjun", spec: "Career Coach", type: "Paid 1-hr Deep Dive" }
-            ].map((c, i) => (
-              <div key={i} style={{ padding: "16px", background: "var(--surface)", borderRadius: "var(--r-md)", border: "1.5px solid var(--border)", marginBottom: "12px", display: "flex", gap: "14px", alignItems: "center" }}>
-                <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "var(--teal)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>👩‍⚕️</div>
+            <div style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: '900', color: SESSION_PRICE === 0 ? '#059669' : '#B45309' }}>
+              {SESSION_PRICE === 0 ? '1st Session FREE!' : '₹700 per session'}
+            </div>
+            <div style={{ fontSize: '12px', color: SESSION_PRICE === 0 ? '#065F46' : '#92400E', marginTop: '2px', fontWeight: '500' }}>
+              {SESSION_PRICE === 0 ? 'No credit card required. Book your free intro session now.' : `You have booked ${sessionsBooked} session${sessionsBooked > 1 ? 's' : ''} so far.`}
+            </div>
+          </div>
+          <div style={{ fontSize: '32px', flexShrink: 0 }}>{SESSION_PRICE === 0 ? '🎉' : '📅'}</div>
+        </div>
+
+        {/* Step 1: Select Counsellor */}
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '10px' }}>Step 1 — Choose Your Expert</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {COUNSELLORS.map((c) => (
+              <div
+                key={c.id}
+                onClick={() => setSelectedCounsellor(c.id)}
+                style={{
+                  padding: '14px 16px', background: selectedCounsellor === c.id ? '#EEF2FF' : 'var(--surface)',
+                  border: `1.5px solid ${selectedCounsellor === c.id ? '#6366F1' : 'var(--border)'}`,
+                  borderRadius: 'var(--r-md)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--teal)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>{c.emoji}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "15px", fontWeight: "700", color: "var(--ink)" }}>{c.name}</div>
-                  <div style={{ fontSize: "12px", color: "var(--muted)" }}>{c.spec}</div>
-                  <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--saffron)", marginTop: "4px" }}>🎥 {c.type}</div>
+                  <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--ink)' }}>{c.name}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)' }}>{c.spec}</div>
                 </div>
-                <button className="db-btn-outline" onClick={() => { incrementSessions(); showToast("✅ Session booked! Check your email for confirmation."); }}>Select Time</button>
+                {selectedCounsellor === c.id && <div style={{ color: '#6366F1', fontWeight: '800', fontSize: '18px' }}>✓</div>}
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Step 2: Date Picker */}
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '8px' }}>Step 2 — Pick a Date</div>
+          <input
+            type="date"
+            value={selectedDate}
+            min={new Date().toISOString().split('T')[0]}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px', fontFamily: 'inherit', color: 'var(--ink)', background: 'white' }}
+          />
+        </div>
+
+        {/* Step 3: Time Slot */}
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '8px' }}>Step 3 — Select a Time Slot</div>
+          <select
+            value={selectedSlot}
+            onChange={(e) => setSelectedSlot(e.target.value)}
+            style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px', fontFamily: 'inherit', color: 'var(--ink)', background: 'white' }}
+          >
+            <option value="">-- Select a time slot --</option>
+            {TIME_SLOTS.map((slot) => (
+              <option key={slot} value={slot}>{slot}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Step 4: Payment (only if paid session) */}
+        {SESSION_PRICE > 0 && (
+          <div style={{ background: 'white', border: '1.5px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '20px' }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '14px' }}>Step 4 — Complete Payment via UPI</div>
+
+            {/* QR Code */}
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '10px', fontWeight: '600' }}>Scan the QR code below to pay ₹{SESSION_PRICE}</div>
+              <img
+                src="/upi/SecretSharz/credupi.jpeg"
+                alt="Scan to Pay"
+                style={{ width: '192px', height: '192px', margin: '0 auto', display: 'block', borderRadius: '12px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }}
+              />
+              <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--muted)' }}>UPI ID: <strong style={{ color: 'var(--ink)' }}>secretsharz@upi</strong></div>
+            </div>
+
+            {/* Transaction ID Input */}
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>
+                Enter 12-Digit UPI Transaction ID *
+              </label>
+              <input
+                type="text"
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                placeholder="e.g., 123456789012"
+                maxLength={12}
+                style={{
+                  width: '100%', padding: '10px 14px',
+                  border: `1.5px solid ${transactionId.length === 12 ? '#10B981' : 'var(--border)'}`,
+                  borderRadius: 'var(--r-sm)', fontSize: '14px', fontFamily: 'inherit',
+                  letterSpacing: '2px', color: 'var(--ink)',
+                }}
+              />
+              <div style={{ fontSize: '11px', color: transactionId.length === 12 ? '#059669' : 'var(--muted)', marginTop: '4px', fontWeight: '600' }}>
+                {transactionId.length}/12 digits {transactionId.length === 12 ? '✓ Valid' : ''}
+              </div>
+            </div>
+
+            {/* Help Section */}
+            <div style={{ background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 'var(--r-sm)', padding: '14px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '800', color: '#0369A1', marginBottom: '8px' }}>📖 How to find your Transaction ID</div>
+              <ul style={{ margin: '0 0 0 16px', padding: 0, fontSize: '12px', color: '#0C4A6E', lineHeight: '1.8' }}>
+                <li><strong>PhonePe:</strong> Open app → History → Tap the payment → Copy Transaction ID</li>
+                <li><strong>Google Pay:</strong> Open app → Transactions → Tap payment → Scroll to Transaction ID</li>
+                <li><strong>CRED:</strong> Open app → Pay → History → Tap payment → View Details → UPI Ref No.</li>
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {bookingError && (
+          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 'var(--r-sm)', padding: '12px 16px', fontSize: '13px', color: '#DC2626', fontWeight: '600' }}>
+            ⚠️ {bookingError}
+          </div>
+        )}
+
+        {/* Submit Button */}
+        <button
+          onClick={handleSubmit}
+          style={{
+            width: '100%', padding: '14px', background: 'linear-gradient(135deg, var(--saffron), var(--gold))',
+            color: 'white', border: 'none', borderRadius: 'var(--r-md)',
+            fontSize: '15px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit',
+            boxShadow: '0 6px 20px rgba(232,101,10,0.35)', transition: 'all 0.2s',
+          }}
+        >
+          ✅ Confirm &amp; Submit Booking
+        </button>
+      </div>
+    );
+  };
+
+  const renderCounsellorTab = () => (
+    <div className="db-tab">
+      <div className="db-card" style={{ marginBottom: 0 }}>
+        <div className="db-card-header"><div className="db-card-title">📅 Book Expert Session</div></div>
+        <div className="db-card-body">
+          <BookingEngine />
         </div>
       </div>
     </div>
