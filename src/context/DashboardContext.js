@@ -9,6 +9,19 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 const DEFAULT_USER_PROFILE = {
   // Basic identity
   profilePicture: null,          // URL string or null
+  gender: '',                    // e.g. 'Male' | 'Female' | 'Non-binary' | 'Prefer not to say'
+  motherName: '',                // Mother's full name
+  fatherName: '',                // Father's full name
+  phone: '',                     // Contact phone number
+  email: '',                     // Contact email address
+
+  // Student track — determines which services are enabled
+  // Values: 'unassigned' | 'counselling' | 'guidance' | 'both'
+  studentTrack: 'unassigned',
+
+  // Counselling consent — must be true before counselling features are unlocked
+  counsellingConsentAgreed: false,
+
   interests: [],                 // e.g. ['Technology', 'Music']
   hobbies: [],                   // e.g. ['Reading', 'Sketching']
   tvShows: [],                   // e.g. ['Breaking Bad', 'Dark']

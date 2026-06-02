@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDashboard } from './context/DashboardContext';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -341,6 +341,90 @@ const S = {
     opacity: 0.6,
     cursor: 'not-allowed',
   },
+  // ── Disclaimer box styles ──────────────────────────────────────────────────
+  disclaimerBox: {
+    background: 'linear-gradient(135deg, #FFF1F2, #FEE2E2)',
+    border: '2.5px solid #F87171',
+    borderRadius: '16px',
+    padding: '20px 24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '14px',
+  },
+  disclaimerHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  },
+  disclaimerIcon: { fontSize: '24px', flexShrink: 0 },
+  disclaimerTitle: {
+    fontFamily: "'Fraunces', serif",
+    fontSize: '16px',
+    fontWeight: '900',
+    color: '#991B1B',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+  disclaimerBody: {
+    fontSize: '13px',
+    color: '#7F1D1D',
+    lineHeight: '1.7',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+  },
+  disclaimerPoint: {
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'flex-start',
+  },
+  disclaimerBullet: { flexShrink: 0, marginTop: '2px' },
+  disclaimerEmergency: {
+    background: '#FEF2F2',
+    border: '1.5px solid #FECACA',
+    borderRadius: '10px',
+    padding: '12px 16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  },
+  disclaimerEmergencyTitle: {
+    fontSize: '12px',
+    fontWeight: '800',
+    color: '#991B1B',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+  disclaimerEmergencyItem: {
+    fontSize: '13px',
+    color: '#7F1D1D',
+    fontWeight: '600',
+  },
+  consentRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '10px',
+    background: 'white',
+    border: '2px solid #F87171',
+    borderRadius: '10px',
+    padding: '12px 16px',
+    cursor: 'pointer',
+  },
+  consentCheckbox: {
+    width: '18px',
+    height: '18px',
+    flexShrink: 0,
+    marginTop: '2px',
+    accentColor: '#DC2626',
+    cursor: 'pointer',
+  },
+  consentLabel: {
+    fontSize: '13px',
+    fontWeight: '700',
+    color: '#991B1B',
+    lineHeight: '1.5',
+    cursor: 'pointer',
+  },
   infoNote: {
     fontSize: '11px',
     color: '#9CA3AF',
@@ -628,6 +712,19 @@ export default function ProfileEditor({ onClose }) {
   // ── Local form state ──────────────────────────────────────────────────────
   const [profilePicture, setProfilePicture] = useState(userProfile.profilePicture || '');
 
+  // ── Demographics ──────────────────────────────────────────────────────────
+  const [gender, setGender] = useState(userProfile.gender || '');
+  const [fatherName, setFatherName] = useState(userProfile.fatherName || '');
+  const [motherName, setMotherName] = useState(userProfile.motherName || '');
+  const [phone, setPhone] = useState(userProfile.phone || '');
+  const [email, setEmail] = useState(userProfile.email || '');
+
+  // ── Track & Consent ───────────────────────────────────────────────────────
+  const [studentTrack, setStudentTrack] = useState(userProfile.studentTrack || 'unassigned');
+  const [counsellingConsentAgreed, setCounsellingConsentAgreed] = useState(
+    typeof userProfile.counsellingConsentAgreed === 'boolean' ? userProfile.counsellingConsentAgreed : false
+  );
+
   const [interests, setInterests] = useState(Array.isArray(userProfile.interests) ? userProfile.interests : []);
   const [hobbies, setHobbies] = useState(Array.isArray(userProfile.hobbies) ? userProfile.hobbies : []);
   const [tvShows, setTvShows] = useState(Array.isArray(userProfile.tvShows) ? userProfile.tvShows : []);
@@ -672,6 +769,11 @@ export default function ProfileEditor({ onClose }) {
 
   // ── Tier updater helpers ──────────────────────────────────────────────────
   const updateTier = (setter) => (patch) => setter((prev) => ({ ...prev, ...patch }));
+
+  // ── Derived: does this track require consent? ─────────────────────────────
+  const requiresConsent = studentTrack === 'counselling' || studentTrack === 'both';
+  const showDisclaimer = requiresConsent;
+  const isSaveBlocked = requiresConsent && !counsellingConsentAgreed;
 
   // ── Save handler ──────────────────────────────────────────────────────────
   const handleSave = useCallback(() => {
@@ -728,6 +830,15 @@ export default function ProfileEditor({ onClose }) {
 
     const profilePayload = {
       profilePicture: profilePicture || null,
+      // Demographics — all primitives, no objects
+      gender: String(gender || '').trim(),
+      fatherName: String(fatherName || '').trim(),
+      motherName: String(motherName || '').trim(),
+      phone: String(phone || '').trim(),
+      email: String(email || '').trim(),
+      // Track & consent
+      studentTrack: String(studentTrack || 'unassigned'),
+      counsellingConsentAgreed: Boolean(counsellingConsentAgreed),
       interests: interests.map(String),
       hobbies: hobbies.map(String),
       tvShows: tvShows.map(String),
@@ -746,7 +857,10 @@ export default function ProfileEditor({ onClose }) {
       if (onClose) onClose();
     }, 1200);
   }, [
-    profilePicture, interests, hobbies, tvShows, movies, games, sports,
+    profilePicture,
+    gender, fatherName, motherName, phone, email,
+    studentTrack, counsellingConsentAgreed,
+    interests, hobbies, tvShows, movies, games, sports,
     highestLevel, address, yearOfPassing, isPursuing, electives,
     tenth, twelfth, graduate, postGraduate,
     updateUserProfile, onClose,
@@ -823,6 +937,206 @@ export default function ProfileEditor({ onClose }) {
 
         {/* ── BODY ── */}
         <div style={S.body}>
+
+          {/* ════════════════════════════════════════════════════════════════
+              SECTION 0 — DEMOGRAPHICS
+          ════════════════════════════════════════════════════════════════ */}
+          <div style={S.section}>
+            <div style={S.sectionHeader}>
+              <span style={S.sectionIcon}>👤</span>
+              <span style={S.sectionTitle}>Personal Details</span>
+            </div>
+            <div style={S.sectionBody}>
+
+              {/* Gender */}
+              <div style={S.fieldGroup}>
+                <label style={S.label}>Gender</label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  style={S.select}
+                >
+                  <option value="">— Select Gender —</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Non-binary">Non-binary</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+
+              {/* Father & Mother Name */}
+              <div style={S.twoCol}>
+                <div style={S.fieldGroup}>
+                  <label style={S.label}>Father's Name</label>
+                  <input
+                    type="text"
+                    value={fatherName}
+                    onChange={(e) => setFatherName(e.target.value)}
+                    placeholder="e.g. Rajesh Kumar"
+                    style={S.input}
+                  />
+                </div>
+                <div style={S.fieldGroup}>
+                  <label style={S.label}>Mother's Name</label>
+                  <input
+                    type="text"
+                    value={motherName}
+                    onChange={(e) => setMotherName(e.target.value)}
+                    placeholder="e.g. Sunita Devi"
+                    style={S.input}
+                  />
+                </div>
+              </div>
+
+              {/* Phone & Email */}
+              <div style={S.twoCol}>
+                <div style={S.fieldGroup}>
+                  <label style={S.label}>Phone Number</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="e.g. +91 98765 43210"
+                    style={S.input}
+                  />
+                </div>
+                <div style={S.fieldGroup}>
+                  <label style={S.label}>Email Address</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="e.g. student@email.com"
+                    style={S.input}
+                  />
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ════════════════════════════════════════════════════════════════
+              SECTION 0B — TRACK SELECTION
+          ════════════════════════════════════════════════════════════════ */}
+          <div style={S.section}>
+            <div style={S.sectionHeader}>
+              <span style={S.sectionIcon}>🛤️</span>
+              <span style={S.sectionTitle}>Your Track</span>
+            </div>
+            <div style={S.sectionBody}>
+
+              <div style={S.fieldGroup}>
+                <label style={S.label}>Select Your Track <span style={{ color: '#EF4444' }}>*</span></label>
+                <select
+                  value={studentTrack}
+                  onChange={(e) => {
+                    setStudentTrack(e.target.value);
+                    // Reset consent if track no longer requires it
+                    if (e.target.value !== 'counselling' && e.target.value !== 'both') {
+                      setCounsellingConsentAgreed(false);
+                    }
+                  }}
+                  style={S.select}
+                  required
+                >
+                  <option value="unassigned">— Select a Track —</option>
+                  <option value="counselling">Counselling</option>
+                  <option value="guidance">Career Guidance</option>
+                  <option value="both">Both</option>
+                </select>
+                <div style={S.infoNote}>
+                  Choose the service(s) you wish to access. This determines which features are enabled for you.
+                </div>
+              </div>
+
+              {/* ── CONDITIONAL MEDICAL DISCLAIMER ── */}
+              {showDisclaimer && (
+                <div style={S.disclaimerBox} role="alert" aria-live="polite">
+
+                  {/* Header */}
+                  <div style={S.disclaimerHeader}>
+                    <span style={S.disclaimerIcon}>⚠️</span>
+                    <span style={S.disclaimerTitle}>Important Legal &amp; Medical Disclaimer</span>
+                  </div>
+
+                  {/* Body points */}
+                  <div style={S.disclaimerBody}>
+
+                    <div style={S.disclaimerPoint}>
+                      <span style={S.disclaimerBullet}>🔹</span>
+                      <span>
+                        <strong>Not a substitute for professional care:</strong> Online guidance and counselling
+                        provided through this platform is <strong>NOT</strong> a substitute for professional,
+                        in-person psychiatric care or clinical diagnoses. If you are experiencing a mental health
+                        crisis, please seek immediate in-person help.
+                      </span>
+                    </div>
+
+                    <div style={S.disclaimerPoint}>
+                      <span style={S.disclaimerBullet}>🔹</span>
+                      <span>
+                        <strong>Confidentiality &amp; Exceptions:</strong> Strict confidentiality will be
+                        maintained for all sessions. <strong>However</strong>, confidentiality will be
+                        <strong> broken</strong> in cases where there is a risk of{' '}
+                        <strong>suicide, self-harm, or harm to others</strong>. In such situations, emergency
+                        contacts and relevant authorities will be notified immediately.
+                      </span>
+                    </div>
+
+                    <div style={S.disclaimerPoint}>
+                      <span style={S.disclaimerBullet}>🔹</span>
+                      <span>
+                        <strong>Fee Details:</strong> All fee structures are subject to the individual
+                        counsellor's terms and conditions. Please confirm fees directly with your assigned
+                        counsellor before commencing sessions.
+                      </span>
+                    </div>
+
+                    {/* Emergency contacts box */}
+                    <div style={S.disclaimerEmergency}>
+                      <div style={S.disclaimerEmergencyTitle}>🚨 For Immediate Psychiatric Emergencies, Contact:</div>
+                      <div style={S.disclaimerEmergencyItem}>
+                        📞 NIMHANS (National Institute of Mental Health and Neurosciences) — 24/7 Helpline:{' '}
+                        <strong>080-46110007</strong>
+                      </div>
+                      <div style={S.disclaimerEmergencyItem}>
+                        🏥 St. John's Medical College Hospital Emergency — Bangalore
+                      </div>
+                      <div style={S.disclaimerEmergencyItem}>
+                        🏥 Fortis Hospital — Emergency Services
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Mandatory consent checkbox */}
+                  <label style={S.consentRow}>
+                    <input
+                      type="checkbox"
+                      checked={counsellingConsentAgreed}
+                      onChange={(e) => setCounsellingConsentAgreed(e.target.checked)}
+                      style={S.consentCheckbox}
+                    />
+                    <span style={S.consentLabel}>
+                      I have read and understood the above disclaimer. I acknowledge that online counselling is
+                      not a substitute for in-person psychiatric care, and I consent to the confidentiality
+                      policy including its stated exceptions. <strong>(Required to save)</strong>
+                    </span>
+                  </label>
+
+                  {/* Warning if not yet agreed */}
+                  {!counsellingConsentAgreed && (
+                    <div style={{ ...S.disabledNote, color: '#DC2626', fontSize: '12px' }}>
+                      <span>🔒</span>
+                      <span>You must tick the consent checkbox above before you can save your profile.</span>
+                    </div>
+                  )}
+
+                </div>
+              )}
+
+            </div>
+          </div>
 
           {/* ════════════════════════════════════════════════════════════════
               SECTION 1 — FUN & PERSONALITY
@@ -1089,11 +1403,12 @@ export default function ProfileEditor({ onClose }) {
             </button>
             <button
               type="button"
-              style={saving || saved ? { ...S.saveBtn, ...S.saveBtnDisabled } : S.saveBtn}
+              style={saving || saved || isSaveBlocked ? { ...S.saveBtn, ...S.saveBtnDisabled } : S.saveBtn}
               onClick={handleSave}
-              disabled={saving || saved}
+              disabled={saving || saved || isSaveBlocked}
+              title={isSaveBlocked ? 'Please agree to the counselling disclaimer first' : undefined}
             >
-              {saved ? '✅ Saved!' : saving ? 'Saving...' : '💾 Save Profile'}
+              {saved ? '✅ Saved!' : saving ? 'Saving...' : isSaveBlocked ? '🔒 Consent Required' : '💾 Save Profile'}
             </button>
           </div>
         </div>

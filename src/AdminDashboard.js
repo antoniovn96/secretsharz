@@ -845,6 +845,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [trackFilter, setTrackFilter] = useState('All');
   const [viewMode, setViewMode] = useState('cards'); // 'cards' | 'table'
 
   // Modals & Forms
@@ -1068,9 +1069,14 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
         (s.name || '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
         (s.email || '').toLowerCase().includes(debouncedSearch.toLowerCase());
       const matchesStatus = statusFilter === 'All' || s.counsellingStatus === statusFilter;
-      return matchesSearch && matchesStatus && s.riasecCode;
+      const sTrack = typeof s.studentTrack === 'string' ? s.studentTrack : '';
+      const matchesTrack =
+        trackFilter === 'All' ||
+        sTrack === trackFilter ||
+        (trackFilter === 'Both' && sTrack === 'Both');
+      return matchesSearch && matchesStatus && matchesTrack && s.riasecCode;
     });
-  }, [students, debouncedSearch, statusFilter]);
+  }, [students, debouncedSearch, statusFilter, trackFilter]);
 
   const pendingInterventions = students.filter(s => !s.assignedCounsellorId && s.riasecCode).length;
   const totalRegistered = students.length;
@@ -1515,6 +1521,44 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                   </button>
                 </div>
               </div>
+            </div>
+
+            {/* Track Filter Pills */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginRight: '4px' }}>Track:</span>
+              {['All Students', 'Counselling', 'Career Guidance', 'Both'].map((label) => {
+                const value = label === 'All Students' ? 'All' : label;
+                const isActive = trackFilter === value;
+                return (
+                  <button
+                    key={label}
+                    onClick={() => setTrackFilter(value)}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '20px',
+                      border: isActive ? '1.5px solid var(--primary)' : '1.5px solid var(--border)',
+                      background: isActive ? 'var(--primary)' : 'var(--card-bg)',
+                      color: isActive ? 'white' : 'var(--text-muted)',
+                      fontWeight: '600',
+                      fontSize: '0.78rem',
+                      cursor: 'pointer',
+                      fontFamily: 'Inter, sans-serif',
+                      transition: 'all 0.15s',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+              {trackFilter !== 'All' && (
+                <button
+                  onClick={() => setTrackFilter('All')}
+                  style={{ padding: '6px 10px', borderRadius: '20px', border: '1.5px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)', color: 'var(--danger)', fontWeight: '600', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
+                >
+                  ✕ Reset
+                </button>
+              )}
             </div>
 
             {/* Search & Filter Bar */}
@@ -2192,6 +2236,83 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                       </div>
                     </div>
                   )}
+
+                  {/* ── DEMOGRAPHICS & CONTACT SECTION ── */}
+                  {(() => {
+                    const track = typeof selectedStudent.studentTrack === 'string' ? selectedStudent.studentTrack : '';
+                    const showConsent = track === 'Counselling' || track === 'Both';
+                    const consentSigned = selectedStudent.counsellingConsentAgreed === true;
+                    const safeStr = (val) => (val !== null && val !== undefined && typeof val !== 'object' && !Array.isArray(val)) ? String(val) : null;
+                    const fields = [
+                      { label: 'Gender', icon: '🧬', value: safeStr(selectedStudent.gender) },
+                      { label: 'Father\'s Name', icon: '👨', value: safeStr(selectedStudent.fatherName) },
+                      { label: 'Mother\'s Name', icon: '👩', value: safeStr(selectedStudent.motherName) },
+                      { label: 'Phone', icon: '📞', value: safeStr(selectedStudent.phone) },
+                      { label: 'Email', icon: '✉️', value: safeStr(selectedStudent.email) },
+                      { label: 'Student Track', icon: '🎯', value: track || null },
+                    ];
+                    return (
+                      <div style={{
+                        marginTop: '16px',
+                        background: 'var(--bg)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--r-md)',
+                        overflow: 'hidden',
+                      }}>
+                        {/* Section header */}
+                        <div style={{
+                          padding: '12px 16px',
+                          borderBottom: '1px solid var(--border)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          background: 'white',
+                        }}>
+                          <span style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-main)' }}>
+                            👤 Demographics &amp; Contact
+                          </span>
+                          {showConsent && (
+                            consentSigned ? (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                padding: '4px 12px', borderRadius: '20px',
+                                background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)',
+                                color: 'var(--success)', fontWeight: '700', fontSize: '0.72rem',
+                              }}>
+                                ✅ Medical Consent Signed
+                              </span>
+                            ) : (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                padding: '4px 12px', borderRadius: '20px',
+                                background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)',
+                                color: 'var(--warning)', fontWeight: '700', fontSize: '0.72rem',
+                              }}>
+                                ⚠️ Consent Pending
+                              </span>
+                            )
+                          )}
+                        </div>
+                        {/* Fields grid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
+                          {fields.map((f, i) => (
+                            <div key={f.label} style={{
+                              padding: '10px 16px',
+                              borderBottom: i < fields.length - 2 ? '1px solid var(--border)' : 'none',
+                              borderRight: i % 2 === 0 ? '1px solid var(--border)' : 'none',
+                            }}>
+                              <div style={{ fontSize: '0.68rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '3px' }}>
+                                {f.icon} {f.label}
+                              </div>
+                              <div style={{ fontSize: '0.85rem', fontWeight: '600', color: f.value ? 'var(--text-main)' : 'var(--text-muted)', fontStyle: f.value ? 'normal' : 'italic' }}>
+                                {f.value || 'Not provided'}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
