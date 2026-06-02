@@ -1105,18 +1105,17 @@ export default function ProfileEditor({ onClose }) {
                   </label>
 
                   {/* Warning if not yet agreed */}
-                  {!counsellingConsentAgreed && (
-                    <div style={{ ...S.disabledNote, color: '#DC2626', fontSize: '12px' }}>
-                      <span>🔒</span>
-                      <span>You must tick the consent checkbox above before you can save your profile.</span>
-                    </div>
-                  )}
+                {!counsellingConsentAgreed && (
+                  <div style={{ ...S.disabledNote, color: '#DC2626', fontSize: '12px' }}>
+                    <span>🔒</span>
+                    <span>You must tick the consent checkbox above before you can save your profile.</span>
+                  </div>
+                )}
 
-                </div>
-              )}
-
+              </div>
             </div>
           </div>
+          )}
 
           {/* ════════════════════════════════════════════════════════════════
               SECTION 1 — FUN & PERSONALITY
