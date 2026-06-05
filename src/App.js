@@ -596,8 +596,8 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
   return (
     <>
       <Head>
-        <title>Secret Sharz | #1 Anonymous Student Mental Health &amp; Career Platform</title>
-        <meta name="description" content="India's top anonymous emotional safe space and career discovery platform for students. Get free emotional first aid, vent anonymously, and plan your career with VidyaVantage." />
+        <title>Secret Sharz: Anonymous Student Mental Health &amp; Careers</title>
+        <meta name="description" content="India's anonymous emotional safe space and career platform for students. Get free emotional first aid and plan your career with VidyaVantage." />
         <meta name="keywords" content="student mental health, anonymous venting, career guidance, Indian students, POCSO aligned, emotional support, VidyaVantage, Holland RIASEC" />
         <link rel="canonical" href="https://www.secretsharz.com/" />
         <meta property="og:title" content="Secret Sharz | Anonymous Mental Health Support &amp; Career Guidance" />

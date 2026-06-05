@@ -1068,6 +1068,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [trackFilter, setTrackFilter] = useState('All');
+  const [eduFilter, setEduFilter] = useState('All');
   const [viewMode, setViewMode] = useState('cards'); // 'cards' | 'table'
 
   // Modals & Forms
@@ -1313,9 +1314,14 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
         trackFilter === 'All' ||
         sTrack === trackFilter ||
         (trackFilter === 'Both' && sTrack === 'Both');
-      return matchesSearch && matchesStatus && matchesTrack && s.riasecCode;
+      
+      // New Education Filter Logic
+      const studentEdu = s?.education?.highestLevel || s?.gradeLevel || '';
+      const matchesEdu = eduFilter === 'All' || studentEdu.includes(eduFilter);
+
+      return matchesSearch && matchesStatus && matchesTrack && matchesEdu && s.riasecCode;
     });
-  }, [students, debouncedSearch, statusFilter, trackFilter]);
+  }, [students, debouncedSearch, statusFilter, trackFilter, eduFilter]);
 
   const pendingInterventions = students.filter(s => !s.assignedCounsellorId && s.riasecCode).length;
   const totalRegistered = students.length;
@@ -1362,8 +1368,12 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
       <div className="student-roster-card">
         {/* Top: Avatar + Name + Email */}
         <div className="src-top">
-          <div className="src-avatar">
-            {(student.name || '?').charAt(0).toUpperCase()}
+          <div className="src-avatar" style={{ overflow: 'hidden', padding: student.profilePicture ? '0' : undefined }}>
+            {student.profilePicture ? (
+              <img src={student.profilePicture} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              (student.name || '?').charAt(0).toUpperCase()
+            )}
           </div>
           <div className="src-info">
             <div className="src-name">{student.name || 'Unknown Student'}</div>
@@ -1801,7 +1811,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             </div>
 
             {/* Search & Filter Bar */}
-            <div className="search-bar">
+            <div className="search-bar" style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
               <input
                 type="text"
                 ref={searchRef}
@@ -1811,16 +1821,23 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                 onChange={(e) => setSearchInput(e.target.value)}
                 style={{ flex: 2 }}
               />
+              <select className="form-select" value={eduFilter} onChange={(e) => setEduFilter(e.target.value)} style={{ flex: 1 }}>
+                <option value="All">All Education Levels</option>
+                <option value="10th">10th Grade</option>
+                <option value="12th">12th Grade / PUC</option>
+                <option value="Graduate">Graduate (UG)</option>
+                <option value="Post Graduate">Post Graduate (PG)</option>
+              </select>
               <select className="form-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ flex: 1 }}>
                 <option value="All">All Statuses</option>
                 <option value="Not Started">Not Started</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Completed">Completed</option>
               </select>
-              {(searchInput || statusFilter !== 'All') && (
+              {(searchInput || statusFilter !== 'All' || eduFilter !== 'All') && (
                 <button
                   className="admin-btn-outline"
-                  onClick={() => { setSearchInput(''); setStatusFilter('All'); }}
+                  onClick={() => { setSearchInput(''); setStatusFilter('All'); setEduFilter('All'); }}
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   ✕ Clear
@@ -1889,8 +1906,19 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                         return (
                           <tr key={student.id}>
                             <td>
-                              <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{student.name || 'Unknown'}</div>
-                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{student.email}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', overflow: 'hidden', flexShrink: 0 }}>
+                                  {student.profilePicture ? (
+                                    <img src={student.profilePicture} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  ) : (
+                                    (student.name || '?').charAt(0).toUpperCase()
+                                  )}
+                                </div>
+                                <div>
+                                  <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{student.name || 'Unknown'}</div>
+                                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{student.email}</div>
+                                </div>
+                              </div>
                             </td>
                             <td><span className="admin-badge badge-primary">{student.riasecCode}</span></td>
                             <td>

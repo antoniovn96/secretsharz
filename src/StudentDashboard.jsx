@@ -498,7 +498,12 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         )}
 
         {/* EX Points Block */}
-        <div className="db-xp-block">
+        <div 
+          className="db-xp-block" 
+          style={{ cursor: 'pointer' }} 
+          onClick={() => setShowProfileEditor(true)}
+          title="Click to earn more EX Points"
+        >
           <div className="db-xp-label">⚡ EX Points</div>
           <div className="db-xp-score">{exPoints} <span>/ {maxXp}</span></div>
           <div className="db-xp-bar-wrap">
@@ -572,8 +577,11 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             <div
               key={notif.id}
               className="db-notif-item"
-              style={{ cursor: !notif.isRead ? 'pointer' : 'default', opacity: notif.isRead ? 0.65 : 1 }}
-              onClick={() => !notif.isRead && markNotificationRead(notif.id)}
+              style={{ cursor: 'pointer', opacity: notif.isRead ? 0.65 : 1 }}
+              onClick={() => {
+                if (!notif.isRead) markNotificationRead(notif.id);
+                setShowProfileEditor(true);
+              }}
             >
               <div className="db-notif-dot" style={{ background: getNotifColor(notif.priority, notif.isRead) }} />
               <div className="db-notif-content">
