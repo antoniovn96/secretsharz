@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import CareerAssessment from "./CareerAssessment";
 import ProfileEditor from "./ProfileEditor";
@@ -294,28 +294,24 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   useEffect(() => { if (userData) setLocalUserData(userData); }, [userData]);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (auth?.currentUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            setLocalUserData(data);
-            if (data.profileComplete) {
-              setProfileData({
-                age: data.age || '', gender: data.gender || '',
-                schoolName: data.schoolName || '', gradeLevel: data.gradeLevel || '',
-                marks10th: data.marks10th || '', marks11th: data.marks11th || '',
-                stream1112: data.stream1112 || '', marks12th: data.marks12th || '',
-                ugCourse: data.ugCourse || '', ugCGPA: data.ugCGPA || '',
-                pgCourse: data.pgCourse || '', pgCGPA: data.pgCGPA || ''
-              });
-            }
-          }
-        } catch (e) { console.error('Error fetching user data:', e); }
+    if (!auth?.currentUser) return;
+    const unsub = onSnapshot(doc(db, 'users', auth.currentUser.uid), (userDoc) => {
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        setLocalUserData(data);
+        if (data.profileComplete) {
+          setProfileData({
+            age: data.age || '', gender: data.gender || '',
+            schoolName: data.schoolName || '', gradeLevel: data.gradeLevel || '',
+            marks10th: data.marks10th || '', marks11th: data.marks11th || '',
+            stream1112: data.stream1112 || '', marks12th: data.marks12th || '',
+            ugCourse: data.ugCourse || '', ugCGPA: data.ugCGPA || '',
+            pgCourse: data.pgCourse || '', pgCGPA: data.pgCGPA || ''
+          });
+        }
       }
-    };
-    fetchUserData();
+    }, (e) => { console.error('Error listening to user data:', e); });
+    return () => unsub();
   }, []);
 
   useEffect(() => {
