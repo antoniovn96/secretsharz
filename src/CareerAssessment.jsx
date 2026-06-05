@@ -440,7 +440,8 @@ function applyHobbyBoosts(scores, hobbies) {
 
 function getTop3(scores) {
   return Object.entries(scores)
-    .sort((a, b) => b[1] - a[1])
+    // Sort by score descending. If tied, sort alphabetically to prevent random shuffling!
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 3)
     .map(([k]) => k);
 }
@@ -730,25 +731,28 @@ function scoreCareerMatch(career, hollandCode, subjects, hobbies, marks) {
   const hobbyArr = Array.isArray(hobbies) ? hobbies : [];
   const marksW = MARKS_WEIGHT[marks] || 0.85;
 
-  // RIASEC overlap
+  // RIASEC overlap (Max possible = 55 points)
   let riasecScore = 0;
   hollandCode.forEach((k, rank) => {
     const idx = career.riasec.indexOf(k);
-    if (idx === 0) riasecScore += (3 - rank) * 15;
-    else if (idx === 1) riasecScore += (3 - rank) * 8;
-    else if (idx === 2) riasecScore += (3 - rank) * 4;
+    if (idx === 0) riasecScore += (3 - rank) * 12;      // 1st letter match
+    else if (idx === 1) riasecScore += (3 - rank) * 6;  // 2nd letter match
+    else if (idx === 2) riasecScore += (3 - rank) * 3;  // 3rd letter match
   });
 
-  // Subject overlap
+  // Subject overlap (Max possible = 25 points)
   const subjectOverlap = subjectArr.filter(s => career.subjects.includes(s)).length;
-  const subjectScore = Math.min(subjectOverlap * 10, 25);
+  const subjectScore = Math.min(subjectOverlap * 12.5, 25); 
 
-  // Hobby overlap
+  // Hobby overlap (Max possible = 20 points)
   const hobbyOverlap = hobbyArr.filter(h => career.hobbies.includes(h)).length;
-  const hobbyScore = Math.min(hobbyOverlap * 8, 20);
+  const hobbyScore = Math.min(hobbyOverlap * 10, 20); 
 
+  // Total possible raw = 100.
   const raw = (riasecScore + subjectScore + hobbyScore) * marksW;
-  return Math.min(Math.round(raw), 99);
+  
+  // Cap at 98% because no career is mathematically perfect in reality
+  return Math.min(Math.round(raw), 98);
 }
 
 function buildWhyText(career, subjects, hobbies) {

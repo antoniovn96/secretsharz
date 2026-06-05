@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { doc, setDoc } from 'firebase/firestore';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '../firebase';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -412,10 +413,41 @@ export function DashboardProvider({ children, navigate }) {
   const [assignments, setAssignments] = useState(INITIAL_ASSIGNMENTS);
   const [institutions, setInstitutions] = useState([]);
 
-  // ── GAMIFIED USER PROFILE STATE ──────────────────────────────────────────
-  const [userProfile, setUserProfile] = useState(DEFAULT_USER_PROFILE);
-  const [socialFeed] = useState(INITIAL_SOCIAL_FEED);
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+  // ── FETCH SAVED DATA ON PAGE REFRESH ──
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const docRef = doc(db, 'users', user.uid);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            const dbData = docSnap.data();
+            setUserProfile(prev => {
+              const merged = { ...prev, ...dbData };
+              // Deep-merge the education sub-object safely
+              if (dbData.education) {
+                merged.education = { ...prev.education, ...dbData.education };
+              }
+              return merged;
+            });
+            
+            // Recalculate the gamified XP points automatically after fetching
+            setTimeout(() => {
+              setUserProfile(curr => ({ ...curr, exPoints: calculateExPoints(curr) }));
+            }, 100);
+          }
+        } catch (err) {
+          console.error("Failed to load profile on refresh:", err);
+        }
+      } else {
+        // Reset to default if the user logs out
+        setUserProfile(DEFAULT_USER_PROFILE); 
+      }
+    });
+
+    return () => unsubscribe();
+  }, [calculateExPoints]);
 
   // ── STUDENT HELPERS ──────────────────────────────────────────────────────
 
