@@ -1,13 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AutocompleteInput
+// AutocompleteInput (Advanced UX)
 //
-// Props:
-//   options      — string[]  — the full list of suggestions
-//   value        — string    — current input value (controlled)
-//   onChange     — fn(str)   — called with the new string value
-//   placeholder  — string    — input placeholder text
+// Features:
+// - Ghost Text (Inline suggestion in grey)
+// - Tab to auto-complete
+// - Enter to add tag instantly
+// - Smart sorting (Starts-with prioritized over includes)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function AutocompleteInput({ options = [], value = '', onChange, placeholder = '' }) {
@@ -16,18 +16,35 @@ export default function AutocompleteInput({ options = [], value = '', onChange, 
   const containerRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Safety check: ensure value is always a string and not null/undefined
+  // Safety check: ensure value is always a string
   const query = value == null ? '' : String(value);
-  
-  // Filter: only show when ≥ 3 chars typed
-  const filtered =
-    query.trim().length >= 3
-      ? options.filter((opt) =>
-          opt != null && String(opt).toLowerCase().includes(query.trim().toLowerCase())
-        )
-      : [];
+  const queryLower = query.toLowerCase();
+
+  // Filter: show when >= 1 char typed. 
+  // Smart sort: items that START with the query go to the very top.
+  const filtered = query.trim().length >= 1
+    ? options
+        .filter((opt) => opt != null && String(opt).toLowerCase().includes(query.trim().toLowerCase()))
+        .sort((a, b) => {
+          const aStarts = String(a).toLowerCase().startsWith(query.trim().toLowerCase());
+          const bStarts = String(b).toLowerCase().startsWith(query.trim().toLowerCase());
+          if (aStarts && !bStarts) return -1;
+          if (!aStarts && bStarts) return 1;
+          return 0;
+        })
+    : [];
 
   const showDropdown = open && filtered.length > 0;
+
+  // Ghost Text Logic: Find the first option that STARTS with what they typed
+  const firstStartsWithMatch = query.length > 0 
+    ? options.find(opt => String(opt).toLowerCase().startsWith(queryLower))
+    : null;
+    
+  // The grey text that sits behind the input cursor
+  const ghostSuffix = firstStartsWithMatch 
+    ? String(firstStartsWithMatch).substring(query.length)
+    : '';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -55,17 +72,30 @@ export default function AutocompleteInput({ options = [], value = '', onChange, 
   };
 
   const handleKeyDown = (e) => {
-    if (!showDropdown) return;
-    if (e.key === 'ArrowDown') {
+    if (e.key === 'Tab') {
+      // Tab to auto-complete the ghost text
+      if (firstStartsWithMatch && ghostSuffix) {
+        e.preventDefault();
+        onChange(String(firstStartsWithMatch));
+        setOpen(false);
+      }
+    } else if (e.key === 'ArrowDown') {
+      if (!showDropdown) return;
       e.preventDefault();
       setActiveIdx((prev) => Math.min(prev + 1, filtered.length - 1));
     } else if (e.key === 'ArrowUp') {
+      if (!showDropdown) return;
       e.preventDefault();
       setActiveIdx((prev) => Math.max(prev - 1, 0));
     } else if (e.key === 'Enter') {
-      if (activeIdx >= 0 && activeIdx < filtered.length) {
+      // If they are navigating the dropdown, select the item.
+      if (showDropdown && activeIdx >= 0) {
         e.preventDefault();
+        e.stopPropagation(); // Stops the tag from being added immediately
         handleSelect(filtered[activeIdx]);
+      } else {
+        // If they just hit enter, let it bubble up to TagInput so it adds the tag!
+        setOpen(false);
       }
     } else if (e.key === 'Escape') {
       setOpen(false);
@@ -75,6 +105,15 @@ export default function AutocompleteInput({ options = [], value = '', onChange, 
 
   return (
     <div ref={containerRef} style={styles.wrapper}>
+      
+      {/* ── GHOST TEXT LAYER ── */}
+      <div style={styles.ghostContainer}>
+        {/* Invisible block pushes the grey text to the exact cursor position */}
+        <span style={{ visibility: 'hidden' }}>{query}</span>
+        {/* Visible grey text */}
+        <span style={styles.ghostMatch}>{ghostSuffix}</span>
+      </div>
+
       <input
         ref={inputRef}
         type="text"
@@ -89,10 +128,10 @@ export default function AutocompleteInput({ options = [], value = '', onChange, 
         aria-expanded={showDropdown}
         aria-haspopup="listbox"
       />
+      
       {showDropdown && (
         <ul style={styles.dropdown} role="listbox">
           {filtered.map((opt, idx) => {
-            // CRITICAL: always render a plain string — never a raw object
             const label = String(opt);
             const isActive = idx === activeIdx;
             return (
@@ -102,13 +141,11 @@ export default function AutocompleteInput({ options = [], value = '', onChange, 
                 aria-selected={isActive}
                 style={isActive ? { ...styles.item, ...styles.itemActive } : styles.item}
                 onMouseDown={(e) => {
-                  // Use mousedown so it fires before the input's blur
                   e.preventDefault();
                   handleSelect(label);
                 }}
                 onMouseEnter={() => setActiveIdx(idx)}
               >
-                {/* Highlight the matching portion */}
                 <HighlightMatch text={label} query={query.trim()} />
               </li>
             );
@@ -120,11 +157,10 @@ export default function AutocompleteInput({ options = [], value = '', onChange, 
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HighlightMatch — bolds the matched substring inside a suggestion
-// Prevents React Error #306 by only ever rendering strings inside <span>s
+// HighlightMatch
 // ─────────────────────────────────────────────────────────────────────────────
 function HighlightMatch({ text, query }) {
-  if (!query || query.length < 3) return <span>{String(text)}</span>;
+  if (!query || query.length < 1) return <span>{String(text)}</span>;
 
   const safeText = String(text);
   const idx = safeText.toLowerCase().indexOf(query.toLowerCase());
@@ -144,7 +180,7 @@ function HighlightMatch({ text, query }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// STYLES — matches the existing ProfileEditor dashboard aesthetic
+// STYLES
 // ─────────────────────────────────────────────────────────────────────────────
 const styles = {
   wrapper: {
@@ -159,10 +195,33 @@ const styles = {
     fontSize: '14px',
     fontFamily: 'inherit',
     color: '#0D1117',
-    background: 'white',
+    background: 'transparent', // MUST be transparent to see ghost text behind it
+    position: 'relative',
+    zIndex: 2,
     outline: 'none',
     transition: 'border-color 0.2s',
     boxSizing: 'border-box',
+  },
+  ghostContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: '10px 14px', 
+    fontSize: '14px',     
+    fontFamily: 'inherit',
+    color: 'transparent', 
+    background: 'white',  
+    border: '1.5px solid transparent', 
+    borderRadius: '10px',
+    zIndex: 1,
+    pointerEvents: 'none',
+    whiteSpace: 'pre', 
+    overflow: 'hidden',
+  },
+  ghostMatch: {
+    color: '#9CA3AF' // Light grey suggestion color
   },
   dropdown: {
     position: 'absolute',
