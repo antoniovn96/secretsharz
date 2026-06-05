@@ -78,7 +78,7 @@ export const S = {
   xpBannerLabel: { fontSize: '12px', fontWeight: '700', color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.5px' },
   xpBannerValue: { fontFamily: "'Fraunces', serif", fontSize: '28px', fontWeight: '900', color: '#D97706', lineHeight: 1 },
   xpBannerSub: { fontSize: '11px', color: '#B45309', fontWeight: '500', marginTop: '2px' },
-  body: { padding: '24px 32px 32px', display: 'flex', flexDirection: 'column', gap: '28px' },
+  body: { padding: '24px 32px 120px', display: 'flex', flexDirection: 'column', gap: '28px' },
   section: {
     background: '#F6F8FA',
     borderRadius: '16px',

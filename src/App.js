@@ -961,7 +961,7 @@ export default function App() {
 
         if (typeof window !== 'undefined') {
           const path = window.location.pathname.replace(/\/+$/, '') || '/';
-          if (path === '/auth' || path === '/') {
+          if (path === '/auth') {
             navigate(isAdmin ? '/admin' : '/dashboard');
           }
         }

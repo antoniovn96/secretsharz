@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { doc, setDoc } from 'firebase/firestore';
+import { db, auth } from '../firebase';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MOCK DATA — Realistic seed data for frontend prototype
@@ -647,7 +649,8 @@ export function DashboardProvider({ children, navigate }) {
    *
    * @param {Partial<DEFAULT_USER_PROFILE>} updates
    */
-  const updateUserProfile = useCallback((updates) => {
+  const updateUserProfile = useCallback(async (updates) => {
+    // 1. Update the local React state instantly
     setUserProfile(prev => {
       const merged = { ...prev, ...updates };
       // Deep-merge education sub-object if provided
@@ -656,13 +659,24 @@ export function DashboardProvider({ children, navigate }) {
       }
       return merged;
     });
-    // Re-run XP calculation after state settles (next tick)
+    
+    // 2. Re-run XP calculation after state settles (next tick)
     setTimeout(() => {
       setUserProfile(prev => {
         const points = calculateExPoints(prev);
         return { ...prev, exPoints: points };
       });
     }, 0);
+
+    // 3. Save permanently to Firebase Firestore
+    if (auth?.currentUser) {
+      try {
+        const userRef = doc(db, 'users', auth.currentUser.uid);
+        await setDoc(userRef, updates, { merge: true });
+      } catch (error) {
+        console.error("Error saving to Firebase:", error);
+      }
+    }
   }, [calculateExPoints]);
 
   /**

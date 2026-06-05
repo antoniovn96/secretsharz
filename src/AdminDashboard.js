@@ -1365,7 +1365,17 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
       'badge-danger';
 
     return (
-      <div className="student-roster-card">
+      <div 
+        className="student-roster-card"
+        style={{ cursor: 'pointer' }}
+        onClick={(e) => {
+          // Prevent opening modal if clicking the dropdown or buttons inside the card
+          if (e.target.tagName !== 'SELECT' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'OPTION') {
+            setSelectedStudent(student); 
+            setModalTab('overview');
+          }
+        }}
+      >
         {/* Top: Avatar + Name + Email */}
         <div className="src-top">
           <div className="src-avatar" style={{ overflow: 'hidden', padding: student.profilePicture ? '0' : undefined }}>
@@ -1375,13 +1385,18 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               (student.name || '?').charAt(0).toUpperCase()
             )}
           </div>
+          
           <div className="src-info">
             <div className="src-name">{student.name || 'Unknown Student'}</div>
             <div className="src-email">{student.email || '—'}</div>
           </div>
           <button
             className="admin-btn-sm-outline"
-            onClick={() => { setSelectedStudent(student); setModalTab('overview'); }}
+            onClick={(e) => { 
+              e.stopPropagation(); // Stops the double-click effect
+              setSelectedStudent(student); 
+              setModalTab('overview'); 
+            }}
             title="View full profile"
           >
             View
