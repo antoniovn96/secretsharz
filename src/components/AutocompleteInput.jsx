@@ -1,6 +1,86 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
+// STYLES (MOVED TO TOP TO FIX VERCEL COMPILATION ERROR)
+// ─────────────────────────────────────────────────────────────────────────────
+const styles = {
+  wrapper: {
+    position: 'relative',
+    width: '100%',
+  },
+  input: {
+    width: '100%',
+    padding: '10px 14px',
+    border: '1.5px solid #E1E7EF',
+    borderRadius: '10px',
+    fontSize: '14px',
+    fontFamily: 'inherit',
+    color: '#0D1117',
+    background: 'transparent', // MUST be transparent to see ghost text behind it
+    position: 'relative',
+    zIndex: 2,
+    outline: 'none',
+    transition: 'border-color 0.2s',
+    boxSizing: 'border-box',
+  },
+  ghostContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: '10px 14px', 
+    fontSize: '14px',     
+    fontFamily: 'inherit',
+    color: 'transparent', 
+    background: 'white',  
+    border: '1.5px solid transparent', 
+    borderRadius: '10px',
+    zIndex: 1,
+    pointerEvents: 'none',
+    whiteSpace: 'pre', 
+    overflow: 'hidden',
+  },
+  ghostMatch: {
+    color: '#9CA3AF' // Light grey suggestion color
+  },
+  dropdown: {
+    position: 'absolute',
+    top: 'calc(100% + 4px)',
+    left: 0,
+    right: 0,
+    background: '#FFFFFF',
+    border: '1.5px solid #C7D2FE',
+    borderRadius: '12px',
+    boxShadow: '0 8px 32px rgba(79,70,229,0.13), 0 2px 8px rgba(0,0,0,0.08)',
+    zIndex: 9999,
+    maxHeight: '220px',
+    overflowY: 'auto',
+    margin: 0,
+    padding: '6px 0',
+    listStyle: 'none',
+  },
+  item: {
+    padding: '9px 16px',
+    fontSize: '13px',
+    color: '#374151',
+    cursor: 'pointer',
+    transition: 'background 0.12s',
+    lineHeight: '1.5',
+    userSelect: 'none',
+  },
+  itemActive: {
+    background: '#EEF2FF',
+    color: '#4338CA',
+  },
+  highlight: {
+    fontWeight: '700',
+    color: '#4F46E5',
+    background: 'transparent',
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // AutocompleteInput (Advanced UX)
 //
 // Features:
@@ -178,83 +258,3 @@ function HighlightMatch({ text, query }) {
     </span>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STYLES
-// ─────────────────────────────────────────────────────────────────────────────
-const styles = {
-  wrapper: {
-    position: 'relative',
-    width: '100%',
-  },
-  input: {
-    width: '100%',
-    padding: '10px 14px',
-    border: '1.5px solid #E1E7EF',
-    borderRadius: '10px',
-    fontSize: '14px',
-    fontFamily: 'inherit',
-    color: '#0D1117',
-    background: 'transparent', // MUST be transparent to see ghost text behind it
-    position: 'relative',
-    zIndex: 2,
-    outline: 'none',
-    transition: 'border-color 0.2s',
-    boxSizing: 'border-box',
-  },
-  ghostContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    padding: '10px 14px', 
-    fontSize: '14px',     
-    fontFamily: 'inherit',
-    color: 'transparent', 
-    background: 'white',  
-    border: '1.5px solid transparent', 
-    borderRadius: '10px',
-    zIndex: 1,
-    pointerEvents: 'none',
-    whiteSpace: 'pre', 
-    overflow: 'hidden',
-  },
-  ghostMatch: {
-    color: '#9CA3AF' // Light grey suggestion color
-  },
-  dropdown: {
-    position: 'absolute',
-    top: 'calc(100% + 4px)',
-    left: 0,
-    right: 0,
-    background: '#FFFFFF',
-    border: '1.5px solid #C7D2FE',
-    borderRadius: '12px',
-    boxShadow: '0 8px 32px rgba(79,70,229,0.13), 0 2px 8px rgba(0,0,0,0.08)',
-    zIndex: 9999,
-    maxHeight: '220px',
-    overflowY: 'auto',
-    margin: 0,
-    padding: '6px 0',
-    listStyle: 'none',
-  },
-  item: {
-    padding: '9px 16px',
-    fontSize: '13px',
-    color: '#374151',
-    cursor: 'pointer',
-    transition: 'background 0.12s',
-    lineHeight: '1.5',
-    userSelect: 'none',
-  },
-  itemActive: {
-    background: '#EEF2FF',
-    color: '#4338CA',
-  },
-  highlight: {
-    fontWeight: '700',
-    color: '#4F46E5',
-    background: 'transparent',
-  },
-};
