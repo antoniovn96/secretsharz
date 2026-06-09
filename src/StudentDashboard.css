@@ -1,0 +1,18 @@
+/* --- GLOBAL DARK THEME --- */
+.social-dark-theme { background-color: #18191A; color: #E4E6EB; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+.social-dashboard-layout { display: flex; max-width: 1400px; margin: 0 auto; }
+.social-sidebar { width: 320px; position: sticky; top: 0; height: 100vh; padding: 20px; border-right: 1px solid #3A3B3C; background-color: #18191A; }
+.social-main-content { flex: 1; background: #242526; min-height: 100vh; border-left: 1px solid #3A3B3C; border-right: 1px solid #3A3B3C; }
+.profile-hero-container { background-color: #242526; border-bottom: 1px solid #3A3B3C; padding-bottom: 20px; }
+.profile-cover-photo { height: 350px; width: 100%; background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%); position: relative; }
+.profile-avatar-wrapper { position: absolute; bottom: -40px; left: 40px; width: 168px; height: 168px; border-radius: 50%; border: 4px solid #242526; background: #3A3B3C; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.profile-avatar-fallback { font-size: 64px; color: #E4E6EB; font-weight: bold; }
+.profile-identity-row { margin-top: 60px; padding: 0 40px; display: flex; justify-content: space-between; align-items: flex-start; }
+.profile-name-section h1 { font-size: 32px; font-weight: 700; margin: 0 0 8px 0; }
+.profile-bio { color: #B0B3B8; font-size: 16px; margin-bottom: 12px; }
+.profile-pinned-details { display: flex; gap: 16px; color: #B0B3B8; font-size: 14px; font-weight: 500; }
+.profile-actions { display: flex; gap: 12px; }
+.btn-primary-social { background-color: #0866FF; color: white; border: none; padding: 8px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.btn-primary-social:hover { background-color: #0054d1; }
+.btn-secondary-social { background-color: #3A3B3C; color: #E4E6EB; border: none; padding: 8px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.btn-secondary-social:hover { background-color: #4E4F50; }

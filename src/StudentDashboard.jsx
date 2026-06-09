@@ -6,6 +6,7 @@ import ProfileEditor from "./ProfileEditor";
 import { useDashboard } from "./context/DashboardContext";
 import XpChecklistModal from "./components/XpChecklistModal";
 import CareerMatchesModal from "./components/CareerMatchesModal";
+import "./StudentDashboard.css";
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
 
@@ -525,22 +526,49 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         )}
 
         {/* EX Points Block */}
-        <div 
-          className="db-xp-block" 
-          style={{ cursor: 'pointer' }} 
-          onClick={() => setShowProfileEditor(true)}
-          title="Click to earn more EX Points"
-        >
-          <div className="db-xp-label">⚡ EX Points</div>
-          <div className="db-xp-score">{exPoints} <span>/ {maxXp}</span></div>
-          <div className="db-xp-bar-wrap">
-            <div className="db-xp-bar-fill" style={{ width: `${xpPct}%` }} />
+        {exPoints === 0 ? (
+          /* ── XP EMPTY STATE ── */
+          <div className="db-xp-block" style={{ textAlign: 'center', padding: '16px' }}>
+            <div className="db-xp-label">⚡ EX Points</div>
+            <div style={{ fontSize: '36px', margin: '8px 0 6px' }}>🌟</div>
+            <div style={{ fontFamily: "'Fraunces', serif", fontSize: '14px', fontWeight: '700', color: '#92400E', marginBottom: '6px', lineHeight: '1.4' }}>
+              Welcome to Secret Sharz!
+            </div>
+            <div style={{ fontSize: '11px', color: '#B45309', lineHeight: '1.5', marginBottom: '12px' }}>
+              Complete your profile to earn your first 50 XP.
+            </div>
+            <button
+              onClick={() => setShowProfileEditor(true)}
+              style={{
+                width: '100%', padding: '8px 12px',
+                background: 'linear-gradient(135deg, var(--saffron), var(--gold))',
+                color: 'white', border: 'none', borderRadius: 'var(--r-sm)',
+                fontSize: '12px', fontWeight: '700', cursor: 'pointer',
+                fontFamily: 'inherit', boxShadow: '0 3px 10px rgba(232,101,10,0.3)',
+                transition: 'all 0.2s',
+              }}
+            >
+              Complete Profile ✨
+            </button>
           </div>
-          <div className="db-xp-level">
-            <span>Level {xpLevel}</span>
-            <span>{xpPct}% to next</span>
+        ) : (
+          <div 
+            className="db-xp-block" 
+            style={{ cursor: 'pointer' }} 
+            onClick={() => setShowProfileEditor(true)}
+            title="Click to earn more EX Points"
+          >
+            <div className="db-xp-label">⚡ EX Points</div>
+            <div className="db-xp-score">{exPoints} <span>/ {maxXp}</span></div>
+            <div className="db-xp-bar-wrap">
+              <div className="db-xp-bar-fill" style={{ width: `${xpPct}%` }} />
+            </div>
+            <div className="db-xp-level">
+              <span>Level {xpLevel}</span>
+              <span>{xpPct}% to next</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Edit Profile Button */}
         <button className="db-edit-profile-btn" onClick={() => setShowProfileEditor(true)}>
@@ -627,46 +655,102 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         </div>
       </div>
 
-      {/* Career Intelligence (compact) — only shown if assessment done */}
-      {hasAssessment && (
-        <div className="db-sidebar-widget">
-          <div className="db-widget-header">
-            <div className="db-widget-title">🧠 Career Intel</div>
+      {/* Career Intelligence (compact) — shown if assessment done, empty state if not */}
+      <div className="db-sidebar-widget">
+        <div className="db-widget-header">
+          <div className="db-widget-title">🧠 Career Intel</div>
+          {hasAssessment && (
             <button className="db-widget-action" onClick={() => setActiveTab("report")}>Full Report →</button>
-          </div>
-          <div className="db-widget-body">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <div>
-                <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--muted)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '3px' }}>Holland Code</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', fontWeight: '900', color: 'var(--ink)', letterSpacing: '3px' }}>{String(localUserData?.riasecCode || '')}</div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--muted)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '3px' }}>Top Match</div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)' }}>
-                  {String(
-                    (localUserData?.topCareerMatches && localUserData.topCareerMatches.length > 0)
-                      ? localUserData.topCareerMatches[0].name
-                      : (localUserData?.bestCareer?.title || 'Pending')
-                  )}
-                </div>
-                <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--success)' }}>
-                  {localUserData?.topCareerMatches?.[0]?.matchScore
-                    ? `${Number(localUserData.topCareerMatches[0].matchScore)}%`
-                    : `${Number(localUserData?.bestCareer?.matchPercent || 0)}%`} fit
-                </div>
-              </div>
-            </div>
-            {localUserData?.riasecSummary && (
-              <div style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.6', background: 'var(--surface)', padding: '10px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)' }}>
-                {String(localUserData.riasecSummary).substring(0, 120)}…
-              </div>
-            )}
-            <button className="db-btn" onClick={() => setShowCareerMatchesModal(true)} style={{ width: '100%', marginTop: '12px', fontSize: '12px', padding: '9px 16px' }}>
-              🎯 View Career Matches
-            </button>
-          </div>
+          )}
         </div>
-      )}
+        <div className="db-widget-body">
+          {hasAssessment ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <div>
+                  <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--muted)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '3px' }}>Holland Code</div>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', fontWeight: '900', color: 'var(--ink)', letterSpacing: '3px' }}>{String(localUserData?.riasecCode || '')}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--muted)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '3px' }}>Top Match</div>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--ink)' }}>
+                    {String(
+                      (localUserData?.topCareerMatches && localUserData.topCareerMatches.length > 0)
+                        ? localUserData.topCareerMatches[0].name
+                        : (localUserData?.bestCareer?.title || 'Pending')
+                    )}
+                  </div>
+                  <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--success)' }}>
+                    {localUserData?.topCareerMatches?.[0]?.matchScore
+                      ? `${Number(localUserData.topCareerMatches[0].matchScore)}%`
+                      : `${Number(localUserData?.bestCareer?.matchPercent || 0)}%`} fit
+                  </div>
+                </div>
+              </div>
+              {/* Career Matches Empty State — assessment done but no topCareerMatches */}
+              {(!localUserData?.topCareerMatches || localUserData.topCareerMatches.length === 0) && !localUserData?.bestCareer ? (
+                <div style={{ textAlign: 'center', padding: '16px 8px', background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', borderRadius: 'var(--r-md)', border: '1px dashed #93C5FD', marginBottom: '12px' }}>
+                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>🔭</div>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontSize: '13px', fontWeight: '700', color: '#1E40AF', marginBottom: '6px', lineHeight: '1.4' }}>
+                    Your future is waiting!
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#3B82F6', lineHeight: '1.5', marginBottom: '12px' }}>
+                    Take the RIASEC assessment to unlock your top career matches.
+                  </div>
+                  <button
+                    onClick={() => setShowAssessment(true)}
+                    style={{
+                      width: '100%', padding: '9px 12px',
+                      background: '#2563EB',
+                      color: 'white', border: 'none', borderRadius: 'var(--r-sm)',
+                      fontSize: '12px', fontWeight: '700', cursor: 'pointer',
+                      fontFamily: 'inherit', boxShadow: '0 3px 10px rgba(37,99,235,0.3)',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    Take the Assessment 🚀
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {localUserData?.riasecSummary && (
+                    <div style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.6', background: 'var(--surface)', padding: '10px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)' }}>
+                      {String(localUserData.riasecSummary).substring(0, 120)}…
+                    </div>
+                  )}
+                  <button className="db-btn" onClick={() => setShowCareerMatchesModal(true)} style={{ width: '100%', marginTop: '12px', fontSize: '12px', padding: '9px 16px' }}>
+                    🎯 View Career Matches
+                  </button>
+                </>
+              )}
+            </>
+          ) : (
+            /* ── CAREER MATCHES EMPTY STATE (no assessment at all) ── */
+            <div style={{ textAlign: 'center', padding: '20px 8px' }}>
+              <div style={{ fontSize: '36px', marginBottom: '10px' }}>🔭</div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: '14px', fontWeight: '700', color: 'var(--ink)', marginBottom: '8px', lineHeight: '1.4' }}>
+                Your future is waiting!
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '14px' }}>
+                Take the RIASEC assessment to unlock your top career matches.
+              </div>
+              <button
+                onClick={() => setShowAssessment(true)}
+                style={{
+                  width: '100%', padding: '10px 14px',
+                  background: '#2563EB',
+                  color: 'white', border: 'none', borderRadius: 'var(--r-sm)',
+                  fontSize: '13px', fontWeight: '700', cursor: 'pointer',
+                  fontFamily: 'inherit', boxShadow: '0 4px 14px rgba(37,99,235,0.35)',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Take the Assessment 🚀
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Quick Links */}
       <div className="db-sidebar-widget">
@@ -1471,7 +1555,73 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   };
 
   return (
-    <div className="db-root">
+    <div className="social-dark-theme">
+      <div className="social-dashboard-layout">
+        <aside className="social-sidebar">
+          <h2 style={{color: '#E4E6EB', fontSize: '24px', marginBottom: '20px'}}>VidyaVantage</h2>
+          <ul style={{listStyle: 'none', padding: 0, color: '#E4E6EB', lineHeight: '2.5', fontWeight: 'bold'}}>
+            <li style={{ cursor: 'pointer' }}>🏠 Home</li>
+            <li style={{ cursor: 'pointer' }}>📊 Growth Plan</li>
+            <li style={{ cursor: 'pointer' }}>📘 Full Report</li>
+            <li style={{ cursor: 'pointer' }}>📅 Book Expert</li>
+          </ul>
+        </aside>
+        <main className="social-main-content">
+          <div className="profile-hero-container">
+            <div className="profile-cover-photo">
+              <div className="profile-avatar-wrapper">
+                <span className="profile-avatar-fallback">
+                  {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'S'}
+                </span>
+              </div>
+            </div>
+            <div className="profile-identity-row">
+              <div className="profile-name-section">
+                <h1>{userProfile?.name || 'Student'}</h1>
+                <div className="profile-bio">
+                  🚀 Ready to build my future • Passionate about {userProfile?.interests?.[0] || 'Learning'}
+                </div>
+                <div className="profile-pinned-details">
+                  {/* ── PINNED DETAILS FALLBACK ── */}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    📍{' '}
+                    {userProfile?.location && userProfile.location.trim() !== ''
+                      ? userProfile.location
+                      : <span style={{ color: '#6B7280', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          Update your location
+                          <button
+                            onClick={() => setShowProfileEditor(true)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', lineHeight: 1, fontSize: '13px', color: '#9CA3AF' }}
+                            title="Edit location"
+                          >✏️</button>
+                        </span>
+                    }
+                  </span>
+                  <span>🎓 Secret Sharz</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    💡{' '}
+                    {userProfile?.interests && userProfile.interests.length > 0
+                      ? userProfile.interests[0]
+                      : <span style={{ color: '#6B7280', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          Add your interests
+                          <button
+                            onClick={() => setShowProfileEditor(true)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', lineHeight: 1, fontSize: '13px', color: '#9CA3AF' }}
+                            title="Add interests"
+                          >✏️</button>
+                        </span>
+                    }
+                  </span>
+                  <span>🔑 RIASEC: {userProfile?.riasecCode || 'Pending'}</span>
+                </div>
+              </div>
+              <div className="profile-actions">
+                <button className="btn-primary-social">📘 Full Report</button>
+                <button className="btn-secondary-social">✏️ Edit</button>
+              </div>
+            </div>
+          </div>
+          <div className="db-root">
       {/* ── TOP NAV BAR ── */}
       <nav className="db-topnav">
         <div
@@ -1602,6 +1752,9 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
       )}
 
       {toast && <div className="db-toast"><span>🔔</span><span>{toast}</span></div>}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

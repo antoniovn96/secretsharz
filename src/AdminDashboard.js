@@ -2178,7 +2178,47 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   };
 
   return (
-    <div className="admin-root">
+    <div className="social-dark-theme">
+      <div className="social-dashboard-layout">
+        <aside className="social-sidebar">
+          <h2 style={{color: '#E4E6EB', fontSize: '24px', marginBottom: '20px'}}>VidyaVantage</h2>
+          <ul style={{listStyle: 'none', padding: 0, color: '#E4E6EB', lineHeight: '2.5', fontWeight: 'bold'}}>
+            <li style={{ cursor: 'pointer' }}>🎛️ Command Center</li>
+            <li style={{ cursor: 'pointer' }}>👥 Manage Users</li>
+            <li style={{ cursor: 'pointer' }}>🏫 Institutions</li>
+            <li style={{ cursor: 'pointer' }}>💳 Billing</li>
+          </ul>
+        </aside>
+        <main className="social-main-content">
+
+        {/* ── ADMIN HERO HEADER ── */}
+        <div className="profile-hero-container">
+          <div className="profile-cover-photo">
+            <div className="profile-avatar-wrapper">
+              <span className="profile-avatar-fallback">
+                A
+              </span>
+            </div>
+          </div>
+          <div className="profile-identity-row">
+            <div className="profile-name-section">
+              <h1>Admin Command Center</h1>
+              <div className="profile-bio">
+                System management and platform analytics.
+              </div>
+              <div className="profile-pinned-details">
+                <span>📍 Secret Sharz Server</span>
+                <span>🔐 Super Admin</span>
+              </div>
+            </div>
+            <div className="profile-actions">
+              <button className="btn-primary-social">📊 View Analytics</button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── EXISTING ADMIN DASHBOARD (admin-root wrapper) ── */}
+        <div className="admin-root" style={{ height: 'auto', minHeight: '100vh' }}>
 
       {/* ── SIDEBAR ── */}
       <div className="admin-sidebar">
@@ -2294,441 +2334,13 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
         </div>
       </div>
 
-      {/* ── STUDENT DETAIL MODAL ── */}
-      {selectedStudent && (() => {
-        // ── Education tier helpers ──
-        const edu = selectedStudent.education || {};
-        const eduTiers = [
-          { key: 'tenth', label: '10th Grade', icon: '🏫' },
-          { key: 'twelfth', label: '12th / PUC', icon: '📚' },
-          { key: 'graduate', label: 'Graduate', icon: '🎓' },
-          { key: 'postGraduate', label: 'Post Graduate', icon: '🏛️' },
-        ];
-        const hasAnyEduTier = eduTiers.some(({ key }) => {
-          const tier = edu[key];
-          return tier && (tier.schoolName || tier.marksValue || tier.marksObtained || (Array.isArray(tier.subjects) && tier.subjects.length > 0));
-        });
-        const renderEduTier = (tierKey, label, icon) => {
-          const tier = edu[tierKey];
-          if (!tier || (!tier.schoolName && !tier.marksValue && !tier.marksObtained && !(Array.isArray(tier.subjects) && tier.subjects.length > 0))) return null;
-          const marksDisplay = (() => {
-            if (!tier.marksType || tier.marksType === 'percentage') return tier.marksValue ? `${String(tier.marksValue)}%` : null;
-            if (tier.marksType === 'cgpa') return tier.marksValue ? `${String(tier.marksValue)} CGPA` : null;
-            if (tier.marksType === 'raw') return (tier.marksObtained && tier.marksMax) ? `${String(tier.marksObtained)} / ${String(tier.marksMax)}` : null;
-            return null;
-          })();
-          const subjectsDisplay = Array.isArray(tier.subjects) && tier.subjects.length > 0
-            ? tier.subjects.map(String).join(', ')
-            : null;
-          return (
-            <div key={tierKey} style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: '10px 12px', border: '1px solid var(--border)', marginBottom: '6px' }}>
-              <div style={{ fontWeight: '700', fontSize: '0.78rem', color: 'var(--primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span>{icon}</span> {label}
-              </div>
-              {tier.schoolName && (
-                <div style={{ fontSize: '0.875rem', color: 'var(--text-main)', fontWeight: '600', marginBottom: '2px' }}>{String(tier.schoolName)}</div>
-              )}
-              {marksDisplay && (
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '2px' }}>📊 {marksDisplay}</div>
-              )}
-              {subjectsDisplay && (
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>📖 {subjectsDisplay}</div>
-              )}
-            </div>
-          );
-        };
-        const legacySchool = !hasAnyEduTier && (selectedStudent.schoolName || edu.schoolName);
-
-        return (
-        <div className="modal-overlay" onClick={() => setSelectedStudent(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header" style={{ position: 'relative' }}>
-              <button className="close-btn" onClick={() => setSelectedStudent(null)}>✕</button>
-              {/* ── Profile Picture + Name ── */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '4px' }}>
-                <div style={{
-                  width: '56px', height: '56px', borderRadius: '50%', flexShrink: 0,
-                  background: 'linear-gradient(135deg, var(--primary), #7C6EF5)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: '800', fontSize: '1.3rem', color: 'white',
-                  border: '3px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                  overflow: 'hidden',
-                }}>
-                  {selectedStudent.profilePicture
-                    ? <img src={String(selectedStudent.profilePicture)} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : (selectedStudent.name || '?').charAt(0).toUpperCase()
-                  }
-                </div>
-                <div>
-                  <h2 style={{ fontSize: '1.2rem', fontWeight: '700', margin: 0, color: 'var(--text-main)' }}>
-                    {selectedStudent.name || 'Unknown Student'}
-                  </h2>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{selectedStudent.email}</span>
-                </div>
-              </div>
-              <div className="modal-tabs">
-                <button className={`modal-tab ${modalTab === 'overview' ? 'active' : ''}`} onClick={() => setModalTab('overview')}>Overview</button>
-                <button className={`modal-tab ${modalTab === 'education' ? 'active' : ''}`} onClick={() => setModalTab('education')}>Education</button>
-                <button className={`modal-tab ${modalTab === 'counselling' ? 'active' : ''}`} onClick={() => setModalTab('counselling')}>Counselling Log</button>
-                <button className={`modal-tab ${modalTab === 'documents' ? 'active' : ''}`} onClick={() => setModalTab('documents')}>Documents</button>
-              </div>
-            </div>
-
-            <div className="modal-body">
-              {/* OVERVIEW TAB */}
-              {modalTab === 'overview' && (
-                <div>
-                  {/* Student info grid */}
-                  <div className="grid-2col" style={{ marginBottom: '20px' }}>
-                    <div style={{ background: 'var(--primary-light)', padding: '16px', borderRadius: 'var(--r-md)', border: '1px solid rgba(91,110,245,0.15)' }}>
-                      <label className="form-label">RIASEC Profile</label>
-                      <div style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--primary)', marginBottom: '4px' }}>{selectedStudent.riasecCode}</div>
-                      <div style={{ color: 'var(--text-muted)', fontWeight: '500', fontSize: '0.82rem', lineHeight: '1.5' }}>
-                        {selectedStudent.riasecSummary || selectedStudent.bestCareer?.title || 'Pending Match'}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="form-group">
-                        <label className="form-label">School / Institution</label>
-                        <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '0.875rem', color: 'var(--text-main)' }}>
-                          {legacySchool ? String(legacySchool) : (hasAnyEduTier ? (edu.tenth?.schoolName ? String(edu.tenth.schoolName) : '—') : '—')}
-                        </div>
-                      </div>
-                      <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">Grade / Stream</label>
-                        <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '0.875rem', color: 'var(--text-main)' }}>
-                          {[selectedStudent.gradeLevel, selectedStudent.stream1112].filter(Boolean).join(' · ') || '—'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Assign Counsellor */}
-                  <div className="admin-card" style={{ margin: '0 0 16px 0', borderTop: '3px solid var(--primary)', boxShadow: 'none' }}>
-                    <h3 style={{ fontSize: '0.9rem' }}>
-                      🎯 Counsellor Assignment
-                      {selectedStudent.assignedCounsellorId ? (
-                        <span className="counsellor-chip" style={{ marginLeft: '8px' }}>
-                          <span className="counsellor-chip-dot" />
-                          {getAssignedCounsellor(selectedStudent)?.name || 'Assigned'}
-                        </span>
-                      ) : (
-                        <span className="unassigned-chip" style={{ marginLeft: '8px' }}>⚠ Unassigned</span>
-                      )}
-                    </h3>
-
-                    {counsellorsList.length === 0 ? (
-                      <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '1.5px dashed var(--border)', borderRadius: 'var(--r-sm)', fontSize: '0.875rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                        No counsellors registered yet. Add counsellors via the Staff collection.
-                      </div>
-                    ) : (
-                      <div>
-                        <label className="form-label">Select or Reassign Counsellor</label>
-                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                          <select
-                            className="form-select"
-                            style={{ flex: 1 }}
-                            value={selectedStudent.assignedCounsellorId || ''}
-                            onChange={(e) => handleAssignCounsellor(selectedStudent.id, e.target.value)}
-                          >
-                            <option value="">— Unassigned —</option>
-                            {counsellorsList.map(c => (
-                              <option key={c.id} value={c.id}>
-                                {c.name || c.email}
-                                {c.specialization ? ` · ${c.specialization}` : ''}
-                                {c.availability ? ` (${c.availability})` : ''}
-                              </option>
-                            ))}
-                          </select>
-                          {selectedStudent.assignedCounsellorId && (
-                            <button
-                              className="admin-btn-danger"
-                              onClick={() => handleAssignCounsellor(selectedStudent.id, '')}
-                            >
-                              Unassign
-                            </button>
-                          )}
-                        </div>
-                        {/* ── ADMIN TRACK CONTROL ── */}
-                  <div style={{
-                    marginTop: '16px',
-                    background: 'var(--bg)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--r-md)',
-                    padding: '16px'
-                  }}>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '8px' }}>
-                      🎯 Assign Student Track (Admin Control)
-                    </label>
-                    <select 
-                      value={selectedStudent.studentTrack || 'unassigned'}
-                      onChange={(e) => handleUpdateStudent(selectedStudent.id, { studentTrack: e.target.value })}
-                      className="form-select"
-                      style={{ padding: '8px 12px', fontSize: '0.875rem' }}
-                    >
-                      <option value="unassigned">-- Select a Track --</option>
-                      <option value="Counselling">Counselling (Rs. 200/session)</option>
-                      <option value="Career Guidance">Career Guidance</option>
-                      <option value="Both">Both (Counselling & Guidance)</option>
-                    </select>
-                  </div>
-
-                        {/* Counsellor detail preview */}
-                        {selectedStudent.assignedCounsellorId && (() => {
-                          const c = getAssignedCounsellor(selectedStudent);
-                          if (!c) return null;
-                          return (
-                            <div style={{
-                              marginTop: '12px', padding: '12px 16px',
-                              background: 'rgba(16,185,129,0.04)',
-                              border: '1px solid rgba(16,185,129,0.15)',
-                              borderRadius: 'var(--r-sm)',
-                              display: 'flex', alignItems: 'center', gap: '12px'
-                            }}>
-                              <div style={{
-                                width: '36px', height: '36px', borderRadius: '50%',
-                                background: 'linear-gradient(135deg, var(--primary), #7C6EF5)',
-                                color: 'white', fontWeight: '800', fontSize: '0.9rem',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                              }}>
-                                {(c.name || 'C').charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <div style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-main)' }}>{c.name}</div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                  {c.title || c.specialization}
-                                  {c.availability ? ` · ${c.availability}` : ''}
-                                </div>
-                              </div>
-                              {c.rating && (
-                                <div style={{ marginLeft: 'auto', fontSize: '0.85rem', fontWeight: '700', color: 'var(--warning)' }}>
-                                  ⭐ {c.rating}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Status */}
-                  <div className="form-group">
-                    <label className="form-label">Current Counselling Status</label>
-                    <select
-                      className="form-select"
-                      value={selectedStudent.counsellingStatus}
-                      onChange={(e) => handleUpdateStudent(selectedStudent.id, { counsellingStatus: e.target.value })}
-                    >
-                      <option value="Not Started">Not Started</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Completed">Completed</option>
-                    </select>
-                  </div>
-
-                  {/* Career match preview */}
-                  {selectedStudent.bestCareer && (
-                    <div style={{
-                      padding: '14px 16px',
-                      background: 'var(--bg)',
-                      border: '1px solid var(--border)',
-                      borderRadius: 'var(--r-sm)',
-                      marginTop: '4px'
-                    }}>
-                      <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
-                        Best Career Match
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div>
-                          <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.95rem' }}>{selectedStudent.bestCareer.title}</div>
-                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{selectedStudent.bestCareer.subtitle}</div>
-                        </div>
-                        <div style={{
-                          padding: '6px 14px',
-                          background: 'var(--primary-light)',
-                          color: 'var(--primary)',
-                          borderRadius: '20px',
-                          fontWeight: '800',
-                          fontSize: '0.9rem'
-                        }}>
-                          {selectedStudent.bestCareer.matchPercent}%
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ── DEMOGRAPHICS & CONTACT SECTION ── */}
-                  {(() => {
-                    const track = typeof selectedStudent.studentTrack === 'string' ? selectedStudent.studentTrack : '';
-                    const showConsent = track === 'Counselling' || track === 'Both';
-                    const consentSigned = selectedStudent.counsellingConsentAgreed === true;
-                    const safeStr = (val) => (val !== null && val !== undefined && typeof val !== 'object' && !Array.isArray(val)) ? String(val) : null;
-                    const fields = [
-                      { label: 'Gender', icon: '🧬', value: safeStr(selectedStudent.gender) },
-                      { label: 'Father\'s Name', icon: '👨', value: safeStr(selectedStudent.fatherName) },
-                      { label: 'Mother\'s Name', icon: '👩', value: safeStr(selectedStudent.motherName) },
-                      { label: 'Phone', icon: '📞', value: safeStr(selectedStudent.phone) },
-                      { label: 'Email', icon: '✉️', value: safeStr(selectedStudent.email) },
-                      { label: 'Student Track', icon: '🎯', value: track || null },
-                    ];
-                    return (
-                      <div style={{
-                        marginTop: '16px',
-                        background: 'var(--bg)',
-                        border: '1px solid var(--border)',
-                        borderRadius: 'var(--r-md)',
-                        overflow: 'hidden',
-                      }}>
-                        {/* Section header */}
-                        <div style={{
-                          padding: '12px 16px',
-                          borderBottom: '1px solid var(--border)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          background: 'white',
-                        }}>
-                          <span style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-main)' }}>
-                            👤 Demographics &amp; Contact
-                          </span>
-                          {showConsent && (
-                            consentSigned ? (
-                              <span style={{
-                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                padding: '4px 12px', borderRadius: '20px',
-                                background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)',
-                                color: 'var(--success)', fontWeight: '700', fontSize: '0.72rem',
-                              }}>
-                                ✅ Medical Consent Signed
-                              </span>
-                            ) : (
-                              <span style={{
-                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                padding: '4px 12px', borderRadius: '20px',
-                                background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)',
-                                color: 'var(--warning)', fontWeight: '700', fontSize: '0.72rem',
-                              }}>
-                                ⚠️ Consent Pending
-                              </span>
-                            )
-                          )}
-                        </div>
-                        {/* Fields grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
-                          {fields.map((f, i) => (
-                            <div key={f.label} style={{
-                              padding: '10px 16px',
-                              borderBottom: i < fields.length - 2 ? '1px solid var(--border)' : 'none',
-                              borderRight: i % 2 === 0 ? '1px solid var(--border)' : 'none',
-                            }}>
-                              <div style={{ fontSize: '0.68rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '3px' }}>
-                                {f.icon} {f.label}
-                              </div>
-                              <div style={{ fontSize: '0.85rem', fontWeight: '600', color: f.value ? 'var(--text-main)' : 'var(--text-muted)', fontStyle: f.value ? 'normal' : 'italic' }}>
-                                {f.value || 'Not provided'}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-
-              {/* COUNSELLING TAB */}
-              {modalTab === 'counselling' && (
-                <div>
-                  <div style={{ marginBottom: '28px' }}>
-                    <h3 style={{ marginTop: 0, borderBottom: '1px solid var(--border)', paddingBottom: '12px', fontSize: '1rem' }}>Session History</h3>
-                    {!selectedStudent.sessions || selectedStudent.sessions.length === 0 ? (
-                      <div className="empty-state" style={{ padding: '24px' }}>
-                        <div className="empty-icon" style={{ fontSize: '2rem', marginBottom: '8px' }}>📋</div>
-                        <p style={{ margin: 0, fontSize: '0.875rem' }}>No sessions logged yet for this student.</p>
-                      </div>
-                    ) : (
-                      <div className="timeline">
-                        {selectedStudent.sessions.map((sess, idx) => (
-                          <div key={idx} className="timeline-item">
-                            <div className="timeline-dot"></div>
-                            <div className="timeline-date">{new Date(sess.date).toLocaleDateString('en-GB')} • {sess.duration} mins</div>
-                            <div style={{ background: 'var(--bg)', padding: '12px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', marginTop: '6px', fontSize: '0.875rem', lineHeight: '1.6' }}>
-                              {sess.outcome}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ background: 'var(--bg)', padding: '20px', borderRadius: 'var(--r-md)', border: '1px solid var(--border)' }}>
-                    <h4 style={{ marginTop: 0, color: 'var(--primary)', fontWeight: '700', marginBottom: '16px' }}>➕ Log New Session</h4>
-                    <div className="grid-2col">
-                      <div className="form-group">
-                        <label className="form-label">Date</label>
-                        <input type="date" className="form-input" value={newSession.date} onChange={e => setNewSession({ ...newSession, date: e.target.value })} />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Duration (mins)</label>
-                        <input type="number" className="form-input" value={newSession.duration} onChange={e => setNewSession({ ...newSession, duration: e.target.value })} />
-                      </div>
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Session Notes / Outcome</label>
-                      <textarea className="form-textarea" rows="3" placeholder="Discussed parental pressure regarding stream selection..." value={newSession.outcome} onChange={e => setNewSession({ ...newSession, outcome: e.target.value })}></textarea>
-                    </div>
-                    <button className="admin-btn" style={{ width: '100%' }} onClick={handleAddSession}>Save Session</button>
-                  </div>
-                </div>
-              )}
-
-              {/* EDUCATION TAB */}
-              {modalTab === 'education' && (
-                <div>
-                  {edu.highestLevel && (
-                    <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '700', marginBottom: '12px' }}>
-                      Highest Level: {String(edu.highestLevel)}
-                    </div>
-                  )}
-                  {hasAnyEduTier
-                    ? eduTiers.map(({ key, label, icon }) => renderEduTier(key, label, icon))
-                    : legacySchool
-                      ? (
-                        <div style={{ background: 'var(--bg)', borderRadius: 'var(--r-sm)', padding: '12px 14px', border: '1px solid var(--border)' }}>
-                          <div style={{ fontSize: '0.875rem', color: 'var(--text-main)', fontWeight: '600' }}>{String(legacySchool)}</div>
-                          {selectedStudent.marks10th && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>10th: {String(selectedStudent.marks10th)}%</div>}
-                          {selectedStudent.marks12th && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px' }}>12th: {String(selectedStudent.marks12th)}%</div>}
-                        </div>
-                      )
-                      : (
-                        <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontStyle: 'italic' }}>No education details provided yet.</div>
-                      )
-                  }
-                </div>
-              )}
-
-              {/* DOCUMENTS TAB */}
-              {modalTab === 'documents' && (
-                <div className="empty-state">
-                  <div className="empty-icon">📄</div>
-                  <h3 style={{ color: 'var(--text-main)', marginBottom: '8px' }}>Document Vault</h3>
-                  <p style={{ marginBottom: '20px' }}>Upload psychometric reports and consent forms here.</p>
-                  <button className="admin-btn-outline" disabled>Cloud Storage — Coming Soon</button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        );
-      })()}
-
-      {/* ── TOAST ── */}
-      {toast && (
-        <div className={`admin-toast ${toast.type}`}>
-          {toast.type === 'success' ? '✅' : '⚠️'} {toast.message}
-        </div>
-      )}
+        </div>{/* end admin-root */}
+        </main>
+      </div>
     </div>
   );
 }
+
+// ── STUDENT DETAIL MODAL + TOAST are inside the return above ──
+// (moved inside the social-dark-theme wrapper)
+

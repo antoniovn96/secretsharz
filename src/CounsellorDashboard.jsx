@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import "./StudentDashboard.css";
 import { auth, db } from './firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, updateDoc, arrayUnion, collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -1558,9 +1559,47 @@ export default function CounsellorDashboard({ navigate }) {
 
   // ── Root render ───────────────────────────────────────────────────────────────
   return (
-    <div className="c-root">
-      {/* ── TOP NAV BAR ── */}
-      <nav className="c-topnav">
+    <div className="social-dark-theme">
+      <div className="social-dashboard-layout">
+        <aside className="social-sidebar">
+          <h2 style={{color: '#E4E6EB', fontSize: '24px', marginBottom: '20px'}}>VidyaVantage</h2>
+          <ul style={{listStyle: 'none', padding: 0, color: '#E4E6EB', lineHeight: '2.5', fontWeight: 'bold'}}>
+            <li style={{ cursor: 'pointer' }}>👥 My Students</li>
+            <li style={{ cursor: 'pointer' }}>📅 Schedule</li>
+            <li style={{ cursor: 'pointer' }}>📝 Session Notes</li>
+          </ul>
+        </aside>
+        <main className="social-main-content">
+          {/* ── HERO HEADER ── */}
+          <div className="profile-hero-container">
+            <div className="profile-cover-photo">
+              <div className="profile-avatar-wrapper">
+                <span className="profile-avatar-fallback">
+                  C
+                </span>
+              </div>
+            </div>
+            <div className="profile-identity-row">
+              <div className="profile-name-section">
+                <h1>Expert Portal</h1>
+                <div className="profile-bio">
+                  Guiding students towards their perfect career path.
+                </div>
+                <div className="profile-pinned-details">
+                  <span>📍 Secret Sharz HQ</span>
+                  <span>💼 Verified Expert</span>
+                </div>
+              </div>
+              <div className="profile-actions">
+                <button className="btn-primary-social">📅 View Calendar</button>
+              </div>
+            </div>
+          </div>
+
+          {/* ── EXISTING DASHBOARD CONTENT ── */}
+          <div className="c-root">
+            {/* ── TOP NAV BAR ── */}
+            <nav className="c-topnav">
         <div className="c-topnav-brand">Secret <span>Sharz</span></div>
         <div className="c-topnav-tabs">
           {[
@@ -1652,6 +1691,10 @@ export default function CounsellorDashboard({ navigate }) {
       )}
 
       {renderStudentModal()}
+          </div>
+          {/* ── END EXISTING DASHBOARD CONTENT ── */}
+        </main>
+      </div>
     </div>
   );
 }
