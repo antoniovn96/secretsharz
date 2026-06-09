@@ -412,6 +412,88 @@ export function DashboardProvider({ children, navigate }) {
   const [counsellors, setCounsellors] = useState(INITIAL_COUNSELLORS);
   const [assignments, setAssignments] = useState(INITIAL_ASSIGNMENTS);
   const [institutions, setInstitutions] = useState([]);
+  const [userProfile, setUserProfile] = useState(DEFAULT_USER_PROFILE);
+  const [socialFeed, setSocialFeed] = useState(INITIAL_SOCIAL_FEED);
+  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+
+  // ── GAMIFIED PROFILE HELPERS ─────────────────────────────────────────────
+
+  /**
+   * calculateExPoints(profileData)
+   *
+   * Evaluates how many gamified profile fields are filled out and updates
+   * the `exPoints` value on the userProfile state.
+   *
+   * Point breakdown:
+   *   +100  Education section fully filled (schoolName + highestLevel + marksValue)
+   *   +50   Profile picture uploaded
+   *   +30   Interests list has at least one entry
+   *   +20   Hobbies list has at least one entry
+   *   +15   TV Shows list has at least one entry
+   *   +15   Movies list has at least one entry
+   *   +15   Games list has at least one entry
+   *   +15   Sports list has at least one entry
+   *   +20   Education subjects filled (at least one subject)
+   *   +10   Education electives filled (at least one elective)
+   *   +10   Education address filled
+   *   +10   Education yearOfPassing filled
+   *
+   * @param {object} profileData - A profile object matching DEFAULT_USER_PROFILE shape.
+   *                               If omitted, the current userProfile state is used.
+   * @returns {number} The newly calculated exPoints total.
+   */
+  const calculateExPoints = useCallback((profileData) => {
+    const data = profileData || userProfile;
+    let points = 0;
+
+    // ── Profile picture ──────────────────────────────────────────────────
+    if (data.profilePicture) points += 50;
+
+    // ── Interests ────────────────────────────────────────────────────────
+    if (Array.isArray(data.interests) && data.interests.length > 0) points += 30;
+
+    // ── Hobbies ──────────────────────────────────────────────────────────
+    if (Array.isArray(data.hobbies) && data.hobbies.length > 0) points += 20;
+
+    // ── TV Shows ─────────────────────────────────────────────────────────
+    if (Array.isArray(data.tvShows) && data.tvShows.length > 0) points += 15;
+
+    // ── Movies ───────────────────────────────────────────────────────────
+    if (Array.isArray(data.movies) && data.movies.length > 0) points += 15;
+
+    // ── Games ────────────────────────────────────────────────────────────
+    if (Array.isArray(data.games) && data.games.length > 0) points += 15;
+
+    // ── Sports ───────────────────────────────────────────────────────────
+    if (Array.isArray(data.sports) && data.sports.length > 0) points += 15;
+
+    // ── Education ────────────────────────────────────────────────────────
+    const edu = data.education || {};
+
+    // Core education completion: schoolName + highestLevel + marksValue = +100
+    const eduCoreComplete =
+      edu.schoolName && edu.schoolName.trim() !== '' &&
+      edu.highestLevel && edu.highestLevel.trim() !== '' &&
+      edu.marksValue && String(edu.marksValue).trim() !== '';
+    if (eduCoreComplete) points += 100;
+
+    // Address filled
+    if (edu.address && edu.address.trim() !== '') points += 10;
+
+    // Year of passing filled
+    if (edu.yearOfPassing && String(edu.yearOfPassing).trim() !== '') points += 10;
+
+    // Subjects filled
+    if (Array.isArray(edu.subjects) && edu.subjects.length > 0) points += 20;
+
+    // Electives filled
+    if (Array.isArray(edu.electives) && edu.electives.length > 0) points += 10;
+
+    // ── Persist to state ─────────────────────────────────────────────────
+    setUserProfile(prev => ({ ...prev, exPoints: points }));
+
+    return points;
+  }, [userProfile]);
 
   // ── FETCH SAVED DATA ON PAGE REFRESH ──
   useEffect(() => {
@@ -594,85 +676,6 @@ export function DashboardProvider({ children, navigate }) {
       })
     );
   }, []);
-
-  // ── GAMIFIED PROFILE HELPERS ─────────────────────────────────────────────
-
-  /**
-   * calculateExPoints(profileData)
-   *
-   * Evaluates how many gamified profile fields are filled out and updates
-   * the `exPoints` value on the userProfile state.
-   *
-   * Point breakdown:
-   *   +100  Education section fully filled (schoolName + highestLevel + marksValue)
-   *   +50   Profile picture uploaded
-   *   +30   Interests list has at least one entry
-   *   +20   Hobbies list has at least one entry
-   *   +15   TV Shows list has at least one entry
-   *   +15   Movies list has at least one entry
-   *   +15   Games list has at least one entry
-   *   +15   Sports list has at least one entry
-   *   +20   Education subjects filled (at least one subject)
-   *   +10   Education electives filled (at least one elective)
-   *   +10   Education address filled
-   *   +10   Education yearOfPassing filled
-   *
-   * @param {object} profileData - A profile object matching DEFAULT_USER_PROFILE shape.
-   *                               If omitted, the current userProfile state is used.
-   * @returns {number} The newly calculated exPoints total.
-   */
-  const calculateExPoints = useCallback((profileData) => {
-    const data = profileData || userProfile;
-    let points = 0;
-
-    // ── Profile picture ──────────────────────────────────────────────────
-    if (data.profilePicture) points += 50;
-
-    // ── Interests ────────────────────────────────────────────────────────
-    if (Array.isArray(data.interests) && data.interests.length > 0) points += 30;
-
-    // ── Hobbies ──────────────────────────────────────────────────────────
-    if (Array.isArray(data.hobbies) && data.hobbies.length > 0) points += 20;
-
-    // ── TV Shows ─────────────────────────────────────────────────────────
-    if (Array.isArray(data.tvShows) && data.tvShows.length > 0) points += 15;
-
-    // ── Movies ───────────────────────────────────────────────────────────
-    if (Array.isArray(data.movies) && data.movies.length > 0) points += 15;
-
-    // ── Games ────────────────────────────────────────────────────────────
-    if (Array.isArray(data.games) && data.games.length > 0) points += 15;
-
-    // ── Sports ───────────────────────────────────────────────────────────
-    if (Array.isArray(data.sports) && data.sports.length > 0) points += 15;
-
-    // ── Education ────────────────────────────────────────────────────────
-    const edu = data.education || {};
-
-    // Core education completion: schoolName + highestLevel + marksValue = +100
-    const eduCoreComplete =
-      edu.schoolName && edu.schoolName.trim() !== '' &&
-      edu.highestLevel && edu.highestLevel.trim() !== '' &&
-      edu.marksValue && String(edu.marksValue).trim() !== '';
-    if (eduCoreComplete) points += 100;
-
-    // Address filled
-    if (edu.address && edu.address.trim() !== '') points += 10;
-
-    // Year of passing filled
-    if (edu.yearOfPassing && String(edu.yearOfPassing).trim() !== '') points += 10;
-
-    // Subjects filled
-    if (Array.isArray(edu.subjects) && edu.subjects.length > 0) points += 20;
-
-    // Electives filled
-    if (Array.isArray(edu.electives) && edu.electives.length > 0) points += 10;
-
-    // ── Persist to state ─────────────────────────────────────────────────
-    setUserProfile(prev => ({ ...prev, exPoints: points }));
-
-    return points;
-  }, [userProfile]);
 
   /**
    * updateUserProfile(updates)
