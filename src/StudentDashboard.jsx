@@ -6,8 +6,6 @@ import ProfileEditor from "./ProfileEditor";
 import { useDashboard } from "./context/DashboardContext";
 import XpChecklistModal from "./components/XpChecklistModal";
 import CareerMatchesModal from "./components/CareerMatchesModal";
-import "./StudentDashboard.css";
-
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
 
 const CSS = `

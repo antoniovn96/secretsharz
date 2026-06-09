@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import "./StudentDashboard.css";
 import { auth, db } from './firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, updateDoc, arrayUnion, collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';

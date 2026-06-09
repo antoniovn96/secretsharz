@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import { useDashboard } from "./context/DashboardContext";
-import "./StudentDashboard.css";
 
 export default function ParentDashboard({ user, userData, onBack, onLogout }) {
   const { userProfile } = useDashboard();
