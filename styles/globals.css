@@ -16,3 +16,28 @@
 .btn-primary-social:hover { background-color: #0054d1; }
 .btn-secondary-social { background-color: #3A3B3C; color: #E4E6EB; border: none; padding: 8px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
 .btn-secondary-social:hover { background-color: #4E4F50; }
+
+/* --- NESTED ABOUT SECTION --- */
+.about-container { display: flex; background-color: #242526; border-radius: 8px; border: 1px solid #3A3B3C; margin-top: 20px; min-height: 500px; overflow: hidden; }
+.about-sidebar { width: 250px; border-right: 1px solid #3A3B3C; padding: 10px 0; }
+.about-sidebar h3 { padding: 10px 20px; color: #E4E6EB; font-size: 20px; margin-bottom: 10px; }
+.about-nav-item { padding: 10px 20px; color: #B0B3B8; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 15px; }
+.about-nav-item:hover { background-color: #3A3B3C; color: #E4E6EB; }
+.about-nav-item.active { color: #2D88FF; background-color: rgba(45, 136, 255, 0.1); border-left: 3px solid #2D88FF; }
+
+.about-content { flex: 1; padding: 20px; }
+.about-content-header { color: #E4E6EB; font-size: 20px; font-weight: bold; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #3A3B3C; display: flex; justify-content: space-between; align-items: center; }
+
+/* Timeline / List Items */
+.timeline-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #3A3B3C; }
+.timeline-icon { width: 40px; height: 40px; border-radius: 50%; background-color: #3A3B3C; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 20px; }
+.timeline-details { flex: 1; }
+.timeline-title { color: #E4E6EB; font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+.timeline-subtitle { color: #B0B3B8; font-size: 14px; }
+.timeline-action { color: #B0B3B8; cursor: pointer; padding: 8px; border-radius: 50%; transition: 0.2s; }
+.timeline-action:hover { background-color: #3A3B3C; }
+
+/* Inline Edit Form */
+.inline-form { background-color: #18191A; padding: 20px; border-radius: 8px; border: 1px solid #3A3B3C; margin-bottom: 20px; }
+.form-input { width: 100%; background-color: #242526; border: 1px solid #3A3B3C; color: #E4E6EB; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; }

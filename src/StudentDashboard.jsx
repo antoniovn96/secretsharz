@@ -320,6 +320,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   // ── Modal state for XP Checklist and Career Matches ──
   const [showXpModal, setShowXpModal] = useState(false);
   const [showCareerMatchesModal, setShowCareerMatchesModal] = useState(false);
+  const [activeAboutTab, setActiveAboutTab] = useState('overview');
 
   useEffect(() => { if (userData) setLocalUserData(userData); }, [userData]);
 
@@ -1619,6 +1620,95 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               </div>
             </div>
           </div>
+          {/* NESTED ABOUT SECTION */}
+          <div className="about-container">
+            <div className="about-sidebar">
+              <h3>About</h3>
+              <div className={`about-nav-item ${activeAboutTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveAboutTab('overview')}>Overview</div>
+              <div className={`about-nav-item ${activeAboutTab === 'education' ? 'active' : ''}`} onClick={() => setActiveAboutTab('education')}>Education</div>
+              <div className={`about-nav-item ${activeAboutTab === 'interests' ? 'active' : ''}`} onClick={() => setActiveAboutTab('interests')}>Hobbies &amp; Interests</div>
+            </div>
+
+            <div className="about-content">
+              {activeAboutTab === 'overview' && (
+                <div>
+                  <div className="about-content-header">Dashboard Overview</div>
+                  {/* EXISTING XP, ALERTS, AND CAREER MATCH WIDGETS */}
+                  <div className="db-root" style={{ background: 'transparent', minHeight: 'unset' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {/* XP Block */}
+                      <div className="db-xp-block" style={{ cursor: 'pointer' }} onClick={() => setShowProfileEditor(true)} title="Click to earn more EX Points">
+                        <div className="db-xp-label">⚡ EX Points</div>
+                        {exPoints === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                            <div style={{ fontSize: '28px', margin: '4px 0' }}>🌟</div>
+                            <div style={{ fontFamily: "'Fraunces', serif", fontSize: '13px', fontWeight: '700', color: '#92400E', lineHeight: '1.4' }}>Complete your profile to earn your first 50 XP.</div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="db-xp-score">{exPoints} <span>/ {maxXp}</span></div>
+                            <div className="db-xp-bar-wrap"><div className="db-xp-bar-fill" style={{ width: `${xpPct}%` }} /></div>
+                            <div className="db-xp-level"><span>Level {xpLevel}</span><span>{xpPct}% to next</span></div>
+                          </>
+                        )}
+                      </div>
+                      {/* Career Intel Summary */}
+                      {hasAssessment && (
+                        <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '8px', padding: '16px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: '#B0B3B8', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '10px' }}>🧠 Career Intelligence</div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <div style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', fontWeight: '900', color: '#E4E6EB', letterSpacing: '3px' }}>{String(localUserData?.riasecCode || '')}</div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '11px', color: '#B0B3B8', marginBottom: '2px' }}>Top Match</div>
+                              <div style={{ fontSize: '13px', fontWeight: '700', color: '#E4E6EB' }}>{String(localUserData?.bestCareer?.title || 'Pending')}</div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setShowCareerMatchesModal(true)}
+                            style={{ width: '100%', padding: '8px', background: '#2D88FF', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}
+                          >
+                            🎯 View Career Matches
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeAboutTab === 'education' && (
+                <div>
+                  <div className="about-content-header">
+                    <span>Education</span>
+                    <span className="timeline-action" title="Add Education">➕</span>
+                  </div>
+                  <div className="timeline-item">
+                    <div className="timeline-icon">🎓</div>
+                    <div className="timeline-details">
+                      <div className="timeline-title">{localUserData?.schoolName || 'St Aloysius College - Autonomous'}</div>
+                      <div className="timeline-subtitle">Student • {localUserData?.gradeLevel || 'Mangaluru'}</div>
+                    </div>
+                    <div className="timeline-action" onClick={() => setShowProfileEditor(true)}>✏️</div>
+                  </div>
+                </div>
+              )}
+
+              {activeAboutTab === 'interests' && (
+                <div>
+                  <div className="about-content-header">Hobbies &amp; Interests</div>
+                  <div className="timeline-item">
+                    <div className="timeline-icon">🎨</div>
+                    <div className="timeline-details">
+                      <div className="timeline-title">{userProfile?.interests?.[0] || 'Learning'}</div>
+                      <div className="timeline-subtitle">Primary Interest</div>
+                    </div>
+                    <div className="timeline-action" onClick={() => setShowProfileEditor(true)}>✏️</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="db-root">
       {/* ── TOP NAV BAR ── */}
       <nav className="db-topnav">
