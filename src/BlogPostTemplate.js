@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Head from 'next/head';
 
 const TEMPLATE_CSS = `
   /* ── Top Bar ─────────────────────────────────────────────────────── */
@@ -253,6 +254,30 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
   const toc = safeMeta.toc || [];
   const totalWords = safeMeta.wordCount || 0;
 
+  // ── Article Schema (JSON-LD) ─────────────────────────────────────────────
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": safeMeta.title || "",
+    "image": [ safeMeta.imgUrl ? `https://secretsharz.com${safeMeta.imgUrl}` : "https://secretsharz.com/default-blog-cover.jpg" ],
+    "datePublished": safeMeta.publishedAt || safeMeta.date || "",
+    "dateModified": safeMeta.updatedAt || safeMeta.publishedAt || safeMeta.date || "",
+    "author": [{
+      "@type": "Person",
+      "name": safeMeta.authorName || "Secret Sharz Team",
+      "url": "https://secretsharz.com/about"
+    }],
+    "publisher": {
+      "@type": "Organization",
+      "name": "Secret Sharz",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://secretsharz.com/logo.png"
+      }
+    },
+    "description": safeMeta.excerpt || ""
+  };
+
   // Inject CSS
   useEffect(() => {
     const style = document.createElement('style');
@@ -354,6 +379,13 @@ export default function BlogPostTemplate({ meta, navigate, children, relatedPost
 
   return (
     <div className={`blog-page ${isReadingMode ? 'reading-mode' : ''}`} style={{ padding: 0, background: isReadingMode ? '#1a1a1a' : 'white', transition: 'background 0.3s' }}>
+
+      <Head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+        />
+      </Head>
 
       <div className="post-top-bar">
         <button className="post-back-btn" onClick={() => navigate('/blog')}>← Back</button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Head from 'next/head';
 
 const VV_TEMPLATE_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap');
@@ -117,6 +118,30 @@ export default function VidyaVantageBlogPostTemplate({ meta, navigate, children 
   const toc = safeMeta.toc || [];
   const bodyRef = useRef(null);
 
+  // ── Article Schema (JSON-LD) ─────────────────────────────────────────────
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": safeMeta.title || "",
+    "image": [ safeMeta.imgUrl ? `https://secretsharz.com${safeMeta.imgUrl}` : "https://secretsharz.com/default-blog-cover.jpg" ],
+    "datePublished": safeMeta.publishedAt || safeMeta.date || "",
+    "dateModified": safeMeta.updatedAt || safeMeta.publishedAt || safeMeta.date || "",
+    "author": [{
+      "@type": "Person",
+      "name": safeMeta.authorName || "Secret Sharz Team",
+      "url": "https://secretsharz.com/about"
+    }],
+    "publisher": {
+      "@type": "Organization",
+      "name": "Secret Sharz",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://secretsharz.com/logo.png"
+      }
+    },
+    "description": safeMeta.excerpt || ""
+  };
+
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = VV_TEMPLATE_CSS;
@@ -147,6 +172,14 @@ export default function VidyaVantageBlogPostTemplate({ meta, navigate, children 
 
   return (
     <div className="vv-blog-page">
+
+      <Head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+        />
+      </Head>
+
       <div className="vv-post-top-bar">
         <button className="vv-post-back-btn" onClick={() => navigate('/vidyavantage/blog')}>← Back to Career Insights</button>
         <span className="vv-reading-time-pill">⏱ {safeMeta.readTime || '5 min read'}</span>

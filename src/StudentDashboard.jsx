@@ -4,6 +4,8 @@ import { db, auth } from './firebase';
 import CareerAssessment from "./CareerAssessment";
 import ProfileEditor from "./ProfileEditor";
 import { useDashboard } from "./context/DashboardContext";
+import XpChecklistModal from "./components/XpChecklistModal";
+import CareerMatchesModal from "./components/CareerMatchesModal";
 
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
 
@@ -29,12 +31,38 @@ const CSS = `
 
 /* ── TOP NAV BAR ── */
 .db-topnav { background: var(--ink); height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
-.db-topnav-logo { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; color: white; letter-spacing: -0.5px; }
+.db-topnav-logo { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; color: white; letter-spacing: -0.5px; transition: opacity 0.2s; }
+.db-topnav-logo:hover { opacity: 0.85; }
 .db-topnav-logo span { color: var(--gold); font-style: italic; }
-.db-topnav-tabs { display: flex; align-items: center; gap: 4px; }
-.db-topnav-tab { background: transparent; border: none; color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-family: inherit; transition: all 0.2s; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-.db-topnav-tab:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
-.db-topnav-tab.active { background: rgba(232,101,10,0.2); color: white; }
+
+/* ── FLOATING PILL NAV ── */
+.db-topnav-tabs {
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 50px;
+  padding: 4px 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.db-topnav-tab {
+  background: transparent; border: none;
+  color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 600;
+  padding: 7px 14px; border-radius: 50px;
+  cursor: pointer; font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.db-topnav-tab:hover {
+  background: #F3F4F6;
+  color: var(--ink);
+  transform: translateY(-2px);
+}
+.db-topnav-tab.active {
+  background: linear-gradient(135deg, #111827, #374151);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
 .db-topnav-badge { background: var(--saffron); color: white; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 8px; }
 .db-topnav-right { display: flex; align-items: center; gap: 10px; }
 
@@ -290,6 +318,9 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     ugCourse: '', ugCGPA: '', pgCourse: '', pgCGPA: ''
   });
   const [savingProfile, setSavingProfile] = useState(false);
+  // ── Modal state for XP Checklist and Career Matches ──
+  const [showXpModal, setShowXpModal] = useState(false);
+  const [showCareerMatchesModal, setShowCareerMatchesModal] = useState(false);
 
   useEffect(() => { if (userData) setLocalUserData(userData); }, [userData]);
 
@@ -573,13 +604,19 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             <div
               key={notif.id}
               className="db-notif-item"
-              style={{ cursor: 'pointer', opacity: notif.isRead ? 0.65 : 1 }}
+              style={{ cursor: 'pointer', opacity: notif.isRead ? 0.6 : 1, transition: 'opacity 0.2s' }}
               onClick={() => {
                 if (!notif.isRead) markNotificationRead(notif.id);
-                setShowProfileEditor(true);
+                // Special handling: XP alert opens the XP checklist modal
+                if (notif.id === 'notif-001' || notif.title?.toLowerCase().includes('xp')) {
+                  setShowXpModal(true);
+                } else {
+                  setShowProfileEditor(true);
+                }
               }}
             >
-              <div className="db-notif-dot" style={{ background: getNotifColor(notif.priority, notif.isRead) }} />
+              {/* Unread dot — hidden when read */}
+              <div className="db-notif-dot" style={{ background: notif.isRead ? 'transparent' : getNotifColor(notif.priority, notif.isRead) }} />
               <div className="db-notif-content">
                 <div className="db-notif-title">{String(notif.title)}</div>
                 <div className="db-notif-msg">{String(notif.message).substring(0, 80)}{notif.message.length > 80 ? '…' : ''}</div>
@@ -624,7 +661,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 {String(localUserData.riasecSummary).substring(0, 120)}…
               </div>
             )}
-            <button className="db-btn" onClick={() => setActiveTab("careers")} style={{ width: '100%', marginTop: '12px', fontSize: '12px', padding: '9px 16px' }}>
+            <button className="db-btn" onClick={() => setShowCareerMatchesModal(true)} style={{ width: '100%', marginTop: '12px', fontSize: '12px', padding: '9px 16px' }}>
               🎯 View Career Matches
             </button>
           </div>
@@ -1437,7 +1474,14 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     <div className="db-root">
       {/* ── TOP NAV BAR ── */}
       <nav className="db-topnav">
-        <div className="db-topnav-logo">Vidya<span>Vantage</span></div>
+        <div
+          className="db-topnav-logo"
+          style={{ cursor: 'pointer' }}
+          onClick={onBack}
+          title="Back to Secret Sharz Home"
+        >
+          Vidya<span>Vantage</span>
+        </div>
         <div className="db-topnav-tabs">
           {NAV_ITEMS.map((item) => (
             <button
@@ -1545,6 +1589,16 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             showToast('✅ Profile updated! EX Points recalculated.');
           }}
         />
+      )}
+
+      {/* ── XP CHECKLIST MODAL ── */}
+      {showXpModal && (
+        <XpChecklistModal onClose={() => { setShowXpModal(false); setShowProfileEditor(true); }} />
+      )}
+
+      {/* ── CAREER MATCHES MODAL ── */}
+      {showCareerMatchesModal && (
+        <CareerMatchesModal localUserData={localUserData} onClose={() => setShowCareerMatchesModal(false)} />
       )}
 
       {toast && <div className="db-toast"><span>🔔</span><span>{toast}</span></div>}
