@@ -23,11 +23,15 @@ const DEFAULT_USER_PROFILE = {
   email: '',                     // Contact email address
 
   // Student track — determines which services are enabled
-  // Values: 'unassigned' | 'counselling' | 'guidance' | 'both'
+  // Values: 'unassigned' | 'counselling' | 'career_guidance' | 'both'
   studentTrack: 'unassigned',
 
   // Counselling consent — must be true before counselling features are unlocked
   counsellingConsentAgreed: false,
+
+  // Dual-role assignment IDs
+  assignedCounsellorId: null,        // ID of assigned counsellor (roleType: 'counsellor')
+  assignedCareerCoachId: null,       // ID of assigned career coach (roleType: 'career_coach')
 
   interests: [],                 // e.g. ['Technology', 'Music']
   hobbies: [],                   // e.g. ['Reading', 'Sketching']
@@ -218,6 +222,7 @@ const INITIAL_STUDENTS = [
     counsellingStatus: 'In Progress',
     counsellingStage: 'Exploration',
     assignedCounsellorId: 'counsellor-001',
+    assignedCareerCoachId: null,
     priority: 'high',
     sessions: [
       {
@@ -260,6 +265,7 @@ const INITIAL_STUDENTS = [
     counsellingStatus: 'Not Started',
     counsellingStage: 'Assessment',
     assignedCounsellorId: null,
+    assignedCareerCoachId: null,
     priority: 'medium',
     sessions: [],
     counsellorNotes: [],
@@ -286,6 +292,7 @@ const INITIAL_STUDENTS = [
     counsellingStatus: 'Completed',
     counsellingStage: 'Finalisation',
     assignedCounsellorId: 'counsellor-001',
+    assignedCareerCoachId: null,
     priority: 'low',
     sessions: [
       { id: 1, date: '2026-04-05', duration: '60', outcome: 'Initial assessment. Identified strong interest in corporate law and finance.' },
@@ -309,6 +316,7 @@ const INITIAL_STUDENTS = [
 const INITIAL_COUNSELLORS = [
   {
     id: 'counsellor-001',
+    roleType: 'counsellor',
     name: 'Dr. Meera Nair',
     email: 'dr.meera@secretsharz.com',
     title: 'Senior Career Counsellor & Clinical Psychologist',
@@ -332,6 +340,7 @@ const INITIAL_COUNSELLORS = [
   },
   {
     id: 'counsellor-002',
+    roleType: 'career_coach',
     name: 'Prof. Arjun Kapoor',
     email: 'arjun.kapoor@secretsharz.com',
     title: 'Career Coach & IIT Alumni Mentor',
@@ -355,10 +364,10 @@ const INITIAL_COUNSELLORS = [
   }
 ];
 
-// assignments: { [studentId]: counsellorId }
+// assignments: { [studentId]: { counsellorId: string|null, coachId: string|null } }
 const INITIAL_ASSIGNMENTS = {
-  'student-001': 'counsellor-001',
-  'student-003': 'counsellor-001'
+  'student-001': { counsellorId: 'counsellor-001', coachId: null },
+  'student-003': { counsellorId: 'counsellor-001', coachId: null },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -533,21 +542,65 @@ export function DashboardProvider({ children, navigate }) {
 
   // ── STUDENT HELPERS ──────────────────────────────────────────────────────
 
-  /** Returns the counsellor object assigned to a given student, or null */
+  /**
+   * getCounsellorForStudent(studentId)
+   * Returns the counsellor object (roleType: 'counsellor') assigned to a student, or null.
+   */
   const getCounsellorForStudent = useCallback((studentId) => {
-    const counsellorId = assignments[studentId];
+    const entry = assignments[studentId];
+    if (!entry) return null;
+    const counsellorId = typeof entry === 'object' ? entry.counsellorId : entry;
     if (!counsellorId) return null;
     return counsellors.find(c => c.id === counsellorId) || null;
   }, [assignments, counsellors]);
 
-  /** Returns all students assigned to a given counsellor */
+  /**
+   * getCareerCoachForStudent(studentId)
+   * Returns the career coach object (roleType: 'career_coach') assigned to a student, or null.
+   */
+  const getCareerCoachForStudent = useCallback((studentId) => {
+    const entry = assignments[studentId];
+    if (!entry || typeof entry !== 'object') return null;
+    const coachId = entry.coachId;
+    if (!coachId) return null;
+    return counsellors.find(c => c.id === coachId) || null;
+  }, [assignments, counsellors]);
+
+  /**
+   * getStudentsForCounsellor(counsellorId)
+   * Returns all students whose counsellorId matches the given ID.
+   */
   const getStudentsForCounsellor = useCallback((counsellorId) => {
-    return students.filter(s => assignments[s.id] === counsellorId);
+    return students.filter(s => {
+      const entry = assignments[s.id];
+      if (!entry) return false;
+      const cId = typeof entry === 'object' ? entry.counsellorId : entry;
+      return cId === counsellorId;
+    });
   }, [students, assignments]);
 
-  /** Assign a student to a counsellor (creates new assignment) */
+  /**
+   * getStudentsForCoach(coachId)
+   * Returns all students whose coachId matches the given ID.
+   */
+  const getStudentsForCoach = useCallback((coachId) => {
+    return students.filter(s => {
+      const entry = assignments[s.id];
+      if (!entry || typeof entry !== 'object') return false;
+      return entry.coachId === coachId;
+    });
+  }, [students, assignments]);
+
+  /**
+   * assignStudentToCounsellor(studentId, counsellorId)
+   * Assigns a counsellor to a student (preserves existing coachId).
+   */
   const assignStudentToCounsellor = useCallback((studentId, counsellorId) => {
-    setAssignments(prev => ({ ...prev, [studentId]: counsellorId }));
+    setAssignments(prev => {
+      const existing = prev[studentId] || { counsellorId: null, coachId: null };
+      const entry = typeof existing === 'object' ? existing : { counsellorId: existing, coachId: null };
+      return { ...prev, [studentId]: { ...entry, counsellorId } };
+    });
     setStudents(prev =>
       prev.map(s =>
         s.id === studentId
@@ -557,9 +610,35 @@ export function DashboardProvider({ children, navigate }) {
     );
   }, []);
 
-  /** Reassign a student to a different counsellor */
+  /**
+   * assignStudentToCoach(studentId, coachId)
+   * Assigns a career coach to a student (preserves existing counsellorId).
+   */
+  const assignStudentToCoach = useCallback((studentId, coachId) => {
+    setAssignments(prev => {
+      const existing = prev[studentId] || { counsellorId: null, coachId: null };
+      const entry = typeof existing === 'object' ? existing : { counsellorId: existing, coachId: null };
+      return { ...prev, [studentId]: { ...entry, coachId } };
+    });
+    setStudents(prev =>
+      prev.map(s =>
+        s.id === studentId
+          ? { ...s, assignedCareerCoachId: coachId }
+          : s
+      )
+    );
+  }, []);
+
+  /**
+   * reassignStudent(studentId, newCounsellorId)
+   * Reassigns a student to a different counsellor (preserves coachId).
+   */
   const reassignStudent = useCallback((studentId, newCounsellorId) => {
-    setAssignments(prev => ({ ...prev, [studentId]: newCounsellorId }));
+    setAssignments(prev => {
+      const existing = prev[studentId] || { counsellorId: null, coachId: null };
+      const entry = typeof existing === 'object' ? existing : { counsellorId: existing, coachId: null };
+      return { ...prev, [studentId]: { ...entry, counsellorId: newCounsellorId } };
+    });
     setStudents(prev =>
       prev.map(s =>
         s.id === studentId
@@ -569,7 +648,10 @@ export function DashboardProvider({ children, navigate }) {
     );
   }, []);
 
-  /** Unassign a student from their counsellor */
+  /**
+   * unassignStudent(studentId)
+   * Clears both counsellorId and coachId for a student.
+   */
   const unassignStudent = useCallback((studentId) => {
     setAssignments(prev => {
       const next = { ...prev };
@@ -579,11 +661,59 @@ export function DashboardProvider({ children, navigate }) {
     setStudents(prev =>
       prev.map(s =>
         s.id === studentId
-          ? { ...s, assignedCounsellorId: null }
+          ? { ...s, assignedCounsellorId: null, assignedCareerCoachId: null }
           : s
       )
     );
   }, []);
+
+  /**
+   * autoAssignExperts(studentId, track)
+   *
+   * Automatically assigns the first available expert(s) based on the student's track.
+   *
+   * @param {string} studentId - The student's ID
+   * @param {'counselling' | 'career_guidance' | 'both'} track - The student's service track
+   *
+   * Track behaviour:
+   *   'counselling'     → assigns the first expert with roleType === 'counsellor' to counsellorId
+   *   'career_guidance' → assigns the first expert with roleType === 'career_coach' to coachId
+   *   'both'            → assigns one of each
+   */
+  const autoAssignExperts = useCallback((studentId, track) => {
+    const firstCounsellor = counsellors.find(c => c.roleType === 'counsellor');
+    const firstCoach = counsellors.find(c => c.roleType === 'career_coach');
+
+    setAssignments(prev => {
+      const existing = prev[studentId] || { counsellorId: null, coachId: null };
+      const entry = typeof existing === 'object' ? existing : { counsellorId: existing, coachId: null };
+      let updated = { ...entry };
+
+      if ((track === 'counselling' || track === 'both') && firstCounsellor) {
+        updated.counsellorId = firstCounsellor.id;
+      }
+      if ((track === 'career_guidance' || track === 'both') && firstCoach) {
+        updated.coachId = firstCoach.id;
+      }
+
+      return { ...prev, [studentId]: updated };
+    });
+
+    setStudents(prev =>
+      prev.map(s => {
+        if (s.id !== studentId) return s;
+        const studentUpdates = { studentTrack: track };
+        if ((track === 'counselling' || track === 'both') && firstCounsellor) {
+          studentUpdates.assignedCounsellorId = firstCounsellor.id;
+          studentUpdates.counsellingStatus = s.counsellingStatus === 'Not Started' ? 'In Progress' : s.counsellingStatus;
+        }
+        if ((track === 'career_guidance' || track === 'both') && firstCoach) {
+          studentUpdates.assignedCareerCoachId = firstCoach.id;
+        }
+        return { ...s, ...studentUpdates };
+      })
+    );
+  }, [counsellors]);
 
   /** Update any field(s) on a student record */
   const updateStudent = useCallback((studentId, updates) => {
@@ -907,10 +1037,14 @@ export function DashboardProvider({ children, navigate }) {
 
     // Student operations
     getCounsellorForStudent,
+    getCareerCoachForStudent,
     getStudentsForCounsellor,
+    getStudentsForCoach,
     assignStudentToCounsellor,
+    assignStudentToCoach,
     reassignStudent,
     unassignStudent,
+    autoAssignExperts,
     updateStudent,
     addSessionToStudent,
     saveAssessmentResults,
