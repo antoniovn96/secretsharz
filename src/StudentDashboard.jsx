@@ -1907,47 +1907,6 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             </div>
           </div>
 
-          {/* ── VIDYAVANTAGE DASHBOARD (dark-themed three-column layout) ── */}
-          <div className="db-root">
-            {/* ── THREE-COLUMN SOCIAL LAYOUT ── */}
-            <div className="db-social-layout">
-              {/* Left: Profile Card */}
-              <LeftProfileCard />
-
-              {/* Center: Feed / Tab Content */}
-              <main>
-                {/* Tab Navigation */}
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px', background: 'rgba(255,255,255,0.06)', borderRadius: '50px', padding: '4px 6px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  {NAV_ITEMS.map((item) => (
-                    <button
-                      key={item.id}
-                      style={{
-                        background: activeTab === item.id ? 'linear-gradient(135deg, #111827, #374151)' : 'transparent',
-                        border: 'none',
-                        color: activeTab === item.id ? 'white' : 'rgba(255,255,255,0.55)',
-                        fontSize: '12px', fontWeight: '600',
-                        padding: '6px 12px', borderRadius: '50px',
-                        cursor: 'pointer', fontFamily: 'inherit',
-                        display: 'flex', alignItems: 'center', gap: '5px',
-                        whiteSpace: 'nowrap',
-                        boxShadow: activeTab === item.id ? '0 4px 12px rgba(0,0,0,0.3)' : 'none',
-                        transition: 'all 0.2s',
-                      }}
-                      onClick={() => setActiveTab(item.id)}
-                    >
-                      {item.icon} {item.label}
-                      {item.badge && <span style={{ background: '#E8650A', color: 'white', fontSize: '9px', fontWeight: '800', padding: '2px 5px', borderRadius: '8px' }}>{item.badge}</span>}
-                    </button>
-                  ))}
-                </div>
-                {renderActiveTab()}
-              </main>
-
-              {/* Right: Intelligence Sidebar */}
-              <RightSidebar />
-            </div>
-          </div>
-
           {/* ── PROFILE FORM MODAL ── */}
           {showProfileForm && (
             <div className="db-modal-overlay">
