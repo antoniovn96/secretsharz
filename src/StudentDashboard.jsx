@@ -1626,45 +1626,162 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               {activeAboutTab === 'overview' && (
                 <div>
                   <div className="about-content-header">Dashboard Overview</div>
-                  {/* EXISTING XP, ALERTS, AND CAREER MATCH WIDGETS */}
-                  <div className="db-root" style={{ background: 'transparent', minHeight: 'unset' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      {/* XP Block */}
-                      <div className="db-xp-block" style={{ cursor: 'pointer' }} onClick={() => setShowProfileEditor(true)} title="Click to earn more EX Points">
-                        <div className="db-xp-label">⚡ EX Points</div>
-                        {exPoints === 0 ? (
-                          <div style={{ textAlign: 'center', padding: '8px 0' }}>
-                            <div style={{ fontSize: '28px', margin: '4px 0' }}>🌟</div>
-                            <div style={{ fontFamily: "'Fraunces', serif", fontSize: '13px', fontWeight: '700', color: '#92400E', lineHeight: '1.4' }}>Complete your profile to earn your first 50 XP.</div>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="db-xp-score">{exPoints} <span>/ {maxXp}</span></div>
-                            <div className="db-xp-bar-wrap"><div className="db-xp-bar-fill" style={{ width: `${xpPct}%` }} /></div>
-                            <div className="db-xp-level"><span>Level {xpLevel}</span><span>{xpPct}% to next</span></div>
-                          </>
-                        )}
-                      </div>
-                      {/* Career Intel Summary */}
-                      {hasAssessment && (
-                        <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '8px', padding: '16px' }}>
-                          <div style={{ fontSize: '11px', fontWeight: '800', color: '#B0B3B8', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '10px' }}>🧠 Career Intelligence</div>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <div style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', fontWeight: '900', color: '#E4E6EB', letterSpacing: '3px' }}>{String(localUserData?.riasecCode || '')}</div>
-                            <div style={{ textAlign: 'right' }}>
-                              <div style={{ fontSize: '11px', color: '#B0B3B8', marginBottom: '2px' }}>Top Match</div>
-                              <div style={{ fontSize: '13px', fontWeight: '700', color: '#E4E6EB' }}>{String(localUserData?.bestCareer?.title || 'Pending')}</div>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => setShowCareerMatchesModal(true)}
-                            style={{ width: '100%', padding: '8px', background: '#2D88FF', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}
-                          >
-                            🎯 View Career Matches
-                          </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                    {/* ── Welcome Back Banner ── */}
+                    <div style={{ background: 'linear-gradient(135deg, #1C2333 0%, #1C2850 100%)', borderRadius: '12px', padding: '20px 24px', border: '1px solid #3A3B3C', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                      <div>
+                        <div style={{ fontSize: '10px', fontWeight: '700', color: '#F0A500', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '4px' }}>Welcome Back</div>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: '700', color: '#E4E6EB', lineHeight: '1.2', marginBottom: '6px' }}>
+                          Hey {firstName}, <em style={{ fontStyle: 'italic', color: '#F0A500' }}>own your future.</em>
                         </div>
+                        <div style={{ fontSize: '12px', color: 'rgba(228,230,235,0.55)', lineHeight: '1.6' }}>
+                          {hasAssessment
+                            ? `Your RIASEC code is ${String(localUserData.riasecCode)}. Your best path is ${String(bestCareer?.title || '')}.`
+                            : 'Take our free AI assessment to unlock your career roadmap.'}
+                        </div>
+                      </div>
+                      {!hasAssessment && (
+                        <button
+                          onClick={() => setShowAssessment(true)}
+                          style={{ background: 'linear-gradient(135deg, #E8650A, #F0A500)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '50px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}
+                        >
+                          Take Assessment 🚀
+                        </button>
                       )}
                     </div>
+
+                    {/* ── 🔔 Alerts Block ── */}
+                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '12px', overflow: 'hidden' }}>
+                      <div style={{ padding: '12px 16px', borderBottom: '1px solid #3A3B3C', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: '15px', fontWeight: '700', color: '#E4E6EB', display: 'flex', alignItems: 'center', gap: '7px' }}>
+                          🔔 Alerts
+                          {unreadCount > 0 && (
+                            <span style={{ background: '#EF4444', color: 'white', fontSize: '10px', fontWeight: '800', padding: '2px 7px', borderRadius: '10px' }}>{unreadCount}</span>
+                          )}
+                        </div>
+                        {unreadCount > 0 && (
+                          <button onClick={() => markAllNotificationsRead()} style={{ fontSize: '11px', fontWeight: '700', color: '#2D88FF', cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'inherit' }}>Mark all read</button>
+                        )}
+                      </div>
+                      <div style={{ padding: '8px 16px' }}>
+                        {notifications.map((notif) => (
+                          <div
+                            key={notif.id}
+                            className="overview-notif-item"
+                            style={{ opacity: notif.isRead ? 0.6 : 1 }}
+                            onClick={() => {
+                              if (!notif.isRead) markNotificationRead(notif.id);
+                              if (notif.id === 'notif-001' || notif.title?.toLowerCase().includes('xp')) {
+                                setShowXpModal(true);
+                              } else {
+                                setShowProfileEditor(true);
+                              }
+                            }}
+                          >
+                            <div className="overview-notif-dot" style={{ background: notif.isRead ? 'transparent' : getNotifColor(notif.priority, notif.isRead) }} />
+                            <div style={{ flex: 1 }}>
+                              <div className="overview-notif-title">{String(notif.title)}</div>
+                              <div className="overview-notif-msg">{String(notif.message).substring(0, 80)}{notif.message.length > 80 ? '…' : ''}</div>
+                              <div className="overview-notif-time">{relativeTime(notif.timestamp)}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* ── Clarity Index Stats ── */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '22px', marginBottom: '6px' }}>🎯</div>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: '700', color: '#E4E6EB', lineHeight: '1' }}>{hasAssessment ? '8' : '0'}</div>
+                        <div style={{ fontSize: '10px', color: '#B0B3B8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px' }}>Clarity Index</div>
+                      </div>
+                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '12px', padding: '16px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setShowProfileEditor(true)}>
+                        <div style={{ fontSize: '22px', marginBottom: '6px' }}>⚡</div>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: '700', color: '#F0A500', lineHeight: '1' }}>{exPoints}</div>
+                        <div style={{ fontSize: '10px', color: '#B0B3B8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px' }}>EX Points</div>
+                      </div>
+                    </div>
+
+                    {/* ── EX Points Progress Bar ── */}
+                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '12px', padding: '16px', cursor: 'pointer' }} onClick={() => setShowProfileEditor(true)} title="Click to earn more EX Points">
+                      <div style={{ fontSize: '10px', fontWeight: '800', color: '#B0B3B8', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>⚡ EX Points Progress</div>
+                      {exPoints === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                          <div style={{ fontSize: '28px', margin: '4px 0' }}>🌟</div>
+                          <div style={{ fontSize: '13px', fontWeight: '700', color: '#E4E6EB', lineHeight: '1.4' }}>Complete your profile to earn your first 50 XP.</div>
+                        </div>
+                      ) : (
+                        <>
+                          <div style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', fontWeight: '900', color: '#F0A500', lineHeight: '1', marginBottom: '8px' }}>{exPoints} <span style={{ fontSize: '14px', fontWeight: '600', color: '#B0B3B8' }}>/ {maxXp}</span></div>
+                          <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '6px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${xpPct}%`, background: 'linear-gradient(90deg, #E8650A, #F0A500)', borderRadius: '6px', transition: 'width 1s ease' }} />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '11px', color: '#B0B3B8', fontWeight: '600' }}>
+                            <span>Level {xpLevel}</span><span>{xpPct}% to next</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* ── Your RIASEC Profile Card ── */}
+                    {hasAssessment && (
+                      <div style={{ background: 'linear-gradient(135deg, #0D1117 0%, #1C2850 60%, #0A3D2E 100%)', border: '1px solid rgba(240,165,0,0.2)', borderRadius: '12px', padding: '20px' }}>
+                        <div style={{ fontSize: '10px', fontWeight: '800', color: '#F0A500', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '6px' }}>🧠 Your RIASEC Profile</div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                          <div style={{ fontFamily: "'Fraunces', serif", fontSize: '36px', fontWeight: '900', color: '#F0A500', letterSpacing: '4px' }}>{String(localUserData?.riasecCode || '')}</div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '10px', color: 'rgba(228,230,235,0.4)', fontWeight: '600', marginBottom: '2px' }}>Top Match</div>
+                            <div style={{ fontSize: '13px', fontWeight: '700', color: '#E4E6EB' }}>
+                              {String(
+                                (localUserData?.topCareerMatches && localUserData.topCareerMatches.length > 0)
+                                  ? localUserData.topCareerMatches[0].name
+                                  : (localUserData?.bestCareer?.title || 'Pending')
+                              )}
+                            </div>
+                            <div style={{ fontSize: '12px', fontWeight: '800', color: '#34D399' }}>
+                              {localUserData?.topCareerMatches?.[0]?.matchScore
+                                ? `${Number(localUserData.topCareerMatches[0].matchScore)}%`
+                                : `${Number(localUserData?.bestCareer?.matchPercent || 0)}%`} fit
+                            </div>
+                          </div>
+                        </div>
+                        {localUserData?.riasecSummary && (
+                          <div style={{ fontSize: '12px', color: 'rgba(228,230,235,0.6)', lineHeight: '1.7', background: 'rgba(255,255,255,0.04)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.07)', marginBottom: '12px' }}>
+                            {String(localUserData.riasecSummary).substring(0, 150)}…
+                          </div>
+                        )}
+                        <button
+                          onClick={() => setShowCareerMatchesModal(true)}
+                          style={{ width: '100%', padding: '9px', background: '#2D88FF', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}
+                        >
+                          🎯 View Career Matches
+                        </button>
+                      </div>
+                    )}
+
+                    {/* ── Stream Recommendation ── */}
+                    {hasAssessment && streamRec && (
+                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                        <div>
+                          <div style={{ fontSize: '10px', color: '#34D399', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>🎯 Stream Recommendation</div>
+                          <div style={{ fontFamily: "'Fraunces', serif", fontSize: '18px', fontWeight: '700', color: '#E4E6EB', marginBottom: '4px' }}>
+                            {String(streamRec.name)} <span style={{ color: '#34D399', fontSize: '14px' }}>({Number(streamRec.match)}% Match)</span>
+                          </div>
+                          <ul style={{ margin: '4px 0 0 16px', fontSize: '12px', color: '#B0B3B8', fontWeight: '500' }}>
+                            {(streamRec.reasons || []).map((r, i) => <li key={i}>{String(r)}</li>)}
+                          </ul>
+                        </div>
+                        <button
+                          onClick={() => setActiveTab('colleges')}
+                          style={{ background: 'linear-gradient(135deg, #E8650A, #F0A500)', color: 'white', border: 'none', padding: '9px 16px', borderRadius: '50px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}
+                        >
+                          Explore Colleges
+                        </button>
+                      </div>
+                    )}
+
                   </div>
                 </div>
               )}
@@ -1790,138 +1907,129 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             </div>
           </div>
 
+          {/* ── VIDYAVANTAGE DASHBOARD (dark-themed three-column layout) ── */}
           <div className="db-root">
-      {/* ── TOP NAV BAR ── */}
-      <nav className="db-topnav">
-        <div
-          className="db-topnav-logo"
-          style={{ cursor: 'pointer' }}
-          onClick={onBack}
-          title="Back to Secret Sharz Home"
-        >
-          Vidya<span>Vantage</span>
-        </div>
-        <div className="db-topnav-tabs">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              className={`db-topnav-tab ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(item.id)}
-            >
-              {item.icon} {item.label}
-              {item.badge && <span className="db-topnav-badge">{item.badge}</span>}
-            </button>
-          ))}
-        </div>
-        <div className="db-topnav-right">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(240,165,0,0.15)', border: '1px solid rgba(240,165,0,0.3)', color: 'var(--gold)', padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>
-            ⚡ {exPoints} EX
+            {/* ── THREE-COLUMN SOCIAL LAYOUT ── */}
+            <div className="db-social-layout">
+              {/* Left: Profile Card */}
+              <LeftProfileCard />
+
+              {/* Center: Feed / Tab Content */}
+              <main>
+                {/* Tab Navigation */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px', background: 'rgba(255,255,255,0.06)', borderRadius: '50px', padding: '4px 6px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  {NAV_ITEMS.map((item) => (
+                    <button
+                      key={item.id}
+                      style={{
+                        background: activeTab === item.id ? 'linear-gradient(135deg, #111827, #374151)' : 'transparent',
+                        border: 'none',
+                        color: activeTab === item.id ? 'white' : 'rgba(255,255,255,0.55)',
+                        fontSize: '12px', fontWeight: '600',
+                        padding: '6px 12px', borderRadius: '50px',
+                        cursor: 'pointer', fontFamily: 'inherit',
+                        display: 'flex', alignItems: 'center', gap: '5px',
+                        whiteSpace: 'nowrap',
+                        boxShadow: activeTab === item.id ? '0 4px 12px rgba(0,0,0,0.3)' : 'none',
+                        transition: 'all 0.2s',
+                      }}
+                      onClick={() => setActiveTab(item.id)}
+                    >
+                      {item.icon} {item.label}
+                      {item.badge && <span style={{ background: '#E8650A', color: 'white', fontSize: '9px', fontWeight: '800', padding: '2px 5px', borderRadius: '8px' }}>{item.badge}</span>}
+                    </button>
+                  ))}
+                </div>
+                {renderActiveTab()}
+              </main>
+
+              {/* Right: Intelligence Sidebar */}
+              <RightSidebar />
+            </div>
           </div>
-          {unreadCount > 0 && (
-            <div style={{ background: '#EF4444', color: 'white', fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '20px' }}>
-              🔔 {unreadCount}
+
+          {/* ── PROFILE FORM MODAL ── */}
+          {showProfileForm && (
+            <div className="db-modal-overlay">
+              <div className="db-modal-box">
+                <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h2 style={{ fontFamily: 'Fraunces', fontSize: '22px', color: 'var(--ink)', marginBottom: '4px' }}>Complete Your Profile</h2>
+                    <p style={{ fontSize: '13px', color: 'var(--muted)' }}>This helps us provide personalized recommendations</p>
+                  </div>
+                  <button onClick={() => setShowProfileForm(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--muted)', padding: '4px' }}>×</button>
+                </div>
+                <form onSubmit={handleProfileSubmit} style={{ padding: '28px 32px' }}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>Age *</label>
+                    <input type="number" value={profileData.age} onChange={(e) => setProfileData({ ...profileData, age: e.target.value })} placeholder="e.g., 16" style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }} required />
+                  </div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>Gender *</label>
+                    <select value={profileData.gender} onChange={(e) => setProfileData({ ...profileData, gender: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }} required>
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Non-binary">Non-binary</option>
+                      <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                  </div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>School/College Name *</label>
+                    <input type="text" value={profileData.schoolName} onChange={(e) => setProfileData({ ...profileData, schoolName: e.target.value })} placeholder="e.g., Delhi Public School" style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }} required />
+                  </div>
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>Current Grade Level *</label>
+                    <select value={profileData.gradeLevel} onChange={(e) => setProfileData({ ...profileData, gradeLevel: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }} required>
+                      <option value="">Select Grade Level</option>
+                      <option value="Class 8">Class 8</option>
+                      <option value="Class 9">Class 9</option>
+                      <option value="Class 10">Class 10</option>
+                      <option value="Class 11">Class 11</option>
+                      <option value="Class 12">Class 12</option>
+                      <option value="1st Year UG">1st Year UG</option>
+                      <option value="2nd Year UG">2nd Year UG</option>
+                      <option value="3rd Year UG">3rd Year UG</option>
+                      <option value="4th Year UG">4th Year UG</option>
+                      <option value="Postgraduate">Postgraduate</option>
+                    </select>
+                  </div>
+                  {profileData.gradeLevel && (
+                    <div style={{ background: 'var(--surface)', padding: '20px', borderRadius: 'var(--r-md)', marginBottom: '24px', border: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--ink)', marginBottom: '16px' }}>📚 Academic History</div>
+                      {renderAcademicFields()}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                    <button type="button" onClick={() => setShowProfileForm(false)} className="db-btn-outline">Cancel</button>
+                    <button type="submit" className="db-btn" disabled={savingProfile}>{savingProfile ? 'Saving...' : 'Save Profile'}</button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
-        </div>
-      </nav>
 
-      {/* ── THREE-COLUMN SOCIAL LAYOUT ── */}
-      <div className="db-social-layout">
-        {/* Left: Profile Card */}
-        <LeftProfileCard />
+          {/* ── PROFILE EDITOR MODAL ── */}
+          {showProfileEditor && (
+            <ProfileEditor
+              onClose={() => {
+                setShowProfileEditor(false);
+                showToast('✅ Profile updated! EX Points recalculated.');
+              }}
+            />
+          )}
 
-        {/* Center: Feed / Tab Content */}
-        <main>
-          {renderActiveTab()}
-        </main>
+          {/* ── XP CHECKLIST MODAL ── */}
+          {showXpModal && (
+            <XpChecklistModal onClose={() => { setShowXpModal(false); setShowProfileEditor(true); }} />
+          )}
 
-        {/* Right: Intelligence Sidebar */}
-        <RightSidebar />
-      </div>
+          {/* ── CAREER MATCHES MODAL ── */}
+          {showCareerMatchesModal && (
+            <CareerMatchesModal localUserData={localUserData} onClose={() => setShowCareerMatchesModal(false)} />
+          )}
 
-      {/* ── PROFILE FORM MODAL ── */}
-      {showProfileForm && (
-        <div className="db-modal-overlay">
-          <div className="db-modal-box">
-            <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h2 style={{ fontFamily: 'Fraunces', fontSize: '22px', color: 'var(--ink)', marginBottom: '4px' }}>Complete Your Profile</h2>
-                <p style={{ fontSize: '13px', color: 'var(--muted)' }}>This helps us provide personalized recommendations</p>
-              </div>
-              <button onClick={() => setShowProfileForm(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--muted)', padding: '4px' }}>×</button>
-            </div>
-            <form onSubmit={handleProfileSubmit} style={{ padding: '28px 32px' }}>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>Age *</label>
-                <input type="number" value={profileData.age} onChange={(e) => setProfileData({ ...profileData, age: e.target.value })} placeholder="e.g., 16" style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }} required />
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>Gender *</label>
-                <select value={profileData.gender} onChange={(e) => setProfileData({ ...profileData, gender: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }} required>
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Non-binary">Non-binary</option>
-                  <option value="Prefer not to say">Prefer not to say</option>
-                </select>
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>School/College Name *</label>
-                <input type="text" value={profileData.schoolName} onChange={(e) => setProfileData({ ...profileData, schoolName: e.target.value })} placeholder="e.g., Delhi Public School" style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }} required />
-              </div>
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>Current Grade Level *</label>
-                <select value={profileData.gradeLevel} onChange={(e) => setProfileData({ ...profileData, gradeLevel: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }} required>
-                  <option value="">Select Grade Level</option>
-                  <option value="Class 8">Class 8</option>
-                  <option value="Class 9">Class 9</option>
-                  <option value="Class 10">Class 10</option>
-                  <option value="Class 11">Class 11</option>
-                  <option value="Class 12">Class 12</option>
-                  <option value="1st Year UG">1st Year UG</option>
-                  <option value="2nd Year UG">2nd Year UG</option>
-                  <option value="3rd Year UG">3rd Year UG</option>
-                  <option value="4th Year UG">4th Year UG</option>
-                  <option value="Postgraduate">Postgraduate</option>
-                </select>
-              </div>
-              {profileData.gradeLevel && (
-                <div style={{ background: 'var(--surface)', padding: '20px', borderRadius: 'var(--r-md)', marginBottom: '24px', border: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--ink)', marginBottom: '16px' }}>📚 Academic History</div>
-                  {renderAcademicFields()}
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button type="button" onClick={() => setShowProfileForm(false)} className="db-btn-outline">Cancel</button>
-                <button type="submit" className="db-btn" disabled={savingProfile}>{savingProfile ? 'Saving...' : 'Save Profile'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── PROFILE EDITOR MODAL ── */}
-      {showProfileEditor && (
-        <ProfileEditor
-          onClose={() => {
-            setShowProfileEditor(false);
-            showToast('✅ Profile updated! EX Points recalculated.');
-          }}
-        />
-      )}
-
-      {/* ── XP CHECKLIST MODAL ── */}
-      {showXpModal && (
-        <XpChecklistModal onClose={() => { setShowXpModal(false); setShowProfileEditor(true); }} />
-      )}
-
-      {/* ── CAREER MATCHES MODAL ── */}
-      {showCareerMatchesModal && (
-        <CareerMatchesModal localUserData={localUserData} onClose={() => setShowCareerMatchesModal(false)} />
-      )}
-
-      {toast && <div className="db-toast"><span>🔔</span><span>{toast}</span></div>}
-          </div>
+          {toast && <div className="db-toast"><span>🔔</span><span>{toast}</span></div>}
         </main>
       </div>
     </div>
