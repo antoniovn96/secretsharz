@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
-import { db, auth } from './firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, auth, storage } from './firebase';
 import CareerAssessment from "./CareerAssessment";
 import ProfileEditor from "./ProfileEditor";
 import { useDashboard } from "./context/DashboardContext";
@@ -301,7 +302,7 @@ function getNotifColor(priority, isRead) {
 }
 
 export default function StudentDashboard({ user, userData, initialTab = "home", onBack, onLogout }) {
-  const { userProfile, socialFeed, notifications, markNotificationRead, markAllNotificationsRead, incrementSessions, submitBooking } = useDashboard();
+  const { userProfile, socialFeed, notifications, markNotificationRead, markAllNotificationsRead, incrementSessions, submitBooking, updateUserProfile } = useDashboard();
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isParentMode, setIsParentMode] = useState(false);
@@ -311,6 +312,12 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [showAssessment, setShowAssessment] = useState(false);
   const [localUserData, setLocalUserData] = useState(userData || {});
   const [showProfileForm, setShowProfileForm] = useState(false);
+  // ── Photo edit popup state ──
+  const [photoPopup, setPhotoPopup] = useState(null); // 'cover' | 'avatar' | null
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const coverPhotoInputRef = useRef(null);
+  const avatarInputRef = useRef(null);
+  const photoPopupRef = useRef(null);
   const [profileData, setProfileData] = useState({
     age: '', gender: '', schoolName: '', gradeLevel: '',
     marks10th: '', marks11th: '', stream1112: '', marks12th: '',
@@ -1554,16 +1561,180 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     }
   };
 
+  // ── Photo upload handler ──
+  const handlePhotoUpload = async (file, type) => {
+    if (!file || !auth?.currentUser) return;
+    setUploadingPhoto(true);
+    setPhotoPopup(null);
+    try {
+      const uid = auth.currentUser.uid;
+      const path = `users/${uid}/${type === 'cover' ? 'coverPhoto' : 'profilePicture'}`;
+      const fileRef = storageRef(storage, path);
+      await uploadBytes(fileRef, file);
+      const downloadURL = await getDownloadURL(fileRef);
+      if (type === 'cover') {
+        await updateUserProfile({ coverPhoto: downloadURL });
+      } else {
+        await updateUserProfile({ profilePicture: downloadURL });
+      }
+      showToast(`✅ ${type === 'cover' ? 'Cover photo' : 'Profile picture'} updated!`);
+    } catch (err) {
+      console.error('Photo upload error:', err);
+      showToast('❌ Upload failed. Please try again.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handlePhotoRemove = async (type) => {
+    if (!auth?.currentUser) return;
+    setPhotoPopup(null);
+    try {
+      const uid = auth.currentUser.uid;
+      const path = `users/${uid}/${type === 'cover' ? 'coverPhoto' : 'profilePicture'}`;
+      try {
+        await deleteObject(storageRef(storage, path));
+      } catch (_) { /* file may not exist */ }
+      if (type === 'cover') {
+        await updateUserProfile({ coverPhoto: null });
+      } else {
+        await updateUserProfile({ profilePicture: null });
+      }
+      showToast(`✅ ${type === 'cover' ? 'Cover photo' : 'Profile picture'} removed.`);
+    } catch (err) {
+      console.error('Photo remove error:', err);
+      showToast('❌ Remove failed. Please try again.');
+    }
+  };
+
   return (
     <div className="social-dark-theme">
+      {/* Hidden file inputs */}
+      <input
+        ref={coverPhotoInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => { if (e.target.files[0]) handlePhotoUpload(e.target.files[0], 'cover'); e.target.value = ''; }}
+      />
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={(e) => { if (e.target.files[0]) handlePhotoUpload(e.target.files[0], 'avatar'); e.target.value = ''; }}
+      />
+
       <div className="social-dashboard-layout" style={{paddingTop: '60px'}}>
         <main className="social-main-content">
           <div className="profile-hero-container">
-            <div className="profile-cover-photo">
-              <div className="profile-avatar-wrapper">
-                <span className="profile-avatar-fallback">
-                  {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'S'}
-                </span>
+            <div className="profile-cover-photo" style={{ backgroundImage: userProfile?.coverPhoto ? `url(${userProfile.coverPhoto})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+              {/* Cover photo edit button */}
+              <button
+                className="edit-cover-btn"
+                onClick={() => setPhotoPopup(photoPopup === 'cover' ? null : 'cover')}
+                disabled={uploadingPhoto}
+              >
+                {uploadingPhoto ? '⏳' : '📷'} {uploadingPhoto ? 'Uploading…' : 'Edit Cover Photo'}
+              </button>
+
+              {/* Cover photo popup */}
+              {photoPopup === 'cover' && (
+                <div
+                  ref={photoPopupRef}
+                  style={{
+                    position: 'absolute', bottom: '56px', right: '16px',
+                    background: '#1E293B', border: '1px solid #334155',
+                    borderRadius: '12px', boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+                    zIndex: 500, overflow: 'hidden', minWidth: '200px',
+                    animation: 'alertsSlideDown 0.18s ease',
+                  }}
+                >
+                  <button
+                    onClick={() => coverPhotoInputRef.current?.click()}
+                    style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: '#E4E6EB', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                  >
+                    📤 Upload Photo
+                  </button>
+                  {userProfile?.coverPhoto && (
+                    <button
+                      onClick={() => handlePhotoRemove('cover')}
+                      style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: '#EF4444', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s', borderTop: '1px solid #334155' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                    >
+                      🗑️ Remove Photo
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setPhotoPopup(null)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: '#9CA3AF', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s', borderTop: '1px solid #334155' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                  >
+                    ✕ Cancel
+                  </button>
+                </div>
+              )}
+
+              {/* Avatar wrapper with camera overlay */}
+              <div
+                className="profile-avatar-wrapper"
+                onClick={() => setPhotoPopup(photoPopup === 'avatar' ? null : 'avatar')}
+                style={{ cursor: 'pointer' }}
+              >
+                {userProfile?.profilePicture
+                  ? <img src={userProfile.profilePicture} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span className="profile-avatar-fallback">{userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'S'}</span>
+                }
+                <div className="avatar-camera-overlay">
+                  <span>📷</span>
+                  <p>Change<br/>Photo</p>
+                </div>
+
+                {/* Avatar popup */}
+                {photoPopup === 'avatar' && (
+                  <div
+                    style={{
+                      position: 'absolute', top: '100%', left: '0',
+                      background: '#1E293B', border: '1px solid #334155',
+                      borderRadius: '12px', boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+                      zIndex: 500, overflow: 'hidden', minWidth: '200px',
+                      marginTop: '8px',
+                      animation: 'alertsSlideDown 0.18s ease',
+                    }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => avatarInputRef.current?.click()}
+                      style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: '#E4E6EB', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                    >
+                      📤 Upload Photo
+                    </button>
+                    {userProfile?.profilePicture && (
+                      <button
+                        onClick={() => handlePhotoRemove('avatar')}
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: '#EF4444', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s', borderTop: '1px solid #334155' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                      >
+                        🗑️ Remove Photo
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setPhotoPopup(null)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: '#9CA3AF', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s', borderTop: '1px solid #334155' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                    >
+                      ✕ Cancel
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             <div className="profile-identity-row">

@@ -1080,6 +1080,20 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   // Inline assignment state: { [studentId]: counsellorId }
   const [pendingAssignments, setPendingAssignments] = useState({});
 
+  // Counsellor Creation State
+  const [newCounsellorEmail, setNewCounsellorEmail] = useState('');
+  const [generatedPassword, setGeneratedPassword] = useState('');
+  const [generatedEmpId, setGeneratedEmpId] = useState('');
+
+  // Helper function to generate mock credentials
+  const handleGenerateCredentials = () => {
+    const randomString = Math.random().toString(36).slice(-8);
+    setGeneratedPassword(randomString);
+    // Mock generation logic: SJU20000 + random 2 digits (assuming admin is 01)
+    const randomId = Math.floor(Math.random() * 90) + 10;
+    setGeneratedEmpId(`SJU20000${randomId}`);
+  };
+
   // Dropdowns
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -2186,6 +2200,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           <li>🎛️ Dashboard</li>
           <li>⚙️ System Health</li>
           <li>🚪 Sign Out</li>
+          <li style={{ cursor: 'pointer', color: '#2D88FF' }} onClick={() => window.location.href = '/'}>🌐 Main Website</li>
         </ul>
       </nav>
       <div className="social-dashboard-layout" style={{ paddingTop: '60px' }}>
@@ -2379,6 +2394,32 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                   {/* Main content for user-db */}
                   <div className="admin-main">
                     <div className="main-content">
+                      {/* Onboard New Counsellor Card */}
+                      <div className="inline-form" style={{ marginBottom: '30px' }}>
+                        <div className="about-content-header" style={{ borderBottom: 'none', paddingBottom: '0' }}>Onboard New Counsellor</div>
+                        <p style={{ color: '#B0B3B8', fontSize: '14px', marginBottom: '20px' }}>Auto-generate secure credentials and unique employee IDs (Format: SJU20000X).</p>
+                        
+                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', marginBottom: '15px' }}>
+                          <input 
+                            className="form-input" 
+                            style={{ margin: 0, flex: 2 }} 
+                            type="email" 
+                            placeholder="Counsellor Email Address" 
+                            value={newCounsellorEmail}
+                            onChange={(e) => setNewCounsellorEmail(e.target.value)}
+                          />
+                          <button className="btn-secondary-social" onClick={handleGenerateCredentials}>Generate Credentials</button>
+                        </div>
+
+                        {(generatedPassword || generatedEmpId) && (
+                          <div style={{ backgroundColor: '#18191A', padding: '15px', borderRadius: '6px', border: '1px dashed #3A3B3C', display: 'flex', gap: '20px' }}>
+                            <div><span style={{ color: '#B0B3B8', fontSize: '12px' }}>Employee ID:</span><br/><strong style={{ color: '#2D88FF' }}>{generatedEmpId}</strong></div>
+                            <div><span style={{ color: '#B0B3B8', fontSize: '12px' }}>Temporary Password:</span><br/><strong style={{ color: '#E4E6EB' }}>{generatedPassword}</strong></div>
+                            <button className="btn-primary-social" style={{ marginLeft: 'auto' }}>Create Account</button>
+                          </div>
+                        )}
+                      </div>
+
                       {/* Search Bar */}
                       <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
                         <input
