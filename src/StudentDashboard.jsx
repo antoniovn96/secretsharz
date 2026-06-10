@@ -7,6 +7,7 @@ import ProfileEditor from "./ProfileEditor";
 import { useDashboard } from "./context/DashboardContext";
 import XpChecklistModal from "./components/XpChecklistModal";
 import CareerMatchesModal from "./components/CareerMatchesModal";
+import { SCHOOLS, COLLEGES, INTERESTS, HOBBIES, TV_SHOWS, MOVIES, GAMES, SPORTS } from "./data/platformData";
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
 
 const CSS = `
@@ -329,6 +330,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [showCareerMatchesModal, setShowCareerMatchesModal] = useState(false);
   const [activeAboutTab, setActiveAboutTab] = useState('overview');
   const [editingItem, setEditingItem] = useState(null);
+  const [eduType, setEduType] = useState('');
 
   useEffect(() => { if (userData) setLocalUserData(userData); }, [userData]);
 
@@ -1626,13 +1628,15 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
       />
 
       <div className="social-dashboard-layout" style={{paddingTop: '60px'}}>
+        <input type="file" id="coverPhotoUpload" accept="image/*" style={{ display: 'none' }} onChange={(e) => console.log('Cover selected', e.target.files[0])} />
+        <input type="file" id="profilePicUpload" accept="image/*" style={{ display: 'none' }} onChange={(e) => console.log('Avatar selected', e.target.files[0])} />
         <main className="social-main-content">
           <div className="profile-hero-container">
             <div className="profile-cover-photo" style={{ backgroundImage: userProfile?.coverPhoto ? `url(${userProfile.coverPhoto})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
               {/* Cover photo edit button */}
               <button
                 className="edit-cover-btn"
-                onClick={() => setPhotoPopup(photoPopup === 'cover' ? null : 'cover')}
+                onClick={() => document.getElementById('coverPhotoUpload').click()}
                 disabled={uploadingPhoto}
               >
                 {uploadingPhoto ? '⏳' : '📷'} {uploadingPhoto ? 'Uploading…' : 'Edit Cover Photo'}
@@ -1682,7 +1686,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               {/* Avatar wrapper with camera overlay */}
               <div
                 className="profile-avatar-wrapper"
-                onClick={() => setPhotoPopup(photoPopup === 'avatar' ? null : 'avatar')}
+                onClick={() => document.getElementById('profilePicUpload').click()}
                 style={{ cursor: 'pointer' }}
               >
                 {userProfile?.profilePicture
@@ -1740,8 +1744,15 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             <div className="profile-identity-row">
               <div className="profile-name-section">
                 <h1>{userProfile?.name || 'Student'}</h1>
-                <div className="profile-bio">
-                  🚀 Ready to build my future • Passionate about {userProfile?.interests?.[0] || 'Learning'}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  {editingItem === 'bio' ? (
+                    <input className="form-input" style={{ margin: 0, width: '300px' }} defaultValue="🚀 Ready to build my future • Passionate about Learning" onBlur={() => setEditingItem(null)} autoFocus />
+                  ) : (
+                    <>
+                      <p style={{ color: '#B0B3B8', margin: '5px 0' }}>🚀 Ready to build my future • Passionate about Learning</p>
+                      <span style={{ cursor: 'pointer', fontSize: '12px' }} onClick={() => setEditingItem('bio')}>✏️</span>
+                    </>
+                  )}
                 </div>
                 <div className="profile-pinned-details">
                   {/* ── PINNED DETAILS FALLBACK ── */}
@@ -1788,9 +1799,12 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             <div className="about-sidebar">
               <h3>About</h3>
               <div className={`about-nav-item ${activeAboutTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveAboutTab('overview')}>Overview</div>
+              <div className={`about-nav-item ${activeAboutTab === 'personal-info' ? 'active' : ''}`} onClick={() => setActiveAboutTab('personal-info')}>Personal Information</div>
               <div className={`about-nav-item ${activeAboutTab === 'education' ? 'active' : ''}`} onClick={() => setActiveAboutTab('education')}>Education</div>
-              <div className={`about-nav-item ${activeAboutTab === 'work' ? 'active' : ''}`} onClick={() => setActiveAboutTab('work')}>Work & Experience</div>
-              <div className={`about-nav-item ${activeAboutTab === 'interests' ? 'active' : ''}`} onClick={() => setActiveAboutTab('interests')}>Hobbies &amp; Interests</div>
+              <div className={`about-nav-item ${activeAboutTab === 'internships' ? 'active' : ''}`} onClick={() => setActiveAboutTab('internships')}>Internships</div>
+              <div className={`about-nav-item ${activeAboutTab === 'voluntary' ? 'active' : ''}`} onClick={() => setActiveAboutTab('voluntary')}>Voluntary Experience</div>
+              <div className={`about-nav-item ${activeAboutTab === 'links' ? 'active' : ''}`} onClick={() => setActiveAboutTab('links')}>Project Links</div>
+              <div className={`about-nav-item ${activeAboutTab === 'hobbies' ? 'active' : ''}`} onClick={() => setActiveAboutTab('hobbies')}>Hobbies &amp; Interests</div>
             </div>
 
             <div className="about-content">
@@ -1957,29 +1971,120 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 </div>
               )}
 
+              {/* ── PERSONAL INFORMATION TAB ── */}
+              {activeAboutTab === 'personal-info' && (
+                <div>
+                  <div className="about-content-header">
+                    <span>Personal Information</span>
+                    <span className="timeline-action" title="Edit Personal Info" onClick={() => setEditingItem('personal-info-edit')}>✏️</span>
+                  </div>
+
+                  {editingItem === 'personal-info-edit' ? (
+                    <div className="inline-form">
+                      {/* Parent/Guardian Details */}
+                      <div style={{ fontSize: '13px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid #3A3B3C' }}>
+                        👨‍👩‍👧 Parent / Guardian Details
+                      </div>
+
+                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#B0B3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Father</div>
+                      <input className="form-input" type="text" placeholder="Father's Name" />
+                      <input className="form-input" type="tel" placeholder="Father's Phone Number" />
+                      <input className="form-input" type="email" placeholder="Father's Email ID" />
+
+                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#B0B3B8', marginBottom: '8px', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mother</div>
+                      <input className="form-input" type="text" placeholder="Mother's Name" />
+                      <input className="form-input" type="tel" placeholder="Mother's Phone Number" />
+                      <input className="form-input" type="email" placeholder="Mother's Email ID" />
+
+                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#B0B3B8', marginBottom: '8px', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Guardian</div>
+                      <input className="form-input" type="text" placeholder="Guardian's Name" />
+                      <input className="form-input" type="tel" placeholder="Guardian's Phone Number" />
+                      <input className="form-input" type="email" placeholder="Guardian's Email ID" />
+
+                      {/* Location Details */}
+                      <div style={{ fontSize: '13px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', margin: '16px 0 12px', paddingBottom: '8px', borderBottom: '1px solid #3A3B3C' }}>
+                        📍 Location Details
+                      </div>
+                      <input className="form-input" type="text" placeholder="Current Location" />
+                      <input className="form-input" type="text" placeholder="Home Town" />
+
+                      <div className="form-actions">
+                        <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
+                        <button className="btn-primary-social" onClick={() => setEditingItem(null)}>Save</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>👨‍👩‍👧 Parent / Guardian Details</div>
+                        <div style={{ fontSize: '13px', color: '#B0B3B8', lineHeight: '1.8' }}>
+                          <div>👨 <strong style={{ color: '#E4E6EB' }}>Father:</strong> Not added yet</div>
+                          <div>👩 <strong style={{ color: '#E4E6EB' }}>Mother:</strong> Not added yet</div>
+                          <div>🧑 <strong style={{ color: '#E4E6EB' }}>Guardian:</strong> Not added yet</div>
+                        </div>
+                      </div>
+                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>📍 Location Details</div>
+                        <div style={{ fontSize: '13px', color: '#B0B3B8', lineHeight: '1.8' }}>
+                          <div>🏙️ <strong style={{ color: '#E4E6EB' }}>Current Location:</strong> Not added yet</div>
+                          <div>🏡 <strong style={{ color: '#E4E6EB' }}>Home Town:</strong> Not added yet</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── EDUCATION TAB ── */}
               {activeAboutTab === 'education' && (
                 <div>
                   <div className="about-content-header">
                     <span>Education</span>
-                    <span className="timeline-action" title="Add Education" onClick={() => setEditingItem('new-edu')}>➕</span>
+                    <span className="timeline-action" title="Add Education" onClick={() => { setEditingItem('new-edu'); setEduType(''); }}>➕</span>
                   </div>
 
                   {/* CONDITIONAL RENDER: FORM vs DISPLAY */}
                   {editingItem === 'edu-1' || editingItem === 'new-edu' ? (
                     <div className="inline-form">
-                      <input className="form-input" type="text" placeholder="School/College Name" defaultValue={editingItem === 'edu-1' ? "St Aloysius College - Autonomous" : ""} />
-                      <input className="form-input" type="text" placeholder="Degree / Stream" defaultValue={editingItem === 'edu-1' ? "Student" : ""} />
+                      {/* Type Dropdown */}
+                      <select className="form-input" value={eduType} onChange={(e) => setEduType(e.target.value)}>
+                        <option value="">Select Type</option>
+                        <option value="School">School</option>
+                        <option value="University">University</option>
+                      </select>
+
+                      <input className="form-input" list="institution-list" placeholder="Start typing your institution..." defaultValue={editingItem === 'edu-1' ? "St Aloysius College - Autonomous" : ""} />
+                      <datalist id="institution-list">
+                        {eduType === 'School'
+                          ? SCHOOLS.map(item => <option key={item} value={item} />)
+                          : eduType === 'University'
+                          ? COLLEGES.map(item => <option key={item} value={item} />)
+                          : [...SCHOOLS, ...COLLEGES].map(item => <option key={item} value={item} />)
+                        }
+                      </datalist>
+
+                      {/* Conditional: hide Degree/Stream for School, show Board instead */}
+                      {eduType === 'School' ? (
+                        <select className="form-input">
+                          <option value="">Select Board</option>
+                          <option value="ICSE">ICSE</option>
+                          <option value="CBSE">CBSE</option>
+                          <option value="State">State</option>
+                          <option value="IB">IB</option>
+                        </select>
+                      ) : (
+                        <input className="form-input" type="text" placeholder="Degree / Stream" defaultValue={editingItem === 'edu-1' ? "Student" : ""} />
+                      )}
 
                       <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
                         <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
                           <option>From Year</option>
-                          <option>2020</option>
-                          <option>2021</option>
+                          {Array.from({ length: 2026 - 1990 + 1 }, (_, i) => 2026 - i).map(year => (<option key={year} value={year}>{year}</option>))}
                         </select>
                         <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
                           <option>To Year (or Expected)</option>
-                          <option>2024</option>
                           <option>Present</option>
+                          {Array.from({ length: 2026 - 1990 + 1 }, (_, i) => 2026 - i).map(year => (<option key={year} value={year}>{year}</option>))}
                         </select>
                       </div>
 
@@ -1994,8 +2099,8 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                         {editingItem !== 'new-edu' && (
                           <button style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}>🗑️ Remove</button>
                         )}
-                        <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
-                        <button className="btn-primary-social" onClick={() => setEditingItem(null)}>Save</button>
+                        <button className="btn-secondary-social" onClick={() => { setEditingItem(null); setEduType(''); }}>Cancel</button>
+                        <button className="btn-primary-social" onClick={() => { setEditingItem(null); setEduType(''); }}>Save</button>
                       </div>
                     </div>
                   ) : (
@@ -2005,44 +2110,47 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                         <div className="timeline-title">St Aloysius College - Autonomous</div>
                         <div className="timeline-subtitle">Student • Mangaluru</div>
                       </div>
-                      <div className="timeline-action" onClick={() => setEditingItem('edu-1')}>✏️</div>
+                      <div className="timeline-action" onClick={() => { setEditingItem('edu-1'); setEduType('University'); }}>✏️</div>
                     </div>
                   )}
                 </div>
               )}
 
-              {activeAboutTab === 'work' && (
+              {/* ── INTERNSHIPS TAB ── */}
+              {activeAboutTab === 'internships' && (
                 <div>
                   <div className="about-content-header">
-                    <span>Work & Experience</span>
-                    <span className="timeline-action" title="Add Work" onClick={() => setEditingItem('new-work')}>➕</span>
+                    <span>Internships</span>
+                    <span className="timeline-action" title="Add Internship" onClick={() => setEditingItem('new-intern')}>➕</span>
                   </div>
 
-                  {editingItem === 'work-1' || editingItem === 'new-work' ? (
+                  {editingItem === 'intern-1' || editingItem === 'new-intern' ? (
                     <div className="inline-form">
-                      <input className="form-input" type="text" placeholder="Company / Organization" defaultValue={editingItem === 'work-1' ? "Secret Sharz" : ""} />
-                      <input className="form-input" type="text" placeholder="Position / Title" defaultValue={editingItem === 'work-1' ? "Founder and Managing Director" : ""} />
+                      <input className="form-input" type="text" placeholder="Company / Organization" defaultValue={editingItem === 'intern-1' ? "Secret Sharz" : ""} />
+                      <input className="form-input" type="text" placeholder="Role / Position" defaultValue={editingItem === 'intern-1' ? "Intern" : ""} />
 
                       <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
                         <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
                           <option>From Year</option>
-                          <option>2020</option>
+                          {Array.from({ length: 2026 - 1990 + 1 }, (_, i) => 2026 - i).map(year => (<option key={year} value={year}>{year}</option>))}
                         </select>
                         <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
                           <option>To Year (or Expected)</option>
                           <option>Present</option>
+                          {Array.from({ length: 2026 - 1990 + 1 }, (_, i) => 2026 - i).map(year => (<option key={year} value={year}>{year}</option>))}
                         </select>
                       </div>
 
                       <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#E4E6EB', marginBottom: '15px', fontSize: '14px' }}>
-                        <input type="checkbox" defaultChecked={editingItem === 'work-1'} /> I currently work here
+                        <input type="checkbox" /> I currently intern here
                       </label>
 
-                      <input className="form-input" type="text" placeholder="City/Town" defaultValue={editingItem === 'work-1' ? "Bangalore, India" : ""} />
-                      <textarea className="form-input" placeholder="Description" rows="3"></textarea>
+                      <input className="form-input" type="text" placeholder="City/Town" />
+                      <textarea className="form-input" placeholder="Duties" rows="2"></textarea>
+                      <textarea className="form-input" placeholder="Responsibilities" rows="2"></textarea>
 
                       <div className="form-actions">
-                        {editingItem !== 'new-work' && (
+                        {editingItem !== 'new-intern' && (
                           <button style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}>🗑️ Remove</button>
                         )}
                         <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
@@ -2050,29 +2158,191 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                       </div>
                     </div>
                   ) : (
-                    <div className="timeline-item">
-                      <div className="timeline-icon">💼</div>
-                      <div className="timeline-details">
-                        <div className="timeline-title">Secret Sharz</div>
-                        <div className="timeline-subtitle">Founder and Managing Director • Bangalore, India</div>
-                      </div>
-                      <div className="timeline-action" onClick={() => setEditingItem('work-1')}>✏️</div>
+                    <div style={{ textAlign: 'center', padding: '32px 20px', color: '#B0B3B8', fontSize: '14px' }}>
+                      <div style={{ fontSize: '36px', marginBottom: '10px' }}>💼</div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: '700', color: '#E4E6EB', marginBottom: '6px' }}>No Internships Added</div>
+                      <div style={{ fontSize: '13px', color: '#B0B3B8', marginBottom: '16px' }}>Add your internship experience to showcase your professional journey.</div>
+                      <button className="btn-primary-social" onClick={() => setEditingItem('new-intern')}>➕ Add Internship</button>
                     </div>
                   )}
                 </div>
               )}
 
-              {activeAboutTab === 'interests' && (
+              {/* ── VOLUNTARY EXPERIENCE TAB ── */}
+              {activeAboutTab === 'voluntary' && (
                 <div>
-                  <div className="about-content-header">Hobbies &amp; Interests</div>
-                  <div className="timeline-item">
-                    <div className="timeline-icon">🎨</div>
-                    <div className="timeline-details">
-                      <div className="timeline-title">{userProfile?.interests?.[0] || 'Learning'}</div>
-                      <div className="timeline-subtitle">Primary Interest</div>
-                    </div>
-                    <div className="timeline-action" onClick={() => setShowProfileEditor(true)}>✏️</div>
+                  <div className="about-content-header">
+                    <span>Voluntary Experience</span>
+                    <span className="timeline-action" title="Add Voluntary Experience" onClick={() => setEditingItem('new-voluntary')}>➕</span>
                   </div>
+
+                  {editingItem === 'voluntary-1' || editingItem === 'new-voluntary' ? (
+                    <div className="inline-form">
+                      <input className="form-input" type="text" placeholder="Organization / Cause" defaultValue={editingItem === 'voluntary-1' ? "" : ""} />
+                      <input className="form-input" type="text" placeholder="Role / Title" />
+
+                      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                        <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
+                          <option>From Year</option>
+                          {Array.from({ length: 2026 - 1990 + 1 }, (_, i) => 2026 - i).map(year => (<option key={year} value={year}>{year}</option>))}
+                        </select>
+                        <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
+                          <option>To Year (or Expected)</option>
+                          <option>Present</option>
+                          {Array.from({ length: 2026 - 1990 + 1 }, (_, i) => 2026 - i).map(year => (<option key={year} value={year}>{year}</option>))}
+                        </select>
+                      </div>
+
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#E4E6EB', marginBottom: '15px', fontSize: '14px' }}>
+                        <input type="checkbox" /> I currently volunteer here
+                      </label>
+
+                      <input className="form-input" type="text" placeholder="City/Town" />
+                      <textarea className="form-input" placeholder="Duties" rows="2"></textarea>
+                      <textarea className="form-input" placeholder="Responsibilities" rows="2"></textarea>
+
+                      <div className="form-actions">
+                        {editingItem !== 'new-voluntary' && (
+                          <button style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}>🗑️ Remove</button>
+                        )}
+                        <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
+                        <button className="btn-primary-social" onClick={() => setEditingItem(null)}>Save</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '32px 20px', color: '#B0B3B8', fontSize: '14px' }}>
+                      <div style={{ fontSize: '36px', marginBottom: '10px' }}>🤝</div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: '700', color: '#E4E6EB', marginBottom: '6px' }}>No Voluntary Experience Added</div>
+                      <div style={{ fontSize: '13px', color: '#B0B3B8', marginBottom: '16px' }}>Showcase your community service and volunteer work.</div>
+                      <button className="btn-primary-social" onClick={() => setEditingItem('new-voluntary')}>➕ Add Voluntary Experience</button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── PROJECT LINKS TAB ── */}
+              {activeAboutTab === 'links' && (
+                <div>
+                  <div className="about-content-header">
+                    <span>Project Links</span>
+                    <span className="timeline-action" title="Add Project Link" onClick={() => setEditingItem('new-link')}>➕</span>
+                  </div>
+
+                  {editingItem === 'new-link' || editingItem === 'link-1' ? (
+                    <div className="inline-form">
+                      <input className="form-input" type="text" placeholder="Project Title" />
+                      <input className="form-input" type="url" placeholder="URL (e.g., GitHub, Drive link)" />
+
+                      <div className="form-actions">
+                        {editingItem !== 'new-link' && (
+                          <button style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}>🗑️ Remove</button>
+                        )}
+                        <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
+                        <button className="btn-primary-social" onClick={() => setEditingItem(null)}>Save</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '32px 20px' }}>
+                      <div style={{ fontSize: '36px', marginBottom: '10px' }}>🔗</div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: '700', color: '#E4E6EB', marginBottom: '6px' }}>No Project Links Added</div>
+                      <div style={{ fontSize: '13px', color: '#B0B3B8', marginBottom: '16px' }}>Share your GitHub repos, portfolio, or Drive links.</div>
+                      <button className="btn-primary-social" onClick={() => setEditingItem('new-link')}>➕ Add Project Link</button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── HOBBIES & INTERESTS TAB ── */}
+              {activeAboutTab === 'hobbies' && (
+                <div>
+                  <div className="about-content-header">
+                    <span>Hobbies &amp; Interests</span>
+                    <span className="timeline-action" title="Edit Interests" onClick={() => setEditingItem('hobbies-edit')}>✏️</span>
+                  </div>
+
+                  {editingItem === 'hobbies-edit' ? (
+                    <div className="inline-form">
+                      <div style={{ fontSize: '13px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid #3A3B3C' }}>
+                        Edit Your Interests
+                      </div>
+
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#B0B3B8', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🎨 Hobbies (e.g., Painting, Reading)</label>
+                      <input className="form-input" list="hobbies-list" placeholder="Start typing a hobby..." />
+                      <datalist id="hobbies-list">
+                        {HOBBIES.map(item => <option key={item} value={item} />)}
+                      </datalist>
+
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#B0B3B8', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🎵 Music</label>
+                      <input className="form-input" list="music-list" placeholder="Start typing a genre or artist..." />
+                      <datalist id="music-list">
+                        {TV_SHOWS.map(item => <option key={item} value={item} />)}
+                      </datalist>
+
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#B0B3B8', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>📺 TV Shows &amp; Movies</label>
+                      <input className="form-input" list="tvshows-list" placeholder="Start typing a show or movie..." />
+                      <datalist id="tvshows-list">
+                        {[...TV_SHOWS, ...MOVIES].map(item => <option key={item} value={item} />)}
+                      </datalist>
+
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#B0B3B8', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🎮 Games</label>
+                      <input className="form-input" list="games-list" placeholder="Start typing a game..." />
+                      <datalist id="games-list">
+                        {GAMES.map(item => <option key={item} value={item} />)}
+                      </datalist>
+
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#B0B3B8', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⚽ Sports Teams &amp; Athletes</label>
+                      <input className="form-input" list="sports-list" placeholder="Start typing a sport..." />
+                      <datalist id="sports-list">
+                        {SPORTS.map(item => <option key={item} value={item} />)}
+                      </datalist>
+
+                      <div className="form-actions">
+                        <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
+                        <button className="btn-primary-social" onClick={() => setEditingItem(null)}>Save</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>🎨 Hobbies</h4>
+                        <input className="form-input" list="hobbies-list-view" placeholder="e.g., Painting, Reading" defaultValue={userProfile?.hobbies || ''} />
+                        <datalist id="hobbies-list-view">
+                          {HOBBIES.map(item => <option key={item} value={item} />)}
+                        </datalist>
+                      </div>
+
+                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>🎵 Music</h4>
+                        <input className="form-input" placeholder="e.g., Classical, Rock, Taylor Swift" defaultValue={userProfile?.music || ''} />
+                      </div>
+
+                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>📺 TV Shows &amp; Movies</h4>
+                        <input className="form-input" list="tvshows-list-view" placeholder="e.g., Breaking Bad, Interstellar" defaultValue={userProfile?.tvShows || ''} />
+                        <datalist id="tvshows-list-view">
+                          {[...TV_SHOWS, ...MOVIES].map(item => <option key={item} value={item} />)}
+                        </datalist>
+                      </div>
+
+                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>🎮 Games</h4>
+                        <input className="form-input" list="games-list-view" placeholder="e.g., Chess, FIFA" defaultValue={userProfile?.games || ''} />
+                        <datalist id="games-list-view">
+                          {GAMES.map(item => <option key={item} value={item} />)}
+                        </datalist>
+                      </div>
+
+                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>⚽ Sports Teams &amp; Athletes</h4>
+                        <input className="form-input" list="sports-list-view" placeholder="e.g., Manchester United, Virat Kohli" defaultValue={userProfile?.sports || ''} />
+                        <datalist id="sports-list-view">
+                          {SPORTS.map(item => <option key={item} value={item} />)}
+                        </datalist>
+                      </div>
+
+                    </div>
+                  )}
                 </div>
               )}
             </div>
