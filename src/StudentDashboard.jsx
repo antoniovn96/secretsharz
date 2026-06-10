@@ -321,6 +321,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [showXpModal, setShowXpModal] = useState(false);
   const [showCareerMatchesModal, setShowCareerMatchesModal] = useState(false);
   const [activeAboutTab, setActiveAboutTab] = useState('overview');
+  const [editingItem, setEditingItem] = useState(null);
 
   useEffect(() => { if (userData) setLocalUserData(userData); }, [userData]);
 
@@ -1555,16 +1556,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
 
   return (
     <div className="social-dark-theme">
-      <div className="social-dashboard-layout">
-        <aside className="social-sidebar">
-          <h2 style={{color: '#E4E6EB', fontSize: '24px', marginBottom: '20px'}}>VidyaVantage</h2>
-          <ul style={{listStyle: 'none', padding: 0, color: '#E4E6EB', lineHeight: '2.5', fontWeight: 'bold'}}>
-            <li style={{ cursor: 'pointer' }}>🏠 Home</li>
-            <li style={{ cursor: 'pointer' }}>📊 Growth Plan</li>
-            <li style={{ cursor: 'pointer' }}>📘 Full Report</li>
-            <li style={{ cursor: 'pointer' }}>📅 Book Expert</li>
-          </ul>
-        </aside>
+      <div className="social-dashboard-layout" style={{paddingTop: '60px'}}>
         <main className="social-main-content">
           <div className="profile-hero-container">
             <div className="profile-cover-photo">
@@ -1626,6 +1618,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               <h3>About</h3>
               <div className={`about-nav-item ${activeAboutTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveAboutTab('overview')}>Overview</div>
               <div className={`about-nav-item ${activeAboutTab === 'education' ? 'active' : ''}`} onClick={() => setActiveAboutTab('education')}>Education</div>
+              <div className={`about-nav-item ${activeAboutTab === 'work' ? 'active' : ''}`} onClick={() => setActiveAboutTab('work')}>Work & Experience</div>
               <div className={`about-nav-item ${activeAboutTab === 'interests' ? 'active' : ''}`} onClick={() => setActiveAboutTab('interests')}>Hobbies &amp; Interests</div>
             </div>
 
@@ -1680,16 +1673,104 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 <div>
                   <div className="about-content-header">
                     <span>Education</span>
-                    <span className="timeline-action" title="Add Education">➕</span>
+                    <span className="timeline-action" title="Add Education" onClick={() => setEditingItem('new-edu')}>➕</span>
                   </div>
-                  <div className="timeline-item">
-                    <div className="timeline-icon">🎓</div>
-                    <div className="timeline-details">
-                      <div className="timeline-title">{localUserData?.schoolName || 'St Aloysius College - Autonomous'}</div>
-                      <div className="timeline-subtitle">Student • {localUserData?.gradeLevel || 'Mangaluru'}</div>
+
+                  {/* CONDITIONAL RENDER: FORM vs DISPLAY */}
+                  {editingItem === 'edu-1' || editingItem === 'new-edu' ? (
+                    <div className="inline-form">
+                      <input className="form-input" type="text" placeholder="School/College Name" defaultValue={editingItem === 'edu-1' ? "St Aloysius College - Autonomous" : ""} />
+                      <input className="form-input" type="text" placeholder="Degree / Stream" defaultValue={editingItem === 'edu-1' ? "Student" : ""} />
+
+                      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                        <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
+                          <option>From Year</option>
+                          <option>2020</option>
+                          <option>2021</option>
+                        </select>
+                        <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
+                          <option>To Year (or Expected)</option>
+                          <option>2024</option>
+                          <option>Present</option>
+                        </select>
+                      </div>
+
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#E4E6EB', marginBottom: '15px', fontSize: '14px' }}>
+                        <input type="checkbox" defaultChecked /> I currently study here
+                      </label>
+
+                      <input className="form-input" type="text" placeholder="City/Town" defaultValue={editingItem === 'edu-1' ? "Mangaluru" : ""} />
+                      <textarea className="form-input" placeholder="Description" rows="3"></textarea>
+
+                      <div className="form-actions">
+                        {editingItem !== 'new-edu' && (
+                          <button style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}>🗑️ Remove</button>
+                        )}
+                        <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
+                        <button className="btn-primary-social" onClick={() => setEditingItem(null)}>Save</button>
+                      </div>
                     </div>
-                    <div className="timeline-action" onClick={() => setShowProfileEditor(true)}>✏️</div>
+                  ) : (
+                    <div className="timeline-item">
+                      <div className="timeline-icon">🎓</div>
+                      <div className="timeline-details">
+                        <div className="timeline-title">St Aloysius College - Autonomous</div>
+                        <div className="timeline-subtitle">Student • Mangaluru</div>
+                      </div>
+                      <div className="timeline-action" onClick={() => setEditingItem('edu-1')}>✏️</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeAboutTab === 'work' && (
+                <div>
+                  <div className="about-content-header">
+                    <span>Work & Experience</span>
+                    <span className="timeline-action" title="Add Work" onClick={() => setEditingItem('new-work')}>➕</span>
                   </div>
+
+                  {editingItem === 'work-1' || editingItem === 'new-work' ? (
+                    <div className="inline-form">
+                      <input className="form-input" type="text" placeholder="Company / Organization" defaultValue={editingItem === 'work-1' ? "Secret Sharz" : ""} />
+                      <input className="form-input" type="text" placeholder="Position / Title" defaultValue={editingItem === 'work-1' ? "Founder and Managing Director" : ""} />
+
+                      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                        <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
+                          <option>From Year</option>
+                          <option>2020</option>
+                        </select>
+                        <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
+                          <option>To Year (or Expected)</option>
+                          <option>Present</option>
+                        </select>
+                      </div>
+
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#E4E6EB', marginBottom: '15px', fontSize: '14px' }}>
+                        <input type="checkbox" defaultChecked={editingItem === 'work-1'} /> I currently work here
+                      </label>
+
+                      <input className="form-input" type="text" placeholder="City/Town" defaultValue={editingItem === 'work-1' ? "Bangalore, India" : ""} />
+                      <textarea className="form-input" placeholder="Description" rows="3"></textarea>
+
+                      <div className="form-actions">
+                        {editingItem !== 'new-work' && (
+                          <button style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}>🗑️ Remove</button>
+                        )}
+                        <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
+                        <button className="btn-primary-social" onClick={() => setEditingItem(null)}>Save</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="timeline-item">
+                      <div className="timeline-icon">💼</div>
+                      <div className="timeline-details">
+                        <div className="timeline-title">Secret Sharz</div>
+                        <div className="timeline-subtitle">Founder and Managing Director • Bangalore, India</div>
+                      </div>
+                      <div className="timeline-action" onClick={() => setEditingItem('work-1')}>✏️</div>
+                    </div>
+                  )}
                 </div>
               )}
 

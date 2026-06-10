@@ -1036,6 +1036,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
 
   // --- STATE ---
   const [activeTab, setActiveTab] = useState('overview');
+  const [activeAdminTab, setActiveAdminTab] = useState('command-center');
   const [toast, setToast] = useState(null);
 
   // Firestore live data (supplements context for real users)
@@ -2179,16 +2180,15 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
 
   return (
     <div className="social-dark-theme">
-      <div className="social-dashboard-layout">
-        <aside className="social-sidebar">
-          <h2 style={{color: '#E4E6EB', fontSize: '24px', marginBottom: '20px'}}>VidyaVantage</h2>
-          <ul style={{listStyle: 'none', padding: 0, color: '#E4E6EB', lineHeight: '2.5', fontWeight: 'bold'}}>
-            <li style={{ cursor: 'pointer' }}>🎛️ Command Center</li>
-            <li style={{ cursor: 'pointer' }}>👥 Manage Users</li>
-            <li style={{ cursor: 'pointer' }}>🏫 Institutions</li>
-            <li style={{ cursor: 'pointer' }}>💳 Billing</li>
-          </ul>
-        </aside>
+      <nav className="top-global-nav">
+        <h2>VidyaVantage (Admin Server)</h2>
+        <ul className="top-global-nav-links">
+          <li>🎛️ Dashboard</li>
+          <li>⚙️ System Health</li>
+          <li>🚪 Sign Out</li>
+        </ul>
+      </nav>
+      <div className="social-dashboard-layout" style={{ paddingTop: '60px' }}>
         <main className="social-main-content">
 
         {/* ── ADMIN HERO HEADER ── */}
@@ -2217,124 +2217,350 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           </div>
         </div>
 
-        {/* ── EXISTING ADMIN DASHBOARD (admin-root wrapper) ── */}
-        <div className="admin-root" style={{ height: 'auto', minHeight: '100vh' }}>
-
-      {/* ── SIDEBAR ── */}
-      <div className="admin-sidebar">
-        <div className="admin-brand" onClick={() => setActiveTab('overview')}>
-          <h2>Secret Sharz</h2>
-          <div className="admin-brand-sub">Admin Portal</div>
-        </div>
-
-        <div className="nav-section-label">Navigation</div>
-        {allowedTabs.map(tab => (
-          <button
-            key={tab.id}
-            className={`nav-btn ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            <span className="nav-btn-icon">{tab.icon}</span>
-            {tab.label}
-          </button>
-        ))}
-
-        {/* Portal Switcher */}
-        <div style={{ flex: 1 }} />
-        <div className="portal-switcher">
-          <div className="portal-switcher-label">Switch Portal</div>
-          <button className="portal-btn current">
-            <span className="portal-btn-dot" style={{ background: '#5B6EF5' }} />
-            Admin Portal
-          </button>
-          {navigate && (
-            <button className="portal-btn" onClick={() => navigate('/counsellor')}>
-              <span className="portal-btn-dot" style={{ background: '#10B981' }} />
-              Counsellor Portal
-            </button>
-          )}
-          {navigate && (
-            <button className="portal-btn" onClick={() => navigate('/dashboard')}>
-              <span className="portal-btn-dot" style={{ background: '#F59E0B' }} />
-              Student Portal
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ── MAIN ── */}
-      <div className="admin-main">
-        {/* Top Header */}
-        <div className="top-header">
-          <div className="top-header-left">
-            <span className={`admin-badge ${isCounsellor ? 'badge-primary' : 'badge-success'}`}>
-              {profile.role?.replace('_', ' ').toUpperCase()}
-            </span>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: '500' }}>
-              {profile.name || user?.email}
-            </span>
+        {/* ── NESTED ADMIN CONTROLS ── */}
+        <div className="about-container">
+          <div className="about-sidebar">
+            <h3>Admin Controls</h3>
+            <div className={`about-nav-item ${activeAdminTab === 'command-center' ? 'active' : ''}`} onClick={() => setActiveAdminTab('command-center')}>Command Center</div>
+            <div className={`about-nav-item ${activeAdminTab === 'user-db' ? 'active' : ''}`} onClick={() => setActiveAdminTab('user-db')}>User Database</div>
           </div>
 
-          <div className="header-actions">
-            {/* New Download Button */}
-            <button 
-              onClick={downloadStudentData}
-              className="admin-btn-outline"
-              style={{ borderColor: 'var(--success)', color: 'var(--success)' }}
-            >
-              📥 Export CSV
-            </button>
-            
-            {/* Notifications */}
-            <div style={{ position: 'relative' }}>
-              <button className="notify-bell" onClick={() => setNotifyOpen(!notifyOpen)}>
-                🔔
-                {notifications.length > 0 && <div className="notify-badge">{notifications.length}</div>}
-              </button>
-              {notifyOpen && (
-                <div className="dropdown-content" style={{ width: '300px' }}>
-                  <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-main)' }}>
-                    Notifications
-                  </div>
-                  {notifications.length === 0 ? (
-                    <div style={{ padding: '16px', color: 'var(--text-muted)', fontSize: '0.875rem' }}>No new alerts</div>
-                  ) : (
-                    notifications.map(n => (
-                      <button key={n.id} className="notify-item" style={{ color: n.type === 'warning' ? 'var(--warning)' : 'var(--success)' }}>
-                        {n.type === 'warning' ? '⚠️' : '✅'} {n.text}
+          <div className="about-content">
+            {activeAdminTab === 'command-center' && (
+              <div>
+                <div className="about-content-header">System Overview</div>
+
+                {/* ── EXISTING ADMIN DASHBOARD (admin-root wrapper) ── */}
+                <div className="admin-root" style={{ height: 'auto', minHeight: 'unset' }}>
+
+                  {/* ── SIDEBAR ── */}
+                  <div className="admin-sidebar">
+                    <div className="admin-brand" onClick={() => setActiveTab('overview')}>
+                      <h2>Secret Sharz</h2>
+                      <div className="admin-brand-sub">Admin Portal</div>
+                    </div>
+
+                    <div className="nav-section-label">Navigation</div>
+                    {allowedTabs.map(tab => (
+                      <button
+                        key={tab.id}
+                        className={`nav-btn ${activeTab === tab.id ? 'active' : ''}`}
+                        onClick={() => setActiveTab(tab.id)}
+                      >
+                        <span className="nav-btn-icon">{tab.icon}</span>
+                        {tab.label}
                       </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
+                    ))}
 
-            <button onClick={onBackToApp} className="site-link">🌐 Live Site</button>
-
-            <div style={{ position: 'relative' }}>
-              <div className="avatar-btn" onClick={() => setProfileOpen(!profileOpen)}>
-                {(profile.name || 'A').charAt(0).toUpperCase()}
-              </div>
-              {profileOpen && (
-                <div className="dropdown-content">
-                  <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
-                    <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.9rem' }}>{profile.name}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>{user?.email}</div>
+                    {/* Portal Switcher */}
+                    <div style={{ flex: 1 }} />
+                    <div className="portal-switcher">
+                      <div className="portal-switcher-label">Switch Portal</div>
+                      <button className="portal-btn current">
+                        <span className="portal-btn-dot" style={{ background: '#5B6EF5' }} />
+                        Admin Portal
+                      </button>
+                      {navigate && (
+                        <button className="portal-btn" onClick={() => navigate('/counsellor')}>
+                          <span className="portal-btn-dot" style={{ background: '#10B981' }} />
+                          Counsellor Portal
+                        </button>
+                      )}
+                      {navigate && (
+                        <button className="portal-btn" onClick={() => navigate('/dashboard')}>
+                          <span className="portal-btn-dot" style={{ background: '#F59E0B' }} />
+                          Student Portal
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <button onClick={() => { setProfileOpen(false); setActiveTab('profile'); }}>👤 My Profile</button>
-                  <button style={{ color: 'var(--danger)' }} onClick={handleLogout}>🚪 Sign Out</button>
-                </div>
-              )}
-            </div>
+
+                  {/* ── MAIN ── */}
+                  <div className="admin-main">
+                    {/* Top Header */}
+                    <div className="top-header">
+                      <div className="top-header-left">
+                        <span className={`admin-badge ${isCounsellor ? 'badge-primary' : 'badge-success'}`}>
+                          {profile.role?.replace('_', ' ').toUpperCase()}
+                        </span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: '500' }}>
+                          {profile.name || user?.email}
+                        </span>
+                      </div>
+
+                      <div className="header-actions">
+                        {/* Download Button */}
+                        <button
+                          onClick={downloadStudentData}
+                          className="admin-btn-outline"
+                          style={{ borderColor: 'var(--success)', color: 'var(--success)' }}
+                        >
+                          📥 Export CSV
+                        </button>
+
+                        {/* Notifications */}
+                        <div style={{ position: 'relative' }}>
+                          <button className="notify-bell" onClick={() => setNotifyOpen(!notifyOpen)}>
+                            🔔
+                            {notifications.length > 0 && <div className="notify-badge">{notifications.length}</div>}
+                          </button>
+                          {notifyOpen && (
+                            <div className="dropdown-content" style={{ width: '300px' }}>
+                              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-main)' }}>
+                                Notifications
+                              </div>
+                              {notifications.length === 0 ? (
+                                <div style={{ padding: '16px', color: 'var(--text-muted)', fontSize: '0.875rem' }}>No new alerts</div>
+                              ) : (
+                                notifications.map(n => (
+                                  <button key={n.id} className="notify-item" style={{ color: n.type === 'warning' ? 'var(--warning)' : 'var(--success)' }}>
+                                    {n.type === 'warning' ? '⚠️' : '✅'} {n.text}
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        <button onClick={onBackToApp} className="site-link">🌐 Live Site</button>
+
+                        <div style={{ position: 'relative' }}>
+                          <div className="avatar-btn" onClick={() => setProfileOpen(!profileOpen)}>
+                            {(profile.name || 'A').charAt(0).toUpperCase()}
+                          </div>
+                          {profileOpen && (
+                            <div className="dropdown-content">
+                              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
+                                <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.9rem' }}>{profile.name}</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>{user?.email}</div>
+                              </div>
+                              <button onClick={() => { setProfileOpen(false); setActiveTab('profile'); }}>👤 My Profile</button>
+                              <button style={{ color: 'var(--danger)' }} onClick={handleLogout}>🚪 Sign Out</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="main-content">
+                      {renderTabContent()}
+                    </div>
+                  </div>
+
+                </div>{/* end admin-root */}
+              </div>
+            )}
+
+            {activeAdminTab === 'user-db' && (
+              <div>
+                <div className="about-content-header">Manage Users &amp; Roles</div>
+
+                {/* ── USER MANAGEMENT TABLES ── */}
+                <div className="admin-root" style={{ height: 'auto', minHeight: 'unset' }}>
+
+                  {/* Sidebar for user-db tab */}
+                  <div className="admin-sidebar">
+                    <div className="admin-brand">
+                      <h2>User DB</h2>
+                      <div className="admin-brand-sub">Management</div>
+                    </div>
+                    <div className="nav-section-label">Filters</div>
+                    {['All', 'Not Started', 'In Progress', 'Completed'].map(status => (
+                      <button
+                        key={status}
+                        className={`nav-btn ${statusFilter === status ? 'active' : ''}`}
+                        onClick={() => setStatusFilter(status)}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Main content for user-db */}
+                  <div className="admin-main">
+                    <div className="main-content">
+                      {/* Search Bar */}
+                      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                        <input
+                          type="text"
+                          ref={searchRef}
+                          className="form-input"
+                          placeholder="🔍 Search by name or email..."
+                          value={searchInput}
+                          onChange={(e) => setSearchInput(e.target.value)}
+                          style={{ flex: 2 }}
+                        />
+                        <select className="form-select" value={eduFilter} onChange={(e) => setEduFilter(e.target.value)} style={{ flex: 1 }}>
+                          <option value="All">All Education Levels</option>
+                          <option value="10th">10th Grade</option>
+                          <option value="12th">12th Grade / PUC</option>
+                          <option value="Graduate">Graduate (UG)</option>
+                          <option value="Post Graduate">Post Graduate (PG)</option>
+                        </select>
+                        {(searchInput || statusFilter !== 'All' || eduFilter !== 'All') && (
+                          <button
+                            className="admin-btn-outline"
+                            onClick={() => { setSearchInput(''); setStatusFilter('All'); setEduFilter('All'); }}
+                            style={{ whiteSpace: 'nowrap' }}
+                          >
+                            ✕ Clear
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Students Table */}
+                      <div className="admin-card" style={{ borderTop: '3px solid var(--primary)' }}>
+                        <h3>
+                          🎓 Students
+                          <span className="admin-badge badge-primary">{filteredStudents.length} Shown</span>
+                        </h3>
+                        {filteredStudents.length === 0 ? (
+                          <div className="empty-state">
+                            <div className="empty-icon">🔍</div>
+                            <p>No students found. Try adjusting your filters.</p>
+                          </div>
+                        ) : (
+                          <div style={{ overflowX: 'auto' }}>
+                            <table className="data-table">
+                              <thead>
+                                <tr>
+                                  <th>Student</th>
+                                  <th>RIASEC</th>
+                                  <th>Status</th>
+                                  <th>Assigned Counsellor</th>
+                                  <th>Reassign</th>
+                                  <th>Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {filteredStudents.map(student => {
+                                  const assignedCounsellor = getAssignedCounsellor(student);
+                                  return (
+                                    <tr key={student.id}>
+                                      <td>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', overflow: 'hidden', flexShrink: 0 }}>
+                                            {student.profilePicture ? (
+                                              <img src={student.profilePicture} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ) : (
+                                              (student.name || '?').charAt(0).toUpperCase()
+                                            )}
+                                          </div>
+                                          <div>
+                                            <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{student.name || 'Unknown'}</div>
+                                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{student.email}</div>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td><span className="admin-badge badge-primary">{student.riasecCode}</span></td>
+                                      <td>
+                                        <span className={`admin-badge ${student.counsellingStatus === 'Not Started' ? 'badge-danger' : student.counsellingStatus === 'In Progress' ? 'badge-warn' : 'badge-success'}`}>
+                                          {student.counsellingStatus}
+                                        </span>
+                                      </td>
+                                      <td>
+                                        {assignedCounsellor ? (
+                                          <span className="counsellor-chip">
+                                            <span className="counsellor-chip-dot" />
+                                            {assignedCounsellor.name}
+                                          </span>
+                                        ) : (
+                                          <span className="unassigned-chip">⚠ Unassigned</span>
+                                        )}
+                                      </td>
+                                      <td style={{ minWidth: '180px' }}>
+                                        {counsellorsList.length > 0 ? (
+                                          <select
+                                            className="form-select"
+                                            style={{ padding: '6px 10px', fontSize: '0.8rem' }}
+                                            value={student.assignedCounsellorId || ''}
+                                            onChange={(e) => handleAssignCounsellor(student.id, e.target.value)}
+                                          >
+                                            <option value="">— Unassigned —</option>
+                                            {counsellorsList.map(c => (
+                                              <option key={c.id} value={c.id}>{c.name || c.email}</option>
+                                            ))}
+                                          </select>
+                                        ) : (
+                                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>No counsellors</span>
+                                        )}
+                                      </td>
+                                      <td>
+                                        <button
+                                          className="admin-btn-sm-outline"
+                                          onClick={() => { setSelectedStudent(student); setModalTab('overview'); }}
+                                        >
+                                          View
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Counsellors / Experts Table */}
+                      <div className="admin-card" style={{ borderTop: '3px solid var(--success)' }}>
+                        <h3>
+                          👥 Counsellors / Experts
+                          <span className="admin-badge badge-success">{counsellorsList.length} Registered</span>
+                        </h3>
+                        {counsellorsList.length === 0 ? (
+                          <div className="empty-state">
+                            <div className="empty-icon">👥</div>
+                            <p>No counsellors registered yet. Add them to the Staff collection in Firestore.</p>
+                          </div>
+                        ) : (
+                          <div style={{ overflowX: 'auto' }}>
+                            <table className="data-table">
+                              <thead>
+                                <tr>
+                                  <th>Name</th>
+                                  <th>Title / Specialization</th>
+                                  <th>Email</th>
+                                  <th>Assigned Students</th>
+                                  <th>Availability</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {counsellorsList.map(c => {
+                                  const assignedCount = students.filter(s => s.assignedCounsellorId === c.id).length;
+                                  return (
+                                    <tr key={c.id}>
+                                      <td>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), #7C6EF5)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', flexShrink: 0 }}>
+                                            {(c.name || 'C').charAt(0).toUpperCase()}
+                                          </div>
+                                          <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{c.name || '—'}</div>
+                                        </div>
+                                      </td>
+                                      <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{c.title || c.specialization || '—'}</td>
+                                      <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{c.email || '—'}</td>
+                                      <td>
+                                        <span className="admin-badge badge-primary">{assignedCount} Students</span>
+                                      </td>
+                                      <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{c.availability || '—'}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>{/* end admin-root for user-db */}
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="main-content">
-          {renderTabContent()}
-        </div>
-      </div>
-
-        </div>{/* end admin-root */}
         </main>
       </div>
     </div>
@@ -2343,4 +2569,4 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
 
 // ── STUDENT DETAIL MODAL + TOAST are inside the return above ──
 // (moved inside the social-dark-theme wrapper)
-
+

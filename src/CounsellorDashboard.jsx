@@ -419,6 +419,7 @@ export default function CounsellorDashboard({ navigate }) {
 
   // ── Local UI state ──────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('overview');
+  const [activeAboutTab, setActiveAboutTab] = useState('overview');
   const [counsellorProfile, setCounsellorProfile] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [alertModal, setAlertModal] = useState(null);
@@ -1559,22 +1560,25 @@ export default function CounsellorDashboard({ navigate }) {
   // ── Root render ───────────────────────────────────────────────────────────────
   return (
     <div className="social-dark-theme">
-      <div className="social-dashboard-layout">
-        <aside className="social-sidebar">
-          <h2 style={{color: '#E4E6EB', fontSize: '24px', marginBottom: '20px'}}>VidyaVantage</h2>
-          <ul style={{listStyle: 'none', padding: 0, color: '#E4E6EB', lineHeight: '2.5', fontWeight: 'bold'}}>
-            <li style={{ cursor: 'pointer' }}>👥 My Students</li>
-            <li style={{ cursor: 'pointer' }}>📅 Schedule</li>
-            <li style={{ cursor: 'pointer' }}>📝 Session Notes</li>
-          </ul>
-        </aside>
+      <div className="social-dashboard-layout" style={{ paddingTop: '60px' }}>
         <main className="social-main-content">
+
+          {/* ── TOP GLOBAL NAV ── */}
+          <nav className="top-global-nav">
+            <h2>VidyaVantage (Expert Portal)</h2>
+            <ul className="top-global-nav-links">
+              <li>👥 My Students</li>
+              <li>📅 Schedule</li>
+              <li>📝 Session Notes</li>
+            </ul>
+          </nav>
+
           {/* ── HERO HEADER ── */}
           <div className="profile-hero-container">
             <div className="profile-cover-photo">
               <div className="profile-avatar-wrapper">
                 <span className="profile-avatar-fallback">
-                  C
+                  {counsellorProfile?.name ? counsellorProfile.name.charAt(0).toUpperCase() : 'C'}
                 </span>
               </div>
             </div>
@@ -1595,103 +1599,134 @@ export default function CounsellorDashboard({ navigate }) {
             </div>
           </div>
 
-          {/* ── EXISTING DASHBOARD CONTENT ── */}
-          <div className="c-root">
-            {/* ── TOP NAV BAR ── */}
-            <nav className="c-topnav">
-        <div className="c-topnav-brand">Secret <span>Sharz</span></div>
-        <div className="c-topnav-tabs">
-          {[
-            { id: 'overview', icon: '🏠', label: 'Overview' },
-            { id: 'intelligence', icon: '🧠', label: 'Career Intel' },
-            { id: 'queue', icon: '🎓', label: 'Roster' },
-            { id: 'sessions', icon: '📅', label: 'Sessions' },
-            { id: 'chat', icon: '💬', label: 'Messages' },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              className={`c-topnav-tab ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
-        </div>
-        <div className="c-topnav-right">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.3)', color: '#0EA5E9', padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>
-            ⚡ {exPoints} EX
-          </div>
-          {unreadCount > 0 && (
-            <div style={{ background: '#EF4444', color: 'white', fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '20px' }}>
-              🔔 {unreadCount}
+          {/* ── NESTED ABOUT SECTION ── */}
+          <div className="about-container">
+            <div className="about-sidebar">
+              <h3>Dashboard</h3>
+              <div className={`about-nav-item ${activeAboutTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveAboutTab('overview')}>Overview</div>
+              <div className={`about-nav-item ${activeAboutTab === 'credentials' ? 'active' : ''}`} onClick={() => setActiveAboutTab('credentials')}>My Credentials</div>
             </div>
-          )}
-          <div style={{ position: 'relative' }}>
-            <div
-              onClick={() => setProfileOpen(!profileOpen)}
-              style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid #0EA5E9', cursor: 'pointer', background: '#E0F2FE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0EA5E9', fontWeight: '700', fontSize: '0.9rem' }}
-            >
-              {counsellorProfile?.name ? counsellorProfile.name.charAt(0).toUpperCase() : 'C'}
-            </div>
-            {profileOpen && (
-              <div style={{ position: 'absolute', right: 0, background: 'white', minWidth: '200px', boxShadow: '0 12px 40px rgba(0,0,0,0.12)', zIndex: 100, borderRadius: '16px', border: '1px solid #E4E9F2', overflow: 'hidden', marginTop: '8px' }}>
-                <div style={{ padding: '14px 16px', borderBottom: '1px solid #E4E9F2' }}>
-                  <div style={{ fontWeight: '700', color: '#1A1F36', fontSize: '0.9rem' }}>{String(counsellorProfile?.name || '')}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#6B7A99', marginTop: '2px' }}>{String(counsellorProfile?.email || '')}</div>
+
+            <div className="about-content">
+              {activeAboutTab === 'overview' && (
+                <div>
+                  <div className="about-content-header">Active Caseload</div>
+
+                  {/* ── EXISTING DASHBOARD CONTENT ── */}
+                  <div className="c-root" style={{ background: 'transparent', minHeight: 'unset' }}>
+                    {/* ── TOP NAV BAR ── */}
+                    <nav className="c-topnav">
+                      <div className="c-topnav-brand">Secret <span>Sharz</span></div>
+                      <div className="c-topnav-tabs">
+                        {[
+                          { id: 'overview', icon: '🏠', label: 'Overview' },
+                          { id: 'intelligence', icon: '🧠', label: 'Career Intel' },
+                          { id: 'queue', icon: '🎓', label: 'Roster' },
+                          { id: 'sessions', icon: '📅', label: 'Sessions' },
+                          { id: 'chat', icon: '💬', label: 'Messages' },
+                        ].map(tab => (
+                          <button
+                            key={tab.id}
+                            className={`c-topnav-tab ${activeTab === tab.id ? 'active' : ''}`}
+                            onClick={() => setActiveTab(tab.id)}
+                          >
+                            {tab.icon} {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="c-topnav-right">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(14,165,233,0.15)', border: '1px solid rgba(14,165,233,0.3)', color: '#0EA5E9', padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>
+                          ⚡ {exPoints} EX
+                        </div>
+                        {unreadCount > 0 && (
+                          <div style={{ background: '#EF4444', color: 'white', fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '20px' }}>
+                            🔔 {unreadCount}
+                          </div>
+                        )}
+                        <div style={{ position: 'relative' }}>
+                          <div
+                            onClick={() => setProfileOpen(!profileOpen)}
+                            style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid #0EA5E9', cursor: 'pointer', background: '#E0F2FE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0EA5E9', fontWeight: '700', fontSize: '0.9rem' }}
+                          >
+                            {counsellorProfile?.name ? counsellorProfile.name.charAt(0).toUpperCase() : 'C'}
+                          </div>
+                          {profileOpen && (
+                            <div style={{ position: 'absolute', right: 0, background: 'white', minWidth: '200px', boxShadow: '0 12px 40px rgba(0,0,0,0.12)', zIndex: 100, borderRadius: '16px', border: '1px solid #E4E9F2', overflow: 'hidden', marginTop: '8px' }}>
+                              <div style={{ padding: '14px 16px', borderBottom: '1px solid #E4E9F2' }}>
+                                <div style={{ fontWeight: '700', color: '#1A1F36', fontSize: '0.9rem' }}>{String(counsellorProfile?.name || '')}</div>
+                                <div style={{ fontSize: '0.75rem', color: '#6B7A99', marginTop: '2px' }}>{String(counsellorProfile?.email || '')}</div>
+                              </div>
+                              <button style={{ background: 'transparent', border: 'none', width: '100%', textAlign: 'left', color: '#EF4444', padding: '12px 16px', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: '500' }} onClick={handleLogout}>🚪 Secure Logout</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </nav>
+
+                    {/* ── THREE-COLUMN SOCIAL LAYOUT ── */}
+                    <div className="c-social-layout">
+                      {/* Left: Profile Card */}
+                      <LeftProfileCard />
+
+                      {/* Center: Tab Content */}
+                      <main>
+                        {renderActiveTab()}
+                      </main>
+
+                      {/* Right: Intelligence Sidebar */}
+                      <RightSidebar />
+                    </div>
+
+                    {/* ── ALERT MODAL ── */}
+                    {alertModal && (
+                      <div className="c-modal-overlay">
+                        <div className="c-alert-modal">
+                          <div style={{ fontSize: '2rem', marginBottom: '12px' }}>⚠️</div>
+                          <h3 style={{ color: 'var(--danger)', marginTop: 0, marginBottom: '8px' }}>{String(alertModal.title)}</h3>
+                          <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '0.875rem', lineHeight: '1.6' }}>{String(alertModal.message)}</p>
+                          <button className="c-btn" style={{ width: '100%' }} onClick={() => setAlertModal(null)}>Acknowledge</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── PROFILE EDITOR MODAL ── */}
+                    {showProfileEditor && (
+                      <ProfileEditor
+                        onClose={() => {
+                          setShowProfileEditor(false);
+                          showToast('✅ Profile updated! EX Points recalculated.');
+                        }}
+                      />
+                    )}
+
+                    {/* ── TOAST ── */}
+                    {toast && (
+                      <div style={{ position: 'fixed', bottom: '24px', right: '24px', background: '#0F2027', color: 'white', padding: '12px 24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '600', boxShadow: '0 12px 40px rgba(0,0,0,0.12)', zIndex: 9999, animation: 'c-slideUp 0.3s ease forwards' }}>
+                        🔔 {String(toast)}
+                      </div>
+                    )}
+
+                    {renderStudentModal()}
+                  </div>
+                  {/* ── END EXISTING DASHBOARD CONTENT ── */}
                 </div>
-                <button style={{ background: 'transparent', border: 'none', width: '100%', textAlign: 'left', color: '#EF4444', padding: '12px 16px', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: '500' }} onClick={handleLogout}>🚪 Secure Logout</button>
-              </div>
-            )}
+              )}
+
+              {activeAboutTab === 'credentials' && (
+                <div>
+                  <div className="about-content-header">Professional Background</div>
+                  <div className="timeline-item">
+                    <div className="timeline-icon">🎓</div>
+                    <div className="timeline-details">
+                      <div className="timeline-title">Master of Social Work</div>
+                      <div className="timeline-subtitle">Medical and Psychiatric Specialization</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </nav>
 
-      {/* ── THREE-COLUMN SOCIAL LAYOUT ── */}
-      <div className="c-social-layout">
-        {/* Left: Profile Card */}
-        <LeftProfileCard />
-
-        {/* Center: Tab Content */}
-        <main>
-          {renderActiveTab()}
-        </main>
-
-        {/* Right: Intelligence Sidebar */}
-        <RightSidebar />
-      </div>
-
-      {/* ── ALERT MODAL ── */}
-      {alertModal && (
-        <div className="c-modal-overlay">
-          <div className="c-alert-modal">
-            <div style={{ fontSize: '2rem', marginBottom: '12px' }}>⚠️</div>
-            <h3 style={{ color: 'var(--danger)', marginTop: 0, marginBottom: '8px' }}>{String(alertModal.title)}</h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '0.875rem', lineHeight: '1.6' }}>{String(alertModal.message)}</p>
-            <button className="c-btn" style={{ width: '100%' }} onClick={() => setAlertModal(null)}>Acknowledge</button>
-          </div>
-        </div>
-      )}
-
-      {/* ── PROFILE EDITOR MODAL ── */}
-      {showProfileEditor && (
-        <ProfileEditor
-          onClose={() => {
-            setShowProfileEditor(false);
-            showToast('✅ Profile updated! EX Points recalculated.');
-          }}
-        />
-      )}
-
-      {/* ── TOAST ── */}
-      {toast && (
-        <div style={{ position: 'fixed', bottom: '24px', right: '24px', background: '#0F2027', color: 'white', padding: '12px 24px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '600', boxShadow: '0 12px 40px rgba(0,0,0,0.12)', zIndex: 9999, animation: 'c-slideUp 0.3s ease forwards' }}>
-          🔔 {String(toast)}
-        </div>
-      )}
-
-      {renderStudentModal()}
-          </div>
-          {/* ── END EXISTING DASHBOARD CONTENT ── */}
         </main>
       </div>
     </div>
