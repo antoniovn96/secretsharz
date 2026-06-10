@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
-import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, auth, storage } from './firebase';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { db, auth } from './firebase';
 import CareerAssessment from "./CareerAssessment";
 import ProfileEditor from "./ProfileEditor";
 import { useDashboard } from "./context/DashboardContext";
@@ -1563,21 +1562,47 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     }
   };
 
-  // ── Photo upload handler ──
+  // ── Image Compression Helper ──
+  const compressImage = (file, maxWidth) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const base64 = canvas.toDataURL('image/jpeg', 0.7);
+          resolve(base64);
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // ── Photo upload handler (Firestore base64, no Storage) ──
   const handlePhotoUpload = async (file, type) => {
     if (!file || !auth?.currentUser) return;
     setUploadingPhoto(true);
     setPhotoPopup(null);
     try {
-      const uid = auth.currentUser.uid;
-      const path = `users/${uid}/${type === 'cover' ? 'coverPhoto' : 'profilePicture'}`;
-      const fileRef = storageRef(storage, path);
-      await uploadBytes(fileRef, file);
-      const downloadURL = await getDownloadURL(fileRef);
+      const maxWidth = type === 'cover' ? 500 : 200;
+      const base64 = await compressImage(file, maxWidth);
       if (type === 'cover') {
-        await updateUserProfile({ coverPhoto: downloadURL });
+        await updateUserProfile({ coverPhoto: base64 });
       } else {
-        await updateUserProfile({ profilePicture: downloadURL });
+        await updateUserProfile({ profilePicture: base64 });
       }
       showToast(`✅ ${type === 'cover' ? 'Cover photo' : 'Profile picture'} updated!`);
     } catch (err) {
@@ -1592,11 +1617,6 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     if (!auth?.currentUser) return;
     setPhotoPopup(null);
     try {
-      const uid = auth.currentUser.uid;
-      const path = `users/${uid}/${type === 'cover' ? 'coverPhoto' : 'profilePicture'}`;
-      try {
-        await deleteObject(storageRef(storage, path));
-      } catch (_) { /* file may not exist */ }
       if (type === 'cover') {
         await updateUserProfile({ coverPhoto: null });
       } else {
@@ -1606,6 +1626,62 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     } catch (err) {
       console.error('Photo remove error:', err);
       showToast('❌ Remove failed. Please try again.');
+    }
+  };
+
+  // ── Save Profile Handler (Firestore only) ──
+  const handleSaveProfile = async () => {
+    try {
+      // ── Personal Info: gather from DOM inputs in the personal-info form ──
+      const fatherName     = document.querySelector('input[placeholder="Father\'s Name"]')?.value || userProfile?.fatherName || '';
+      const fatherPhone    = document.querySelector('input[placeholder="Father\'s Phone Number"]')?.value || userProfile?.fatherPhone || '';
+      const fatherEmail    = document.querySelector('input[placeholder="Father\'s Email ID"]')?.value || userProfile?.fatherEmail || '';
+      const motherName     = document.querySelector('input[placeholder="Mother\'s Name"]')?.value || userProfile?.motherName || '';
+      const motherPhone    = document.querySelector('input[placeholder="Mother\'s Phone Number"]')?.value || userProfile?.motherPhone || '';
+      const motherEmail    = document.querySelector('input[placeholder="Mother\'s Email ID"]')?.value || userProfile?.motherEmail || '';
+      const guardianName   = document.querySelector('input[placeholder="Guardian\'s Name"]')?.value || userProfile?.guardianName || '';
+      const guardianPhone  = document.querySelector('input[placeholder="Guardian\'s Phone Number"]')?.value || userProfile?.guardianPhone || '';
+      const guardianEmail  = document.querySelector('input[placeholder="Guardian\'s Email ID"]')?.value || userProfile?.guardianEmail || '';
+      const location       = document.querySelector('input[placeholder="Current Location"]')?.value || userProfile?.location || '';
+      const hometown       = document.querySelector('input[placeholder="Home Town"]')?.value || userProfile?.hometown || '';
+
+      // ── Hobbies & Interests: gather from the always-visible view inputs ──
+      const hobbiesInput  = document.querySelector('input[list="hobbies-list-view"]');
+      const musicInput    = document.querySelector('input[placeholder="e.g., Classical, Rock, Taylor Swift"]');
+      const tvShowsInput  = document.querySelector('input[list="tvshows-list-view"]');
+      const gamesInput    = document.querySelector('input[list="games-list-view"]');
+      const sportsInput   = document.querySelector('input[list="sports-list-view"]');
+
+      // ── Photos: base64 strings from userProfile context ──
+      const coverPhotoBase64      = userProfile?.coverPhoto || null;
+      const profilePictureBase64  = userProfile?.profilePicture || null;
+
+      const dataToSave = {
+        ...localUserData,
+        ...profileData,
+        // Personal Info
+        fatherName, fatherPhone, fatherEmail,
+        motherName, motherPhone, motherEmail,
+        guardianName, guardianPhone, guardianEmail,
+        location, hometown,
+        // Hobbies & Interests
+        hobbies:  hobbiesInput?.value  || userProfile?.hobbies  || '',
+        music:    musicInput?.value    || userProfile?.music    || '',
+        tvShows:  tvShowsInput?.value  || userProfile?.tvShows  || '',
+        games:    gamesInput?.value    || userProfile?.games    || '',
+        sports:   sportsInput?.value   || userProfile?.sports   || '',
+        // Photos
+        coverPhoto:      coverPhotoBase64,
+        profilePicture:  profilePictureBase64,
+        savedAt: new Date().toISOString(),
+      };
+
+      await setDoc(doc(db, 'users', 'mock-student-id'), dataToSave, { merge: true });
+      alert('Profile Saved Successfully!');
+      showToast('✅ Profile Saved Successfully!');
+    } catch (err) {
+      console.error('Save profile error:', err);
+      alert('Failed to save profile. Please try again.');
     }
   };
 
@@ -1628,8 +1704,36 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
       />
 
       <div className="social-dashboard-layout" style={{paddingTop: '60px'}}>
-        <input type="file" id="coverPhotoUpload" accept="image/*" style={{ display: 'none' }} onChange={(e) => console.log('Cover selected', e.target.files[0])} />
-        <input type="file" id="profilePicUpload" accept="image/*" style={{ display: 'none' }} onChange={(e) => console.log('Avatar selected', e.target.files[0])} />
+        <input
+          type="file"
+          id="coverPhotoUpload"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const base64 = await compressImage(file, 500);
+              await updateUserProfile({ coverPhoto: base64 });
+              showToast('✅ Cover photo updated!');
+            }
+            e.target.value = '';
+          }}
+        />
+        <input
+          type="file"
+          id="profilePicUpload"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const base64 = await compressImage(file, 200);
+              await updateUserProfile({ profilePicture: base64 });
+              showToast('✅ Profile picture updated!');
+            }
+            e.target.value = '';
+          }}
+        />
         <main className="social-main-content">
           <div className="profile-hero-container">
             <div className="profile-cover-photo" style={{ backgroundImage: userProfile?.coverPhoto ? `url(${userProfile.coverPhoto})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -1789,8 +1893,9 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 </div>
               </div>
               <div className="profile-actions">
-                <button className="btn-primary-social">📘 Full Report</button>
-                <button className="btn-secondary-social">✏️ Edit</button>
+                <button className="btn-primary-social" onClick={() => window.location.href = '/report'}>📘 Full Report</button>
+                <button className="btn-secondary-social" onClick={() => { setActiveAboutTab('personal-info'); document.querySelector('.about-container').scrollIntoView({ behavior: 'smooth' }); }}>✏️ Edit</button>
+                <button className="btn-primary-social" style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }} onClick={handleSaveProfile}>💾 Save Profile</button>
               </div>
             </div>
           </div>
@@ -1834,45 +1939,6 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                           Take Assessment 🚀
                         </button>
                       )}
-                    </div>
-
-                    {/* ── 🔔 Alerts Block ── */}
-                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '12px', overflow: 'hidden' }}>
-                      <div style={{ padding: '12px 16px', borderBottom: '1px solid #3A3B3C', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: '15px', fontWeight: '700', color: '#E4E6EB', display: 'flex', alignItems: 'center', gap: '7px' }}>
-                          🔔 Alerts
-                          {unreadCount > 0 && (
-                            <span style={{ background: '#EF4444', color: 'white', fontSize: '10px', fontWeight: '800', padding: '2px 7px', borderRadius: '10px' }}>{unreadCount}</span>
-                          )}
-                        </div>
-                        {unreadCount > 0 && (
-                          <button onClick={() => markAllNotificationsRead()} style={{ fontSize: '11px', fontWeight: '700', color: '#2D88FF', cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'inherit' }}>Mark all read</button>
-                        )}
-                      </div>
-                      <div style={{ padding: '8px 16px' }}>
-                        {notifications.map((notif) => (
-                          <div
-                            key={notif.id}
-                            className="overview-notif-item"
-                            style={{ opacity: notif.isRead ? 0.6 : 1 }}
-                            onClick={() => {
-                              if (!notif.isRead) markNotificationRead(notif.id);
-                              if (notif.id === 'notif-001' || notif.title?.toLowerCase().includes('xp')) {
-                                setShowXpModal(true);
-                              } else {
-                                setShowProfileEditor(true);
-                              }
-                            }}
-                          >
-                            <div className="overview-notif-dot" style={{ background: notif.isRead ? 'transparent' : getNotifColor(notif.priority, notif.isRead) }} />
-                            <div style={{ flex: 1 }}>
-                              <div className="overview-notif-title">{String(notif.title)}</div>
-                              <div className="overview-notif-msg">{String(notif.message).substring(0, 80)}{notif.message.length > 80 ? '…' : ''}</div>
-                              <div className="overview-notif-time">{relativeTime(notif.timestamp)}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
                     </div>
 
                     {/* ── Clarity Index Stats ── */}
@@ -1959,7 +2025,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                           </ul>
                         </div>
                         <button
-                          onClick={() => setActiveTab('colleges')}
+                          onClick={() => window.location.href = '/colleges'}
                           style={{ background: 'linear-gradient(135deg, #E8650A, #F0A500)', color: 'white', border: 'none', padding: '9px 16px', borderRadius: '50px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}
                         >
                           Explore Colleges
