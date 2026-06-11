@@ -303,6 +303,41 @@ function getNotifColor(priority, isRead) {
   }
 }
 
+const SkillRadarChart = ({ skills }) => {
+  const max = 100; const size = 240; const center = size / 2; const radius = size / 2 - 30;
+  const categories = ['communication', 'resilience', 'criticalThinking', 'empathy', 'leadership'];
+  const labels = ['Communication', 'Resilience', 'Critical Thinking', 'Empathy', 'Leadership'];
+  const angleStep = (Math.PI * 2) / categories.length;
+  const getPoint = (value, i) => {
+    const angle = i * angleStep - Math.PI / 2;
+    const r = (value / max) * radius;
+    return `${center + r * Math.cos(angle)},${center + r * Math.sin(angle)}`;
+  };
+  const points = categories.map((cat, i) => getPoint(skills[cat] || 0, i)).join(' ');
+  return (
+    <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} style={{ overflow: 'visible' }}>
+      {[20, 40, 60, 80, 100].map(level => (
+        <polygon key={level} points={categories.map((_, i) => getPoint(level, i)).join(' ')} fill="none" stroke="rgba(255,255,255,0.05)" />
+      ))}
+      {categories.map((cat, i) => {
+        const end = getPoint(100, i);
+        const labelPoint = getPoint(120, i);
+        return (
+          <g key={cat}>
+            <line x1={center} y1={center} x2={end.split(',')[0]} y2={end.split(',')[1]} stroke="rgba(255,255,255,0.1)" />
+            <text x={labelPoint.split(',')[0]} y={labelPoint.split(',')[1]} fill="var(--text-muted)" fontSize="10" textAnchor="middle" alignmentBaseline="middle">{labels[i]}</text>
+          </g>
+        );
+      })}
+      <polygon points={points} fill="rgba(91,110,245,0.3)" stroke="var(--primary)" strokeWidth="2" />
+      {categories.map((cat, i) => {
+        const pt = getPoint(skills[cat] || 0, i);
+        return <circle key={`c-${cat}`} cx={pt.split(',')[0]} cy={pt.split(',')[1]} r="4" fill="var(--primary)" />;
+      })}
+    </svg>
+  );
+};
+
 export default function StudentDashboard({ user, userData, initialTab = "home", onBack, onLogout }) {
   const { userProfile, socialFeed, notifications, markNotificationRead, markAllNotificationsRead, incrementSessions, submitBooking, updateUserProfile } = useDashboard();
 
@@ -3305,6 +3340,36 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                         </div>
                       ))
                     )}
+                  </div>
+                </div>
+              )}
+              {activeAboutTab === 'life-skills' && (
+                <div>
+                  <div className="admin-card" style={{ borderTop: '3px solid var(--primary)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                      <div>
+                        <h3 style={{ margin: 0, border: 'none', padding: 0 }}>🕸️ Life Skills Matrix</h3>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '5px' }}>Self-assess your core psychological and social competencies.</p>
+                      </div>
+                      <button className="admin-btn" onClick={handleSaveProfile} disabled={savingProfile}>{savingProfile ? '⏳ Saving...' : '💾 Save Matrix'}</button>
+                    </div>
+                    
+                    <div className="grid-2col" style={{ alignItems: 'center' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        {Object.keys(lifeSkills).map(skill => (
+                          <div key={skill}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-main)', textTransform: 'capitalize' }}>
+                              <span>{skill.replace(/([A-Z])/g, ' $1').trim()}</span>
+                              <span style={{ color: 'var(--primary)' }}>{lifeSkills[skill]} / 100</span>
+                            </div>
+                            <input type="range" min="0" max="100" value={lifeSkills[skill]} onChange={(e) => setLifeSkills({ ...lifeSkills, [skill]: Number(e.target.value) })} style={{ width: '100%', accentColor: 'var(--primary)' }} />
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', minHeight: '300px' }}>
+                        <SkillRadarChart skills={lifeSkills} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
