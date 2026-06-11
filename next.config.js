@@ -1,12 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  
-  // ── TEMPORARY DEBUGGING OVERRIDE ──
-  webpack: (config) => {
-    config.optimization.minimize = false;
-    return config;
-  },
+  swcMinify: true,
 
   async rewrites() {
     return [
