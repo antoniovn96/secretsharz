@@ -338,6 +338,37 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [sports, setSports] = useState([]);
   const [athletes, setAthletes] = useState([]);
 
+  // ── Personal Info state ──
+  const [fatherName, setFatherName] = useState('');
+  const [fatherPhone, setFatherPhone] = useState('');
+  const [fatherEmail, setFatherEmail] = useState('');
+  const [motherName, setMotherName] = useState('');
+  const [motherPhone, setMotherPhone] = useState('');
+  const [motherEmail, setMotherEmail] = useState('');
+  const [guardianName, setGuardianName] = useState('');
+  const [guardianPhone, setGuardianPhone] = useState('');
+  const [guardianEmail, setGuardianEmail] = useState('');
+  const [currentLocation, setCurrentLocation] = useState('');
+  const [hometown, setHometown] = useState('');
+
+  // ── Education state ──
+  const [schoolName, setSchoolName] = useState('');
+  const [schoolBoard, setSchoolBoard] = useState('');
+  const [schoolFrom, setSchoolFrom] = useState('');
+  const [schoolTo, setSchoolTo] = useState('');
+  const [schoolCity, setSchoolCity] = useState('');
+  const [marks10th, setMarks10th] = useState('');
+  const [marks12th, setMarks12th] = useState('');
+  const [stream1112, setStream1112] = useState('');
+  const [ugInstitution, setUgInstitution] = useState('');
+  const [ugCourse, setUgCourse] = useState('');
+  const [ugCGPA, setUgCGPA] = useState('');
+  const [ugFrom, setUgFrom] = useState('');
+  const [ugTo, setUgTo] = useState('');
+  const [pgInstitution, setPgInstitution] = useState('');
+  const [pgCourse, setPgCourse] = useState('');
+  const [pgCGPA, setPgCGPA] = useState('');
+
   const handleAddTag = (e, stateArray, setStateFunction) => {
     if (e.key === 'Enter' && e.target.value.trim() !== '') {
       e.preventDefault();
@@ -356,20 +387,43 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         if (docSnap.exists()) {
           const data = docSnap.data();
           setLocalUserData(prev => ({ ...prev, ...data }));
-          if (data.location) setLocalUserData(prev => ({ ...prev, location: data.location }));
-          if (data.bio) setLocalUserData(prev => ({ ...prev, bio: data.bio }));
-          if (data.hobbies) setLocalUserData(prev => ({ ...prev, hobbies: data.hobbies }));
-          if (data.music) setLocalUserData(prev => ({ ...prev, music: data.music }));
-          if (data.tvShows) setLocalUserData(prev => ({ ...prev, tvShows: data.tvShows }));
-          if (data.games) setLocalUserData(prev => ({ ...prev, games: data.games }));
-          if (data.sports) setLocalUserData(prev => ({ ...prev, sports: data.sports }));
-          if (data.interests) setLocalUserData(prev => ({ ...prev, interests: data.interests }));
-          if (data.coverPhoto) setLocalUserData(prev => ({ ...prev, coverPhoto: data.coverPhoto }));
-          if (data.profilePicture) setLocalUserData(prev => ({ ...prev, profilePicture: data.profilePicture }));
-          if (data.fatherName) setLocalUserData(prev => ({ ...prev, fatherName: data.fatherName }));
-          if (data.motherName) setLocalUserData(prev => ({ ...prev, motherName: data.motherName }));
-          if (data.guardianName) setLocalUserData(prev => ({ ...prev, guardianName: data.guardianName }));
-          if (data.hometown) setLocalUserData(prev => ({ ...prev, hometown: data.hometown }));
+          // ── Personal Info ──
+          if (data.fatherName)  setFatherName(data.fatherName);
+          if (data.fatherPhone) setFatherPhone(data.fatherPhone);
+          if (data.fatherEmail) setFatherEmail(data.fatherEmail);
+          if (data.motherName)  setMotherName(data.motherName);
+          if (data.motherPhone) setMotherPhone(data.motherPhone);
+          if (data.motherEmail) setMotherEmail(data.motherEmail);
+          if (data.guardianName)  setGuardianName(data.guardianName);
+          if (data.guardianPhone) setGuardianPhone(data.guardianPhone);
+          if (data.guardianEmail) setGuardianEmail(data.guardianEmail);
+          if (data.location)  setCurrentLocation(data.location);
+          if (data.hometown)  setHometown(data.hometown);
+          // ── Education ──
+          if (data.schoolName)    setSchoolName(data.schoolName);
+          if (data.schoolBoard)   setSchoolBoard(data.schoolBoard);
+          if (data.schoolFrom)    setSchoolFrom(data.schoolFrom);
+          if (data.schoolTo)      setSchoolTo(data.schoolTo);
+          if (data.schoolCity)    setSchoolCity(data.schoolCity);
+          if (data.marks10th)     setMarks10th(data.marks10th);
+          if (data.marks12th)     setMarks12th(data.marks12th);
+          if (data.stream1112)    setStream1112(data.stream1112);
+          if (data.ugInstitution) setUgInstitution(data.ugInstitution);
+          if (data.ugCourse)      setUgCourse(data.ugCourse);
+          if (data.ugCGPA)        setUgCGPA(data.ugCGPA);
+          if (data.ugFrom)        setUgFrom(data.ugFrom);
+          if (data.ugTo)          setUgTo(data.ugTo);
+          if (data.pgInstitution) setPgInstitution(data.pgInstitution);
+          if (data.pgCourse)      setPgCourse(data.pgCourse);
+          if (data.pgCGPA)        setPgCGPA(data.pgCGPA);
+          // ── Hobbies (tag arrays) ──
+          if (Array.isArray(data.hobbies))  setHobbies(data.hobbies);
+          if (Array.isArray(data.music))    setMusic(data.music);
+          if (Array.isArray(data.tvShows))  setTvShows(data.tvShows);
+          if (Array.isArray(data.movies))   setMovies(data.movies);
+          if (Array.isArray(data.games))    setGames(data.games);
+          if (Array.isArray(data.sports))   setSports(data.sports);
+          if (Array.isArray(data.athletes)) setAthletes(data.athletes);
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
@@ -1683,26 +1737,6 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   // ── Save Profile Handler (Firestore only) ──
   const handleSaveProfile = async () => {
     try {
-      // ── Personal Info: gather from DOM inputs in the personal-info form ──
-      const fatherName     = document.querySelector('input[placeholder="Father\'s Name"]')?.value || userProfile?.fatherName || '';
-      const fatherPhone    = document.querySelector('input[placeholder="Father\'s Phone Number"]')?.value || userProfile?.fatherPhone || '';
-      const fatherEmail    = document.querySelector('input[placeholder="Father\'s Email ID"]')?.value || userProfile?.fatherEmail || '';
-      const motherName     = document.querySelector('input[placeholder="Mother\'s Name"]')?.value || userProfile?.motherName || '';
-      const motherPhone    = document.querySelector('input[placeholder="Mother\'s Phone Number"]')?.value || userProfile?.motherPhone || '';
-      const motherEmail    = document.querySelector('input[placeholder="Mother\'s Email ID"]')?.value || userProfile?.motherEmail || '';
-      const guardianName   = document.querySelector('input[placeholder="Guardian\'s Name"]')?.value || userProfile?.guardianName || '';
-      const guardianPhone  = document.querySelector('input[placeholder="Guardian\'s Phone Number"]')?.value || userProfile?.guardianPhone || '';
-      const guardianEmail  = document.querySelector('input[placeholder="Guardian\'s Email ID"]')?.value || userProfile?.guardianEmail || '';
-      const location       = document.querySelector('input[placeholder="Current Location"]')?.value || userProfile?.location || '';
-      const hometown       = document.querySelector('input[placeholder="Home Town"]')?.value || userProfile?.hometown || '';
-
-      // ── Hobbies & Interests: gather from the always-visible view inputs ──
-      const hobbiesInput  = document.querySelector('input[list="hobbies-list-view"]');
-      const musicInput    = document.querySelector('input[placeholder="e.g., Classical, Rock, Taylor Swift"]');
-      const tvShowsInput  = document.querySelector('input[list="tvshows-list-view"]');
-      const gamesInput    = document.querySelector('input[list="games-list-view"]');
-      const sportsInput   = document.querySelector('input[list="sports-list-view"]');
-
       // ── Photos: base64 strings from userProfile context ──
       const coverPhotoBase64      = userProfile?.coverPhoto || null;
       const profilePictureBase64  = userProfile?.profilePicture || null;
@@ -1714,7 +1748,13 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         fatherName, fatherPhone, fatherEmail,
         motherName, motherPhone, motherEmail,
         guardianName, guardianPhone, guardianEmail,
-        location, hometown,
+        location: currentLocation,
+        hometown,
+        // Education
+        schoolName, schoolBoard, schoolFrom, schoolTo, schoolCity,
+        marks10th, marks12th, stream1112,
+        ugInstitution, ugCourse, ugCGPA, ugFrom, ugTo,
+        pgInstitution, pgCourse, pgCGPA,
         // Bio
         bio: bio,
         // Hobbies & Interests (tag arrays)
@@ -2101,59 +2141,35 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                     <span className="timeline-action" title="Edit Personal Info" onClick={() => setEditingItem('personal-info-edit')}>✏️</span>
                   </div>
 
-                  {editingItem === 'personal-info-edit' ? (
-                    <div className="inline-form">
-                      {/* Parent/Guardian Details */}
-                      <div style={{ fontSize: '13px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid #3A3B3C' }}>
-                        👨‍👩‍👧 Parent / Guardian Details
-                      </div>
-
-                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#B0B3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Father</div>
-                      <input className="form-input" type="text" placeholder="Father's Name" />
-                      <input className="form-input" type="tel" placeholder="Father's Phone Number" />
-                      <input className="form-input" type="email" placeholder="Father's Email ID" />
-
-                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#B0B3B8', marginBottom: '8px', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mother</div>
-                      <input className="form-input" type="text" placeholder="Mother's Name" />
-                      <input className="form-input" type="tel" placeholder="Mother's Phone Number" />
-                      <input className="form-input" type="email" placeholder="Mother's Email ID" />
-
-                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#B0B3B8', marginBottom: '8px', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Guardian</div>
-                      <input className="form-input" type="text" placeholder="Guardian's Name" />
-                      <input className="form-input" type="tel" placeholder="Guardian's Phone Number" />
-                      <input className="form-input" type="email" placeholder="Guardian's Email ID" />
-
-                      {/* Location Details */}
-                      <div style={{ fontSize: '13px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', margin: '16px 0 12px', paddingBottom: '8px', borderBottom: '1px solid #3A3B3C' }}>
-                        📍 Location Details
-                      </div>
-                      <input className="form-input" type="text" placeholder="Current Location" />
-                      <input className="form-input" type="text" placeholder="Home Town" />
-
-                      <div className="form-actions">
-                        <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
-                        <button className="btn-primary-social" onClick={() => setEditingItem(null)}>Save</button>
-                      </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {/* Father */}
+                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>👨 Father</div>
+                      <input className="form-input" type="text" placeholder="Father's Name" value={fatherName} onChange={(e) => setFatherName(e.target.value)} />
+                      <input className="form-input" type="tel" placeholder="Father's Phone Number" value={fatherPhone} onChange={(e) => setFatherPhone(e.target.value)} />
+                      <input className="form-input" type="email" placeholder="Father's Email ID" value={fatherEmail} onChange={(e) => setFatherEmail(e.target.value)} />
                     </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
-                        <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>👨‍👩‍👧 Parent / Guardian Details</div>
-                        <div style={{ fontSize: '13px', color: '#B0B3B8', lineHeight: '1.8' }}>
-                          <div>👨 <strong style={{ color: '#E4E6EB' }}>Father:</strong> Not added yet</div>
-                          <div>👩 <strong style={{ color: '#E4E6EB' }}>Mother:</strong> Not added yet</div>
-                          <div>🧑 <strong style={{ color: '#E4E6EB' }}>Guardian:</strong> Not added yet</div>
-                        </div>
-                      </div>
-                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
-                        <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>📍 Location Details</div>
-                        <div style={{ fontSize: '13px', color: '#B0B3B8', lineHeight: '1.8' }}>
-                          <div>🏙️ <strong style={{ color: '#E4E6EB' }}>Current Location:</strong> Not added yet</div>
-                          <div>🏡 <strong style={{ color: '#E4E6EB' }}>Home Town:</strong> Not added yet</div>
-                        </div>
-                      </div>
+                    {/* Mother */}
+                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>👩 Mother</div>
+                      <input className="form-input" type="text" placeholder="Mother's Name" value={motherName} onChange={(e) => setMotherName(e.target.value)} />
+                      <input className="form-input" type="tel" placeholder="Mother's Phone Number" value={motherPhone} onChange={(e) => setMotherPhone(e.target.value)} />
+                      <input className="form-input" type="email" placeholder="Mother's Email ID" value={motherEmail} onChange={(e) => setMotherEmail(e.target.value)} />
                     </div>
-                  )}
+                    {/* Guardian */}
+                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>🧑 Guardian</div>
+                      <input className="form-input" type="text" placeholder="Guardian's Name" value={guardianName} onChange={(e) => setGuardianName(e.target.value)} />
+                      <input className="form-input" type="tel" placeholder="Guardian's Phone Number" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} />
+                      <input className="form-input" type="email" placeholder="Guardian's Email ID" value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} />
+                    </div>
+                    {/* Location */}
+                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>📍 Location Details</div>
+                      <input className="form-input" type="text" placeholder="Current Location" value={currentLocation} onChange={(e) => setCurrentLocation(e.target.value)} />
+                      <input className="form-input" type="text" placeholder="Home Town" value={hometown} onChange={(e) => setHometown(e.target.value)} />
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -2453,12 +2469,25 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                       </h3>
                       {collegesExt.length > 0 ? (
                         collegesExt.slice(0, 3).map((c, i) => (
-                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: i < Math.min(collegesExt.length, 3) - 1 ? '1px solid #2A2B2C' : 'none' }}>
+                          <div
+                            key={i}
+                            onClick={() => window.location.href = '/colleges'}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '12px',
+                              padding: '10px 12px', margin: '0 -12px',
+                              borderBottom: i < Math.min(collegesExt.length, 3) - 1 ? '1px solid #2A2B2C' : 'none',
+                              cursor: 'pointer', borderRadius: '8px',
+                              transition: 'background 0.15s',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          >
                             <span style={{ fontSize: '20px' }}>🏫</span>
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: '14px', fontWeight: '600', color: '#E4E6EB' }}>{String(c.name)}</div>
                               <div style={{ fontSize: '12px', color: '#B0B3B8', marginTop: '2px' }}>📍 {String(c.loc)} &nbsp;|&nbsp; 💰 {String(c.fees)} &nbsp;|&nbsp; 📈 {String(c.placement)}</div>
                             </div>
+                            <span style={{ fontSize: '12px', color: '#6B7280', flexShrink: 0 }}>→</span>
                           </div>
                         ))
                       ) : (
