@@ -329,6 +329,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   // ── Modal state for XP Checklist and Career Matches ──
   const [showXpModal, setShowXpModal] = useState(false);
   const [showCareerMatchesModal, setShowCareerMatchesModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [activeAboutTab, setActiveAboutTab] = useState('overview');
   const [activeChat, setActiveChat] = useState(null);
   const [internships, setInternships] = useState([]);
@@ -385,6 +386,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
 
   const handleAutocompleteChange = (e, categoryName) => {
     const val = e.target.value;
+    let filteredArray = [];
     if (val.length >= 3) {
       let sourceArray = [];
       const dataObj = platformData || {};
@@ -409,17 +411,11 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         else if (key === 'SPORTS' && typeof SPORTS !== 'undefined') sourceArray = SPORTS;
       }
 
-      const filteredArray = sourceArray.filter(item =>
+      filteredArray = sourceArray.filter(item =>
         item.toLowerCase().includes(val.toLowerCase())
       );
-      setAutocomplete({
-        category: categoryName,
-        text: val,
-        suggestions: filteredArray.slice(0, 5)
-      });
-    } else {
-      setAutocomplete({ category: '', text: val, suggestions: [] });
     }
+    setAutocomplete({ category: categoryName, text: val, suggestions: val.length >= 3 ? filteredArray.slice(0, 5) : [] });
   };
 
   const handleSuggestionClick = (suggestion, stateArray, setStateFunction) => {
@@ -463,6 +459,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
       e.preventDefault();
       setStateFunction([...stateArray, e.target.value.trim()]);
       e.target.value = '';
+      setAutocomplete({ category: '', text: '', suggestions: [] });
     }
   };
   const handleRemoveTag = (indexToRemove, stateArray, setStateFunction) => {
@@ -475,6 +472,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         const docSnap = await getDoc(doc(db, "users", "mock-student-id"));
         if (docSnap.exists()) {
           const data = docSnap.data();
+          if (!data.hasAcceptedTerms) { setShowTermsModal(true); }
           setLocalUserData(prev => ({ ...prev, ...data }));
           if (Array.isArray(data.internships)) setInternships(data.internships);
           if (Array.isArray(data.voluntaryExp)) setVoluntaryExp(data.voluntaryExp);
@@ -1837,6 +1835,11 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
       console.error('Photo remove error:', err);
       showToast('❌ Remove failed. Please try again.');
     }
+  };
+
+  const handleAcceptTerms = async () => {
+    await setDoc(doc(db, "users", "mock-student-id"), { hasAcceptedTerms: true, termsAcceptedAt: new Date().toISOString() }, { merge: true });
+    setShowTermsModal(false);
   };
 
   // ── Save Profile Handler (Firestore only) ──
@@ -3312,6 +3315,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
 
           {toast && <div className="db-toast"><span>🔔</span><span>{toast}</span></div>}
           <ChatWidget />
+          {showTermsModal && ( <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}> <div style={{ background: 'var(--bg-surface, #1e1e1e)', padding: '30px', borderRadius: '10px', maxWidth: '500px', width: '90%', border: '1px solid var(--border)' }}> <h2 style={{ color: '#fff', marginBottom: '15px' }}>Terms & Conditions</h2> <p style={{ color: '#aaa', fontSize: '14px', lineHeight: '1.6', marginBottom: '20px' }}> By accessing the Secret Sharz dashboard, you consent that all personal, academic, and psychological information provided on this platform will be strictly utilized for Career Guidance and professional Counseling purposes. Your data is securely managed and will only be accessible to your assigned counselors and platform administrators. </p> <div style={{ display: 'flex', justifyContent: 'flex-end' }}> <button onClick={handleAcceptTerms} style={{ background: 'var(--primary-blue, #0066ff)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}> I Agree & Continue </button> </div> </div> </div> )}
         </main>
       </div>
     </div>
