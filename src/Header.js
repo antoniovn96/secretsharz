@@ -115,6 +115,26 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
               )}
               <button onClick={() => handleNav('/dashboard')} className="nav-link">My Dashboard</button>
 
+              {/* ── MESSENGER ICON ── */}
+              <div
+                style={{ position: 'relative', cursor: 'pointer', marginRight: '15px' }}
+                onClick={() => {
+                  if (window.setActiveAboutTabGlobal) {
+                    window.setActiveAboutTabGlobal('messages');
+                  } else {
+                    sessionStorage.setItem('pendingAboutTab', 'messages');
+                    handleNav('/dashboard');
+                  }
+                }}
+              >
+                <span style={{ fontSize: '20px' }}>💬</span>
+                {unreadCount > 0 && (
+                  <span style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'red', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '10px', fontWeight: 'bold' }}>
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+
               {/* ── BELL ICON WITH DROPDOWN ── */}
               <div ref={alertsRef} style={{ position: 'relative' }}>
                 <button

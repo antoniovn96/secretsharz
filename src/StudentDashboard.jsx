@@ -3,6 +3,7 @@ import { doc, setDoc, onSnapshot, getDoc } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import CareerAssessment from "./CareerAssessment";
 import ProfileEditor from "./ProfileEditor";
+import ChatWidget from "./components/ChatWidget";
 import { useDashboard } from "./context/DashboardContext";
 import XpChecklistModal from "./components/XpChecklistModal";
 import CareerMatchesModal from "./components/CareerMatchesModal";
@@ -328,6 +329,8 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [showXpModal, setShowXpModal] = useState(false);
   const [showCareerMatchesModal, setShowCareerMatchesModal] = useState(false);
   const [activeAboutTab, setActiveAboutTab] = useState('overview');
+  const [activeChat, setActiveChat] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [editingItem, setEditingItem] = useState(null);
   const [isEditingTab, setIsEditingTab] = useState(false);
   const [eduType, setEduType] = useState('');
@@ -464,6 +467,18 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   }, []);
 
   useEffect(() => { if (initialTab) setActiveTab(initialTab); }, [initialTab]);
+
+  useEffect(() => {
+    window.setActiveAboutTabGlobal = setActiveAboutTab;
+    const pending = sessionStorage.getItem('pendingAboutTab');
+    if (pending) {
+      setActiveAboutTab(pending);
+      sessionStorage.removeItem('pendingAboutTab');
+    }
+    return () => {
+      delete window.setActiveAboutTabGlobal;
+    };
+  }, [setActiveAboutTab]);
   useEffect(() => { setAdvisoryMsg(ADVISORY_MESSAGES[Math.floor(Math.random() * ADVISORY_MESSAGES.length)]); }, []);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
@@ -2007,6 +2022,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               <div className={`about-nav-item ${activeAboutTab === 'links' ? 'active' : ''}`} onClick={() => setActiveAboutTab('links')}>Project Links</div>
               <div className={`about-nav-item ${activeAboutTab === 'hobbies' ? 'active' : ''}`} onClick={() => setActiveAboutTab('hobbies')}>Hobbies &amp; Interests</div>
               <div className={`about-nav-item ${activeAboutTab === 'career-report' ? 'active' : ''}`} onClick={() => setActiveAboutTab('career-report')}>Career Report</div>
+              <div className={`about-nav-item ${activeAboutTab === 'messages' ? 'active' : ''}`} onClick={() => setActiveAboutTab('messages')}>💬 Messages {unreadCount > 0 && <span style={{background: 'red', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '12px', marginLeft: '5px'}}>{unreadCount}</span>}</div>
             </div>
 
             <div className="about-content">
@@ -2703,6 +2719,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                   </div>
                 </div>
               )}
+              {activeAboutTab === 'messages' && <ChatWidget activeChat={activeChat} setActiveChat={setActiveChat} setUnreadCount={setUnreadCount} />}
             </div>
           </div>
 
@@ -2788,6 +2805,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
           )}
 
           {toast && <div className="db-toast"><span>🔔</span><span>{toast}</span></div>}
+          <ChatWidget />
         </main>
       </div>
     </div>

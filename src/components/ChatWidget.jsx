@@ -84,32 +84,151 @@ const ChatWidget = () => {
             overflow: 'hidden'
           }}
         >
-          <div style={{ 
-            padding: '10px', 
-            backgroundColor: '#333', 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            borderTopLeftRadius: '10px',
-            borderTopRightRadius: '10px'
-          }}>
-            <span style={{ fontWeight: 'bold' }}>Chat</span>
-            <button 
-              onClick={() => setIsOpen(false)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              Close
-            </button>
-          </div>
-          <div style={{ flex: 1, padding: '10px' }}>
-            Select a conversation...
-          </div>
+          {!activeChat ? (
+            <>
+              <div style={{ 
+                padding: '10px', 
+                backgroundColor: '#333', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                borderTopLeftRadius: '10px',
+                borderTopRightRadius: '10px'
+              }}>
+                <span style={{ fontWeight: 'bold' }}>Select Contact</span>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+              <div style={{ flex: 1, padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' }}>
+                {ALLOWED_CONTACTS.map(contact => (
+                  <button
+                    key={contact.id}
+                    onClick={() => setActiveChat(contact)}
+                    style={{
+                      padding: '12px',
+                      backgroundColor: '#2a2a2a',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontWeight: 'bold',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#3a3a3a'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2a2a2a'}
+                  >
+                    {contact.name} ({contact.role})
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ 
+                padding: '10px', 
+                backgroundColor: '#333', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                borderTopLeftRadius: '10px',
+                borderTopRightRadius: '10px'
+              }}>
+                <button
+                  onClick={() => setActiveChat(null)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#007bff',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '14px'
+                  }}
+                >
+                  Back
+                </button>
+                <span style={{ fontWeight: 'bold', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '150px' }}>
+                  {activeChat.name}
+                </span>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+              <div style={{ flex: 1, padding: '10px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {messages.map(msg => {
+                  const isMe = msg.senderId === CURRENT_USER.id;
+                  return (
+                    <div
+                      key={msg.id}
+                      style={{
+                        alignSelf: isMe ? 'flex-end' : 'flex-start',
+                        backgroundColor: isMe ? '#007bff' : '#444',
+                        color: 'white',
+                        padding: '8px 12px',
+                        borderRadius: '10px',
+                        maxWidth: '80%',
+                        wordBreak: 'break-word',
+                        fontSize: '14px'
+                      }}
+                    >
+                      {msg.text}
+                    </div>
+                  );
+                })}
+              </div>
+              <form onSubmit={sendMessage} style={{ display: 'flex', padding: '10px', borderTop: '1px solid #333' }}>
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    borderRadius: '5px',
+                    border: '1px solid #444',
+                    backgroundColor: '#2a2a2a',
+                    color: 'white',
+                    outline: 'none',
+                    marginRight: '8px'
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 12px',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Send
+                </button>
+              </form>
+            </>
+          )}
         </div>
       )}
     </div>
