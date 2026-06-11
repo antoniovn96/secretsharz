@@ -329,6 +329,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [showCareerMatchesModal, setShowCareerMatchesModal] = useState(false);
   const [activeAboutTab, setActiveAboutTab] = useState('overview');
   const [editingItem, setEditingItem] = useState(null);
+  const [isEditingTab, setIsEditingTab] = useState(false);
   const [eduType, setEduType] = useState('');
   const [hobbies, setHobbies] = useState([]);
   const [music, setMusic] = useState([]);
@@ -2136,39 +2137,75 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               {/* ── PERSONAL INFORMATION TAB ── */}
               {activeAboutTab === 'personal-info' && (
                 <div>
-                  <div className="about-content-header">
+                  <div className="about-content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>Personal Information</span>
-                    <span className="timeline-action" title="Edit Personal Info" onClick={() => setEditingItem('personal-info-edit')}>✏️</span>
+                    {!isEditingTab && (
+                      <button onClick={() => setIsEditingTab(true)} className="btn-secondary-social" style={{ padding: '6px 12px', fontSize: '12px' }}>✏️ Edit Information</button>
+                    )}
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {/* Father */}
-                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
-                      <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>👨 Father</div>
-                      <input className="form-input" type="text" placeholder="Father's Name" value={fatherName} onChange={(e) => setFatherName(e.target.value)} />
-                      <input className="form-input" type="tel" placeholder="Father's Phone Number" value={fatherPhone} onChange={(e) => setFatherPhone(e.target.value)} />
-                      <input className="form-input" type="email" placeholder="Father's Email ID" value={fatherEmail} onChange={(e) => setFatherEmail(e.target.value)} />
-                    </div>
-                    {/* Mother */}
-                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
-                      <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>👩 Mother</div>
-                      <input className="form-input" type="text" placeholder="Mother's Name" value={motherName} onChange={(e) => setMotherName(e.target.value)} />
-                      <input className="form-input" type="tel" placeholder="Mother's Phone Number" value={motherPhone} onChange={(e) => setMotherPhone(e.target.value)} />
-                      <input className="form-input" type="email" placeholder="Mother's Email ID" value={motherEmail} onChange={(e) => setMotherEmail(e.target.value)} />
-                    </div>
-                    {/* Guardian */}
-                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
-                      <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>🧑 Guardian</div>
-                      <input className="form-input" type="text" placeholder="Guardian's Name" value={guardianName} onChange={(e) => setGuardianName(e.target.value)} />
-                      <input className="form-input" type="tel" placeholder="Guardian's Phone Number" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} />
-                      <input className="form-input" type="email" placeholder="Guardian's Email ID" value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} />
-                    </div>
-                    {/* Location */}
-                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
-                      <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>📍 Location Details</div>
-                      <input className="form-input" type="text" placeholder="Current Location" value={currentLocation} onChange={(e) => setCurrentLocation(e.target.value)} />
-                      <input className="form-input" type="text" placeholder="Home Town" value={hometown} onChange={(e) => setHometown(e.target.value)} />
-                    </div>
+                    {!isEditingTab ? (
+                      <>
+                        <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>👨 Father</div>
+                          <p style={{ margin: '4px 0', fontSize: '14px', color: '#E4E6EB' }}><strong>Name:</strong> {fatherName || 'Not added yet'}</p>
+                          <p style={{ margin: '4px 0', fontSize: '14px', color: '#E4E6EB' }}><strong>Phone:</strong> {fatherPhone || 'Not added yet'}</p>
+                          <p style={{ margin: '4px 0', fontSize: '14px', color: '#E4E6EB' }}><strong>Email:</strong> {fatherEmail || 'Not added yet'}</p>
+                        </div>
+                        <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>👩 Mother</div>
+                          <p style={{ margin: '4px 0', fontSize: '14px', color: '#E4E6EB' }}><strong>Name:</strong> {motherName || 'Not added yet'}</p>
+                          <p style={{ margin: '4px 0', fontSize: '14px', color: '#E4E6EB' }}><strong>Phone:</strong> {motherPhone || 'Not added yet'}</p>
+                          <p style={{ margin: '4px 0', fontSize: '14px', color: '#E4E6EB' }}><strong>Email:</strong> {motherEmail || 'Not added yet'}</p>
+                        </div>
+                        <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>🧑 Guardian</div>
+                          <p style={{ margin: '4px 0', fontSize: '14px', color: '#E4E6EB' }}><strong>Name:</strong> {guardianName || 'Not added yet'}</p>
+                          <p style={{ margin: '4px 0', fontSize: '14px', color: '#E4E6EB' }}><strong>Phone:</strong> {guardianPhone || 'Not added yet'}</p>
+                          <p style={{ margin: '4px 0', fontSize: '14px', color: '#E4E6EB' }}><strong>Email:</strong> {guardianEmail || 'Not added yet'}</p>
+                        </div>
+                        <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>📍 Location Details</div>
+                          <p style={{ margin: '4px 0', fontSize: '14px', color: '#E4E6EB' }}><strong>Current Location:</strong> {currentLocation || 'Not added yet'}</p>
+                          <p style={{ margin: '4px 0', fontSize: '14px', color: '#E4E6EB' }}><strong>Hometown:</strong> {hometown || 'Not added yet'}</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Father */}
+                        <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>👨 Father</div>
+                          <input className="form-input" type="text" placeholder="Father's Name" value={fatherName} onChange={(e) => setFatherName(e.target.value)} />
+                          <input className="form-input" type="tel" placeholder="Father's Phone Number" value={fatherPhone} onChange={(e) => setFatherPhone(e.target.value)} />
+                          <input className="form-input" type="email" placeholder="Father's Email ID" value={fatherEmail} onChange={(e) => setFatherEmail(e.target.value)} />
+                        </div>
+                        {/* Mother */}
+                        <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>👩 Mother</div>
+                          <input className="form-input" type="text" placeholder="Mother's Name" value={motherName} onChange={(e) => setMotherName(e.target.value)} />
+                          <input className="form-input" type="tel" placeholder="Mother's Phone Number" value={motherPhone} onChange={(e) => setMotherPhone(e.target.value)} />
+                          <input className="form-input" type="email" placeholder="Mother's Email ID" value={motherEmail} onChange={(e) => setMotherEmail(e.target.value)} />
+                        </div>
+                        {/* Guardian */}
+                        <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>🧑 Guardian</div>
+                          <input className="form-input" type="text" placeholder="Guardian's Name" value={guardianName} onChange={(e) => setGuardianName(e.target.value)} />
+                          <input className="form-input" type="tel" placeholder="Guardian's Phone Number" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} />
+                          <input className="form-input" type="email" placeholder="Guardian's Email ID" value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} />
+                        </div>
+                        {/* Location */}
+                        <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '16px' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '10px' }}>📍 Location Details</div>
+                          <input className="form-input" type="text" placeholder="Current Location" value={currentLocation} onChange={(e) => setCurrentLocation(e.target.value)} />
+                          <input className="form-input" type="text" placeholder="Home Town" value={hometown} onChange={(e) => setHometown(e.target.value)} />
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                          <button onClick={() => setIsEditingTab(false)} className="btn-secondary-social">Cancel</button>
+                          <button onClick={async () => { await handleSaveProfile(); setIsEditingTab(false); }} className="btn-primary-social">Save Changes</button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -2251,6 +2288,9 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                       <div className="timeline-action" onClick={() => { setEditingItem('edu-1'); setEduType('University'); }}>✏️</div>
                     </div>
                   )}
+                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button onClick={handleSaveProfile} className="btn-save btn-primary-social">Save Changes</button>
+                  </div>
                 </div>
               )}
 
@@ -2303,6 +2343,9 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                       <button className="btn-primary-social" onClick={() => setEditingItem('new-intern')}>➕ Add Internship</button>
                     </div>
                   )}
+                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button onClick={handleSaveProfile} className="btn-save btn-primary-social">Save Changes</button>
+                  </div>
                 </div>
               )}
 
@@ -2355,6 +2398,9 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                       <button className="btn-primary-social" onClick={() => setEditingItem('new-voluntary')}>➕ Add Voluntary Experience</button>
                     </div>
                   )}
+                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button onClick={handleSaveProfile} className="btn-save btn-primary-social">Save Changes</button>
+                  </div>
                 </div>
               )}
 
@@ -2387,6 +2433,9 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                       <button className="btn-primary-social" onClick={() => setEditingItem('new-link')}>➕ Add Project Link</button>
                     </div>
                   )}
+                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button onClick={handleSaveProfile} className="btn-save btn-primary-social">Save Changes</button>
+                  </div>
                 </div>
               )}
 
@@ -2649,6 +2698,9 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
 
                     </div>
                   )}
+                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button onClick={handleSaveProfile} className="btn-save btn-primary-social">Save Changes</button>
+                  </div>
                 </div>
               )}
             </div>
