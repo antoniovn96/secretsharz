@@ -1008,6 +1008,42 @@ function InstitutionsTab({ ctxInstitutions, registerInstitution, setToast }) {
   );
 }
 
+const SkillRadarChart = ({ skills }) => {
+  if (!skills) return null;
+  const max = 100; const size = 240; const center = size / 2; const radius = size / 2 - 30;
+  const categories = ['communication', 'resilience', 'criticalThinking', 'empathy', 'leadership'];
+  const labels = ['Communication', 'Resilience', 'Critical Thinking', 'Empathy', 'Leadership'];
+  const angleStep = (Math.PI * 2) / categories.length;
+  const getPoint = (value, i) => {
+    const angle = i * angleStep - Math.PI / 2;
+    const r = (value / max) * radius;
+    return `${center + r * Math.cos(angle)},${center + r * Math.sin(angle)}`;
+  };
+  const points = categories.map((cat, i) => getPoint(skills[cat] || 0, i)).join(' ');
+  return (
+    <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} style={{ overflow: 'visible' }}>
+      {[20, 40, 60, 80, 100].map(level => (
+        <polygon key={level} points={categories.map((_, i) => getPoint(level, i)).join(' ')} fill="none" stroke="rgba(255,255,255,0.05)" />
+      ))}
+      {categories.map((cat, i) => {
+        const end = getPoint(100, i);
+        const labelPoint = getPoint(120, i);
+        return (
+          <g key={cat}>
+            <line x1={center} y1={center} x2={end.split(',')[0]} y2={end.split(',')[1]} stroke="rgba(255,255,255,0.1)" />
+            <text x={labelPoint.split(',')[0]} y={labelPoint.split(',')[1]} fill="var(--text-muted)" fontSize="10" textAnchor="middle" alignmentBaseline="middle">{labels[i]}</text>
+          </g>
+        );
+      })}
+      <polygon points={points} fill="rgba(91,110,245,0.3)" stroke="var(--primary)" strokeWidth="2" />
+      {categories.map((cat, i) => {
+        const pt = getPoint(skills[cat] || 0, i);
+        return <circle key={`c-${cat}`} cx={pt.split(',')[0]} cy={pt.split(',')[1]} r="4" fill="var(--primary)" />;
+      })}
+    </svg>
+  );
+};
+
 const ALL_NAV_TABS = [
   { id: 'profile', icon: '👤', label: 'My Profile', roles: ['super_admin', 'counsellor'] },
   { id: 'overview', icon: '🏠', label: 'Overview', roles: ['super_admin', 'counsellor'] },
@@ -2675,6 +2711,29 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                           </div>
                         ))}
                       </div>
+                    </div>
+
+                    <div className="admin-card" style={{ borderTop: '3px solid var(--secondary)', marginTop: '20px' }}>
+                      <h3>🕸️ Life Skills Matrix</h3>
+                      {selectedStudent.lifeSkills ? (
+                        <div className="grid-2col" style={{ alignItems: 'center' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {['communication', 'resilience', 'criticalThinking', 'empathy', 'leadership'].map(skill => (
+                              <div key={skill} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-main)' }}>
+                                <span style={{ textTransform: 'capitalize' }}>{skill.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                <span style={{ color: 'var(--primary)' }}>{selectedStudent.lifeSkills[skill] || 0} / 100</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+                            <SkillRadarChart skills={selectedStudent.lifeSkills} />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="empty-state" style={{ padding: '20px' }}>
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontStyle: 'italic', margin: 0 }}>Student has not completed the Life Skills Matrix yet.</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
