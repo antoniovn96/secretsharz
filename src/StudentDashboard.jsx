@@ -369,6 +369,24 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [activeAboutTab, setActiveAboutTab] = useState('overview');
   const [journalEntries, setJournalEntries] = useState([]);
   const [newJournalEntry, setNewJournalEntry] = useState('');
+  const [roadmapTasks, setRoadmapTasks] = useState([]);
+  const [newTaskText, setNewTaskText] = useState('');
+
+  const addRoadmapTask = (e) => {
+    if (e.key === 'Enter' && newTaskText.trim() !== '') {
+      e.preventDefault();
+      setRoadmapTasks([...roadmapTasks, { id: Date.now().toString(), text: newTaskText.trim(), status: 'todo' }]);
+      setNewTaskText('');
+    }
+  };
+  const handleDragStart = (e, taskId) => { e.dataTransfer.setData('taskId', taskId); };
+  const handleDrop = (e, status) => {
+    const taskId = e.dataTransfer.getData('taskId');
+    setRoadmapTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
+  };
+  const removeTask = (taskId) => {
+    setRoadmapTasks(prev => prev.filter(t => t.id !== taskId));
+  };
   const [activeChat, setActiveChat] = useState(null);
   const [internships, setInternships] = useState([]);
   const [voluntaryExp, setVoluntaryExp] = useState([]);
@@ -513,6 +531,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
           if (!data.hasAcceptedTerms) { setShowTermsModal(true); }
           setLocalUserData(prev => ({ ...prev, ...data }));
           if (data.journalEntries) setJournalEntries(data.journalEntries);
+          if (data.roadmapTasks) setRoadmapTasks(data.roadmapTasks);
           if (Array.isArray(data.internships)) setInternships(data.internships);
           if (Array.isArray(data.voluntaryExp)) setVoluntaryExp(data.voluntaryExp);
           if (Array.isArray(data.workExperience)) setWorkExperience(data.workExperience);
@@ -1913,6 +1932,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         workExperience,
         projects,
         lifeSkills,
+        roadmapTasks: roadmapTasks,
         // Personal Info
         fatherName, fatherPhone, fatherEmail,
         motherName, motherPhone, motherEmail,
@@ -2176,6 +2196,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               <div className={`about-nav-item ${activeAboutTab === 'journal' ? 'active' : ''}`} onClick={() => setActiveAboutTab('journal')}>📓 Clarity Journal</div>
               <div className={`about-nav-item ${activeAboutTab === 'life-skills' ? 'active' : ''}`} onClick={() => setActiveAboutTab('life-skills')}>🕸️ Life Skills Matrix</div>
               <div className={`about-nav-item ${activeAboutTab === 'career-report' ? 'active' : ''}`} onClick={() => setActiveAboutTab('career-report')}>Career Report</div>
+              <div className={`about-nav-item ${activeAboutTab === 'roadmap' ? 'active' : ''}`} onClick={() => setActiveAboutTab('roadmap')}>🗺️ Career Roadmap</div>
               <div className={`about-nav-item ${activeAboutTab === 'messages' ? 'active' : ''}`} onClick={() => setActiveAboutTab('messages')}>💬 Messages {unreadCount > 0 && <span style={{background: 'red', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '12px', marginLeft: '5px'}}>{unreadCount}</span>}</div>
             </div>
 
@@ -3369,6 +3390,40 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', minHeight: '300px' }}>
                         <SkillRadarChart skills={lifeSkills} />
                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {activeAboutTab === 'roadmap' && (
+                <div>
+                  <div className="admin-card" style={{ borderTop: '3px solid var(--primary)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <h3 style={{ margin: 0, border: 'none', padding: 0 }}>🗺️ Career Roadmap</h3>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '5px' }}>Drag and drop your execution steps. Press Enter below to add a new task.</p>
+                      </div>
+                      <button className="admin-btn" onClick={handleSaveProfile} disabled={savingProfile}>{savingProfile ? '⏳ Saving...' : '💾 Save Roadmap'}</button>
+                    </div>
+                    
+                    <input type="text" className="form-input" placeholder="Add a new action step and press Enter..." value={newTaskText} onChange={(e) => setNewTaskText(e.target.value)} onKeyDown={addRoadmapTask} style={{ width: '100%' }} />
+                    
+                    <div style={{ display: 'flex', gap: '15px', minHeight: '400px', overflowX: 'auto' }}>
+                      {['todo', 'doing', 'done'].map(column => (
+                        <div key={column} onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, column)} style={{ flex: 1, minWidth: '250px', background: 'rgba(0,0,0,0.1)', borderRadius: '10px', padding: '15px', border: '1px solid var(--border)' }}>
+                          <h4 style={{ textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '15px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+                            {column === 'todo' ? '📝 To Do' : column === 'doing' ? '⏳ Doing' : '✅ Done'}
+                            <span style={{ float: 'right', background: 'var(--bg)', padding: '2px 8px', borderRadius: '12px' }}>{roadmapTasks.filter(t => t.status === column).length}</span>
+                          </h4>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {roadmapTasks.filter(t => t.status === column).map(task => (
+                              <div key={task.id} draggable onDragStart={(e) => handleDragStart(e, task.id)} style={{ background: 'var(--card-bg)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border)', cursor: 'grab', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                <span style={{ fontSize: '0.875rem', color: 'var(--text-main)' }}>{task.text}</span>
+                                <button onClick={() => removeTask(task.id)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', opacity: 0.5 }}>✕</button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>

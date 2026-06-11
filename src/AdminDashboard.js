@@ -2765,6 +2765,37 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                         )}
                       </div>
                     </div>
+
+                    <div className="admin-card" style={{ borderTop: '3px solid var(--secondary)', marginTop: '20px' }}>
+                      <h3>🗺️ Student's Career Roadmap</h3>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '15px' }}>Read-only view of the student's execution plan and progress.</p>
+                      
+                      {selectedStudent.roadmapTasks && selectedStudent.roadmapTasks.length > 0 ? (
+                        <div style={{ display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '10px' }}>
+                          {['todo', 'doing', 'done'].map(column => (
+                            <div key={column} style={{ flex: 1, minWidth: '200px', background: 'rgba(0,0,0,0.1)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border)' }}>
+                              <h4 style={{ textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '12px', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
+                                {column === 'todo' ? '📝 To Do' : column === 'doing' ? '⏳ Doing' : '✅ Done'}
+                                <span style={{ float: 'right', background: 'var(--bg)', padding: '2px 6px', borderRadius: '10px', fontSize: '10px' }}>
+                                  {selectedStudent.roadmapTasks.filter(t => t.status === column).length}
+                                </span>
+                              </h4>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {selectedStudent.roadmapTasks.filter(t => t.status === column).map(task => (
+                                  <div key={task.id} style={{ background: 'var(--bg)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '0.85rem', color: 'var(--text-main)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                                    {task.text}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="empty-state" style={{ padding: '20px' }}>
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontStyle: 'italic', margin: 0 }}>Student has not added any tasks to their roadmap yet.</p>
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
