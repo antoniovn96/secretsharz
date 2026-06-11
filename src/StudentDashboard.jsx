@@ -8,6 +8,7 @@ import { useDashboard } from "./context/DashboardContext";
 import XpChecklistModal from "./components/XpChecklistModal";
 import CareerMatchesModal from "./components/CareerMatchesModal";
 import { SCHOOLS, COLLEGES, INTERESTS, HOBBIES, TV_SHOWS, MOVIES, GAMES, SPORTS } from "./data/platformData";
+import platformData from './data/platformData';
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
 
 const CSS = `
@@ -330,6 +331,45 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [showCareerMatchesModal, setShowCareerMatchesModal] = useState(false);
   const [activeAboutTab, setActiveAboutTab] = useState('overview');
   const [activeChat, setActiveChat] = useState(null);
+  const [internships, setInternships] = useState([]);
+  const [voluntaryExp, setVoluntaryExp] = useState([]);
+  const [workExperience, setWorkExperience] = useState([]);
+  const [projects, setProjects] = useState([]);
+
+  // Projects form state
+  const [projectTitle, setProjectTitle] = useState('');
+  const [projectUrl, setProjectUrl] = useState('');
+  const [projectDescription, setProjectDescription] = useState('');
+
+  // Internships form state
+  const [internCompany, setInternCompany] = useState('');
+  const [internRole, setInternRole] = useState('');
+  const [internFrom, setInternFrom] = useState('');
+  const [internTo, setInternTo] = useState('');
+  const [internCurrent, setInternCurrent] = useState(false);
+  const [internCity, setInternCity] = useState('');
+  const [internDuties, setInternDuties] = useState('');
+  const [internResponsibilities, setInternResponsibilities] = useState('');
+
+  // Voluntary experience form state
+  const [volunteerOrg, setVolunteerOrg] = useState('');
+  const [volunteerRole, setVolunteerRole] = useState('');
+  const [volunteerFrom, setVolunteerFrom] = useState('');
+  const [volunteerTo, setVolunteerTo] = useState('');
+  const [volunteerCurrent, setVolunteerCurrent] = useState(false);
+  const [volunteerCity, setVolunteerCity] = useState('');
+  const [volunteerDuties, setVolunteerDuties] = useState('');
+  const [volunteerResponsibilities, setVolunteerResponsibilities] = useState('');
+
+  // Work experience form state
+  const [workCompany, setWorkCompany] = useState('');
+  const [workRole, setWorkRole] = useState('');
+  const [workFrom, setWorkFrom] = useState('');
+  const [workTo, setWorkTo] = useState('');
+  const [workCurrent, setWorkCurrent] = useState(false);
+  const [workCity, setWorkCity] = useState('');
+  const [workDuties, setWorkDuties] = useState('');
+  const [workResponsibilities, setWorkResponsibilities] = useState('');
   const [editingItem, setEditingItem] = useState(null);
   const [isEditingTab, setIsEditingTab] = useState(false);
   const [eduType, setEduType] = useState('');
@@ -340,6 +380,52 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [games, setGames] = useState([]);
   const [sports, setSports] = useState([]);
   const [athletes, setAthletes] = useState([]);
+
+  const [autocomplete, setAutocomplete] = useState({ category: '', text: '', suggestions: [] });
+
+  const handleAutocompleteChange = (e, categoryName) => {
+    const val = e.target.value;
+    if (val.length >= 3) {
+      let sourceArray = [];
+      const dataObj = platformData || {};
+      let key = categoryName.toUpperCase();
+      if (categoryName === 'tvShows' || categoryName === 'tvshows') {
+        key = 'TV_SHOWS';
+      }
+      
+      if (Array.isArray(dataObj[key])) {
+        sourceArray = dataObj[key];
+      } else if (Array.isArray(dataObj[categoryName])) {
+        sourceArray = dataObj[categoryName];
+      } else if (dataObj.default && Array.isArray(dataObj.default[key])) {
+        sourceArray = dataObj.default[key];
+      } else if (dataObj.default && Array.isArray(dataObj.default[categoryName])) {
+        sourceArray = dataObj.default[categoryName];
+      } else {
+        if (key === 'HOBBIES' && typeof HOBBIES !== 'undefined') sourceArray = HOBBIES;
+        else if (key === 'TV_SHOWS' && typeof TV_SHOWS !== 'undefined') sourceArray = TV_SHOWS;
+        else if (key === 'MOVIES' && typeof MOVIES !== 'undefined') sourceArray = MOVIES;
+        else if (key === 'GAMES' && typeof GAMES !== 'undefined') sourceArray = GAMES;
+        else if (key === 'SPORTS' && typeof SPORTS !== 'undefined') sourceArray = SPORTS;
+      }
+
+      const filteredArray = sourceArray.filter(item =>
+        item.toLowerCase().includes(val.toLowerCase())
+      );
+      setAutocomplete({
+        category: categoryName,
+        text: val,
+        suggestions: filteredArray.slice(0, 5)
+      });
+    } else {
+      setAutocomplete({ category: '', text: val, suggestions: [] });
+    }
+  };
+
+  const handleSuggestionClick = (suggestion, stateArray, setStateFunction) => {
+    setStateFunction([...stateArray, suggestion]);
+    setAutocomplete({ category: '', text: '', suggestions: [] });
+  };
 
   // ── Personal Info state ──
   const [fatherName, setFatherName] = useState('');
@@ -390,6 +476,10 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         if (docSnap.exists()) {
           const data = docSnap.data();
           setLocalUserData(prev => ({ ...prev, ...data }));
+          if (Array.isArray(data.internships)) setInternships(data.internships);
+          if (Array.isArray(data.voluntaryExp)) setVoluntaryExp(data.voluntaryExp);
+          if (Array.isArray(data.workExperience)) setWorkExperience(data.workExperience);
+          if (Array.isArray(data.projects)) setProjects(data.projects);
           // ── Personal Info ──
           if (data.fatherName)  setFatherName(data.fatherName);
           if (data.fatherPhone) setFatherPhone(data.fatherPhone);
@@ -487,7 +577,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     setSavingProfile(true);
     try {
       const userRef = doc(db, 'users', auth.currentUser.uid);
-      await setDoc(userRef, { ...localUserData, ...profileData, profileComplete: true, profileCompletedAt: new Date().toISOString() }, { merge: true });
+      await setDoc(userRef, { ...localUserData, ...profileData, internships, voluntaryExp, workExperience, projects, profileComplete: true, profileCompletedAt: new Date().toISOString() }, { merge: true });
       setLocalUserData(prev => ({ ...prev, ...profileData, profileComplete: true }));
       setShowProfileForm(false);
       showToast('✅ Profile saved successfully!');
@@ -1759,6 +1849,10 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
       const dataToSave = {
         ...localUserData,
         ...profileData,
+        internships,
+        voluntaryExp,
+        workExperience,
+        projects,
         // Personal Info
         fatherName, fatherPhone, fatherEmail,
         motherName, motherPhone, motherEmail,
@@ -2016,8 +2110,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               <div className={`about-nav-item ${activeAboutTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveAboutTab('overview')}>Overview</div>
               <div className={`about-nav-item ${activeAboutTab === 'personal-info' ? 'active' : ''}`} onClick={() => setActiveAboutTab('personal-info')}>Personal Information</div>
               <div className={`about-nav-item ${activeAboutTab === 'education' ? 'active' : ''}`} onClick={() => setActiveAboutTab('education')}>Education</div>
-              <div className={`about-nav-item ${activeAboutTab === 'internships' ? 'active' : ''}`} onClick={() => setActiveAboutTab('internships')}>Internships</div>
-              <div className={`about-nav-item ${activeAboutTab === 'voluntary' ? 'active' : ''}`} onClick={() => setActiveAboutTab('voluntary')}>Voluntary Experience</div>
+              <div className={`about-nav-item ${activeAboutTab === 'work-experience' ? 'active' : ''}`} onClick={() => setActiveAboutTab('work-experience')}>Work Experience</div>
               <div className={`about-nav-item ${activeAboutTab === 'links' ? 'active' : ''}`} onClick={() => setActiveAboutTab('links')}>Project Links</div>
               <div className={`about-nav-item ${activeAboutTab === 'hobbies' ? 'active' : ''}`} onClick={() => setActiveAboutTab('hobbies')}>Hobbies &amp; Interests</div>
               <div className={`about-nav-item ${activeAboutTab === 'career-report' ? 'active' : ''}`} onClick={() => setActiveAboutTab('career-report')}>Career Report</div>
@@ -2266,13 +2359,10 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                         <input className="form-input" type="text" placeholder="Degree / Stream" defaultValue={editingItem === 'edu-1' ? "Student" : ""} />
                       )}
 
-                      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                        <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
-                          <option>From Year</option>
-                          {Array.from({ length: 2026 - 1990 + 1 }, (_, i) => 2026 - i).map(year => (<option key={year} value={year}>{year}</option>))}
-                        </select>
-                        <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
-                          <option>To Year (or Expected)</option>
+                      <div style={{ marginBottom: '15px' }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#E4E6EB', marginBottom: '6px' }}>Date of Completion / Expected Completion</label>
+                        <select className="form-input" style={{ width: '100%', marginBottom: 0 }}>
+                          <option>Select Year</option>
                           <option>Present</option>
                           {Array.from({ length: 2026 - 1990 + 1 }, (_, i) => 2026 - i).map(year => (<option key={year} value={year}>{year}</option>))}
                         </select>
@@ -2309,111 +2399,391 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 </div>
               )}
 
-              {/* ── INTERNSHIPS TAB ── */}
-              {activeAboutTab === 'internships' && (
+              {/* ── WORK EXPERIENCE TAB ── */}
+              {activeAboutTab === 'work-experience' && (
                 <div>
-                  <div className="about-content-header">
-                    <span>Internships</span>
-                    <span className="timeline-action" title="Add Internship" onClick={() => setEditingItem('new-intern')}>➕</span>
-                  </div>
+                  {/* Sub-section 1: Internships */}
+                  <div style={{ borderBottom: '1px solid #3A3B3C', paddingBottom: '24px', marginBottom: '24px' }}>
+                    <div className="about-content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Internships</span>
+                      <span className="timeline-action" title="Add Internship" onClick={() => {
+                        setInternCompany('');
+                        setInternRole('');
+                        setInternFrom('');
+                        setInternTo('');
+                        setInternCurrent(false);
+                        setInternCity('');
+                        setInternDuties('');
+                        setInternResponsibilities('');
+                        setEditingItem('new-intern');
+                      }}>➕</span>
+                    </div>
 
-                  {editingItem === 'intern-1' || editingItem === 'new-intern' ? (
-                    <div className="inline-form">
-                      <input className="form-input" type="text" placeholder="Company / Organization" defaultValue={editingItem === 'intern-1' ? "Secret Sharz" : ""} />
-                      <input className="form-input" type="text" placeholder="Role / Position" defaultValue={editingItem === 'intern-1' ? "Intern" : ""} />
+                    {editingItem === 'new-intern' || editingItem?.startsWith('intern-') ? (
+                      <div className="inline-form">
+                        <input className="form-input" type="text" placeholder="Company / Organization" value={internCompany} onChange={(e) => setInternCompany(e.target.value)} />
+                        <input className="form-input" type="text" placeholder="Role / Position" value={internRole} onChange={(e) => setInternRole(e.target.value)} />
 
-                      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                        <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
-                          <option>From Year</option>
-                          {Array.from({ length: 2026 - 1990 + 1 }, (_, i) => 2026 - i).map(year => (<option key={year} value={year}>{year}</option>))}
-                        </select>
-                        <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
-                          <option>To Year (or Expected)</option>
-                          <option>Present</option>
-                          {Array.from({ length: 2026 - 1990 + 1 }, (_, i) => 2026 - i).map(year => (<option key={year} value={year}>{year}</option>))}
-                        </select>
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '11px', color: '#B0B3B8', marginBottom: '4px' }}>From Date</label>
+                            <input type="date" className="form-input" value={internFrom} onChange={(e) => setInternFrom(e.target.value)} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '11px', color: '#B0B3B8', marginBottom: '4px' }}>To Date</label>
+                            <input type="date" className="form-input" value={internTo} onChange={(e) => setInternTo(e.target.value)} disabled={internCurrent} />
+                          </div>
+                        </div>
+
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#E4E6EB', marginBottom: '15px', fontSize: '14px' }}>
+                          <input type="checkbox" checked={internCurrent} onChange={(e) => setInternCurrent(e.target.checked)} /> I currently intern here
+                        </label>
+
+                        <input className="form-input" type="text" placeholder="City/Town" value={internCity} onChange={(e) => setInternCity(e.target.value)} />
+                        <textarea className="form-input" placeholder="Duties" rows="2" value={internDuties} onChange={(e) => setInternDuties(e.target.value)}></textarea>
+                        <textarea className="form-input" placeholder="Responsibilities" rows="2" value={internResponsibilities} onChange={(e) => setInternResponsibilities(e.target.value)}></textarea>
+
+                        <div className="form-actions">
+                          {editingItem !== 'new-intern' && (
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const idx = parseInt(editingItem.split('-')[1]);
+                                setInternships(internships.filter((_, i) => i !== idx));
+                                setEditingItem(null);
+                              }}
+                              style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}
+                            >
+                              🗑️ Remove
+                            </button>
+                          )}
+                          <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
+                          <button 
+                            className="btn-primary-social" 
+                            onClick={() => {
+                              const itemPayload = {
+                                company: internCompany,
+                                role: internRole,
+                                from: internFrom,
+                                to: internCurrent ? 'Present' : internTo,
+                                current: internCurrent,
+                                city: internCity,
+                                duties: internDuties,
+                                responsibilities: internResponsibilities
+                              };
+                              if (editingItem === 'new-intern') {
+                                setInternships([...internships, itemPayload]);
+                              } else {
+                                const idx = parseInt(editingItem.split('-')[1]);
+                                const updated = [...internships];
+                                updated[idx] = itemPayload;
+                                setInternships(updated);
+                              }
+                              setEditingItem(null);
+                            }}
+                          >
+                            Save
+                          </button>
+                        </div>
                       </div>
-
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#E4E6EB', marginBottom: '15px', fontSize: '14px' }}>
-                        <input type="checkbox" /> I currently intern here
-                      </label>
-
-                      <input className="form-input" type="text" placeholder="City/Town" />
-                      <textarea className="form-input" placeholder="Duties" rows="2"></textarea>
-                      <textarea className="form-input" placeholder="Responsibilities" rows="2"></textarea>
-
-                      <div className="form-actions">
-                        {editingItem !== 'new-intern' && (
-                          <button style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}>🗑️ Remove</button>
+                    ) : (
+                      <div>
+                        {internships.length > 0 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {internships.map((item, idx) => (
+                              <div key={idx} className="timeline-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#18191A', padding: '16px', borderRadius: '10px', border: '1px solid #3A3B3C' }}>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                  <div style={{ fontSize: '24px' }}>💼</div>
+                                  <div>
+                                    <div style={{ fontSize: '15px', fontWeight: '700', color: '#E4E6EB' }}>{item.role} @ {item.company}</div>
+                                    <div style={{ fontSize: '13px', color: '#B0B3B8' }}>{item.from} – {item.to} &nbsp;|&nbsp; {item.city}</div>
+                                    {item.duties && <div style={{ fontSize: '12px', color: '#B0B3B8', marginTop: '6px' }}><strong>Duties:</strong> {item.duties}</div>}
+                                    {item.responsibilities && <div style={{ fontSize: '12px', color: '#B0B3B8', marginTop: '4px' }}><strong>Responsibilities:</strong> {item.responsibilities}</div>}
+                                  </div>
+                                </div>
+                                <div 
+                                  style={{ cursor: 'pointer', fontSize: '14px' }} 
+                                  onClick={() => {
+                                    setInternCompany(item.company || '');
+                                    setInternRole(item.role || '');
+                                    setInternFrom(item.from || '');
+                                    setInternTo(item.to === 'Present' ? '' : item.to || '');
+                                    setInternCurrent(item.to === 'Present' || !!item.current);
+                                    setInternCity(item.city || '');
+                                    setInternDuties(item.duties || '');
+                                    setInternResponsibilities(item.responsibilities || '');
+                                    setEditingItem(`intern-${idx}`);
+                                  }}
+                                >
+                                  ✏️
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ textAlign: 'center', padding: '20px', color: '#B0B3B8', fontSize: '14px' }}>
+                            No internships added yet. Click ➕ above to add one.
+                          </div>
                         )}
-                        <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
-                        <button className="btn-primary-social" onClick={() => setEditingItem(null)}>Save</button>
                       </div>
-                    </div>
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: '32px 20px', color: '#B0B3B8', fontSize: '14px' }}>
-                      <div style={{ fontSize: '36px', marginBottom: '10px' }}>💼</div>
-                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: '700', color: '#E4E6EB', marginBottom: '6px' }}>No Internships Added</div>
-                      <div style={{ fontSize: '13px', color: '#B0B3B8', marginBottom: '16px' }}>Add your internship experience to showcase your professional journey.</div>
-                      <button className="btn-primary-social" onClick={() => setEditingItem('new-intern')}>➕ Add Internship</button>
-                    </div>
-                  )}
-                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
-                    <button onClick={handleSaveProfile} className="btn-save btn-primary-social">Save Changes</button>
-                  </div>
-                </div>
-              )}
-
-              {/* ── VOLUNTARY EXPERIENCE TAB ── */}
-              {activeAboutTab === 'voluntary' && (
-                <div>
-                  <div className="about-content-header">
-                    <span>Voluntary Experience</span>
-                    <span className="timeline-action" title="Add Voluntary Experience" onClick={() => setEditingItem('new-voluntary')}>➕</span>
+                    )}
                   </div>
 
-                  {editingItem === 'voluntary-1' || editingItem === 'new-voluntary' ? (
-                    <div className="inline-form">
-                      <input className="form-input" type="text" placeholder="Organization / Cause" defaultValue={editingItem === 'voluntary-1' ? "" : ""} />
-                      <input className="form-input" type="text" placeholder="Role / Title" />
+                  {/* Sub-section 2: Voluntary Experience */}
+                  <div style={{ borderBottom: '1px solid #3A3B3C', paddingBottom: '24px', marginBottom: '24px' }}>
+                    <div className="about-content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Voluntary Experience</span>
+                      <span className="timeline-action" title="Add Voluntary Experience" onClick={() => {
+                        setVolunteerOrg('');
+                        setVolunteerRole('');
+                        setVolunteerFrom('');
+                        setVolunteerTo('');
+                        setVolunteerCurrent(false);
+                        setVolunteerCity('');
+                        setVolunteerDuties('');
+                        setVolunteerResponsibilities('');
+                        setEditingItem('new-voluntary');
+                      }}>➕</span>
+                    </div>
 
-                      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                        <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
-                          <option>From Year</option>
-                          {Array.from({ length: 2026 - 1990 + 1 }, (_, i) => 2026 - i).map(year => (<option key={year} value={year}>{year}</option>))}
-                        </select>
-                        <select className="form-input" style={{ flex: 1, marginBottom: 0 }}>
-                          <option>To Year (or Expected)</option>
-                          <option>Present</option>
-                          {Array.from({ length: 2026 - 1990 + 1 }, (_, i) => 2026 - i).map(year => (<option key={year} value={year}>{year}</option>))}
-                        </select>
+                    {editingItem === 'new-voluntary' || editingItem?.startsWith('voluntary-') ? (
+                      <div className="inline-form">
+                        <input className="form-input" type="text" placeholder="Organization / Cause" value={volunteerOrg} onChange={(e) => setVolunteerOrg(e.target.value)} />
+                        <input className="form-input" type="text" placeholder="Role / Title" value={volunteerRole} onChange={(e) => setVolunteerRole(e.target.value)} />
+
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '11px', color: '#B0B3B8', marginBottom: '4px' }}>From Date</label>
+                            <input type="date" className="form-input" value={volunteerFrom} onChange={(e) => setVolunteerFrom(e.target.value)} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '11px', color: '#B0B3B8', marginBottom: '4px' }}>To Date</label>
+                            <input type="date" className="form-input" value={volunteerTo} onChange={(e) => setVolunteerTo(e.target.value)} disabled={volunteerCurrent} />
+                          </div>
+                        </div>
+
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#E4E6EB', marginBottom: '15px', fontSize: '14px' }}>
+                          <input type="checkbox" checked={volunteerCurrent} onChange={(e) => setVolunteerCurrent(e.target.checked)} /> I currently volunteer here
+                        </label>
+
+                        <input className="form-input" type="text" placeholder="City/Town" value={volunteerCity} onChange={(e) => setVolunteerCity(e.target.value)} />
+                        <textarea className="form-input" placeholder="Duties" rows="2" value={volunteerDuties} onChange={(e) => setVolunteerDuties(e.target.value)}></textarea>
+                        <textarea className="form-input" placeholder="Responsibilities" rows="2" value={volunteerResponsibilities} onChange={(e) => setVolunteerResponsibilities(e.target.value)}></textarea>
+
+                        <div className="form-actions">
+                          {editingItem !== 'new-voluntary' && (
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const idx = parseInt(editingItem.split('-')[1]);
+                                setVoluntaryExp(voluntaryExp.filter((_, i) => i !== idx));
+                                setEditingItem(null);
+                              }}
+                              style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}
+                            >
+                              🗑️ Remove
+                            </button>
+                          )}
+                          <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
+                          <button 
+                            className="btn-primary-social" 
+                            onClick={() => {
+                              const itemPayload = {
+                                org: volunteerOrg,
+                                role: volunteerRole,
+                                from: volunteerFrom,
+                                to: volunteerCurrent ? 'Present' : volunteerTo,
+                                current: volunteerCurrent,
+                                city: volunteerCity,
+                                duties: volunteerDuties,
+                                responsibilities: volunteerResponsibilities
+                              };
+                              if (editingItem === 'new-voluntary') {
+                                setVoluntaryExp([...voluntaryExp, itemPayload]);
+                              } else {
+                                const idx = parseInt(editingItem.split('-')[1]);
+                                const updated = [...voluntaryExp];
+                                updated[idx] = itemPayload;
+                                setVoluntaryExp(updated);
+                              }
+                              setEditingItem(null);
+                            }}
+                          >
+                            Save
+                          </button>
+                        </div>
                       </div>
-
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#E4E6EB', marginBottom: '15px', fontSize: '14px' }}>
-                        <input type="checkbox" /> I currently volunteer here
-                      </label>
-
-                      <input className="form-input" type="text" placeholder="City/Town" />
-                      <textarea className="form-input" placeholder="Duties" rows="2"></textarea>
-                      <textarea className="form-input" placeholder="Responsibilities" rows="2"></textarea>
-
-                      <div className="form-actions">
-                        {editingItem !== 'new-voluntary' && (
-                          <button style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}>🗑️ Remove</button>
+                    ) : (
+                      <div>
+                        {voluntaryExp.length > 0 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {voluntaryExp.map((item, idx) => (
+                              <div key={idx} className="timeline-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#18191A', padding: '16px', borderRadius: '10px', border: '1px solid #3A3B3C' }}>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                  <div style={{ fontSize: '24px' }}>🤝</div>
+                                  <div>
+                                    <div style={{ fontSize: '15px', fontWeight: '700', color: '#E4E6EB' }}>{item.role} @ {item.org}</div>
+                                    <div style={{ fontSize: '13px', color: '#B0B3B8' }}>{item.from} – {item.to} &nbsp;|&nbsp; {item.city}</div>
+                                    {item.duties && <div style={{ fontSize: '12px', color: '#B0B3B8', marginTop: '6px' }}><strong>Duties:</strong> {item.duties}</div>}
+                                    {item.responsibilities && <div style={{ fontSize: '12px', color: '#B0B3B8', marginTop: '4px' }}><strong>Responsibilities:</strong> {item.responsibilities}</div>}
+                                  </div>
+                                </div>
+                                <div 
+                                  style={{ cursor: 'pointer', fontSize: '14px' }} 
+                                  onClick={() => {
+                                    setVolunteerOrg(item.org || '');
+                                    setVolunteerRole(item.role || '');
+                                    setVolunteerFrom(item.from || '');
+                                    setVolunteerTo(item.to === 'Present' ? '' : item.to || '');
+                                    setVolunteerCurrent(item.to === 'Present' || !!item.current);
+                                    setVolunteerCity(item.city || '');
+                                    setVolunteerDuties(item.duties || '');
+                                    setVolunteerResponsibilities(item.responsibilities || '');
+                                    setEditingItem(`voluntary-${idx}`);
+                                  }}
+                                >
+                                  ✏️
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ textAlign: 'center', padding: '20px', color: '#B0B3B8', fontSize: '14px' }}>
+                            No voluntary experience added yet. Click ➕ above to add one.
+                          </div>
                         )}
-                        <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
-                        <button className="btn-primary-social" onClick={() => setEditingItem(null)}>Save</button>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Sub-section 3: Work Experience */}
+                  <div style={{ paddingBottom: '12px' }}>
+                    <div className="about-content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Work Experience</span>
+                      <span className="timeline-action" title="Add Work Experience" onClick={() => {
+                        setWorkCompany('');
+                        setWorkRole('');
+                        setWorkFrom('');
+                        setWorkTo('');
+                        setWorkCurrent(false);
+                        setWorkCity('');
+                        setWorkDuties('');
+                        setWorkResponsibilities('');
+                        setEditingItem('new-work');
+                      }}>➕</span>
                     </div>
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: '32px 20px', color: '#B0B3B8', fontSize: '14px' }}>
-                      <div style={{ fontSize: '36px', marginBottom: '10px' }}>🤝</div>
-                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: '700', color: '#E4E6EB', marginBottom: '6px' }}>No Voluntary Experience Added</div>
-                      <div style={{ fontSize: '13px', color: '#B0B3B8', marginBottom: '16px' }}>Showcase your community service and volunteer work.</div>
-                      <button className="btn-primary-social" onClick={() => setEditingItem('new-voluntary')}>➕ Add Voluntary Experience</button>
-                    </div>
-                  )}
-                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+
+                    {editingItem === 'new-work' || editingItem?.startsWith('work-') ? (
+                      <div className="inline-form">
+                        <input className="form-input" type="text" placeholder="Company / Organization" value={workCompany} onChange={(e) => setWorkCompany(e.target.value)} />
+                        <input className="form-input" type="text" placeholder="Role / Position" value={workRole} onChange={(e) => setWorkRole(e.target.value)} />
+
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '11px', color: '#B0B3B8', marginBottom: '4px' }}>From Date</label>
+                            <input type="date" className="form-input" value={workFrom} onChange={(e) => setWorkFrom(e.target.value)} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '11px', color: '#B0B3B8', marginBottom: '4px' }}>To Date</label>
+                            <input type="date" className="form-input" value={workTo} onChange={(e) => setWorkTo(e.target.value)} disabled={workCurrent} />
+                          </div>
+                        </div>
+
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#E4E6EB', marginBottom: '15px', fontSize: '14px' }}>
+                          <input type="checkbox" checked={workCurrent} onChange={(e) => setWorkCurrent(e.target.checked)} /> I currently work here
+                        </label>
+
+                        <input className="form-input" type="text" placeholder="City/Town" value={workCity} onChange={(e) => setWorkCity(e.target.value)} />
+                        <textarea className="form-input" placeholder="Duties" rows="2" value={workDuties} onChange={(e) => setWorkDuties(e.target.value)}></textarea>
+                        <textarea className="form-input" placeholder="Responsibilities" rows="2" value={workResponsibilities} onChange={(e) => setWorkResponsibilities(e.target.value)}></textarea>
+
+                        <div className="form-actions">
+                          {editingItem !== 'new-work' && (
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const idx = parseInt(editingItem.split('-')[1]);
+                                setWorkExperience(workExperience.filter((_, i) => i !== idx));
+                                setEditingItem(null);
+                              }}
+                              style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}
+                            >
+                              🗑️ Remove
+                            </button>
+                          )}
+                          <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
+                          <button 
+                            className="btn-primary-social" 
+                            onClick={() => {
+                              const itemPayload = {
+                                company: workCompany,
+                                role: workRole,
+                                from: workFrom,
+                                to: workCurrent ? 'Present' : workTo,
+                                current: workCurrent,
+                                city: workCity,
+                                duties: workDuties,
+                                responsibilities: workResponsibilities
+                              };
+                              if (editingItem === 'new-work') {
+                                setWorkExperience([...workExperience, itemPayload]);
+                              } else {
+                                const idx = parseInt(editingItem.split('-')[1]);
+                                const updated = [...workExperience];
+                                updated[idx] = itemPayload;
+                                setWorkExperience(updated);
+                              }
+                              setEditingItem(null);
+                            }}
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        {workExperience.length > 0 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {workExperience.map((item, idx) => (
+                              <div key={idx} className="timeline-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#18191A', padding: '16px', borderRadius: '10px', border: '1px solid #3A3B3C' }}>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                  <div style={{ fontSize: '24px' }}>💼</div>
+                                  <div>
+                                    <div style={{ fontSize: '15px', fontWeight: '700', color: '#E4E6EB' }}>{item.role} @ {item.company}</div>
+                                    <div style={{ fontSize: '13px', color: '#B0B3B8' }}>{item.from} – {item.to} &nbsp;|&nbsp; {item.city}</div>
+                                    {item.duties && <div style={{ fontSize: '12px', color: '#B0B3B8', marginTop: '6px' }}><strong>Duties:</strong> {item.duties}</div>}
+                                    {item.responsibilities && <div style={{ fontSize: '12px', color: '#B0B3B8', marginTop: '4px' }}><strong>Responsibilities:</strong> {item.responsibilities}</div>}
+                                  </div>
+                                </div>
+                                <div 
+                                  style={{ cursor: 'pointer', fontSize: '14px' }} 
+                                  onClick={() => {
+                                    setWorkCompany(item.company || '');
+                                    setWorkRole(item.role || '');
+                                    setWorkFrom(item.from || '');
+                                    setWorkTo(item.to === 'Present' ? '' : item.to || '');
+                                    setWorkCurrent(item.to === 'Present' || !!item.current);
+                                    setWorkCity(item.city || '');
+                                    setWorkDuties(item.duties || '');
+                                    setWorkResponsibilities(item.responsibilities || '');
+                                    setEditingItem(`work-${idx}`);
+                                  }}
+                                >
+                                  ✏️
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ textAlign: 'center', padding: '20px', color: '#B0B3B8', fontSize: '14px' }}>
+                            No work experience added yet. Click ➕ above to add one.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
                     <button onClick={handleSaveProfile} className="btn-save btn-primary-social">Save Changes</button>
                   </div>
                 </div>
@@ -2424,28 +2794,116 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 <div>
                   <div className="about-content-header">
                     <span>Project Links</span>
-                    <span className="timeline-action" title="Add Project Link" onClick={() => setEditingItem('new-link')}>➕</span>
+                    <span className="timeline-action" title="Add Project Link" onClick={() => {
+                      setProjectTitle('');
+                      setProjectUrl('');
+                      setProjectDescription('');
+                      setEditingItem('new-link');
+                    }}>➕</span>
                   </div>
 
-                  {editingItem === 'new-link' || editingItem === 'link-1' ? (
+                  {editingItem === 'new-link' || editingItem?.startsWith('link-') ? (
                     <div className="inline-form">
-                      <input className="form-input" type="text" placeholder="Project Title" />
-                      <input className="form-input" type="url" placeholder="URL (e.g., GitHub, Drive link)" />
+                      <input 
+                        className="form-input" 
+                        type="text" 
+                        placeholder="Project Title" 
+                        value={projectTitle} 
+                        onChange={(e) => setProjectTitle(e.target.value)} 
+                      />
+                      <input 
+                        className="form-input" 
+                        type="url" 
+                        placeholder="URL (e.g., GitHub, Drive link)" 
+                        value={projectUrl} 
+                        onChange={(e) => setProjectUrl(e.target.value)} 
+                      />
+                      <textarea 
+                        className="form-input" 
+                        placeholder="Description" 
+                        rows="3" 
+                        value={projectDescription} 
+                        onChange={(e) => setProjectDescription(e.target.value)} 
+                      />
 
                       <div className="form-actions">
                         {editingItem !== 'new-link' && (
-                          <button style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}>🗑️ Remove</button>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const idx = parseInt(editingItem.split('-')[1]);
+                              setProjects(projects.filter((_, i) => i !== idx));
+                              setEditingItem(null);
+                            }}
+                            style={{ marginRight: 'auto', background: 'transparent', color: '#B0B3B8', border: 'none', cursor: 'pointer', padding: '8px 16px' }}
+                          >
+                            🗑️ Remove
+                          </button>
                         )}
                         <button className="btn-secondary-social" onClick={() => setEditingItem(null)}>Cancel</button>
-                        <button className="btn-primary-social" onClick={() => setEditingItem(null)}>Save</button>
+                        <button 
+                          className="btn-primary-social" 
+                          onClick={() => {
+                            if (editingItem === 'new-link') {
+                              setProjects([...projects, { title: projectTitle, url: projectUrl, description: projectDescription }]);
+                            } else {
+                              const idx = parseInt(editingItem.split('-')[1]);
+                              const updated = [...projects];
+                              updated[idx] = { title: projectTitle, url: projectUrl, description: projectDescription };
+                              setProjects(updated);
+                            }
+                            setEditingItem(null);
+                          }}
+                        >
+                          Save
+                        </button>
                       </div>
                     </div>
                   ) : (
-                    <div style={{ textAlign: 'center', padding: '32px 20px' }}>
-                      <div style={{ fontSize: '36px', marginBottom: '10px' }}>🔗</div>
-                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: '700', color: '#E4E6EB', marginBottom: '6px' }}>No Project Links Added</div>
-                      <div style={{ fontSize: '13px', color: '#B0B3B8', marginBottom: '16px' }}>Share your GitHub repos, portfolio, or Drive links.</div>
-                      <button className="btn-primary-social" onClick={() => setEditingItem('new-link')}>➕ Add Project Link</button>
+                    <div>
+                      {projects.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                          {projects.map((proj, idx) => (
+                            <div key={idx} className="timeline-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#18191A', padding: '16px', borderRadius: '10px', border: '1px solid #3A3B3C' }}>
+                              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                <div style={{ fontSize: '24px' }}>🔗</div>
+                                <div>
+                                  <div style={{ fontSize: '15px', fontWeight: '700', color: '#E4E6EB' }}>{proj.title}</div>
+                                  <a href={proj.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '13px', color: '#2D88FF', textDecoration: 'none' }}>{proj.url}</a>
+                                  {proj.description && <div style={{ fontSize: '12px', color: '#B0B3B8', marginTop: '6px' }}>{proj.description}</div>}
+                                </div>
+                              </div>
+                              <div 
+                                style={{ cursor: 'pointer', fontSize: '14px' }} 
+                                onClick={() => {
+                                  setProjectTitle(proj.title || '');
+                                  setProjectUrl(proj.url || '');
+                                  setProjectDescription(proj.description || '');
+                                  setEditingItem(`link-${idx}`);
+                                }}
+                              >
+                                ✏️
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ textAlign: 'center', padding: '32px 20px' }}>
+                        <div style={{ fontSize: '36px', marginBottom: '10px' }}>🔗</div>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: '700', color: '#E4E6EB', marginBottom: '6px' }}>Project Links</div>
+                        <div style={{ fontSize: '13px', color: '#B0B3B8', marginBottom: '16px' }}>Share your GitHub repos, portfolio, or Drive links.</div>
+                        <button 
+                          className="btn-primary-social" 
+                          onClick={() => {
+                            setProjectTitle('');
+                            setProjectUrl('');
+                            setProjectDescription('');
+                            setEditingItem('new-link');
+                          }}
+                        >
+                          ➕ Add Project Link
+                        </button>
+                      </div>
                     </div>
                   )}
                   <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
@@ -2630,7 +3088,14 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                             </span>
                           ))}
                         </div>
-                        <input type="text" className="form-input" placeholder="Type a hobby and press Enter..." onKeyDown={(e) => handleAddTag(e, hobbies, setHobbies)} />
+                        <div style={{ position: 'relative' }}>
+                          <input type="text" className="form-input" placeholder="Type a hobby and press Enter..." value={autocomplete.category === 'hobbies' ? autocomplete.text : ''} onChange={(e) => handleAutocompleteChange(e, 'hobbies')} onKeyDown={(e) => handleAddTag(e, hobbies, setHobbies)} />
+                          {autocomplete.category === 'hobbies' && autocomplete.suggestions.length > 0 && (
+                            <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-surface, #fff)', border: '1px solid var(--border)', zIndex: 50, listStyle: 'none', padding: 0, margin: 0, borderRadius: '4px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                              {autocomplete.suggestions.map((s, i) => <li key={i} style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid var(--border)', color: '#000' }} onClick={() => handleSuggestionClick(s, hobbies, setHobbies)}>{s}</li>)}
+                            </ul>
+                          )}
+                        </div>
                       </div>
 
                       {/* 🎵 Music */}
@@ -2643,7 +3108,14 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                             </span>
                           ))}
                         </div>
-                        <input type="text" className="form-input" placeholder="Type a genre or artist and press Enter..." onKeyDown={(e) => handleAddTag(e, music, setMusic)} />
+                        <div style={{ position: 'relative' }}>
+                          <input type="text" className="form-input" placeholder="Type a genre or artist and press Enter..." value={autocomplete.category === 'music' ? autocomplete.text : ''} onChange={(e) => handleAutocompleteChange(e, 'music')} onKeyDown={(e) => handleAddTag(e, music, setMusic)} />
+                          {autocomplete.category === 'music' && autocomplete.suggestions.length > 0 && (
+                            <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-surface, #fff)', border: '1px solid var(--border)', zIndex: 50, listStyle: 'none', padding: 0, margin: 0, borderRadius: '4px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                              {autocomplete.suggestions.map((s, i) => <li key={i} style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid var(--border)', color: '#000' }} onClick={() => handleSuggestionClick(s, music, setMusic)}>{s}</li>)}
+                            </ul>
+                          )}
+                        </div>
                       </div>
 
                       {/* 📺 TV Shows */}
@@ -2656,7 +3128,14 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                             </span>
                           ))}
                         </div>
-                        <input type="text" className="form-input" placeholder="Type a TV show and press Enter..." onKeyDown={(e) => handleAddTag(e, tvShows, setTvShows)} />
+                        <div style={{ position: 'relative' }}>
+                          <input type="text" className="form-input" placeholder="Type a TV show and press Enter..." value={autocomplete.category === 'tvShows' ? autocomplete.text : ''} onChange={(e) => handleAutocompleteChange(e, 'tvShows')} onKeyDown={(e) => handleAddTag(e, tvShows, setTvShows)} />
+                          {autocomplete.category === 'tvShows' && autocomplete.suggestions.length > 0 && (
+                            <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-surface, #fff)', border: '1px solid var(--border)', zIndex: 50, listStyle: 'none', padding: 0, margin: 0, borderRadius: '4px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                              {autocomplete.suggestions.map((s, i) => <li key={i} style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid var(--border)', color: '#000' }} onClick={() => handleSuggestionClick(s, tvShows, setTvShows)}>{s}</li>)}
+                            </ul>
+                          )}
+                        </div>
                       </div>
 
                       {/* 🎬 Movies */}
@@ -2669,7 +3148,14 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                             </span>
                           ))}
                         </div>
-                        <input type="text" className="form-input" placeholder="Type a movie and press Enter..." onKeyDown={(e) => handleAddTag(e, movies, setMovies)} />
+                        <div style={{ position: 'relative' }}>
+                          <input type="text" className="form-input" placeholder="Type a movie and press Enter..." value={autocomplete.category === 'movies' ? autocomplete.text : ''} onChange={(e) => handleAutocompleteChange(e, 'movies')} onKeyDown={(e) => handleAddTag(e, movies, setMovies)} />
+                          {autocomplete.category === 'movies' && autocomplete.suggestions.length > 0 && (
+                            <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-surface, #fff)', border: '1px solid var(--border)', zIndex: 50, listStyle: 'none', padding: 0, margin: 0, borderRadius: '4px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                              {autocomplete.suggestions.map((s, i) => <li key={i} style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid var(--border)', color: '#000' }} onClick={() => handleSuggestionClick(s, movies, setMovies)}>{s}</li>)}
+                            </ul>
+                          )}
+                        </div>
                       </div>
 
                       {/* 🎮 Games */}
@@ -2682,7 +3168,14 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                             </span>
                           ))}
                         </div>
-                        <input type="text" className="form-input" placeholder="Type a game and press Enter..." onKeyDown={(e) => handleAddTag(e, games, setGames)} />
+                        <div style={{ position: 'relative' }}>
+                          <input type="text" className="form-input" placeholder="Type a game and press Enter..." value={autocomplete.category === 'games' ? autocomplete.text : ''} onChange={(e) => handleAutocompleteChange(e, 'games')} onKeyDown={(e) => handleAddTag(e, games, setGames)} />
+                          {autocomplete.category === 'games' && autocomplete.suggestions.length > 0 && (
+                            <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-surface, #fff)', border: '1px solid var(--border)', zIndex: 50, listStyle: 'none', padding: 0, margin: 0, borderRadius: '4px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                              {autocomplete.suggestions.map((s, i) => <li key={i} style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid var(--border)', color: '#000' }} onClick={() => handleSuggestionClick(s, games, setGames)}>{s}</li>)}
+                            </ul>
+                          )}
+                        </div>
                       </div>
 
                       {/* ⚽ Sports */}
@@ -2695,7 +3188,14 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                             </span>
                           ))}
                         </div>
-                        <input type="text" className="form-input" placeholder="Type a sport or team and press Enter..." onKeyDown={(e) => handleAddTag(e, sports, setSports)} />
+                        <div style={{ position: 'relative' }}>
+                          <input type="text" className="form-input" placeholder="Type a sport or team and press Enter..." value={autocomplete.category === 'sports' ? autocomplete.text : ''} onChange={(e) => handleAutocompleteChange(e, 'sports')} onKeyDown={(e) => handleAddTag(e, sports, setSports)} />
+                          {autocomplete.category === 'sports' && autocomplete.suggestions.length > 0 && (
+                            <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-surface, #fff)', border: '1px solid var(--border)', zIndex: 50, listStyle: 'none', padding: 0, margin: 0, borderRadius: '4px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                              {autocomplete.suggestions.map((s, i) => <li key={i} style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid var(--border)', color: '#000' }} onClick={() => handleSuggestionClick(s, sports, setSports)}>{s}</li>)}
+                            </ul>
+                          )}
+                        </div>
                       </div>
 
                       {/* 🏅 Athletes */}
@@ -2708,7 +3208,14 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                             </span>
                           ))}
                         </div>
-                        <input type="text" className="form-input" placeholder="Type an athlete name and press Enter..." onKeyDown={(e) => handleAddTag(e, athletes, setAthletes)} />
+                        <div style={{ position: 'relative' }}>
+                          <input type="text" className="form-input" placeholder="Type an athlete name and press Enter..." value={autocomplete.category === 'athletes' ? autocomplete.text : ''} onChange={(e) => handleAutocompleteChange(e, 'athletes')} onKeyDown={(e) => handleAddTag(e, athletes, setAthletes)} />
+                          {autocomplete.category === 'athletes' && autocomplete.suggestions.length > 0 && (
+                            <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-surface, #fff)', border: '1px solid var(--border)', zIndex: 50, listStyle: 'none', padding: 0, margin: 0, borderRadius: '4px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                              {autocomplete.suggestions.map((s, i) => <li key={i} style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid var(--border)', color: '#000' }} onClick={() => handleSuggestionClick(s, athletes, setAthletes)}>{s}</li>)}
+                            </ul>
+                          )}
+                        </div>
                       </div>
 
                     </div>
