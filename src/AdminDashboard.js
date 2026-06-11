@@ -2602,6 +2602,93 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           </div>
         </div>
 
+        {/* ── TOAST NOTIFICATIONS ── */}
+        {toast && (
+          <div className={`admin-toast ${toast.type}`}>
+            {toast.message}
+          </div>
+        )}
+
+        {/* ── STUDENT DETAIL MODAL ── */}
+        {selectedStudent && (
+          <div className="modal-overlay" onClick={() => setSelectedStudent(null)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <button className="close-btn" onClick={() => setSelectedStudent(null)}>✕</button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: '40px' }}>
+                  <div>
+                    <h2 style={{ margin: '0 0 5px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      {selectedStudent.name || 'Unknown Student'}
+                      {selectedStudent.hasAcceptedTerms ? (
+                        <span style={{ background: '#4CAF50', color: 'white', padding: '3px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>✓ Consent Granted</span>
+                      ) : (
+                        <span style={{ background: '#f44336', color: 'white', padding: '3px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>Pending Consent</span>
+                      )}
+                    </h2>
+                    <p style={{ margin: 0, color: 'var(--text-muted)' }}>{selectedStudent.email}</p>
+                  </div>
+                  <span className="admin-badge badge-primary" style={{ fontSize: '1.2rem', padding: '6px 12px' }}>{selectedStudent.riasecCode || 'N/A'}</span>
+                </div>
+                <div className="modal-tabs">
+                  <button className={`modal-tab ${modalTab === 'overview' ? 'active' : ''}`} onClick={() => setModalTab('overview')}>Overview</button>
+                  <button className={`modal-tab ${modalTab === 'counselling' ? 'active' : ''}`} onClick={() => setModalTab('counselling')}>Counselling</button>
+                </div>
+              </div>
+              
+              <div className="modal-body">
+                {modalTab === 'overview' && (
+                  <div>
+                    <div className="admin-card" style={{ marginBottom: '20px', borderTop: '3px solid var(--primary)' }}>
+                      <h3>Personal Information</h3>
+                      <p style={{ marginBottom: '15px' }}><strong>Bio:</strong> {selectedStudent.bio || 'No bio provided'}</p>
+                      <div className="grid-2col" style={{ marginTop: '15px', fontSize: '0.9rem' }}>
+                        <div><strong>Father:</strong> {selectedStudent.fatherName || '—'} <br/><span style={{ color: 'var(--text-muted)' }}>{selectedStudent.fatherPhone || '—'}</span></div>
+                        <div><strong>Mother:</strong> {selectedStudent.motherName || '—'} <br/><span style={{ color: 'var(--text-muted)' }}>{selectedStudent.motherPhone || '—'}</span></div>
+                        <div><strong>Location:</strong> {selectedStudent.location || '—'}</div>
+                        <div><strong>Hometown:</strong> {selectedStudent.hometown || '—'}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="admin-card" style={{ borderTop: '3px solid var(--warning)' }}>
+                      <h3>Hobbies & Interests</h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        {[
+                          { label: '🎨 Hobbies', data: selectedStudent.hobbies },
+                          { label: '🎵 Music', data: selectedStudent.music },
+                          { label: '📺 TV Shows', data: selectedStudent.tvShows },
+                          { label: '🎬 Movies', data: selectedStudent.movies },
+                          { label: '🎮 Games', data: selectedStudent.games },
+                          { label: '⚽ Sports', data: selectedStudent.sports },
+                          { label: '🏅 Athletes', data: selectedStudent.athletes }
+                        ].map((cat, idx) => (
+                          <div key={idx}>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '5px' }}>{cat.label}</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                              {Array.isArray(cat.data) && cat.data.length > 0 ? (
+                                cat.data.map((item, i) => (
+                                  <span key={i} style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem' }}>{item}</span>
+                                ))
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>None listed</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {modalTab === 'counselling' && (
+                  <div className="admin-card" style={{ borderTop: '3px solid var(--success)' }}>
+                    <h3>Counselling Notes</h3>
+                    <p style={{ color: 'var(--text-muted)' }}>Session logging interface goes here.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         </main>
       </div>
     </div>
