@@ -8,7 +8,7 @@ import { useDashboard } from "./context/DashboardContext";
 import XpChecklistModal from "./components/XpChecklistModal";
 import CareerMatchesModal from "./components/CareerMatchesModal";
 import { SCHOOLS, COLLEGES, INTERESTS, HOBBIES, TV_SHOWS, MOVIES, GAMES, SPORTS } from "./data/platformData";
-import { platformData } from './data/platformData';
+import * as platformData from './data/platformData';
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
 
 const CSS = `
