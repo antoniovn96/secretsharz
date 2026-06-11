@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, getDoc } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import CareerAssessment from "./CareerAssessment";
 import ProfileEditor from "./ProfileEditor";
@@ -330,6 +330,53 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [activeAboutTab, setActiveAboutTab] = useState('overview');
   const [editingItem, setEditingItem] = useState(null);
   const [eduType, setEduType] = useState('');
+  const [hobbies, setHobbies] = useState([]);
+  const [music, setMusic] = useState([]);
+  const [tvShows, setTvShows] = useState([]);
+  const [movies, setMovies] = useState([]);
+  const [games, setGames] = useState([]);
+  const [sports, setSports] = useState([]);
+  const [athletes, setAthletes] = useState([]);
+
+  const handleAddTag = (e, stateArray, setStateFunction) => {
+    if (e.key === 'Enter' && e.target.value.trim() !== '') {
+      e.preventDefault();
+      setStateFunction([...stateArray, e.target.value.trim()]);
+      e.target.value = '';
+    }
+  };
+  const handleRemoveTag = (indexToRemove, stateArray, setStateFunction) => {
+    setStateFunction(stateArray.filter((_, index) => index !== indexToRemove));
+  };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const docSnap = await getDoc(doc(db, "users", "mock-student-id"));
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setLocalUserData(prev => ({ ...prev, ...data }));
+          if (data.location) setLocalUserData(prev => ({ ...prev, location: data.location }));
+          if (data.bio) setLocalUserData(prev => ({ ...prev, bio: data.bio }));
+          if (data.hobbies) setLocalUserData(prev => ({ ...prev, hobbies: data.hobbies }));
+          if (data.music) setLocalUserData(prev => ({ ...prev, music: data.music }));
+          if (data.tvShows) setLocalUserData(prev => ({ ...prev, tvShows: data.tvShows }));
+          if (data.games) setLocalUserData(prev => ({ ...prev, games: data.games }));
+          if (data.sports) setLocalUserData(prev => ({ ...prev, sports: data.sports }));
+          if (data.interests) setLocalUserData(prev => ({ ...prev, interests: data.interests }));
+          if (data.coverPhoto) setLocalUserData(prev => ({ ...prev, coverPhoto: data.coverPhoto }));
+          if (data.profilePicture) setLocalUserData(prev => ({ ...prev, profilePicture: data.profilePicture }));
+          if (data.fatherName) setLocalUserData(prev => ({ ...prev, fatherName: data.fatherName }));
+          if (data.motherName) setLocalUserData(prev => ({ ...prev, motherName: data.motherName }));
+          if (data.guardianName) setLocalUserData(prev => ({ ...prev, guardianName: data.guardianName }));
+          if (data.hometown) setLocalUserData(prev => ({ ...prev, hometown: data.hometown }));
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    };
+    fetchUserData();
+  }, []);
 
   useEffect(() => { if (userData) setLocalUserData(userData); }, [userData]);
 
@@ -439,6 +486,10 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   };
 
   // ── DATA EXTRACTION ──
+  const bio = localUserData?.bio || userProfile?.bio || '';
+  const location = localUserData?.location || userProfile?.location || '';
+  const coverPhoto = localUserData?.coverPhoto || userProfile?.coverPhoto || null;
+  const profilePicture = localUserData?.profilePicture || userProfile?.profilePicture || null;
   const studentName = localUserData?.name || user?.displayName || "Student";
   const firstName = studentName.split(" ")[0];
   const hasAssessment = !!localUserData?.riasecCode;
@@ -1664,12 +1715,16 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         motherName, motherPhone, motherEmail,
         guardianName, guardianPhone, guardianEmail,
         location, hometown,
-        // Hobbies & Interests
-        hobbies:  hobbiesInput?.value  || userProfile?.hobbies  || '',
-        music:    musicInput?.value    || userProfile?.music    || '',
-        tvShows:  tvShowsInput?.value  || userProfile?.tvShows  || '',
-        games:    gamesInput?.value    || userProfile?.games    || '',
-        sports:   sportsInput?.value   || userProfile?.sports   || '',
+        // Bio
+        bio: bio,
+        // Hobbies & Interests (tag arrays)
+        hobbies:  hobbies,
+        music:    music,
+        tvShows:  tvShows,
+        movies:   movies,
+        games:    games,
+        sports:   sports,
+        athletes: athletes,
         // Photos
         coverPhoto:      coverPhotoBase64,
         profilePicture:  profilePictureBase64,
@@ -1850,10 +1905,10 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 <h1>{userProfile?.name || 'Student'}</h1>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   {editingItem === 'bio' ? (
-                    <input className="form-input" style={{ margin: 0, width: '300px' }} defaultValue="🚀 Ready to build my future • Passionate about Learning" onBlur={() => setEditingItem(null)} autoFocus />
+                    <input className="form-input" style={{ margin: 0, width: '300px' }} defaultValue={bio || '🚀 Ready to build my future • Passionate about Learning'} onBlur={() => setEditingItem(null)} autoFocus />
                   ) : (
                     <>
-                      <p style={{ color: '#B0B3B8', margin: '5px 0' }}>🚀 Ready to build my future • Passionate about Learning</p>
+                      <p style={{ color: '#B0B3B8', margin: '5px 0' }}>{bio || '🚀 Ready to build my future • Passionate about Learning'}</p>
                       <span style={{ cursor: 'pointer', fontSize: '12px' }} onClick={() => setEditingItem('bio')}>✏️</span>
                     </>
                   )}
@@ -1893,7 +1948,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 </div>
               </div>
               <div className="profile-actions">
-                <button className="btn-primary-social" onClick={() => window.location.href = '/report'}>📘 Full Report</button>
+                <button className="btn-primary-social" onClick={() => { setActiveAboutTab('career-report'); document.querySelector('.about-container')?.scrollIntoView({ behavior: 'smooth' }); }}>📘 Full Report</button>
                 <button className="btn-secondary-social" onClick={() => { setActiveAboutTab('personal-info'); document.querySelector('.about-container').scrollIntoView({ behavior: 'smooth' }); }}>✏️ Edit</button>
                 <button className="btn-primary-social" style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }} onClick={handleSaveProfile}>💾 Save Profile</button>
               </div>
@@ -1910,6 +1965,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               <div className={`about-nav-item ${activeAboutTab === 'voluntary' ? 'active' : ''}`} onClick={() => setActiveAboutTab('voluntary')}>Voluntary Experience</div>
               <div className={`about-nav-item ${activeAboutTab === 'links' ? 'active' : ''}`} onClick={() => setActiveAboutTab('links')}>Project Links</div>
               <div className={`about-nav-item ${activeAboutTab === 'hobbies' ? 'active' : ''}`} onClick={() => setActiveAboutTab('hobbies')}>Hobbies &amp; Interests</div>
+              <div className={`about-nav-item ${activeAboutTab === 'career-report' ? 'active' : ''}`} onClick={() => setActiveAboutTab('career-report')}>Career Report</div>
             </div>
 
             <div className="about-content">
@@ -2318,6 +2374,107 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 </div>
               )}
 
+              {/* ── CAREER REPORT TAB ── */}
+              {activeAboutTab === 'career-report' && (
+                <div>
+                  <div className="about-content-header">
+                    <span>📄 Career Report</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+                    {/* Info Banner */}
+                    <div style={{ background: 'linear-gradient(135deg, #1C2333 0%, #1C2850 100%)', border: '1px solid rgba(240,165,0,0.25)', borderRadius: '12px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{ fontSize: '28px', flexShrink: 0 }}>🧑‍💼</div>
+                      <div>
+                        <div style={{ fontSize: '12px', fontWeight: '800', color: '#F0A500', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Counsellor Section</div>
+                        <div style={{ fontSize: '13px', color: 'rgba(228,230,235,0.7)', lineHeight: '1.6' }}>
+                          This section will be updated by your assigned counsellor after your session. The report below is a placeholder until your counsellor fills in your personalised career analysis.
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 1: RIASEC Assessment Summary */}
+                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '12px', padding: '20px' }}>
+                      <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: '700', color: '#E4E6EB', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        🧠 RIASEC Assessment Summary
+                      </h3>
+                      <div style={{ fontSize: '13px', color: '#B0B3B8', lineHeight: '1.8' }}>
+                        {localUserData?.riasecSummary
+                          ? String(localUserData.riasecSummary)
+                          : (
+                            <span style={{ color: '#6B7280', fontStyle: 'italic' }}>
+                              Your RIASEC personality summary will appear here once you complete the VidyaVantage assessment. Your counsellor will add detailed notes after your session.
+                            </span>
+                          )
+                        }
+                      </div>
+                      {localUserData?.riasecCode && (
+                        <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: '700', color: '#B0B3B8', textTransform: 'uppercase', letterSpacing: '1px' }}>Holland Code:</span>
+                          <span style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: '900', color: '#F0A500', letterSpacing: '3px' }}>{String(localUserData.riasecCode)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Section 2: Top 3 Matched Courses */}
+                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '12px', padding: '20px' }}>
+                      <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: '700', color: '#E4E6EB', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        🎓 Top 3 Matched Courses
+                      </h3>
+                      {[
+                        { title: localUserData?.bestCareer?.title || 'Course 1', match: localUserData?.bestCareer?.matchPercent || null, color: '#34D399' },
+                        { title: localUserData?.recommendedCareer?.title || 'Course 2', match: localUserData?.recommendedCareer?.matchPercent || null, color: '#FCD34D' },
+                        { title: localUserData?.leastCareer?.title || 'Course 3', match: localUserData?.leastCareer?.matchPercent || null, color: '#FB7185' },
+                      ].map((course, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < 2 ? '1px solid #2A2B2C' : 'none' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ fontSize: '16px' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
+                            <span style={{ fontSize: '14px', fontWeight: '600', color: '#E4E6EB' }}>
+                              {course.title !== 'Course 1' && course.title !== 'Course 2' && course.title !== 'Course 3'
+                                ? course.title
+                                : <span style={{ color: '#6B7280', fontStyle: 'italic' }}>Pending counsellor update</span>
+                              }
+                            </span>
+                          </div>
+                          {course.match && (
+                            <span style={{ fontSize: '13px', fontWeight: '800', color: course.color }}>{Number(course.match)}% match</span>
+                          )}
+                        </div>
+                      ))}
+                      <div style={{ marginTop: '14px', fontSize: '12px', color: '#6B7280', fontStyle: 'italic', lineHeight: '1.6' }}>
+                        Your counsellor will refine these recommendations based on your academic background and personal goals during your session.
+                      </div>
+                    </div>
+
+                    {/* Section 3: Recommended Colleges */}
+                    <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '12px', padding: '20px' }}>
+                      <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '16px', fontWeight: '700', color: '#E4E6EB', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        🏫 Recommended Colleges
+                      </h3>
+                      {collegesExt.length > 0 ? (
+                        collegesExt.slice(0, 3).map((c, i) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: i < Math.min(collegesExt.length, 3) - 1 ? '1px solid #2A2B2C' : 'none' }}>
+                            <span style={{ fontSize: '20px' }}>🏫</span>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '14px', fontWeight: '600', color: '#E4E6EB' }}>{String(c.name)}</div>
+                              <div style={{ fontSize: '12px', color: '#B0B3B8', marginTop: '2px' }}>📍 {String(c.loc)} &nbsp;|&nbsp; 💰 {String(c.fees)} &nbsp;|&nbsp; 📈 {String(c.placement)}</div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div style={{ fontSize: '13px', color: '#6B7280', fontStyle: 'italic', lineHeight: '1.7' }}>
+                          College recommendations will be added here by your counsellor after reviewing your academic profile, RIASEC results, and career goals. Complete your assessment to unlock AI-generated suggestions.
+                        </div>
+                      )}
+                      <div style={{ marginTop: '14px', padding: '12px 14px', background: 'rgba(240,165,0,0.06)', border: '1px solid rgba(240,165,0,0.15)', borderRadius: '8px', fontSize: '12px', color: '#B0B3B8', lineHeight: '1.6' }}>
+                        💡 <strong style={{ color: '#F0A500' }}>Counsellor Note:</strong> This section will be updated with personalised college shortlists, cutoff analysis, and application timelines after your counselling session.
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
               {/* ── HOBBIES & INTERESTS TAB ── */}
               {activeAboutTab === 'hobbies' && (
                 <div>
@@ -2370,41 +2527,95 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
+                      {/* 🎨 Hobbies */}
+                      <div className="hobby-category" style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
                         <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>🎨 Hobbies</h4>
-                        <input className="form-input" list="hobbies-list-view" placeholder="e.g., Painting, Reading" defaultValue={userProfile?.hobbies || ''} />
-                        <datalist id="hobbies-list-view">
-                          {HOBBIES.map(item => <option key={item} value={item} />)}
-                        </datalist>
+                        <div className="tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                          {hobbies.map((tag, index) => (
+                            <span key={index} className="tag-chip" style={{ background: '#333', padding: '5px 10px', borderRadius: '15px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px', color: '#E4E6EB' }}>
+                              {tag} <button onClick={() => handleRemoveTag(index, hobbies, setHobbies)} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', fontSize: '16px', lineHeight: 1, padding: 0 }}>×</button>
+                            </span>
+                          ))}
+                        </div>
+                        <input type="text" className="form-input" placeholder="Type a hobby and press Enter..." onKeyDown={(e) => handleAddTag(e, hobbies, setHobbies)} />
                       </div>
 
-                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
+                      {/* 🎵 Music */}
+                      <div className="hobby-category" style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
                         <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>🎵 Music</h4>
-                        <input className="form-input" placeholder="e.g., Classical, Rock, Taylor Swift" defaultValue={userProfile?.music || ''} />
+                        <div className="tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                          {music.map((tag, index) => (
+                            <span key={index} className="tag-chip" style={{ background: '#333', padding: '5px 10px', borderRadius: '15px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px', color: '#E4E6EB' }}>
+                              {tag} <button onClick={() => handleRemoveTag(index, music, setMusic)} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', fontSize: '16px', lineHeight: 1, padding: 0 }}>×</button>
+                            </span>
+                          ))}
+                        </div>
+                        <input type="text" className="form-input" placeholder="Type a genre or artist and press Enter..." onKeyDown={(e) => handleAddTag(e, music, setMusic)} />
                       </div>
 
-                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
-                        <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>📺 TV Shows &amp; Movies</h4>
-                        <input className="form-input" list="tvshows-list-view" placeholder="e.g., Breaking Bad, Interstellar" defaultValue={userProfile?.tvShows || ''} />
-                        <datalist id="tvshows-list-view">
-                          {[...TV_SHOWS, ...MOVIES].map(item => <option key={item} value={item} />)}
-                        </datalist>
+                      {/* 📺 TV Shows */}
+                      <div className="hobby-category" style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>📺 TV Shows</h4>
+                        <div className="tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                          {tvShows.map((tag, index) => (
+                            <span key={index} className="tag-chip" style={{ background: '#333', padding: '5px 10px', borderRadius: '15px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px', color: '#E4E6EB' }}>
+                              {tag} <button onClick={() => handleRemoveTag(index, tvShows, setTvShows)} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', fontSize: '16px', lineHeight: 1, padding: 0 }}>×</button>
+                            </span>
+                          ))}
+                        </div>
+                        <input type="text" className="form-input" placeholder="Type a TV show and press Enter..." onKeyDown={(e) => handleAddTag(e, tvShows, setTvShows)} />
                       </div>
 
-                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
+                      {/* 🎬 Movies */}
+                      <div className="hobby-category" style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>🎬 Movies</h4>
+                        <div className="tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                          {movies.map((tag, index) => (
+                            <span key={index} className="tag-chip" style={{ background: '#333', padding: '5px 10px', borderRadius: '15px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px', color: '#E4E6EB' }}>
+                              {tag} <button onClick={() => handleRemoveTag(index, movies, setMovies)} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', fontSize: '16px', lineHeight: 1, padding: 0 }}>×</button>
+                            </span>
+                          ))}
+                        </div>
+                        <input type="text" className="form-input" placeholder="Type a movie and press Enter..." onKeyDown={(e) => handleAddTag(e, movies, setMovies)} />
+                      </div>
+
+                      {/* 🎮 Games */}
+                      <div className="hobby-category" style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
                         <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>🎮 Games</h4>
-                        <input className="form-input" list="games-list-view" placeholder="e.g., Chess, FIFA" defaultValue={userProfile?.games || ''} />
-                        <datalist id="games-list-view">
-                          {GAMES.map(item => <option key={item} value={item} />)}
-                        </datalist>
+                        <div className="tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                          {games.map((tag, index) => (
+                            <span key={index} className="tag-chip" style={{ background: '#333', padding: '5px 10px', borderRadius: '15px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px', color: '#E4E6EB' }}>
+                              {tag} <button onClick={() => handleRemoveTag(index, games, setGames)} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', fontSize: '16px', lineHeight: 1, padding: 0 }}>×</button>
+                            </span>
+                          ))}
+                        </div>
+                        <input type="text" className="form-input" placeholder="Type a game and press Enter..." onKeyDown={(e) => handleAddTag(e, games, setGames)} />
                       </div>
 
-                      <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
-                        <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>⚽ Sports Teams &amp; Athletes</h4>
-                        <input className="form-input" list="sports-list-view" placeholder="e.g., Manchester United, Virat Kohli" defaultValue={userProfile?.sports || ''} />
-                        <datalist id="sports-list-view">
-                          {SPORTS.map(item => <option key={item} value={item} />)}
-                        </datalist>
+                      {/* ⚽ Sports */}
+                      <div className="hobby-category" style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>⚽ Sports</h4>
+                        <div className="tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                          {sports.map((tag, index) => (
+                            <span key={index} className="tag-chip" style={{ background: '#333', padding: '5px 10px', borderRadius: '15px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px', color: '#E4E6EB' }}>
+                              {tag} <button onClick={() => handleRemoveTag(index, sports, setSports)} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', fontSize: '16px', lineHeight: 1, padding: 0 }}>×</button>
+                            </span>
+                          ))}
+                        </div>
+                        <input type="text" className="form-input" placeholder="Type a sport or team and press Enter..." onKeyDown={(e) => handleAddTag(e, sports, setSports)} />
+                      </div>
+
+                      {/* 🏅 Athletes */}
+                      <div className="hobby-category" style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '10px', padding: '14px 16px' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: '800', color: '#E4E6EB' }}>🏅 Athletes</h4>
+                        <div className="tags-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                          {athletes.map((tag, index) => (
+                            <span key={index} className="tag-chip" style={{ background: '#333', padding: '5px 10px', borderRadius: '15px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px', color: '#E4E6EB' }}>
+                              {tag} <button onClick={() => handleRemoveTag(index, athletes, setAthletes)} style={{ background: 'transparent', border: 'none', color: '#ff4444', cursor: 'pointer', fontSize: '16px', lineHeight: 1, padding: 0 }}>×</button>
+                            </span>
+                          ))}
+                        </div>
+                        <input type="text" className="form-input" placeholder="Type an athlete name and press Enter..." onKeyDown={(e) => handleAddTag(e, athletes, setAthletes)} />
                       </div>
 
                     </div>
