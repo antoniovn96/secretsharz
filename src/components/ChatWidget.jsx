@@ -1,23 +1,80 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
-
-const CURRENT_USER = { id: 'mock-student-id', name: 'Antonio', role: 'student' };
-const ALLOWED_CONTACTS = [
-  { id: 'admin-1', name: 'Admin Support', role: 'admin' },
-  { id: 'counselor-1', name: 'Career Counselor', role: 'counselor' }
-];
+import { auth, db } from '../firebase';
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, getDoc, getDocs, where, doc } from 'firebase/firestore';
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [contacts, setContacts] = useState([]);
+  const [currentUserRole, setCurrentUserRole] = useState(null);
+  const [currentUserData, setCurrentUserData] = useState(null);
 
   useEffect(() => {
-    if (!activeChat) return;
+    if (!auth?.currentUser) return;
+    const uid = auth.currentUser.uid;
+    
+    const fetchMatrix = async () => {
+      try {
+        // 1. Check if user is Staff/Admin
+        let role = 'student';
+        let userData = { id: uid, name: 'Student' };
+        
+        const staffSnap = await getDoc(doc(db, 'staff', uid));
+        if (staffSnap.exists()) {
+          role = staffSnap.data().role || 'counsellor';
+          userData = { id: uid, ...staffSnap.data() };
+        } else {
+          const userSnap = await getDoc(doc(db, 'users', uid));
+          if (userSnap.exists()) userData = { id: uid, ...userSnap.data() };
+        }
+        
+        setCurrentUserRole(role);
+        setCurrentUserData(userData);
+        
+        // 2. Fetch Allowed Contacts based on Role
+        let fetchedContacts = [];
+        
+        if (role === 'super_admin') {
+          const allStaff = await getDocs(collection(db, 'staff'));
+          const allUsers = await getDocs(collection(db, 'users'));
+          fetchedContacts = [
+            ...allStaff.docs.filter(d => d.id !== uid).map(d => ({ id: d.id, ...d.data(), type: 'staff' })),
+            ...allUsers.docs.map(d => ({ id: d.id, ...d.data(), type: 'student' }))
+          ];
+        } else if (role === 'counsellor') {
+          const admins = await getDocs(query(collection(db, 'staff'), where('role', '==', 'super_admin')));
+          const myStudents = await getDocs(query(collection(db, 'users'), where('assignedCounsellorId', '==', uid)));
+          fetchedContacts = [
+            ...admins.docs.map(d => ({ id: d.id, ...d.data(), type: 'admin' })),
+            ...myStudents.docs.map(d => ({ id: d.id, ...d.data(), type: 'student' }))
+          ];
+        } else {
+          // Student view
+          const admins = await getDocs(query(collection(db, 'staff'), where('role', '==', 'super_admin')));
+          fetchedContacts = [...admins.docs.map(d => ({ id: d.id, ...d.data(), type: 'admin' }))];
+          
+          if (userData.assignedCounsellorId) {
+            const counsellorSnap = await getDoc(doc(db, 'staff', userData.assignedCounsellorId));
+            if (counsellorSnap.exists()) {
+              fetchedContacts.push({ id: counsellorSnap.id, ...counsellorSnap.data(), type: 'counsellor' });
+            }
+          }
+        }
+        setContacts(fetchedContacts);
+      } catch (error) {
+        console.error("Error fetching chat matrix:", error);
+      }
+    };
+    
+    fetchMatrix();
+  }, [auth?.currentUser]);
 
-    const conversationId = [CURRENT_USER.id, activeChat.id].sort().join('_');
+  useEffect(() => {
+    if (!activeChat || !auth?.currentUser) return;
+
+    const conversationId = [auth.currentUser.uid, activeChat.id].sort().join('_');
     const q = query(
       collection(db, 'conversations', conversationId, 'messages'),
       orderBy('timestamp', 'asc')
@@ -33,14 +90,14 @@ const ChatWidget = () => {
 
   const sendMessage = async (e) => {
     if (e) e.preventDefault();
-    if (!newMessage.trim() || !activeChat) return;
+    if (!newMessage.trim() || !activeChat || !auth?.currentUser) return;
 
-    const conversationId = [CURRENT_USER.id, activeChat.id].sort().join('_');
+    const conversationId = [auth.currentUser.uid, activeChat.id].sort().join('_');
     
     try {
       await addDoc(collection(db, 'conversations', conversationId, 'messages'), {
         text: newMessage,
-        senderId: CURRENT_USER.id,
+        senderId: auth.currentUser.uid,
         timestamp: serverTimestamp()
       });
       setNewMessage('');
@@ -110,7 +167,7 @@ const ChatWidget = () => {
                 </button>
               </div>
               <div style={{ flex: 1, padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto' }}>
-                {ALLOWED_CONTACTS.map(contact => (
+                {contacts.map(contact => (
                   <button
                     key={contact.id}
                     onClick={() => setActiveChat(contact)}
@@ -128,7 +185,7 @@ const ChatWidget = () => {
                     onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#3a3a3a'}
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2a2a2a'}
                   >
-                    {contact.name} ({contact.role})
+                    {contact.name} <span style={{ fontSize: '0.8em', padding: '2px 6px', background: '#444', borderRadius: '4px', marginLeft: '8px' }}>{contact.type || contact.role}</span>
                   </button>
                 ))}
               </div>
@@ -175,7 +232,7 @@ const ChatWidget = () => {
               </div>
               <div style={{ flex: 1, padding: '10px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {messages.map(msg => {
-                  const isMe = msg.senderId === CURRENT_USER.id;
+                  const isMe = msg.senderId === auth?.currentUser?.uid;
                   return (
                     <div
                       key={msg.id}

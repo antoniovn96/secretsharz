@@ -10,12 +10,12 @@ import { getStorage } from "firebase/storage";
 
 // ⚠️  REPLACE THESE WITH YOUR REAL VALUES FROM FIREBASE CONSOLE
 const firebaseConfig = {
-  apiKey:            "AIzaSyBblimAT7YQtPS4YhKBh1UXttn46xlfH2g",
-  authDomain:        "secretsharz-f9aed.firebaseapp.com",
-  projectId:         "secretsharz-f9aed",
-  storageBucket:     "secretsharz-f9aed.firebasestorage.app",
-  messagingSenderId: "893563102389",
-  appId:             "1:893563102389:web:f0668450e8a7c3732f8afc",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 const app      = initializeApp(firebaseConfig);
