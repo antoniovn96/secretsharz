@@ -1182,6 +1182,11 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
     let unsubscribeStudents = null;
 
     const fetchPlatformData = async () => {
+      if (!db || !auth?.currentUser) {
+        setLoadingData(false);
+        return;
+      }
+
       setLoadingData(true);
       try {
         const docSnap = await getDoc(doc(db, COLLECTIONS.SETTINGS, 'superadmin_profile'));
