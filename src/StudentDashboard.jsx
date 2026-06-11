@@ -326,11 +326,14 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     ugCourse: '', ugCGPA: '', pgCourse: '', pgCGPA: ''
   });
   const [savingProfile, setSavingProfile] = useState(false);
+  const [lifeSkills, setLifeSkills] = useState({ communication: 0, resilience: 0, criticalThinking: 0, empathy: 0, leadership: 0 });
   // ── Modal state for XP Checklist and Career Matches ──
   const [showXpModal, setShowXpModal] = useState(false);
   const [showCareerMatchesModal, setShowCareerMatchesModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [activeAboutTab, setActiveAboutTab] = useState('overview');
+  const [journalEntries, setJournalEntries] = useState([]);
+  const [newJournalEntry, setNewJournalEntry] = useState('');
   const [activeChat, setActiveChat] = useState(null);
   const [internships, setInternships] = useState([]);
   const [voluntaryExp, setVoluntaryExp] = useState([]);
@@ -474,6 +477,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
           const data = docSnap.data();
           if (!data.hasAcceptedTerms) { setShowTermsModal(true); }
           setLocalUserData(prev => ({ ...prev, ...data }));
+          if (data.journalEntries) setJournalEntries(data.journalEntries);
           if (Array.isArray(data.internships)) setInternships(data.internships);
           if (Array.isArray(data.voluntaryExp)) setVoluntaryExp(data.voluntaryExp);
           if (Array.isArray(data.workExperience)) setWorkExperience(data.workExperience);
@@ -515,6 +519,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
           if (Array.isArray(data.games))    setGames(data.games);
           if (Array.isArray(data.sports))   setSports(data.sports);
           if (Array.isArray(data.athletes)) setAthletes(data.athletes);
+          if (data.lifeSkills) setLifeSkills(data.lifeSkills);
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
@@ -1842,6 +1847,22 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     setShowTermsModal(false);
   };
 
+  const handleSaveJournalEntry = async (e) => {
+    if (e) e.preventDefault();
+    if (!newJournalEntry.trim()) return;
+    const entry = { id: Date.now(), text: newJournalEntry, date: new Date().toISOString() };
+    const updatedEntries = [entry, ...journalEntries];
+    try {
+      await setDoc(doc(db, 'users', auth.currentUser.uid), { journalEntries: updatedEntries }, { merge: true });
+      setJournalEntries(updatedEntries);
+      setNewJournalEntry('');
+      showToast('📓 Journal entry saved successfully!');
+    } catch (error) {
+      console.error("Error saving journal entry:", error);
+      showToast('❌ Failed to save journal entry.');
+    }
+  };
+
   // ── Save Profile Handler (Firestore only) ──
   const handleSaveProfile = async () => {
     try {
@@ -1856,6 +1877,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         voluntaryExp,
         workExperience,
         projects,
+        lifeSkills,
         // Personal Info
         fatherName, fatherPhone, fatherEmail,
         motherName, motherPhone, motherEmail,
@@ -2116,6 +2138,8 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               <div className={`about-nav-item ${activeAboutTab === 'work-experience' ? 'active' : ''}`} onClick={() => setActiveAboutTab('work-experience')}>Work Experience</div>
               <div className={`about-nav-item ${activeAboutTab === 'links' ? 'active' : ''}`} onClick={() => setActiveAboutTab('links')}>Project Links</div>
               <div className={`about-nav-item ${activeAboutTab === 'hobbies' ? 'active' : ''}`} onClick={() => setActiveAboutTab('hobbies')}>Hobbies &amp; Interests</div>
+              <div className={`about-nav-item ${activeAboutTab === 'journal' ? 'active' : ''}`} onClick={() => setActiveAboutTab('journal')}>📓 Clarity Journal</div>
+              <div className={`about-nav-item ${activeAboutTab === 'life-skills' ? 'active' : ''}`} onClick={() => setActiveAboutTab('life-skills')}>🕸️ Life Skills Matrix</div>
               <div className={`about-nav-item ${activeAboutTab === 'career-report' ? 'active' : ''}`} onClick={() => setActiveAboutTab('career-report')}>Career Report</div>
               <div className={`about-nav-item ${activeAboutTab === 'messages' ? 'active' : ''}`} onClick={() => setActiveAboutTab('messages')}>💬 Messages {unreadCount > 0 && <span style={{background: 'red', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '12px', marginLeft: '5px'}}>{unreadCount}</span>}</div>
             </div>
@@ -3228,87 +3252,67 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                   </div>
                 </div>
               )}
+              {activeAboutTab === 'journal' && (
+                <div className="db-tab">
+                  <h3>📓 My Clarity Journal</h3>
+                  <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
+                    A secure space to log your thoughts, goals, and anxieties. Only your assigned counselor can read this.
+                  </p>
+                  
+                  {/* Input area */}
+                  <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '12px', padding: '20px', marginBottom: '20px' }}>
+                    <textarea
+                      value={newJournalEntry}
+                      onChange={(e) => setNewJournalEntry(e.target.value)}
+                      placeholder="Write your thoughts here..."
+                      style={{
+                        width: '100%',
+                        height: '120px',
+                        background: '#242526',
+                        color: 'white',
+                        border: '1px solid #3A3B3C',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        fontSize: '14px',
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        marginBottom: '12px'
+                      }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <button onClick={handleSaveJournalEntry} className="btn-primary-social" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        💾 Save Entry
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Timeline area */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {journalEntries.length === 0 ? (
+                      <div className="db-empty-state" style={{ background: '#18191A', border: '1px dashed #3A3B3C' }}>
+                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
+                        <h4 style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', fontWeight: '700', color: 'white', marginBottom: '8px' }}>No journal entries yet</h4>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Start writing to log your very first thought!</p>
+                      </div>
+                    ) : (
+                      journalEntries.map((entry) => (
+                        <div key={entry.id} style={{ background: 'var(--bg, #18191A)', border: '1px solid #3A3B3C', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: 'var(--text-muted, #B0B3B8)', fontWeight: '600' }}>
+                            <span>📅 {new Date(entry.date).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            <span style={{ fontSize: '11px', background: '#242526', padding: '2px 8px', borderRadius: '12px' }}>{relativeTime(entry.date)}</span>
+                          </div>
+                          <div style={{ color: '#E4E6EB', fontSize: '14px', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{entry.text}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
               {activeAboutTab === 'messages' && <ChatWidget activeChat={activeChat} setActiveChat={setActiveChat} />}
             </div>
           </div>
 
           {/* ── PROFILE FORM MODAL ── */}
-          {showProfileForm && (
-            <div className="db-modal-overlay">
-              <div className="db-modal-box">
-                <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h2 style={{ fontFamily: 'Fraunces', fontSize: '22px', color: 'var(--ink)', marginBottom: '4px' }}>Complete Your Profile</h2>
-                    <p style={{ fontSize: '13px', color: 'var(--muted)' }}>This helps us provide personalized recommendations</p>
-                  </div>
-                  <button onClick={() => setShowProfileForm(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--muted)', padding: '4px' }}>×</button>
-                </div>
-                <form onSubmit={handleProfileSubmit} style={{ padding: '28px 32px' }}>
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>Age *</label>
-                    <input type="number" value={profileData.age} onChange={(e) => setProfileData({ ...profileData, age: e.target.value })} placeholder="e.g., 16" style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }} required />
-                  </div>
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>Gender *</label>
-                    <select value={profileData.gender} onChange={(e) => setProfileData({ ...profileData, gender: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }} required>
-                      <option value="">Select Gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Non-binary">Non-binary</option>
-                      <option value="Prefer not to say">Prefer not to say</option>
-                    </select>
-                  </div>
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>School/College Name *</label>
-                    <input type="text" value={profileData.schoolName} onChange={(e) => setProfileData({ ...profileData, schoolName: e.target.value })} placeholder="e.g., Delhi Public School" style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }} required />
-                  </div>
-                  <div style={{ marginBottom: '24px' }}>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: 'var(--ink)', marginBottom: '6px' }}>Current Grade Level *</label>
-                    <select value={profileData.gradeLevel} onChange={(e) => setProfileData({ ...profileData, gradeLevel: e.target.value })} style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: '14px' }} required>
-                      <option value="">Select Grade Level</option>
-                      <option value="Class 8">Class 8</option>
-                      <option value="Class 9">Class 9</option>
-                      <option value="Class 10">Class 10</option>
-                      <option value="Class 11">Class 11</option>
-                      <option value="Class 12">Class 12</option>
-                      <option value="1st Year UG">1st Year UG</option>
-                      <option value="2nd Year UG">2nd Year UG</option>
-                      <option value="3rd Year UG">3rd Year UG</option>
-                      <option value="4th Year UG">4th Year UG</option>
-                      <option value="Postgraduate">Postgraduate</option>
-                    </select>
-                  </div>
-                  {profileData.gradeLevel && (
-                    <div style={{ background: 'var(--surface)', padding: '20px', borderRadius: 'var(--r-md)', marginBottom: '24px', border: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--ink)', marginBottom: '16px' }}>📚 Academic History</div>
-                      {renderAcademicFields()}
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                    <button type="button" onClick={() => setShowProfileForm(false)} className="db-btn-outline">Cancel</button>
-                    <button type="submit" className="db-btn" disabled={savingProfile}>{savingProfile ? 'Saving...' : 'Save Profile'}</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* ── PROFILE EDITOR MODAL ── */}
-          {showProfileEditor && (
-            <ProfileEditor
-              onClose={() => {
-                setShowProfileEditor(false);
-                showToast('✅ Profile updated! EX Points recalculated.');
-              }}
-            />
-          )}
-
-          {/* ── XP CHECKLIST MODAL ── */}
-          {showXpModal && (
-            <XpChecklistModal onClose={() => { setShowXpModal(false); setShowProfileEditor(true); }} />
-          )}
-
-          {/* ── CAREER MATCHES MODAL ── */}
           {showCareerMatchesModal && (
             <CareerMatchesModal localUserData={localUserData} onClose={() => setShowCareerMatchesModal(false)} />
           )}

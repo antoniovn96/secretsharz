@@ -2680,10 +2680,33 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                 )}
                 
                 {modalTab === 'counselling' && (
-                  <div className="admin-card" style={{ borderTop: '3px solid var(--success)' }}>
-                    <h3>Counselling Notes</h3>
-                    <p style={{ color: 'var(--text-muted)' }}>Session logging interface goes here.</p>
-                  </div>
+                  <>
+                    <div className="admin-card" style={{ borderTop: '3px solid var(--success)' }}>
+                      <h3>Counselling Notes</h3>
+                      <p style={{ color: 'var(--text-muted)' }}>Session logging interface goes here.</p>
+                    </div>
+
+                    <div className="admin-card" style={{ borderTop: '3px solid var(--primary)', marginTop: '20px' }}>
+                      <h3>📓 Student's Clarity Journal</h3>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '15px' }}>Private entries logged by the student for counselor review.</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        {selectedStudent.journalEntries && selectedStudent.journalEntries.length > 0 ? (
+                          selectedStudent.journalEntries.map((entry, idx) => (
+                            <div key={idx} style={{ background: 'var(--bg)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 'bold', marginBottom: '8px' }}>
+                                {new Date(entry.date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                              </div>
+                              <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.5', color: 'var(--text-main)', whiteSpace: 'pre-wrap' }}>{entry.text}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="empty-state" style={{ padding: '20px' }}>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontStyle: 'italic', margin: 0 }}>No journal entries logged yet.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
