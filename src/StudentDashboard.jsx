@@ -330,7 +330,6 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [showCareerMatchesModal, setShowCareerMatchesModal] = useState(false);
   const [activeAboutTab, setActiveAboutTab] = useState('overview');
   const [activeChat, setActiveChat] = useState(null);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [editingItem, setEditingItem] = useState(null);
   const [isEditingTab, setIsEditingTab] = useState(false);
   const [eduType, setEduType] = useState('');
@@ -2719,7 +2718,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                   </div>
                 </div>
               )}
-              {activeAboutTab === 'messages' && <ChatWidget activeChat={activeChat} setActiveChat={setActiveChat} setUnreadCount={setUnreadCount} />}
+              {activeAboutTab === 'messages' && <ChatWidget activeChat={activeChat} setActiveChat={setActiveChat} />}
             </div>
           </div>
 
