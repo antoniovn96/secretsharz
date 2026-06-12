@@ -24,6 +24,8 @@ const AboutUs = lazy(() => import('./AboutUs'));
 const JournalingDeepDiveBlog = lazy(() => import('./blogss/2026/January/JournalingDeepDiveBlog'));
 const MentalHealthResetBlog = lazy(() => import('./blogss/2026/February/MentalHealthResetBlog'));
 
+const LandingPage = lazy(() => import('./LandingPage'));
+
 // Header and Footer stay synchronous
 import Header from './Header';
 import Footer from './Footer';
@@ -1073,7 +1075,10 @@ export default function App() {
     // ✅ FIXED 404 BUTTON PLACEHOLDERS HERE
     if (currentPath.startsWith('/wall')) return <SharzWall Maps={navigate} />;
 
-    if (currentPath === '/') return <HomePage currentUser={currentUser} isAdmin={isAdmin} setModal={setModal} setShowQuiz={setShowQuiz} navigate={navigate} />;
+    if (currentPath === '/') {
+      if (!currentUser) return <LandingPage onNavigate={navigate} />;
+      return <HomePage currentUser={currentUser} isAdmin={isAdmin} setModal={setModal} setShowQuiz={setShowQuiz} navigate={navigate} />;
+    }
     
     return (
       <div style={{minHeight:'60vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}>

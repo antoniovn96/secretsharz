@@ -375,11 +375,13 @@ export default function AuthPage({ onAuthSuccess }) {
       
       const snap = await getDoc(doc(db, "users", user.uid));
       if (!snap.exists()) {
+        const track = sessionStorage.getItem("pendingTrack") || "hybrid";
         await createUserProfile(user.uid, {
           name: user.displayName || "",
           email: user.email || "",
           photo: user.photoURL || "",
           gender: "", classLevel: "", state: "", stream: "", aspiration: "",
+          track,
           loginMethod: "social",
           isNewUser: true,
         });
@@ -410,10 +412,12 @@ export default function AuthPage({ onAuthSuccess }) {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name.trim() });
+      const track = sessionStorage.getItem("pendingTrack") || "hybrid";
       await createUserProfile(cred.user.uid, {
         name: name.trim(), email: email.trim(),
         gender, classLevel, state, stream,
         aspiration: reg.aspiration.trim(),
+        track,
         loginMethod: "email",
         isNewUser: true,
       });

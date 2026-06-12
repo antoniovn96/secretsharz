@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() { 
+      return request.auth != null; 
+    }
+    
+    function isOwner(userId) { 
+      return isAuthenticated() && request.auth.uid == userId; 
+    }
+    
+    function isProfessional() { 
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['psychologist', 'career_coach', 'admin']; 
+    }
+    
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isProfessional();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isProfessional();
+      allow delete: if false;
+      
+      match /clinical_sessions/{sessionId} {
+        allow read, write: if isProfessional();
+      }
+      
+      match /bip_records/{bipId} {
+        allow read, write: if isProfessional();
+      }
+    }
+  }
+}

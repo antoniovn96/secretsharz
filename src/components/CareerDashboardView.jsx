@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
+import DocumentVaultModal from './DocumentVaultModal';
 
 export default function CareerDashboardView({ localUserData, collegesExt }) {
   const userName = localUserData?.name || 'User';
+  const [showVault, setShowVault] = useState(false);
+  const [isParentMode, setIsParentMode] = useState(false);
   const profilePic = localUserData?.profilePicture || null;
 
   return (
@@ -16,6 +19,15 @@ export default function CareerDashboardView({ localUserData, collegesExt }) {
         <button className="text-white opacity-50 hover:opacity-100 transition-opacity">📱</button>
         <button className="text-white opacity-50 hover:opacity-100 transition-opacity">👤</button>
         <button className="text-white opacity-50 hover:opacity-100 transition-opacity">🌐</button>
+        {!isParentMode && (
+          <button 
+            onClick={() => setShowVault(true)}
+            className="text-white opacity-50 hover:opacity-100 transition-opacity"
+            title="Document Vault"
+          >
+            📁
+          </button>
+        )}
         <button className="text-white opacity-50 hover:opacity-100 transition-opacity mt-auto">☰</button>
       </div>
 
@@ -37,9 +49,20 @@ export default function CareerDashboardView({ localUserData, collegesExt }) {
             <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-multiply"></div>
           </div>
 
-          {/* Profile Card */}
-          <div className="bg-[#1A1A1A] rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden">
-            <div className="absolute top-4 left-4 text-orange-500 text-xl">🔗</div>
+          {/* Profile Card & Parent Toggle */}
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-end">
+              <button 
+                onClick={() => setIsParentMode(!isParentMode)}
+                className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${
+                  isParentMode ? 'bg-blue-500 text-white shadow-lg' : 'bg-white text-gray-600 shadow-sm hover:bg-gray-50'
+                }`}
+              >
+                👨‍👩‍👧 Parent View
+              </button>
+            </div>
+            <div className="bg-[#1A1A1A] rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden">
+              <div className="absolute top-4 left-4 text-orange-500 text-xl">🔗</div>
             <div className="mt-4">
               <h3 className="text-lg font-black text-white uppercase tracking-wide">{userName}</h3>
               <div className="flex gap-2 mt-3">
@@ -53,8 +76,9 @@ export default function CareerDashboardView({ localUserData, collegesExt }) {
               ) : (
                 <div className="w-full h-full rounded-full bg-[#2A2A2A] border-2 border-[#1A1A1A] flex items-center justify-center text-white font-bold text-xl">
                   {userName.charAt(0)}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -93,7 +117,9 @@ export default function CareerDashboardView({ localUserData, collegesExt }) {
                         }`}>
                           {i % 2 === 0 ? 'Shortlisted' : 'Opening soon'}
                         </span>
-                        <button className="bg-[#E8650A] text-white text-[11px] font-bold px-4 py-1.5 rounded-full transition-transform hover:scale-105">Edit Status</button>
+                        {!isParentMode && (
+                          <button className="bg-[#E8650A] text-white text-[11px] font-bold px-4 py-1.5 rounded-full transition-transform hover:scale-105">Edit Status</button>
+                        )}
                       </div>
                     </div>
                   ))
@@ -152,9 +178,9 @@ export default function CareerDashboardView({ localUserData, collegesExt }) {
           {/* Right Side: Stacked Cards */}
           <div className="flex flex-col gap-4">
             {[
-              { title: 'Education Details', color: 'bg-[#E8650A]' },
-              { title: 'Work Experience', color: 'bg-gray-400' },
-              { title: 'Research Papers', color: 'bg-[#E8650A]' }
+              { title: 'Education Details', color: 'bg-[#E8650A]', metrics: 'Market Stability: High' },
+              { title: 'Work Experience', color: 'bg-gray-400', metrics: 'Financial ROI: Excellent' },
+              { title: 'Research Papers', color: 'bg-[#E8650A]', metrics: 'Campus Safety Index: High' }
             ].map((card, i) => (
               <div key={card.title} className="bg-white rounded-2xl p-6 shadow-sm relative overflow-hidden h-[140px] flex flex-col justify-between group cursor-pointer hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start">
@@ -163,7 +189,11 @@ export default function CareerDashboardView({ localUserData, collegesExt }) {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800 text-lg">{card.title}</h3>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase mt-2 tracking-wider">CAREER CLARITY</p>
+                  {isParentMode ? (
+                    <p className="text-xs font-bold text-blue-600 mt-2 bg-blue-50 px-2 py-1 rounded inline-block">{card.metrics}</p>
+                  ) : (
+                    <p className="text-[10px] font-bold text-gray-400 uppercase mt-2 tracking-wider">CAREER CLARITY</p>
+                  )}
                 </div>
                 {/* Bottom right accent corner */}
                 <div className={`absolute -bottom-4 -right-4 w-16 h-16 rounded-tl-[32px] ${card.color}`}></div>
@@ -172,6 +202,13 @@ export default function CareerDashboardView({ localUserData, collegesExt }) {
           </div>
         </div>
       </div>
+
+      {showVault && (
+        <DocumentVaultModal 
+          localUserData={localUserData} 
+          onClose={() => setShowVault(false)} 
+        />
+      )}
     </div>
   );
 }
