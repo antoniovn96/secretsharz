@@ -1714,73 +1714,87 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
 
       case 'overview':
         return (
-          <div>
-            <div className="header-bar">
+          <div className="min-h-screen bg-gradient-to-br from-[#F4F4F4] to-[#FFF3CA] p-8 -mx-8 -my-7 text-gray-800 font-sans">
+            <div className="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row justify-between items-start md:items-end">
               <div>
-                <h1>Overview Dashboard</h1>
-                <p>Real-time snapshot of your platform metrics.</p>
+                <h1 className="text-4xl font-light text-gray-800">Welcome in, Super Admin</h1>
               </div>
             </div>
 
-            <div className="kpi-grid">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {!isCounsellor && (
-                <div className="kpi-box" style={{ borderTop: '3px solid var(--primary)' }} onClick={() => setActiveTab('institutions')}>
-                  <h4>Institutions</h4>
-                  <div className="val">{isLoadingMetrics ? '...' : institutionsCount}</div>
-                  <div className="val-sub">Registered partners</div>
+                <div 
+                  onClick={() => setActiveTab('institutions')} 
+                  className="bg-white/80 backdrop-blur rounded-3xl p-6 shadow-lg shadow-gray-200/50 cursor-pointer transition-transform hover:-translate-y-1"
+                >
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Institutions</h4>
+                  <div className="text-4xl font-bold text-[#222]">{isLoadingMetrics ? '...' : institutionsCount}</div>
+                  <div className="text-sm font-medium text-gray-500 mt-1">Registered partners</div>
                 </div>
               )}
-              <div className="kpi-box" style={{ borderTop: '3px solid var(--success)' }} onClick={() => setActiveTab('students')}>
-                <h4>Assessed Students</h4>
-                <div className="val">{isLoadingMetrics ? '...' : studentsCount}</div>
-                <div className="val-sub">Completed RIASEC</div>
+              
+              <div 
+                onClick={() => setActiveTab('students')} 
+                className="bg-white/80 backdrop-blur rounded-3xl p-6 shadow-lg shadow-gray-200/50 cursor-pointer transition-transform hover:-translate-y-1"
+              >
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Assessed Students</h4>
+                <div className="text-4xl font-bold text-[#222]">{isLoadingMetrics ? '...' : studentsCount}</div>
+                <div className="text-sm font-medium text-gray-500 mt-1">Completed RIASEC</div>
               </div>
-              <div className="kpi-box" style={{ borderTop: '3px solid var(--danger)' }} onClick={() => { setStatusFilter('Not Started'); setActiveTab('students'); }}>
-                <h4>Pending Assignments</h4>
-                <div className="val" style={{ color: pendingCount > 0 ? 'var(--danger)' : 'var(--success)' }}>{isLoadingMetrics ? '...' : pendingCount}</div>
-                <div className="val-sub">Need counsellor assignment</div>
+
+              <div 
+                onClick={() => { setStatusFilter('Not Started'); setActiveTab('students'); }} 
+                className="bg-white/80 backdrop-blur rounded-3xl p-6 shadow-lg shadow-gray-200/50 cursor-pointer transition-transform hover:-translate-y-1"
+              >
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pending Assignments</h4>
+                <div className="text-4xl font-bold text-[#FDD14B]">{isLoadingMetrics ? '...' : pendingCount}</div>
+                <div className="text-sm font-medium text-gray-500 mt-1">Need counsellor assignment</div>
               </div>
-              <div className="kpi-box" style={{ borderTop: '3px solid var(--warning)' }} onClick={() => setActiveTab('analytics')}>
-                <h4>Completion Rate</h4>
-                <div className="val">{isLoadingMetrics ? '...' : `${completionRate}%`}</div>
-                <div className="val-sub">Based on all registered students</div>
+
+              <div 
+                onClick={() => setActiveTab('analytics')} 
+                className="bg-white/80 backdrop-blur rounded-3xl p-6 shadow-lg shadow-gray-200/50 cursor-pointer transition-transform hover:-translate-y-1"
+              >
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Completion Rate</h4>
+                <div className="text-4xl font-bold text-[#222]">{isLoadingMetrics ? '...' : `${completionRate}%`}</div>
+                <div className="text-sm font-medium text-gray-500 mt-1">Based on all registered students</div>
               </div>
             </div>
 
-            <div className="grid-2col">
-              <div className="admin-card" style={{ borderTop: '3px solid var(--warning)' }}>
-                <h3>⚡ Action Queue</h3>
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white/80 backdrop-blur rounded-3xl p-6 md:p-8 shadow-lg shadow-gray-200/50">
+                <h3 className="text-lg font-bold text-[#222] border-b border-gray-100 pb-3 mb-4">⚡ Action Queue</h3>
                 {pendingInterventions > 0 ? (
                   <div
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'rgba(245,158,11,0.06)', borderRadius: 'var(--r-sm)', border: '1px solid rgba(245,158,11,0.15)', cursor: 'pointer' }}
+                    className="flex justify-between items-center p-4 bg-[#FDD14B]/10 rounded-2xl border border-[#FDD14B]/30 cursor-pointer hover:bg-[#FDD14B]/20 transition-colors"
                     onClick={() => { setStatusFilter('Not Started'); setActiveTab('students'); }}
                   >
                     <div>
-                      <div style={{ fontWeight: '600', color: 'var(--text-main)', marginBottom: '2px' }}>Unassigned Students</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Click to view and assign counsellors</div>
+                      <div className="font-semibold text-[#222] mb-1">Unassigned Students</div>
+                      <div className="text-sm text-gray-500">Click to view and assign counsellors</div>
                     </div>
-                    <span className="admin-badge badge-warn">{pendingInterventions} Students</span>
+                    <span className="px-3 py-1 bg-[#FDD14B]/20 text-[#222] font-bold text-xs rounded-full uppercase tracking-wide">{pendingInterventions} Students</span>
                   </div>
                 ) : (
-                  <div className="empty-state" style={{ padding: '24px' }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🎉</div>
-                    <p style={{ margin: 0, fontWeight: '600', color: 'var(--success)' }}>All clear! No pending actions.</p>
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-3">🎉</div>
+                    <p className="m-0 font-semibold text-green-600">All clear! No pending actions.</p>
                   </div>
                 )}
               </div>
 
-              <div className="admin-card" style={{ borderTop: '3px solid var(--secondary)' }}>
-                <h3>📊 Quick Stats</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="bg-white/80 backdrop-blur rounded-3xl p-6 md:p-8 shadow-lg shadow-gray-200/50">
+                <h3 className="text-lg font-bold text-[#222] border-b border-gray-100 pb-3 mb-4">📊 Quick Stats</h3>
+                <div className="flex flex-col gap-3">
                   {[
-                    { label: 'Total Registered', value: totalRegistered, color: 'var(--text-main)' },
-                    { label: 'Assessed', value: totalAssessed, color: 'var(--primary)' },
-                    { label: 'In Counselling', value: totalCounselled, color: 'var(--warning)' },
-                    { label: 'Completed', value: totalCompleted, color: 'var(--success)' },
+                    { label: 'Total Registered', value: totalRegistered, color: 'text-[#222]' },
+                    { label: 'Assessed', value: totalAssessed, color: 'text-[#222]' },
+                    { label: 'In Counselling', value: totalCounselled, color: 'text-[#FDD14B]' },
+                    { label: 'Completed', value: totalCompleted, color: 'text-green-600' },
                   ].map((stat, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < 3 ? '1px solid var(--border)' : 'none' }}>
-                      <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: '500' }}>{stat.label}</span>
-                      <span style={{ fontSize: '1.1rem', fontWeight: '700', color: stat.color }}>{stat.value}</span>
+                    <div key={i} className={`flex justify-between items-center py-2 ${i < 3 ? 'border-b border-gray-100' : ''}`}>
+                      <span className="text-sm font-medium text-gray-500">{stat.label}</span>
+                      <span className={`text-lg font-bold ${stat.color}`}>{stat.value}</span>
                     </div>
                   ))}
                 </div>
@@ -1789,43 +1803,45 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
 
             {/* Counsellor Panel on Overview */}
             {counsellorsList.length > 0 && (
-              <div className="admin-card" style={{ borderTop: '3px solid var(--primary)' }}>
-                <h3>
+              <div className="max-w-7xl mx-auto mt-6 bg-white/80 backdrop-blur rounded-3xl p-6 md:p-8 shadow-lg shadow-gray-200/50 mb-10">
+                <h3 className="text-lg font-bold text-[#222] border-b border-gray-100 pb-3 mb-6 flex justify-between items-center">
                   👥 Counsellor Team
-                  <span className="admin-badge badge-primary" style={{ fontWeight: '600', fontSize: '0.75rem' }}>{counsellorsList.length} Active</span>
+                  <span className="px-3 py-1 bg-[#222] text-white font-bold text-xs rounded-full uppercase tracking-wide">{counsellorsList.length} Active</span>
                 </h3>
-                <div className="counsellor-panel-grid">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {counsellorsList.map(c => {
                     const assignedCount = students.filter(s => s.assignedCounsellorId === c.id).length;
                     return (
-                      <div key={c.id} className="counsellor-panel-card">
-                        <div className="cpc-header">
-                          <div className="cpc-avatar">{(c.name || 'C').charAt(0).toUpperCase()}</div>
+                      <div key={c.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="w-12 h-12 rounded-full bg-[#222] text-[#FDD14B] font-bold text-lg flex items-center justify-center shrink-0">
+                            {(c.name || 'C').charAt(0).toUpperCase()}
+                          </div>
                           <div>
-                            <div className="cpc-name">{c.name}</div>
-                            <div className="cpc-title">{c.title || c.specialization || 'Counsellor'}</div>
+                            <div className="font-bold text-[#222]">{c.name}</div>
+                            <div className="text-xs text-gray-500">{c.title || c.specialization || 'Counsellor'}</div>
                           </div>
                         </div>
                         {c.availability && (
-                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                          <div className="text-xs text-gray-500 mb-2">
                             🕐 {c.availability}
                           </div>
                         )}
-                        <div className="cpc-stats">
-                          <div className="cpc-stat">
-                            <div className="cpc-stat-val" style={{ color: 'var(--primary)' }}>{assignedCount}</div>
-                            <div className="cpc-stat-label">Assigned</div>
+                        <div className="flex gap-4 mt-3 pt-3 border-t border-gray-100">
+                          <div className="text-center flex-1">
+                            <div className="text-lg font-bold text-[#222]">{assignedCount}</div>
+                            <div className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold mt-1">Assigned</div>
                           </div>
                           {c.totalSessions && (
-                            <div className="cpc-stat">
-                              <div className="cpc-stat-val">{c.totalSessions}</div>
-                              <div className="cpc-stat-label">Sessions</div>
+                            <div className="text-center flex-1">
+                              <div className="text-lg font-bold text-[#222]">{c.totalSessions}</div>
+                              <div className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold mt-1">Sessions</div>
                             </div>
                           )}
                           {c.rating && (
-                            <div className="cpc-stat">
-                              <div className="cpc-stat-val" style={{ color: 'var(--warning)' }}>⭐ {c.rating}</div>
-                              <div className="cpc-stat-label">Rating</div>
+                            <div className="text-center flex-1">
+                              <div className="text-lg font-bold text-[#FDD14B]">⭐ {c.rating}</div>
+                              <div className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold mt-1">Rating</div>
                             </div>
                           )}
                         </div>
