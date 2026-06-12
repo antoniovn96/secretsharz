@@ -1071,6 +1071,11 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   } = useDashboard();
 
   // --- STATE ---
+  const [institutionsCount, setInstitutionsCount] = useState(0);
+  const [studentsCount, setStudentsCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [completionRate, setCompletionRate] = useState(0);
+
   const [activeTab, setActiveTab] = useState('overview');
   const [activeAdminTab, setActiveAdminTab] = useState('command-center');
   const [toast, setToast] = useState(null);
@@ -1141,6 +1146,33 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   // We show firestoreStudents if available, else fall back to context students.
   const students = firestoreStudents.length > 0 ? firestoreStudents : ctxStudents;
   const counsellorsList = firestoreStaff.length > 0 ? firestoreStaff : ctxCounsellors;
+
+  // --- FETCH REAL METRICS (Requested by Task) ---
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const instSnap = await getDocs(collection(db, COLLECTIONS.INSTITUTIONS));
+        setInstitutionsCount(instSnap.size);
+
+        const usersSnap = await getDocs(collection(db, COLLECTIONS.USERS));
+        const usersDocs = usersSnap.docs.map(d => d.data());
+        
+        const assessed = usersDocs.filter(u => u.riasecCode);
+        setStudentsCount(assessed.length);
+        
+        const pending = usersDocs.filter(u => !u.assignedCounsellorId && u.riasecCode);
+        setPendingCount(pending.length);
+        
+        const completed = usersDocs.filter(u => u.counsellingStatus === 'Completed');
+        if (usersDocs.length > 0) {
+          setCompletionRate(Math.round((completed.length / usersDocs.length) * 100));
+        }
+      } catch (err) {
+        console.error('Error fetching metrics', err);
+      }
+    };
+    fetchCounts();
+  }, []);
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -1690,24 +1722,24 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               {!isCounsellor && (
                 <div className="kpi-box" style={{ borderTop: '3px solid var(--primary)' }} onClick={() => setActiveTab('institutions')}>
                   <h4>Institutions</h4>
-                  <div className="val">{institutions.length || ctxStats.totalCounsellors}</div>
+                  <div className="val">{institutionsCount}</div>
                   <div className="val-sub">Registered partners</div>
                 </div>
               )}
               <div className="kpi-box" style={{ borderTop: '3px solid var(--success)' }} onClick={() => setActiveTab('students')}>
                 <h4>Assessed Students</h4>
-                <div className="val">{totalAssessed}</div>
+                <div className="val">{studentsCount}</div>
                 <div className="val-sub">Completed RIASEC</div>
               </div>
               <div className="kpi-box" style={{ borderTop: '3px solid var(--danger)' }} onClick={() => { setStatusFilter('Not Started'); setActiveTab('students'); }}>
                 <h4>Pending Assignments</h4>
-                <div className="val" style={{ color: pendingInterventions > 0 ? 'var(--danger)' : 'var(--success)' }}>{pendingInterventions}</div>
+                <div className="val" style={{ color: pendingCount > 0 ? 'var(--danger)' : 'var(--success)' }}>{pendingCount}</div>
                 <div className="val-sub">Need counsellor assignment</div>
               </div>
               <div className="kpi-box" style={{ borderTop: '3px solid var(--warning)' }} onClick={() => setActiveTab('analytics')}>
                 <h4>Completion Rate</h4>
-                <div className="val">{totalRegistered > 0 ? Math.round((totalCompleted / totalRegistered) * 100) : 0}%</div>
-                <div className="val-sub">{totalCompleted} of {totalRegistered} students</div>
+                <div className="val">{completionRate}%</div>
+                <div className="val-sub">Based on all registered students</div>
               </div>
             </div>
 
