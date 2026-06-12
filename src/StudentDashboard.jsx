@@ -3,6 +3,7 @@ import { doc, setDoc, onSnapshot, getDoc } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import CareerAssessment from "./CareerAssessment";
 import ProfileEditor from "./ProfileEditor";
+import CareerDashboardView from "./components/CareerDashboardView";
 import ChatWidget from "./components/ChatWidget";
 import { useDashboard } from "./context/DashboardContext";
 import XpChecklistModal from "./components/XpChecklistModal";
@@ -1076,7 +1077,11 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   );
 
   // ── CENTER FEED: Home Tab ──
-  const renderHomeFeed = () => (
+  const renderHomeFeed = () => {
+    if (userTrack === 'career') {
+      return <CareerDashboardView collegesExt={collegesExt} localUserData={localUserData} />;
+    }
+    return (
     <div className="db-feed db-tab">
       {/* Profile Completion Banner */}
       {!localUserData?.profileComplete && (
@@ -1310,7 +1315,8 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         );
       })}
     </div>
-  );
+    );
+  };
 
   // ── CAREERS TAB ──
   const renderCareersTab = () => (
