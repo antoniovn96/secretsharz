@@ -1148,8 +1148,10 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   const counsellorsList = firestoreStaff.length > 0 ? firestoreStaff : ctxCounsellors;
 
   // --- FETCH REAL METRICS (Requested by Task) ---
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
   useEffect(() => {
     const fetchCounts = async () => {
+      setIsLoadingMetrics(true);
       try {
         const instSnap = await getDocs(collection(db, COLLECTIONS.INSTITUTIONS));
         setInstitutionsCount(instSnap.size);
@@ -1169,6 +1171,8 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
         }
       } catch (err) {
         console.error('Error fetching metrics', err);
+      } finally {
+        setIsLoadingMetrics(false);
       }
     };
     fetchCounts();
@@ -1722,23 +1726,23 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               {!isCounsellor && (
                 <div className="kpi-box" style={{ borderTop: '3px solid var(--primary)' }} onClick={() => setActiveTab('institutions')}>
                   <h4>Institutions</h4>
-                  <div className="val">{institutionsCount}</div>
+                  <div className="val">{isLoadingMetrics ? '...' : institutionsCount}</div>
                   <div className="val-sub">Registered partners</div>
                 </div>
               )}
               <div className="kpi-box" style={{ borderTop: '3px solid var(--success)' }} onClick={() => setActiveTab('students')}>
                 <h4>Assessed Students</h4>
-                <div className="val">{studentsCount}</div>
+                <div className="val">{isLoadingMetrics ? '...' : studentsCount}</div>
                 <div className="val-sub">Completed RIASEC</div>
               </div>
               <div className="kpi-box" style={{ borderTop: '3px solid var(--danger)' }} onClick={() => { setStatusFilter('Not Started'); setActiveTab('students'); }}>
                 <h4>Pending Assignments</h4>
-                <div className="val" style={{ color: pendingCount > 0 ? 'var(--danger)' : 'var(--success)' }}>{pendingCount}</div>
+                <div className="val" style={{ color: pendingCount > 0 ? 'var(--danger)' : 'var(--success)' }}>{isLoadingMetrics ? '...' : pendingCount}</div>
                 <div className="val-sub">Need counsellor assignment</div>
               </div>
               <div className="kpi-box" style={{ borderTop: '3px solid var(--warning)' }} onClick={() => setActiveTab('analytics')}>
                 <h4>Completion Rate</h4>
-                <div className="val">{completionRate}%</div>
+                <div className="val">{isLoadingMetrics ? '...' : `${completionRate}%`}</div>
                 <div className="val-sub">Based on all registered students</div>
               </div>
             </div>
