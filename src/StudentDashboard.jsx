@@ -9,6 +9,7 @@ import XpChecklistModal from "./components/XpChecklistModal";
 import CareerMatchesModal from "./components/CareerMatchesModal";
 import { SCHOOLS, COLLEGES, INTERESTS, HOBBIES, TV_SHOWS, MOVIES, GAMES, SPORTS } from "./data/platformData";
 import * as platformData from './data/platformData';
+import ClinicalIntakeModal from "./components/ClinicalIntakeModal";
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
 
 const CSS = `
@@ -342,6 +343,14 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const { userProfile, socialFeed, notifications, markNotificationRead, markAllNotificationsRead, incrementSessions, submitBooking, updateUserProfile } = useDashboard();
 
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [userTrack, setUserTrack] = useState('hybrid');
+  const [showClinicalIntake, setShowClinicalIntake] = useState(false);
+
+  const filteredNavItems = NAV_ITEMS.filter(item => {
+    if (userTrack === 'counselling' && ['careers', 'compare', 'colleges', 'growth', 'report'].includes(item.id)) return false;
+    if (userTrack === 'career' && item.id === 'counsellor') return false;
+    return true;
+  });
   const [isParentMode, setIsParentMode] = useState(false);
   const [toast, setToast] = useState(null);
   const [advisoryMsg, setAdvisoryMsg] = useState("");
@@ -528,6 +537,10 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         const docSnap = await getDoc(doc(db, "users", "mock-student-id"));
         if (docSnap.exists()) {
           const data = docSnap.data();
+          if (data.track) { setUserTrack(data.track); } else { setUserTrack('hybrid'); }
+          if ((data.track === 'counselling' || data.track === 'hybrid') && !data.hasCompletedClinicalIntake) {
+            setShowClinicalIntake(true);
+          }
           if (!data.hasAcceptedTerms) { setShowTermsModal(true); }
           setLocalUserData(prev => ({ ...prev, ...data }));
           if (data.journalEntries) setJournalEntries(data.journalEntries);
@@ -589,6 +602,10 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     const unsub = onSnapshot(doc(db, 'users', auth.currentUser.uid), (userDoc) => {
       if (userDoc.exists()) {
         const data = userDoc.data();
+        if (data.track) { setUserTrack(data.track); } else { setUserTrack('hybrid'); }
+        if ((data.track === 'counselling' || data.track === 'hybrid') && !data.hasCompletedClinicalIntake) {
+          setShowClinicalIntake(true);
+        }
         setLocalUserData(data);
         if (data.profileComplete) {
           setProfileData({
@@ -851,16 +868,18 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         </button>
 
         {/* Quick Stats */}
-        <div className="db-profile-stats">
-          <div className="db-profile-stat">
-            <div className="db-profile-stat-val">{hasAssessment ? "8" : "0"}</div>
-            <div className="db-profile-stat-lbl">Clarity</div>
+        {userTrack !== 'counselling' && (
+          <div className="db-profile-stats">
+            <div className="db-profile-stat">
+              <div className="db-profile-stat-val">{hasAssessment ? "8" : "0"}</div>
+              <div className="db-profile-stat-lbl">Clarity</div>
+            </div>
+            <div className="db-profile-stat">
+              <div className="db-profile-stat-val">{hasAssessment ? "✓" : "—"}</div>
+              <div className="db-profile-stat-lbl">Assessed</div>
+            </div>
           </div>
-          <div className="db-profile-stat">
-            <div className="db-profile-stat-val">{hasAssessment ? "✓" : "—"}</div>
-            <div className="db-profile-stat-lbl">Assessed</div>
-          </div>
-        </div>
+        )}
 
         {/* Parent Mode Toggle */}
         <div style={{ marginTop: '12px' }}>
@@ -1038,7 +1057,11 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             { icon: '🏫', label: 'College Explorer', tab: 'colleges' },
             { icon: '📈', label: 'Growth Plan', tab: 'growth' },
             { icon: '📅', label: 'Book Expert', tab: 'counsellor' },
-          ].map((item) => (
+          ].filter(item => {
+            if (userTrack === 'counselling' && ['careers', 'compare', 'colleges', 'growth', 'report'].includes(item.tab)) return false;
+            if (userTrack === 'career' && item.tab === 'counsellor') return false;
+            return true;
+          }).map((item) => (
             <button
               key={item.tab}
               onClick={() => setActiveTab(item.tab)}
@@ -1119,7 +1142,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
       </div>
 
       {/* Career Intelligence Report Card */}
-      {hasAssessment ? (
+      {hasAssessment && userTrack !== 'counselling' ? (
         <div className="db-intel-card">
           <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(240,165,0,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', bottom: '-30px', left: '30%', width: '160px', height: '160px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(20,184,166,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -1206,7 +1229,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             <button className="db-btn-ghost" onClick={() => setActiveTab("report")} style={{ fontSize: '12px', padding: '9px 18px' }}>📄 Full Report</button>
           </div>
         </div>
-      ) : (
+      ) : userTrack !== 'counselling' ? (
         <div style={{ background: 'white', borderRadius: 'var(--r-xl)', padding: '32px', border: '2px dashed var(--border)', display: 'flex', alignItems: 'center', gap: '24px' }}>
           <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, #EEF2FF, #E0E7FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', flexShrink: 0 }}>🧠</div>
           <div style={{ flex: 1 }}>
@@ -1220,10 +1243,10 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             Take Assessment 🚀
           </button>
         </div>
-      )}
+      ) : null}
 
       {/* Stream Recommendation */}
-      {hasAssessment && streamRec && (
+      {hasAssessment && streamRec && userTrack !== 'counselling' && (
         <div className="db-stream-box">
           <div>
             <div style={{ fontSize: '11px', color: 'var(--success)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>🎯 Stream Recommendation</div>
@@ -2192,11 +2215,19 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               <div className={`about-nav-item ${activeAboutTab === 'education' ? 'active' : ''}`} onClick={() => setActiveAboutTab('education')}>Education</div>
               <div className={`about-nav-item ${activeAboutTab === 'work-experience' ? 'active' : ''}`} onClick={() => setActiveAboutTab('work-experience')}>Work Experience</div>
               <div className={`about-nav-item ${activeAboutTab === 'links' ? 'active' : ''}`} onClick={() => setActiveAboutTab('links')}>Project Links</div>
-              <div className={`about-nav-item ${activeAboutTab === 'hobbies' ? 'active' : ''}`} onClick={() => setActiveAboutTab('hobbies')}>Hobbies &amp; Interests</div>
-              <div className={`about-nav-item ${activeAboutTab === 'journal' ? 'active' : ''}`} onClick={() => setActiveAboutTab('journal')}>📓 Clarity Journal</div>
-              <div className={`about-nav-item ${activeAboutTab === 'life-skills' ? 'active' : ''}`} onClick={() => setActiveAboutTab('life-skills')}>🕸️ Life Skills Matrix</div>
-              <div className={`about-nav-item ${activeAboutTab === 'career-report' ? 'active' : ''}`} onClick={() => setActiveAboutTab('career-report')}>Career Report</div>
-              <div className={`about-nav-item ${activeAboutTab === 'roadmap' ? 'active' : ''}`} onClick={() => setActiveAboutTab('roadmap')}>🗺️ Career Roadmap</div>
+              <div className={`about-nav-item ${activeAboutTab === 'hobbies' ? 'active' : ''}`} onClick={() => setActiveAboutTab('hobbies')}>Hobbies & Interests</div>
+              {userTrack !== 'career' && (
+                <>
+                  <div className={`about-nav-item ${activeAboutTab === 'journal' ? 'active' : ''}`} onClick={() => setActiveAboutTab('journal')}>📓 Clarity Journal</div>
+                  <div className={`about-nav-item ${activeAboutTab === 'life-skills' ? 'active' : ''}`} onClick={() => setActiveAboutTab('life-skills')}>🕸️ Life Skills Matrix</div>
+                </>
+              )}
+              {userTrack !== 'counselling' && (
+                <>
+                  <div className={`about-nav-item ${activeAboutTab === 'career-report' ? 'active' : ''}`} onClick={() => setActiveAboutTab('career-report')}>Career Report</div>
+                  <div className={`about-nav-item ${activeAboutTab === 'roadmap' ? 'active' : ''}`} onClick={() => setActiveAboutTab('roadmap')}>🗺️ Career Roadmap</div>
+                </>
+              )}
               <div className={`about-nav-item ${activeAboutTab === 'messages' ? 'active' : ''}`} onClick={() => setActiveAboutTab('messages')}>💬 Messages {unreadCount > 0 && <span style={{background: 'red', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '12px', marginLeft: '5px'}}>{unreadCount}</span>}</div>
             </div>
 
@@ -3440,6 +3471,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
           {toast && <div className="db-toast"><span>🔔</span><span>{toast}</span></div>}
           <ChatWidget />
           {showTermsModal && ( <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}> <div style={{ background: 'var(--bg-surface, #1e1e1e)', padding: '30px', borderRadius: '10px', maxWidth: '500px', width: '90%', border: '1px solid var(--border)' }}> <h2 style={{ color: '#fff', marginBottom: '15px' }}>Terms & Conditions</h2> <p style={{ color: '#aaa', fontSize: '14px', lineHeight: '1.6', marginBottom: '20px' }}> By accessing the Secret Sharz dashboard, you consent that all personal, academic, and psychological information provided on this platform will be strictly utilized for Career Guidance and professional Counseling purposes. Your data is securely managed and will only be accessible to your assigned counselors and platform administrators. </p> <div style={{ display: 'flex', justifyContent: 'flex-end' }}> <button onClick={handleAcceptTerms} style={{ background: 'var(--primary-blue, #0066ff)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}> I Agree & Continue </button> </div> </div> </div> )}
+          {showClinicalIntake && <ClinicalIntakeModal onComplete={() => setShowClinicalIntake(false)} />}
         </main>
       </div>
     </div>
