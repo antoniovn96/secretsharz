@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Menu, Search, Bell, Home, Users, Briefcase, Shield, Settings, Moon, Sun, ChevronDown, CheckCircle, Clock, AlertCircle, X, Check, Eye } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, AreaChart, Area, CartesianGrid, Legend } from 'recharts';
 import { signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { doc, setDoc, getDoc, collection, getDocs, updateDoc, onSnapshot } from 'firebase/firestore';
@@ -314,7 +314,6 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   const [completionRate, setCompletionRate] = useState(0);
 
   const [activeTab, setActiveTab] = useState('overview');
-  const [activeAdminTab, setActiveAdminTab] = useState('command-center');
   const [toast, setToast] = useState(null);
 
   // Firestore live data (supplements context for real users)
@@ -813,6 +812,16 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
     );
   };
 
+  const trendData = [
+    { name: 'Jan', registered: 40, assessed: 24, sessions: 15 },
+    { name: 'Feb', registered: 30, assessed: 13, sessions: 28 },
+    { name: 'Mar', registered: 20, assessed: 58, sessions: 42 },
+    { name: 'Apr', registered: 27, assessed: 39, sessions: 35 },
+    { name: 'May', registered: 18, assessed: 48, sessions: 25 },
+    { name: 'Jun', registered: 23, assessed: 38, sessions: 40 },
+    { name: 'Jul', registered: 34, assessed: 43, sessions: 50 },
+  ];
+
   const renderTabContent = () => {
     if (loadingData) return (
       <div className="empty-state">
@@ -955,41 +964,108 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             <p className="text-gray-500 text-sm mt-1">Welcome back. Here's what's happening today.</p>
           </div>
           
-          {/* Top Row: 3 Cards */}
+          {/* Top Row: Sparkline Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
-              <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Action Queue</span>
-              <div className="text-4xl font-bold text-gray-900 mb-1">{pendingCount}</div>
-              <span className="text-sm text-yellow-500 font-medium bg-yellow-50 px-2 py-1 rounded-md self-start mt-auto">Pending Assignments</span>
+              <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Total Registered</span>
+              <div className="text-4xl font-bold text-gray-900 mb-4">{totalRegistered}</div>
+              <div style={{ width: '100%', height: 60 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData}>
+                    <Area type="monotone" dataKey="registered" stroke="#3B82F6" fill="#EFF6FF" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
             
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
-              <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Counsellor Team</span>
-              <div className="text-4xl font-bold text-gray-900 mb-1">{counsellorsList.length}</div>
-              <span className="text-sm text-blue-500 font-medium bg-blue-50 px-2 py-1 rounded-md self-start mt-auto">Active Staff</span>
+              <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Assessed Students</span>
+              <div className="text-4xl font-bold text-gray-900 mb-4">{totalAssessed}</div>
+              <div style={{ width: '100%', height: 60 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData}>
+                    <Area type="monotone" dataKey="assessed" stroke="#10B981" fill="#ECFDF5" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
             
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
-              <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Institutions</span>
-              <div className="text-4xl font-bold text-gray-900 mb-1">{institutionsCount}</div>
-              <span className="text-sm text-green-500 font-medium bg-green-50 px-2 py-1 rounded-md self-start mt-auto">Partner Schools</span>
+              <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Active Sessions</span>
+              <div className="text-4xl font-bold text-gray-900 mb-4">{students.reduce((acc, s) => acc + (s.sessions?.length || 0), 0)}</div>
+              <div style={{ width: '100%', height: 60 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData}>
+                    <Area type="monotone" dataKey="sessions" stroke="#F59E0B" fill="#FFFBEB" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
           
-          {/* Bottom Row: Donut Chart */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Counselling Funnel</h3>
-            <div style={{ width: '100%', height: 300 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={80} outerRadius={120} paddingAngle={5} dataKey="value">
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+          {/* Middle Row: 3 Advanced Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            {/* Card 1: The Gauge */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 mb-6">Platform Adoption</h3>
+              <div style={{ height: 250, width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="100%"
+                      startAngle={180}
+                      endAngle={0}
+                      innerRadius={80}
+                      outerRadius={120}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Card 2: Stacked Bar */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 mb-6">Monthly Engagement</h3>
+              <div style={{ height: 250, width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={trendData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip cursor={{fill: 'transparent'}} />
+                    <Legend />
+                    <Bar dataKey="registered" stackId="a" fill="#3B82F6" radius={[0, 0, 4, 4]} />
+                    <Bar dataKey="assessed" stackId="a" fill="#10B981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Card 3: Overlapping Area */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 mb-6">Platform Traffic</h3>
+              <div style={{ height: 250, width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Area type="monotone" dataKey="registered" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} strokeWidth={2} />
+                    <Area type="monotone" dataKey="assessed" stroke="#10B981" fill="#10B981" fillOpacity={0.3} strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
@@ -1426,60 +1502,8 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   };
 
   return (
-    <div className="social-dark-theme">
-      <nav className="top-global-nav">
-        <h2>VidyaVantage (Admin Server)</h2>
-        <ul className="top-global-nav-links">
-          <li>🎛️ Dashboard</li>
-          <li>⚙️ System Health</li>
-          <li>🚪 Sign Out</li>
-          <li style={{ cursor: 'pointer', color: '#2D88FF' }} onClick={() => window.location.href = '/'}>🌐 Main Website</li>
-        </ul>
-      </nav>
-      <div className="social-dashboard-layout" style={{ paddingTop: '60px' }}>
-        <main className="social-main-content">
-
-        {/* ── ADMIN HERO HEADER ── */}
-        <div className="profile-hero-container">
-          <div className="profile-cover-photo">
-            <div className="profile-avatar-wrapper">
-              <span className="profile-avatar-fallback">
-                A
-              </span>
-            </div>
-          </div>
-          <div className="profile-identity-row">
-            <div className="profile-name-section">
-              <h1>Admin Command Center</h1>
-              <div className="profile-bio">
-                System management and platform analytics.
-              </div>
-              <div className="profile-pinned-details">
-                <span>📍 Secret Sharz Server</span>
-                <span>🔐 Super Admin</span>
-              </div>
-            </div>
-            <div className="profile-actions">
-              <button className="btn-primary-social">📊 View Analytics</button>
-            </div>
-          </div>
-        </div>
-
-        {/* ── NESTED ADMIN CONTROLS ── */}
-        <div className="about-container">
-          <div className="about-sidebar">
-            <h3>Admin Controls</h3>
-            <div className={`about-nav-item ${activeAdminTab === 'command-center' ? 'active' : ''}`} onClick={() => setActiveAdminTab('command-center')}>Command Center</div>
-            <div className={`about-nav-item ${activeAdminTab === 'user-db' ? 'active' : ''}`} onClick={() => setActiveAdminTab('user-db')}>User Database</div>
-          </div>
-
-          <div className="about-content">
-            {activeAdminTab === 'command-center' && (
-              <div>
-                <div className="about-content-header">System Overview</div>
-
-                {/* ── EXISTING ADMIN DASHBOARD (admin-root wrapper) ── */}
-                <div className="admin-root" style={{ height: 'auto', minHeight: 'unset' }}>
+    <div className={`min-h-screen bg-[#F4F7FE] flex font-sans ${typeof darkMode !== 'undefined' && darkMode ? "dark" : ""}`}>
+      <div className="admin-root" style={{ height: 'auto', minHeight: 'unset', width: '100%' }}>
 
                   {/* ── SIDEBAR ── */}
                   <div className="admin-sidebar">
@@ -1596,244 +1620,6 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                   </div>
 
                 </div>{/* end admin-root */}
-              </div>
-            )}
-
-            {activeAdminTab === 'user-db' && (
-              <div>
-                <div className="about-content-header">Manage Users &amp; Roles</div>
-
-                {/* ── USER MANAGEMENT TABLES ── */}
-                <div className="admin-root" style={{ height: 'auto', minHeight: 'unset' }}>
-
-                  {/* Sidebar for user-db tab */}
-                  <div className="admin-sidebar">
-                    <div className="admin-brand">
-                      <h2>User DB</h2>
-                      <div className="admin-brand-sub">Management</div>
-                    </div>
-                    <div className="nav-section-label">Filters</div>
-                    {['All', 'Not Started', 'In Progress', 'Completed'].map(status => (
-                      <button
-                        key={status}
-                        className={`nav-btn ${statusFilter === status ? 'active' : ''}`}
-                        onClick={() => setStatusFilter(status)}
-                      >
-                        {status}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Main content for user-db */}
-                  <div className="admin-main">
-                    <div className="main-content">
-                      {/* Onboard New Counsellor Card */}
-                      <div className="inline-form" style={{ marginBottom: '30px' }}>
-                        <div className="about-content-header" style={{ borderBottom: 'none', paddingBottom: '0' }}>Onboard New Counsellor</div>
-                        <p style={{ color: '#B0B3B8', fontSize: '14px', marginBottom: '20px' }}>Auto-generate secure credentials and unique employee IDs (Format: SJU20000X).</p>
-                        
-                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', marginBottom: '15px' }}>
-                          <input 
-                            className="form-input" 
-                            style={{ margin: 0, flex: 2 }} 
-                            type="email" 
-                            placeholder="Counsellor Email Address" 
-                            value={newCounsellorEmail}
-                            onChange={(e) => setNewCounsellorEmail(e.target.value)}
-                          />
-                          <button className="btn-secondary-social" onClick={handleGenerateCredentials}>Generate Credentials</button>
-                        </div>
-
-                        {(generatedPassword || generatedEmpId) && (
-                          <div style={{ backgroundColor: '#18191A', padding: '15px', borderRadius: '6px', border: '1px dashed #3A3B3C', display: 'flex', gap: '20px' }}>
-                            <div><span style={{ color: '#B0B3B8', fontSize: '12px' }}>Employee ID:</span><br/><strong style={{ color: '#2D88FF' }}>{generatedEmpId}</strong></div>
-                            <div><span style={{ color: '#B0B3B8', fontSize: '12px' }}>Temporary Password:</span><br/><strong style={{ color: '#E4E6EB' }}>{generatedPassword}</strong></div>
-                            <button className="btn-primary-social" style={{ marginLeft: 'auto' }}>Create Account</button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Search Bar */}
-                      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-                        <input
-                          type="text"
-                          ref={searchRef}
-                          className="form-input"
-                          placeholder="🔍 Search by name or email..."
-                          value={searchInput}
-                          onChange={(e) => setSearchInput(e.target.value)}
-                          style={{ flex: 2 }}
-                        />
-                        <select className="form-select" value={eduFilter} onChange={(e) => setEduFilter(e.target.value)} style={{ flex: 1 }}>
-                          <option value="All">All Education Levels</option>
-                          <option value="10th">10th Grade</option>
-                          <option value="12th">12th Grade / PUC</option>
-                          <option value="Graduate">Graduate (UG)</option>
-                          <option value="Post Graduate">Post Graduate (PG)</option>
-                        </select>
-                        {(searchInput || statusFilter !== 'All' || eduFilter !== 'All') && (
-                          <button
-                            className="admin-btn-outline"
-                            onClick={() => { setSearchInput(''); setStatusFilter('All'); setEduFilter('All'); }}
-                            style={{ whiteSpace: 'nowrap' }}
-                          >
-                            ✕ Clear
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Students Table */}
-                      <div className="admin-card" style={{ borderTop: '3px solid var(--primary)' }}>
-                        <h3>
-                          🎓 Students
-                          <span className="admin-badge badge-primary">{filteredStudents.length} Shown</span>
-                        </h3>
-                        {filteredStudents.length === 0 ? (
-                          <div className="empty-state">
-                            <div className="empty-icon">🔍</div>
-                            <p>No students found. Try adjusting your filters.</p>
-                          </div>
-                        ) : (
-                          <div style={{ overflowX: 'auto' }}>
-                            <table className="data-table">
-                              <thead>
-                                <tr>
-                                  <th>Student</th>
-                                  <th>RIASEC</th>
-                                  <th>Status</th>
-                                  <th>Assigned Counsellor</th>
-                                  <th>Reassign</th>
-                                  <th>Actions</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {filteredStudents.map(student => {
-                                  const assignedCounsellor = getAssignedCounsellor(student);
-                                  return (
-                                    <tr key={student.id}>
-                                      <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', overflow: 'hidden', flexShrink: 0 }}>
-                                            {student.profilePicture ? (
-                                              <img src={student.profilePicture} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            ) : (
-                                              (student.name || '?').charAt(0).toUpperCase()
-                                            )}
-                                          </div>
-                                          <div>
-                                            <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{student.name || 'Unknown'}</div>
-                                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{student.email}</div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                      <td><span className="admin-badge badge-primary">{student.riasecCode}</span></td>
-                                      <td>
-                                        <span className={`admin-badge ${student.counsellingStatus === 'Not Started' ? 'badge-danger' : student.counsellingStatus === 'In Progress' ? 'badge-warn' : 'badge-success'}`}>
-                                          {student.counsellingStatus}
-                                        </span>
-                                      </td>
-                                      <td>
-                                        {assignedCounsellor ? (
-                                          <span className="counsellor-chip">
-                                            <span className="counsellor-chip-dot" />
-                                            {assignedCounsellor.name}
-                                          </span>
-                                        ) : (
-                                          <span className="unassigned-chip">⚠ Unassigned</span>
-                                        )}
-                                      </td>
-                                      <td style={{ minWidth: '180px' }}>
-                                        {counsellorsList.length > 0 ? (
-                                          <select
-                                            className="form-select"
-                                            style={{ padding: '6px 10px', fontSize: '0.8rem' }}
-                                            value={student.assignedCounsellorId || ''}
-                                            onChange={(e) => handleAssignCounsellor(student.id, e.target.value)}
-                                          >
-                                            <option value="">— Unassigned —</option>
-                                            {counsellorsList.map(c => (
-                                              <option key={c.id} value={c.id}>{c.name || c.email}</option>
-                                            ))}
-                                          </select>
-                                        ) : (
-                                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>No counsellors</span>
-                                        )}
-                                      </td>
-                                      <td>
-                                        <button
-                                          className="admin-btn-sm-outline"
-                                          onClick={() => { setSelectedStudent(student); setModalTab('overview'); }}
-                                        >
-                                          View
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Counsellors / Experts Table */}
-                      <div className="admin-card" style={{ borderTop: '3px solid var(--success)' }}>
-                        <h3>
-                          👥 Counsellors / Experts
-                          <span className="admin-badge badge-success">{counsellorsList.length} Registered</span>
-                        </h3>
-                        {counsellorsList.length === 0 ? (
-                          <div className="empty-state">
-                            <div className="empty-icon">👥</div>
-                            <p>No counsellors registered yet. Add them to the Staff collection in Firestore.</p>
-                          </div>
-                        ) : (
-                          <div style={{ overflowX: 'auto' }}>
-                            <table className="data-table">
-                              <thead>
-                                <tr>
-                                  <th>Name</th>
-                                  <th>Title / Specialization</th>
-                                  <th>Email</th>
-                                  <th>Assigned Students</th>
-                                  <th>Availability</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {counsellorsList.map(c => {
-                                  const assignedCount = students.filter(s => s.assignedCounsellorId === c.id).length;
-                                  return (
-                                    <tr key={c.id}>
-                                      <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), #7C6EF5)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', flexShrink: 0 }}>
-                                            {(c.name || 'C').charAt(0).toUpperCase()}
-                                          </div>
-                                          <div style={{ fontWeight: '600', color: 'var(--text-main)' }}>{c.name || '—'}</div>
-                                        </div>
-                                      </td>
-                                      <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{c.title || c.specialization || '—'}</td>
-                                      <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{c.email || '—'}</td>
-                                      <td>
-                                        <span className="admin-badge badge-primary">{assignedCount} Students</span>
-                                      </td>
-                                      <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{c.availability || '—'}</td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                </div>{/* end admin-root for user-db */}
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* ── TOAST NOTIFICATIONS ── */}
         {toast && (
@@ -1999,8 +1785,6 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             </div>
           </div>
         )}
-        </main>
-      </div>
     </div>
   );
 }
