@@ -250,7 +250,7 @@ const CSS = `
 /* Spinner */
 .auth-spinner {
   width: 18px; height: 18px;
-  border: 3px solid rgba(255,255,255,0.3);
+  border: 3px solid rgba(255,255,255,0.3)
   border-top-color: white;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -384,9 +384,15 @@ export default function AuthPage({ onAuthSuccess }) {
           track,
           loginMethod: "social",
           isNewUser: true,
+          role: "student", // Default role for new users
         });
       }
-      onAuthSuccess(user, !snap.exists());
+      
+      // Fetch user role and route accordingly
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const userRole = userDoc.data()?.role || "student";
+      
+      onAuthSuccess(user, !snap.exists(), userRole);
     } catch (err) {
       console.error(err);
       setError(friendlyError(err.code));
@@ -420,8 +426,9 @@ export default function AuthPage({ onAuthSuccess }) {
         track,
         loginMethod: "email",
         isNewUser: true,
+        role: "student", // Default role for new users
       });
-      onAuthSuccess(cred.user, true);
+      onAuthSuccess(cred.user, true, "student");
     } catch (err) {
       setError(friendlyError(err.code));
     } finally {
@@ -436,7 +443,12 @@ export default function AuthPage({ onAuthSuccess }) {
     setLoading(true);
     try {
       const cred = await signInWithEmailAndPassword(auth, login.email, login.password);
-      onAuthSuccess(cred.user, false);
+      
+      // Fetch user role from Firestore
+      const userDoc = await getDoc(doc(db, "users", cred.user.uid));
+      const userRole = userDoc.data()?.role || "student";
+      
+      onAuthSuccess(cred.user, false, userRole);
     } catch (err) {
       setError(friendlyError(err.code));
     } finally {
@@ -625,7 +637,7 @@ export default function AuthPage({ onAuthSuccess }) {
                 </a>
               </div>
               <button type="submit" className="auth-submit" disabled={loading}>
-                {loading ? <><div className="auth-spinner" /> Signing in...</> : "Sign In →"}
+                {loading ? <><div className="auth-spinner" /> Verifying credentials...</> : "Sign In →"}
               </button>
 
               <div className="auth-terms" style={{ marginTop: "20px" }}>

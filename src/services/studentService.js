@@ -1,4 +1,4 @@
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 
 /**
@@ -33,6 +33,36 @@ export const saveCollegeToShortlist = async (currentUser, collegeData, tier) => 
     return true;
   } catch (error) {
     console.error('Error saving college to shortlist:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches all students assigned to a specific counsellor.
+ * @param {string} counsellorUid - The UID of the counsellor.
+ * @returns {Promise<Array>} Array of student objects assigned to this counsellor.
+ */
+export const getAssignedStudents = async (counsellorUid) => {
+  try {
+    if (!counsellorUid) {
+      throw new Error('Counsellor UID is required.');
+    }
+
+    const studentsRef = collection(db, 'students');
+    const q = query(studentsRef, where('assignedStaff.careerId', '==', counsellorUid));
+    const querySnapshot = await getDocs(q);
+
+    const students = [];
+    querySnapshot.forEach((doc) => {
+      students.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    return students;
+  } catch (error) {
+    console.error('Error fetching assigned students:', error);
     throw error;
   }
 };

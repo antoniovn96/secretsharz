@@ -976,10 +976,29 @@ export default function App() {
     return () => unsub();
   }, [isAdmin]); 
 
-  const handleAuthSuccess = async (user, isNew) => {
+  const handleAuthSuccess = async (user, isNew, userRole = 'student') => {
     setCurrentUser(user);
-    if (isNew) setModal('onboarding');
-    else navigate('/dashboard');
+    
+    // Fetch user data to update state
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) {
+        setUserData(snap.data());
+      }
+    } catch (e) {
+      console.error('Error fetching user data:', e);
+    }
+    
+    // Route based on role
+    if (userRole === 'super_admin') {
+      navigate('/admin');
+    } else if (userRole === 'counsellor' || userRole === 'psychologist' || userRole === 'educator') {
+      navigate('/counsellor-dashboard');
+    } else {
+      // Default to student dashboard
+      if (isNew) setModal('onboarding');
+      else navigate('/dashboard');
+    }
   };
 
   const handleLogout = async () => {
@@ -998,6 +1017,21 @@ export default function App() {
     }
     if (currentPath.startsWith('/auth')) {
       return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+    }
+    if (currentPath.startsWith('/counsellor-dashboard')) {
+      if (!currentUser) { navigate('/auth'); return null; }
+      const CounsellorDashboard = lazy(() => import('./components/dashboards/CounsellorDashboard'));
+      return (
+        <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>Loading...</div>}>
+          <CounsellorDashboard
+            user={currentUser}
+            userData={userData}
+            onBack={() => navigate('/')}
+            onLogout={handleLogout}
+            navigate={navigate}
+          />
+        </Suspense>
+      );
     }
     if (currentPath.startsWith('/dashboard')) {
       if (!currentUser) { navigate('/auth'); return null; }
