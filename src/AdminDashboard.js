@@ -1,4 +1,6 @@
-import { Menu, Search, Bell, Home, Users, Briefcase, Shield, X, Check, Eye } from "lucide-react";\nimport { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";\nimport React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Menu, Search, Bell, Home, Users, Briefcase, Shield, Settings, Moon, Sun, ChevronDown, CheckCircle, Clock, AlertCircle, X, Check, Eye } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { doc, setDoc, getDoc, collection, getDocs, updateDoc, onSnapshot } from 'firebase/firestore';
