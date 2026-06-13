@@ -19,9 +19,13 @@ const COLLECTIONS = {
   STAFF: 'staff'
 };
 
+import AdminCommandCenter from './components/admin/AdminCommandCenter';
+import MasterRecord from './components/admin/MasterRecord';
+
 const ALL_NAV_TABS = [
   { id: 'profile', icon: <Users size={18} strokeWidth={2} />, label: 'My Profile', roles: ['super_admin', 'counsellor'] },
   { id: 'overview', icon: <Home size={18} strokeWidth={2} />, label: 'Dashboard', roles: ['super_admin', 'counsellor'] },
+  { id: 'command_center', icon: <Shield size={18} strokeWidth={2} />, label: 'Command Center', roles: ['super_admin'] },
   { id: 'students', icon: <Briefcase size={18} strokeWidth={2} />, label: 'Student Master', roles: ['super_admin', 'counsellor'] },
   { id: 'counselling', icon: <CheckCircle size={18} strokeWidth={2} />, label: 'Counselling Workflow', roles: ['super_admin', 'counsellor'] },
   { id: 'analytics', icon: <PieChart size={18} strokeWidth={2} />, label: 'Analytics & Funnel', roles: ['super_admin'] },
@@ -29,7 +33,7 @@ const ALL_NAV_TABS = [
   { id: 'settings', icon: <Settings size={18} strokeWidth={2} />, label: 'System Settings', roles: ['super_admin'] },
 ];
 
-export default function AdminDashboard({ user, onBackToApp, navigate }) {
+export default function AdminDashboard({ user, onBackToApp, navigate, currentPath }) {
   // ── Context & State ────────────────────────────────────────────────────────
   const { students: ctxStudents, counsellors: ctxCounsellors } = useDashboard();
   
@@ -93,6 +97,11 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
 
   // ── RENDER TAB CONTENT ──────────────────────────────────────────────────────
   const renderTabContent = () => {
+    if (currentPath && currentPath.startsWith('/admin/student/')) {
+      const studentId = currentPath.split('/admin/student/')[1];
+      return <MasterRecord studentId={studentId} navigate={navigate} adminUser={{ role: profile.role, uid: user?.uid }} />;
+    }
+
     if (loadingData) return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6b7280' }}>
         <p>Loading Data...</p>
@@ -292,6 +301,9 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             </div>
           </div>
         );
+
+      case 'command_center':
+        return <AdminCommandCenter navigate={navigate} />;
 
       case 'students':
         return (

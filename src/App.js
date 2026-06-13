@@ -994,7 +994,7 @@ export default function App() {
   const renderRoute = () => {
     if (currentPath.startsWith('/admin')) {
       if (!isAdmin) { navigate('/'); return null; }
-      return <AdminDashboard user={currentUser} onBackToApp={() => navigate('/')} />;
+      return <AdminDashboard user={currentUser} onBackToApp={() => navigate('/')} navigate={navigate} currentPath={currentPath} />;
     }
     if (currentPath.startsWith('/auth')) {
       return <AuthPage onAuthSuccess={handleAuthSuccess} />;
