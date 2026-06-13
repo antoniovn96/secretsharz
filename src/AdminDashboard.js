@@ -977,18 +977,20 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           </div>
           
           {/* Bottom Row: Donut Chart */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-6 h-96">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-6">
             <h3 className="text-lg font-bold text-gray-900 mb-6">Counselling Funnel</h3>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={80} outerRadius={120} paddingAngle={5} dataKey="value">
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            <div style={{ width: '100%', height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={80} outerRadius={120} paddingAngle={5} dataKey="value">
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       );
