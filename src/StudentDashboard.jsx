@@ -1780,65 +1780,97 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Hidden file inputs */}
-      <input
-        ref={coverPhotoInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={(e) => { if (e.target.files[0]) handlePhotoUpload(e.target.files[0], 'cover'); e.target.value = ''; }}
-      />
-      <input
-        ref={avatarInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={(e) => { if (e.target.files[0]) handlePhotoUpload(e.target.files[0], 'avatar'); e.target.value = ''; }}
-      />
+    <div className="db-root">
+      {/* Left Sidebar */}
+      <div className="db-sidebar-left">
+        <LeftProfileCard />
+      </div>
 
-      <div className="!max-w-7xl !mx-auto !px-4 !py-8 !flex !flex-col lg:!flex-row !gap-8 !w-full">
-        <input
-          type="file"
-          id="coverPhotoUpload"
-          accept="image/*"
-          style={{ display: 'none' }}
-          onChange={async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-              const base64 = await compressImage(file, 500);
-              await updateUserProfile({ coverPhoto: base64 });
-              showToast('✅ Cover photo updated!');
-            }
-            e.target.value = '';
+      {/* Main Content Area */}
+      <main className="db-main">
+        {/* Top Navigation */}
+        <div className="db-nav">
+          {filteredNavItems.map((item) => (
+            <button
+              key={item.id}
+              className={`db-nav-item ${activeTab === item.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(item.id)}
+            >
+              <span className="db-nav-icon">{item.icon}</span>
+              <span className="db-nav-label">{item.label}</span>
+              {item.badge && <span className="db-nav-badge">{item.badge}</span>}
+            </button>
+          ))}
+        </div>
+
+        {/* Active Tab Content */}
+        {renderActiveTab()}
+      </main>
+
+      {/* Right Sidebar */}
+      <div className="db-sidebar-right">
+        <RightSidebar />
+      </div>
+
+      {/* Modals & Overlays */}
+      {showProfileEditor && (
+        <ProfileEditor
+          onClose={() => setShowProfileEditor(false)}
+          userData={localUserData}
+          onSave={(updatedData) => {
+            setLocalUserData({ ...localUserData, ...updatedData });
+            setShowProfileEditor(false);
+            showToast('✅ Profile updated successfully!');
           }}
         />
-        <input
-          type="file"
-          id="profilePicUpload"
-          accept="image/*"
-          style={{ display: 'none' }}
-          onChange={async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-              const base64 = await compressImage(file, 200);
-              await updateUserProfile({ profilePicture: base64 });
-              showToast('✅ Profile picture updated!');
-            }
-            e.target.value = '';
-          }}
+      )}
+
+      {showXpModal && (
+        <XpChecklistModal
+          onClose={() => setShowXpModal(false)}
+          userProfile={userProfile}
+          incrementSessions={incrementSessions}
         />
-        <aside className="!w-full lg:!w-[320px] !flex-shrink-0 !flex !flex-col !gap-6">
-          <div className="profile-hero-container">
-            <div className="profile-cover-photo" style={{ backgroundImage: userProfile?.coverPhoto ? `url(${userProfile.coverPhoto})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-              {/* Cover photo edit button */}
-              <button
-                className="edit-cover-btn"
-                onClick={() => document.getElementById('coverPhotoUpload').click()}
-                disabled={uploadingPhoto}
-              >
-                {uploadingPhoto ? '⏳' : '📷'} {uploadingPhoto ? 'Uploading…' : 'Edit Cover Photo'}
+      )}
+
+      {showCareerMatchesModal && (
+        <CareerMatchesModal
+          localUserData={localUserData}
+          onClose={() => setShowCareerMatchesModal(false)}
+        />
+      )}
+
+      {toast && (
+        <div className="db-toast">
+          <span>🔔</span>
+          <span>{toast}</span>
+        </div>
+      )}
+
+      <ChatWidget />
+
+      {showTermsModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ background: 'var(--bg-surface, #1e1e1e)', padding: '30px', borderRadius: '10px', maxWidth: '500px', width: '90%', border: '1px solid var(--border)' }}>
+            <h2 style={{ color: '#fff', marginBottom: '15px' }}>Terms & Conditions</h2>
+            <p style={{ color: '#aaa', fontSize: '14px', lineHeight: '1.6', marginBottom: '20px' }}>
+              By accessing the Secret Sharz dashboard, you consent that all personal, academic, and psychological information provided on this platform will be strictly utilized for Career Guidance and professional Counseling purposes. Your data is securely managed and will only be accessible to your assigned counselors and platform administrators.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={handleAcceptTerms} style={{ background: 'var(--primary-blue, #0066ff)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
+                I Agree & Continue
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showClinicalIntake && (
+        <ClinicalIntakeModal onComplete={() => setShowClinicalIntake(false)} />
+      )}
+    </div>
+  );
+}
 
               {/* Cover photo popup */}
               {photoPopup === 'cover' && (
