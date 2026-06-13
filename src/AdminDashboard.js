@@ -11,7 +11,6 @@ import { signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { collection, getDocs, onSnapshot } from 'firebase/firestore';
 import { useDashboard } from './context/DashboardContext';
-import './AdminDashboard.css';
 
 const COLLECTIONS = {
   USERS: 'users',
