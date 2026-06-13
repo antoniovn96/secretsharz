@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from './firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { useDashboard } from './context/DashboardContext';
 import {
   demographicQuestions,
@@ -1452,7 +1452,7 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
   };
 
   // ── CALCULATE RESULTS ───────────────────────────────────────────────────────
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     setError(null);
     if (!stepDone) {
       setError('Please answer all required questions before calculating your results.');
@@ -1508,6 +1508,34 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
     // Use the authenticated user's UID as the student ID when available,
     // otherwise fall back to a stable anonymous key so the data is still saved.
     const studentId = auth?.currentUser?.uid || '_anonymous';
+
+    // Save to Firestore using dot notation
+    if (auth?.currentUser) {
+      try {
+        const studentRef = doc(db, 'students', auth.currentUser.uid);
+        const caseFileRef = doc(db, 'caseFiles', auth.currentUser.uid);
+        
+        // 1. Save the RIASEC data to the Student Master Record using dot notation
+        await updateDoc(studentRef, {
+          'careerDNA.riasec': {
+            scores: finalScores,
+            code: hollandCode.join('')
+          }
+        });
+        
+        // 2. Log the event in the Case File history timeline
+        await updateDoc(caseFileRef, {
+          history: arrayUnion({
+            type: 'assessment_completion',
+            title: 'Completed RIASEC Career Assessment',
+            timestamp: new Date().toISOString()
+          })
+        });
+      } catch (err) {
+        console.error('Error updating Firebase:', err);
+      }
+    }
+
     if (saveAssessmentResults) {
       saveAssessmentResults(studentId, computedResults);
     }
