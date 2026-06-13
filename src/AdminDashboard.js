@@ -415,13 +415,6 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
     fetchCounts();
   }, []);
 
-  // --- INITIALIZATION ---
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = STYLES;
-    document.head.appendChild(style);
-    return () => document.head.removeChild(style);
-  }, []);
 
   // Keyboard shortcut: '/' to focus search
   useEffect(() => {
