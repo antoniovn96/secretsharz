@@ -965,8 +965,8 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           </div>
           
           {/* Top Row: Sparkline Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Total Registered</span>
               <div className="text-4xl font-bold text-gray-900 mb-4">{totalRegistered}</div>
               <div style={{ width: '100%', height: 60 }}>
@@ -978,7 +978,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
             </div>
             
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Assessed Students</span>
               <div className="text-4xl font-bold text-gray-900 mb-4">{totalAssessed}</div>
               <div style={{ width: '100%', height: 60 }}>
@@ -990,7 +990,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
             </div>
             
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Active Sessions</span>
               <div className="text-4xl font-bold text-gray-900 mb-4">{students.reduce((acc, s) => acc + (s.sessions?.length || 0), 0)}</div>
               <div style={{ width: '100%', height: 60 }}>
@@ -1004,9 +1004,9 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           </div>
           
           {/* Middle Row: 3 Advanced Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Card 1: The Gauge */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-hidden">
               <h3 className="text-lg font-bold text-gray-900 mb-6">Platform Adoption</h3>
               <div style={{ height: 250, width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -1033,7 +1033,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             </div>
 
             {/* Card 2: Stacked Bar */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-hidden">
               <h3 className="text-lg font-bold text-gray-900 mb-6">Monthly Engagement</h3>
               <div style={{ height: 250, width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -1051,7 +1051,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             </div>
 
             {/* Card 3: Overlapping Area */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-hidden">
               <h3 className="text-lg font-bold text-gray-900 mb-6">Platform Traffic</h3>
               <div style={{ height: 250, width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
