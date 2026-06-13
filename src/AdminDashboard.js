@@ -302,7 +302,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
 
   // ── MAIN LAYOUT RENDER ──────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-[9999] min-h-screen flex bg-[#F4F7FE] font-sans text-gray-900 w-full overflow-hidden">
+    <div className="fixed inset-0 z-[9999] bg-[#F4F7FE] flex w-screen h-screen overflow-hidden" style={{ margin: 0, padding: 0 }}>
       {/* 1. FIXED SIDEBAR */}
       <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-[#1A1F36] text-white flex-shrink-0 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.15)] z-20">
         <div className="h-[68px] flex items-center px-6 border-b border-gray-800 flex-shrink-0">

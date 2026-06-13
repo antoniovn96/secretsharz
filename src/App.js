@@ -1120,7 +1120,7 @@ export default function App() {
             </div>
           )}
 
-          {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && (
+          {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && !currentPath.startsWith('/admin') && (
             <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
           )}
           
@@ -1128,7 +1128,7 @@ export default function App() {
             {renderRoute()}
           </main>
 
-          {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && (
+          {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && !currentPath.startsWith('/admin') && (
             <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={setModal} />
           )}
         </Suspense>
