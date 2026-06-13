@@ -966,7 +966,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           
           {/* Top Row: Sparkline Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
               <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Total Registered</span>
               <div className="text-4xl font-bold text-gray-900 mb-4">{totalRegistered}</div>
               <div style={{ width: '100%', height: 60 }}>
@@ -978,7 +978,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
             </div>
             
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
               <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Assessed Students</span>
               <div className="text-4xl font-bold text-gray-900 mb-4">{totalAssessed}</div>
               <div style={{ width: '100%', height: 60 }}>
@@ -990,7 +990,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
             </div>
             
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
               <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Active Sessions</span>
               <div className="text-4xl font-bold text-gray-900 mb-4">{students.reduce((acc, s) => acc + (s.sessions?.length || 0), 0)}</div>
               <div style={{ width: '100%', height: 60 }}>
@@ -1006,7 +1006,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           {/* Middle Row: 3 Advanced Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Card 1: The Gauge */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
               <h3 className="text-lg font-bold text-gray-900 mb-6">Platform Adoption</h3>
               <div style={{ height: 250, width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -1033,7 +1033,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             </div>
 
             {/* Card 2: Stacked Bar */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
               <h3 className="text-lg font-bold text-gray-900 mb-6">Monthly Engagement</h3>
               <div style={{ height: 250, width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -1051,7 +1051,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             </div>
 
             {/* Card 3: Overlapping Area */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
               <h3 className="text-lg font-bold text-gray-900 mb-6">Platform Traffic</h3>
               <div style={{ height: 250, width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -1502,54 +1502,64 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F4F7FE] font-sans text-gray-900">
-      
-      {/* 1. SIDEBAR */}
-      <aside className="w-64 bg-[#1A1F36] text-white flex-shrink-0 flex flex-col h-screen sticky top-0 overflow-y-auto">
-        <div className="p-6 text-xl font-bold border-b border-gray-700">VidyaVantage Admin</div>
-        <nav className="flex-1 p-4 space-y-2">
+    <div className="min-h-screen flex bg-[#F4F7FE] font-sans text-gray-900 w-full overflow-hidden">
+      {/* 1. FIXED SIDEBAR */}
+      <aside className="w-64 bg-[#1A1F36] text-white flex-shrink-0 flex flex-col h-screen sticky top-0">
+        <div className="h-20 flex items-center px-6 text-xl font-bold border-b border-gray-800">
+          EmployX Admin
+        </div>
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {allowedTabs.map(tab => (
             <button
               key={tab.id}
-              className={`flex items-center gap-3 w-full p-3 rounded-lg text-left transition-colors ${activeTab === tab.id ? 'bg-blue-600' : 'hover:bg-blue-600'}`}
               onClick={() => setActiveTab(tab.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                activeTab === tab.id ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+              }`}
             >
-              <span>{tab.icon}</span>
-              {tab.label}
+              <span className="text-lg">{tab.icon}</span>
+              <span className="font-medium">{tab.label}</span>
             </button>
           ))}
         </nav>
       </aside>
 
-      {/* 2. MAIN CONTENT WRAPPER */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        
+      {/* 2. MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* TOP HEADER */}
         <header className="h-20 bg-white shadow-sm border-b border-gray-100 flex items-center justify-between px-8 flex-shrink-0">
-          <div className="text-lg font-bold">Admin Command Center</div>
+          <div className="text-xl font-bold text-gray-800">
+             {allowedTabs.find(t => t.id === activeTab)?.label || 'Dashboard'}
+          </div>
           <div className="flex items-center gap-4">
-            <button onClick={onBackToApp} className="text-blue-600 font-semibold text-sm">Live Site</button>
-            <button onClick={handleLogout} className="text-red-500 font-semibold text-sm">Sign Out</button>
+            <div className="flex items-center gap-3 mr-4">
+               <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                  {(profile?.name || 'A').charAt(0).toUpperCase()}
+               </div>
+               <div className="flex flex-col text-left">
+                  <span className="text-sm font-bold text-gray-900">{profile?.name || 'Admin'}</span>
+                  <span className="text-xs text-gray-500">{profile?.role?.replace('_', ' ').toUpperCase()}</span>
+               </div>
+            </div>
+            <button onClick={onBackToApp} className="px-4 py-2 text-sm font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">Live Site</button>
+            <button onClick={handleLogout} className="px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100">Sign Out</button>
           </div>
         </header>
 
-        {/* SCROLLABLE PAGE CONTENT */}
+        {/* SCROLLABLE TAB CONTENT */}
         <main className="flex-1 overflow-y-auto p-8">
           {renderTabContent()}
         </main>
-
       </div>
 
-        {/* ── TOAST NOTIFICATIONS ── */}
-        {toast && (
-          <div className={`admin-toast ${toast.type}`}>
-            {toast.message}
-          </div>
-        )}
-
-        {/* ── STUDENT DETAIL MODAL ── */}
-        {selectedStudent && (
-          <div className="modal-overlay" onClick={() => setSelectedStudent(null)}>
+      {/* MODALS AND TOASTS */}
+      {toast && (
+        <div className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg text-white font-bold z-50 ${toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`}>
+          {toast.message}
+        </div>
+      )}
+      {selectedStudent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setSelectedStudent(null)}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
               <div className="modal-header">
                 <button className="close-btn" onClick={() => setSelectedStudent(null)}>✕</button>
