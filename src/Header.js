@@ -81,7 +81,8 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
   };
 
   // 🚀 HIDE HEADER ON ADMIN ROUTE 🚀
-  if (router.pathname && router.pathname.startsWith('/admin')) {
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : (router.asPath || router.pathname);
+  if (currentPath && currentPath.startsWith('/admin')) {
     return null;
   }
 
