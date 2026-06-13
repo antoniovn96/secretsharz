@@ -1999,7 +1999,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   };
 
   return (
-    <div className="social-dark-theme">
+    <div className="!min-h-screen !bg-[#F4F7FE] !font-sans !text-gray-900">
       {/* Hidden file inputs */}
       <input
         ref={coverPhotoInputRef}
@@ -2213,7 +2213,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             </div>
           </div>
           {/* NESTED ABOUT SECTION */}
-          <div className="about-container">
+          <div className="!flex !flex-col !md:flex-row !gap-6 !max-w-7xl !mx-auto !p-6">
             <div className="about-sidebar">
               <h3>About</h3>
               <div className={`about-nav-item ${activeAboutTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveAboutTab('overview')}>Overview</div>

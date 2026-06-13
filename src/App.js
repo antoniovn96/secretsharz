@@ -1089,24 +1089,11 @@ export default function App() {
     );
   };
 
-  if (currentPath.startsWith('/admin')) {
-    return (
-      <DashboardProvider navigate={navigate}>
-        <Head>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-        </Head>
-        <Suspense fallback={<div>Loading...</div>}>
-          {renderRoute()}
-        </Suspense>
-      </DashboardProvider>
-    );
-  }
+  const isAppShell = currentPath.startsWith('/admin') || currentPath.startsWith('/dashboard') || currentPath.startsWith('/intake');
 
   return (
     <DashboardProvider navigate={navigate}>
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div style={isAppShell ? {} : { display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -1135,15 +1122,15 @@ export default function App() {
             </div>
           )}
 
-          {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && !currentPath.startsWith('/admin') && (
+          {!isAppShell && !currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && (
             <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
           )}
           
-          <main style={{ flex: 1, position: 'relative' }}>
+          <main style={isAppShell ? { height: '100vh', width: '100vw' } : { flex: 1, position: 'relative' }}>
             {renderRoute()}
           </main>
 
-          {!currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && !currentPath.startsWith('/admin') && (
+          {!isAppShell && !currentPath.startsWith('/vidyavantage') && !currentPath.startsWith('/colleges') && !currentPath.startsWith('/college-details') && (
             <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={setModal} />
           )}
         </Suspense>

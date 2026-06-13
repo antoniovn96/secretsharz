@@ -10,7 +10,7 @@ export default function LandingPage({ onNavigate }) {
     <div className="bg-[#0D1117] text-white min-h-screen flex flex-col items-center justify-center p-8 font-sans">
       <div className="text-center mb-12">
         <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-          Welcome to The Habitat Way
+          Welcome to the Secret Sharz Ecosystem
         </h1>
         <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto">
           Choose your pathway to clarity and growth.
