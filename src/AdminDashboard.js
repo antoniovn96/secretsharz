@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Menu, Search, Bell, Home, Users, Briefcase, Shield, 
-  Settings, Moon, CheckCircle, PieChart, MessageSquare, Maximize, Sliders, Globe, LogOut, Ticket, Check, X, ChevronRight, ChevronDown, MoreHorizontal, Download, Edit3, Trash2, ThumbsUp, Headset, Grid, Layers, Lock, AlertTriangle
+  Settings, Moon, CheckCircle, PieChart, MessageSquare, Maximize, Sliders, Globe, LogOut, Ticket, Check, X, ChevronRight, ChevronDown, MoreHorizontal, Download, Edit3, Trash2, ThumbsUp
 } from 'lucide-react';
 import { 
   PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid 
+  BarChart, Bar, XAxis, YAxis, AreaChart, Area, CartesianGrid 
 } from 'recharts';
 import { signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { collection, getDocs, onSnapshot } from 'firebase/firestore';
 import { useDashboard } from './context/DashboardContext';
+import './AdminDashboard.css';
 
 const COLLECTIONS = {
   USERS: 'users',
@@ -19,34 +20,45 @@ const COLLECTIONS = {
   STAFF: 'staff'
 };
 
+const ALL_NAV_TABS = [
+  { id: 'profile', icon: <Users size={18} strokeWidth={2} />, label: 'My Profile', roles: ['super_admin', 'counsellor'] },
+  { id: 'overview', icon: <Home size={18} strokeWidth={2} />, label: 'Dashboard', roles: ['super_admin', 'counsellor'] },
+  { id: 'students', icon: <Briefcase size={18} strokeWidth={2} />, label: 'Student Master', roles: ['super_admin', 'counsellor'] },
+  { id: 'counselling', icon: <CheckCircle size={18} strokeWidth={2} />, label: 'Counselling Workflow', roles: ['super_admin', 'counsellor'] },
+  { id: 'analytics', icon: <PieChart size={18} strokeWidth={2} />, label: 'Analytics & Funnel', roles: ['super_admin'] },
+  { id: 'institutions', icon: <Shield size={18} strokeWidth={2} />, label: 'Institution Control', roles: ['super_admin'] },
+  { id: 'settings', icon: <Settings size={18} strokeWidth={2} />, label: 'System Settings', roles: ['super_admin'] },
+];
+
 export default function AdminDashboard({ user, onBackToApp, navigate }) {
+  // ── Context & State ────────────────────────────────────────────────────────
   const { students: ctxStudents, counsellors: ctxCounsellors } = useDashboard();
   
-  // State to track which sidebar menus are expanded
-  const [openMenus, setOpenMenus] = useState({
-    support: true,
-    features: false,
-    card: false,
-    widgets: false,
-    custom: false
-  });
-  
-  // State for active menu item
-  const [activeMenu, setActiveMenu] = useState('support-ticket');
-  
+  const [activeTab, setActiveTab] = useState('overview');
   const [loadingData, setLoadingData] = useState(true);
 
   // Firestore Data
   const [institutionsCount, setInstitutionsCount] = useState(0);
   const [firestoreStudents, setFirestoreStudents] = useState([]);
+  const [firestoreStaff, setFirestoreStaff] = useState([]);
+  const [profile, setProfile] = useState({ name: user?.displayName || 'Admin', role: 'super_admin' });
 
   // Merge Context & Live Data
   const students = firestoreStudents.length > 0 ? firestoreStudents : ctxStudents || [];
+  const allowedTabs = ALL_NAV_TABS.filter(t => t.roles.includes(profile.role));
 
-  const toggleMenu = (menu) => {
-    setOpenMenus(prev => ({ ...prev, [menu]: !prev[menu] }));
-  };
+  // Visual Trend Data (Mock data for advanced charts)
+  const trendData = [
+    { name: 'Jan', registered: 40, assessed: 24, sessions: 15 },
+    { name: 'Feb', registered: 30, assessed: 13, sessions: 28 },
+    { name: 'Mar', registered: 20, assessed: 58, sessions: 42 },
+    { name: 'Apr', registered: 27, assessed: 39, sessions: 35 },
+    { name: 'May', registered: 18, assessed: 48, sessions: 25 },
+    { name: 'Jun', registered: 23, assessed: 38, sessions: 40 },
+    { name: 'Jul', registered: 34, assessed: 43, sessions: 50 },
+  ];
 
+  // ── Data Fetching ──────────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
     const fetchPlatformData = async () => {
@@ -54,6 +66,9 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
       try {
         const instSnap = await getDocs(collection(db, COLLECTIONS.INSTITUTIONS));
         if (isMounted) setInstitutionsCount(instSnap.size);
+
+        const staffSnap = await getDocs(collection(db, COLLECTIONS.STAFF));
+        if (isMounted) setFirestoreStaff(staffSnap.docs.map(d => ({ id: d.id, ...d.data() })));
 
         onSnapshot(collection(db, COLLECTIONS.USERS), (snapshot) => {
           if (isMounted) {
@@ -77,502 +92,453 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
     try { await signOut(auth); } catch (error) { console.error('Logout failed', error); }
   };
 
-  const pendingCount = students.filter(s => !s.assignedCounsellorId && s.riasecCode).length;
-  const totalAssessed = students.filter(s => s.riasecCode).length;
-  const totalStudents = students.length || 264;
+  // ── RENDER TAB CONTENT ──────────────────────────────────────────────────────
+  const renderTabContent = () => {
+    if (loadingData) return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6b7280' }}>
+        <p>Loading Data...</p>
+      </div>
+    );
 
-  const pieData = [
-    { name: 'Technical', value: totalAssessed || 8952, color: '#F43F5E' },
-    { name: 'Accounts', value: pendingCount || 7458, color: '#FBBF24' },
-    { name: 'Other', value: institutionsCount || 3254, color: '#3B82F6' }
-  ];
-
-  const barData = [
-    { name: 'A', val1: 154, val2: 0, val3: 0, val4: 0, val5: 0 },
-    { name: 'B', val1: 0, val2: 154, val3: 0, val4: 0, val5: 0 },
-    { name: 'E', val1: 0, val2: 0, val3: 254, val4: 0, val5: 0 },
-    { name: 'C', val1: 0, val2: 0, val3: 0, val4: 854, val5: 0 },
-    { name: 'D', val1: 0, val2: 0, val3: 0, val4: 0, val5: 215 },
-  ];
-
-  return (
-    <div className="flex h-screen w-screen bg-[#F4F7FE] overflow-hidden font-sans">
-      
-      {/* SIDEBAR */}
-      <aside className="w-[260px] bg-[#242539] flex-shrink-0 flex flex-col overflow-y-auto custom-scrollbar shadow-lg z-20">
+    switch (activeTab) {
+      case 'overview':
+        const pendingCount = students.filter(s => !s.assignedCounsellorId && s.riasecCode).length;
+        const totalAssessed = students.filter(s => s.riasecCode).length;
         
-        {/* LOGO */}
-        <div className="h-[70px] flex items-center px-6 flex-shrink-0">
-          <div className="flex items-center gap-3">
+        const pieData = [
+          { name: 'Pending', value: pendingCount || 1, color: '#F43F5E' },
+          { name: 'Assessed', value: totalAssessed || 1, color: '#10B981' },
+          { name: 'Other', value: institutionsCount || 1, color: '#3B82F6' }
+        ];
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <h1 style={{ fontSize: '20px', fontWeight: '500', color: '#1f2937', margin: 0 }}>Dashboard</h1>
+              <Home size={14} color="#9ca3af" style={{ marginLeft: '8px' }} />
+              <span style={{ color: '#9ca3af', fontSize: '13px' }}>- Overview - Dashboard</span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '24px' }}>
+              {/* Left Column - Stats Cards */}
+              <div style={{ gridColumn: 'span 1 / span 1', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '16px' }}>
+                {/* Total Registered */}
+                <div className="admin-card">
+                  <div className="admin-stats-number">
+                    <h3>+{students.length}</h3>
+                    <p>Total Registered</p>
+                  </div>
+                  <div className="admin-stats-bottom bg-indigo">
+                    <Users size={24} />
+                  </div>
+                </div>
+
+                {/* Assessed Students */}
+                <div className="admin-card">
+                  <div className="admin-stats-number">
+                    <h3>{totalAssessed}</h3>
+                    <p>Assessed</p>
+                  </div>
+                  <div className="admin-stats-bottom bg-yellow">
+                    <CheckCircle size={24} />
+                  </div>
+                </div>
+
+                {/* Action Queue */}
+                <div className="admin-card">
+                  <div className="admin-stats-number">
+                    <h3>{pendingCount}</h3>
+                    <p>Action Queue</p>
+                  </div>
+                  <div className="admin-stats-bottom bg-green">
+                    <MessageSquare size={24} />
+                  </div>
+                </div>
+
+                {/* Institutions */}
+                <div className="admin-card">
+                  <div className="admin-stats-number">
+                    <h3>{institutionsCount}</h3>
+                    <p>Institutions</p>
+                  </div>
+                  <div className="admin-stats-bottom bg-rose">
+                    <Shield size={24} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Middle Column - Pie Chart */}
+              <div className="admin-card" style={{ padding: '24px', gridColumn: 'span 1 / span 1', height: '320px' }}>
+                <h3 style={{ fontSize: '15px', color: '#374151', margin: '0 0 8px 0' }}>Platform Adoption</h3>
+                <div style={{ height: '200px', position: 'relative' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsPieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={0}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {pieData.map((item, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: item.color }}></div>
+                        <span style={{ color: '#4b5563' }}>{item.name}</span>
+                      </div>
+                      <span style={{ color: '#4b5563', fontWeight: '500' }}>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Column - Bar Chart */}
+              <div className="admin-card" style={{ padding: '24px', gridColumn: 'span 2 / span 2', height: '320px', position: 'relative' }}>
+                <h3 style={{ fontSize: '15px', color: '#374151', margin: '0 0 24px 0' }}>Monthly Engagement</h3>
+                <div style={{ height: '220px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={trendData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }} barGap={2} barCategoryGap={10}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9CA3AF' }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9CA3AF' }} />
+                      <Tooltip cursor={{ fill: '#F3F4F6' }} />
+                      <Bar dataKey="registered" fill="#6366F1" radius={[2, 2, 0, 0]} barSize={10} />
+                      <Bar dataKey="assessed" fill="#10B981" radius={[2, 2, 0, 0]} barSize={10} />
+                      <Bar dataKey="sessions" fill="#F43F5E" radius={[2, 2, 0, 0]} barSize={10} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div style={{ position: 'absolute', right: '24px', top: '24px', display: 'flex', gap: '16px', fontSize: '11px', color: '#6b7280' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', backgroundColor: '#6366F1', borderRadius: '50%' }}></span> Registered</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', backgroundColor: '#10B981', borderRadius: '50%' }}></span> Assessed</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', backgroundColor: '#F43F5E', borderRadius: '50%' }}></span> Sessions</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Table Section */}
+            <div className="admin-card" style={{ marginTop: '24px' }}>
+              <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <h2 style={{ fontSize: '16px', color: '#1f2937', margin: 0 }}>Student Master Directory</h2>
+                  <p style={{ fontSize: '13px', color: '#9ca3af', margin: 0 }}>Manage {students.length} registered students</p>
+              </div>
+              <div style={{ padding: '0 20px 16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '13px', color: '#4b5563' }}>Show</span>
+                  <select style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '4px 8px', fontSize: '13px', outline: 'none', background: '#fff' }}>
+                    <option>10</option>
+                    <option>25</option>
+                    <option>50</option>
+                  </select>
+                  <span style={{ fontSize: '13px', color: '#4b5563' }}>entries</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '13px', color: '#4b5563' }}>Search:</span>
+                  <input type="text" style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '4px 12px', outline: 'none', fontSize: '13px', width: '200px' }} />
+                </div>
+              </div>
+              <div className="admin-table-container">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Student Name</th>
+                      <th>Email</th>
+                      <th>RIASEC Code</th>
+                      <th>Counselling Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {students.slice(0, 10).map((student, idx) => (
+                      <tr key={student.id || idx}>
+                        <td>10{idx + 11}</td>
+                        <td className="text-blue" style={{ fontWeight: '500', cursor: 'pointer' }}>{student.name || 'Unknown'}</td>
+                        <td>{student.email || 'N/A'}</td>
+                        <td>
+                          <span className={`admin-status-pill ${student.riasecCode ? 'admin-status-pill-green' : 'admin-status-pill-yellow'}`}>
+                            {student.riasecCode || 'Pending'}
+                          </span>
+                        </td>
+                        <td>{student.counsellingStatus}</td>
+                        <td>
+                           <button className="admin-action-btn admin-action-btn-rose">
+                             <Trash2 size={16} />
+                           </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {students.length === 0 && (
+                      <tr>
+                        <td colSpan="6" style={{ padding: '32px', textAlign: 'center' }}>
+                          No students found in the database.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'students':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="admin-table-btn admin-table-btn-primary">
+                  All Students
+                </button>
+                <button className="admin-table-btn admin-table-btn-outline">
+                  Assessed
+                </button>
+                <button className="admin-table-btn admin-table-btn-outline">
+                  Pending
+                </button>
+              </div>
+              <button className="admin-table-btn admin-table-btn-danger">
+                Add Student
+              </button>
+            </div>
+            
+            {/* Top Stat tabs */}
+            <div className="admin-card" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', marginBottom: '24px', flexDirection: 'row' }}>
+               <div style={{ background: '#EFF6FF', textAlign: 'center', padding: '16px 8px', borderRight: '1px solid #f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                 <div style={{ fontSize: '20px', color: '#1f2937', fontWeight: '500' }}>{students.length}</div>
+                 <div style={{ fontSize: '12px', color: '#1f2937', fontWeight: '500', marginTop: '4px' }}>Total Students</div>
+               </div>
+               <div style={{ background: '#ffffff', textAlign: 'center', padding: '16px 8px', borderRight: '1px solid #f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                 <div style={{ fontSize: '20px', color: '#1f2937', fontWeight: '500' }}>{students.filter(s => s.riasecCode).length}</div>
+                 <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500', marginTop: '4px' }}>Assessed</div>
+               </div>
+               <div style={{ background: '#ffffff', textAlign: 'center', padding: '16px 8px', borderRight: '1px solid #f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                 <div style={{ fontSize: '20px', color: '#1f2937', fontWeight: '500' }}>{students.filter(s => !s.riasecCode).length}</div>
+                 <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500', marginTop: '4px' }}>Pending</div>
+               </div>
+               <div style={{ background: '#ffffff', textAlign: 'center', padding: '16px 8px', borderRight: '1px solid #f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                 <div style={{ fontSize: '20px', color: '#1f2937', fontWeight: '500' }}>{students.filter(s => s.assignedCounsellorId).length}</div>
+                 <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500', marginTop: '4px' }}>Assigned</div>
+               </div>
+               <div style={{ background: '#ffffff', textAlign: 'center', padding: '16px 8px', borderRight: '1px solid #f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                 <div style={{ fontSize: '20px', color: '#1f2937', fontWeight: '500' }}>{students.filter(s => !s.assignedCounsellorId).length}</div>
+                 <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: '500', marginTop: '4px' }}>Unassigned</div>
+               </div>
+               <div style={{ background: '#ffffff', textAlign: 'center', padding: '16px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                 <div style={{ fontSize: '20px', color: '#9ca3af', fontWeight: '500' }}>{institutionsCount}</div>
+                 <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '500', marginTop: '4px' }}>Institutions</div>
+               </div>
+            </div>
+
+            <div className="admin-card">
+              <div className="admin-table-container">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '48px' }}><input type="checkbox" style={{ width: '16px', height: '16px' }} /></th>
+                      <th><span style={{ color: '#9ca3af', fontWeight: 'normal', marginRight: '4px' }}>↓↑</span> Name</th>
+                      <th><span style={{ color: '#9ca3af', fontWeight: 'normal', marginRight: '4px' }}>↓↑</span> Email</th>
+                      <th><span style={{ color: '#9ca3af', fontWeight: 'normal', marginRight: '4px' }}>↓↑</span> RIASEC</th>
+                      <th><span style={{ color: '#9ca3af', fontWeight: 'normal', marginRight: '4px' }}>↓↑</span> Status</th>
+                      <th><span style={{ color: '#9ca3af', fontWeight: 'normal', marginRight: '4px' }}>↓↑</span> Complete?</th>
+                      <th><span style={{ color: '#9ca3af', fontWeight: 'normal', marginRight: '4px' }}>↓↑</span> Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {students.map((student, idx) => (
+                      <tr key={student.id || idx}>
+                        <td><input type="checkbox" style={{ width: '16px', height: '16px' }} /></td>
+                        <td style={{ color: '#1f2937', fontWeight: '500' }}>{student.name || 'Unknown'}</td>
+                        <td>{student.email}</td>
+                        <td>
+                          {student.riasecCode ? (
+                            <span className="admin-status-pill admin-status-pill-green">{student.riasecCode}</span>
+                          ) : (
+                            <span className="admin-status-pill admin-status-pill-yellow">Pending</span>
+                          )}
+                        </td>
+                        <td>{student.counsellingStatus}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            {student.riasecCode ? (
+                              <button className="admin-action-btn admin-action-btn-green"><Check size={14} strokeWidth={3} /></button>
+                            ) : (
+                              <button className="admin-action-btn admin-action-btn-rose"><X size={14} strokeWidth={3} /></button>
+                            )}
+                            <button className="admin-action-btn admin-action-btn-blue" style={{ fontSize: '12px' }}>?</button>
+                          </div>
+                        </td>
+                        <td>
+                          <button style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer' }}>
+                            <MoreHorizontal size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {students.length === 0 && (
+                      <tr>
+                        <td colSpan="7" style={{ padding: '32px', textAlign: 'center' }}>
+                          No candidates found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <h1 style={{ fontSize: '20px', fontWeight: '500', color: '#1f2937', margin: 0 }}>{allowedTabs.find(t => t.id === activeTab)?.label || 'Module'}</h1>
+              <Home size={14} color="#9ca3af" style={{ marginLeft: '8px' }} />
+              <span style={{ color: '#9ca3af', fontSize: '13px' }}>- {allowedTabs.find(t => t.id === activeTab)?.label || 'Module'}</span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '24px' }}>
+              <div className="admin-card" style={{ padding: '24px', height: '160px' }}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                   <h3 style={{ fontSize: '15px', color: '#1f2937', fontWeight: '500', margin: 0 }}>Box progress</h3>
+                 </div>
+                 <p style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.5', margin: 0 }}>
+                   This module ({allowedTabs.find(t => t.id === activeTab)?.label}) is currently under construction.
+                   It has been styled to match the EmployX dashboard perfectly.
+                 </p>
+              </div>
+
+              <div className="admin-card" style={{ padding: '24px', height: '160px' }}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                   <h3 style={{ fontSize: '15px', color: '#1f2937', fontWeight: '500', margin: 0 }}>Box switch</h3>
+                 </div>
+                 <p style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.5', margin: 0 }}>
+                   Your Firebase data is fully connected. The {students.length} students and {institutionsCount} institutions are ready to be managed here.
+                 </p>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  // ── MAIN LAYOUT RENDER ──────────────────────────────────────────────────────
+  return (
+    <div className="admin-layout">
+      
+      {/* 1. FIXED SIDEBAR */}
+      <aside className="admin-sidebar">
+        {/* Logo Section */}
+        <div className="admin-sidebar-logo" onClick={() => setActiveTab('overview')}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M16 28C22.6274 28 28 22.6274 28 16C28 9.37258 22.6274 4 16 4C9.37258 4 4 9.37258 4 16C4 22.6274 9.37258 28 16 28Z" stroke="#3B82F6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M16 8C11.5817 8 8 11.5817 8 16C8 20.4183 11.5817 24 16 24" stroke="#F43F5E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span className="text-[24px] font-semibold text-white tracking-wide">EmployX</span>
+            <span style={{ fontSize: '22px', fontWeight: '600', color: '#ffffff', letterSpacing: '0.025em' }}>EmployX</span>
           </div>
         </div>
         
-        {/* MENU */}
-        <nav className="flex-1 py-2 text-[14px]">
-          {/* Dashboard */}
-          <div className="px-6 py-3 flex items-center gap-3 text-[#8a8b9f] hover:text-white cursor-pointer transition-colors">
-            <Home size={18} strokeWidth={2} />
-            <span>Dashboard</span>
-          </div>
-          
-          {/* Jobs */}
-          <div className="px-6 py-3 flex items-center justify-between text-[#8a8b9f] hover:text-white cursor-pointer transition-colors">
-            <div className="flex items-center gap-3">
-              <Briefcase size={18} strokeWidth={2} />
-              <span>Jobs</span>
-            </div>
-            <ChevronRight size={14} />
-          </div>
-
-          {/* Candidates */}
-          <div className="px-6 py-3 flex items-center gap-3 text-[#8a8b9f] hover:text-white cursor-pointer transition-colors">
-            <Users size={18} strokeWidth={2} />
-            <span>Candidates</span>
-          </div>
-
-          {/* Support */}
-          <div>
-            <div 
-              className={`px-6 py-3 flex items-center justify-between cursor-pointer transition-colors ${openMenus.support ? 'text-[#3B82F6]' : 'text-[#8a8b9f] hover:text-white'}`}
-              onClick={() => toggleMenu('support')}
-            >
-              <div className="flex items-center gap-3">
-                <Headset size={18} strokeWidth={2} />
-                <span>Support</span>
-              </div>
-              {openMenus.support ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </div>
-            
-            {openMenus.support && (
-              <div className="flex flex-col py-1">
-                <div 
-                  className={`pl-[46px] pr-6 py-2.5 flex items-center gap-3 cursor-pointer text-[13px] ${activeMenu === 'support-ticket' ? 'text-[#3B82F6]' : 'text-[#8a8b9f] hover:text-white'}`}
-                  onClick={() => setActiveMenu('support-ticket')}
-                >
-                  <div className={`w-1.5 h-1.5 rounded-full border ${activeMenu === 'support-ticket' ? 'border-[#3B82F6] bg-transparent' : 'border-[#8a8b9f]'}`}></div>
-                  <span>Support Ticket</span>
+        {/* Navigation */}
+        <nav className="admin-sidebar-nav custom-scrollbar">
+          {allowedTabs.map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={isActive ? 'active' : ''}
+              >
+                {isActive && <div className="left-border"></div>}
+                <div className="icon-text">
+                  <span style={{ color: isActive ? '#3B82F6' : 'inherit' }}>
+                    {tab.icon}
+                  </span>
+                  <span>{tab.label}</span>
                 </div>
-                <div className="pl-[46px] pr-6 py-2.5 flex items-center gap-3 cursor-pointer text-[13px] text-[#8a8b9f] hover:text-white">
-                  <div className="w-1.5 h-1.5 rounded-full border border-[#8a8b9f]"></div>
-                  <span>Chat</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Components Header */}
-          <div className="px-6 py-4 text-[11px] font-bold text-[#8a8b9f] uppercase tracking-wider mt-2">
-            Components
-          </div>
-
-          {/* Features */}
-          <div>
-            <div 
-              className="px-6 py-3 flex items-center justify-between text-[#8a8b9f] hover:text-white cursor-pointer transition-colors"
-              onClick={() => toggleMenu('features')}
-            >
-              <div className="flex items-center gap-3">
-                <Edit3 size={18} strokeWidth={2} />
-                <span>Features</span>
-              </div>
-              {openMenus.features ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </div>
-          </div>
-
-          {/* Forms & Charts */}
-          <div className="px-6 py-3 flex items-center justify-between text-[#8a8b9f] hover:text-white cursor-pointer transition-colors">
-            <div className="flex items-center gap-3">
-              <PieChart size={18} strokeWidth={2} />
-              <span>Forms & Charts</span>
-            </div>
-            <ChevronRight size={14} />
-          </div>
-
-          {/* Tables */}
-          <div className="px-6 py-3 flex items-center justify-between text-[#8a8b9f] hover:text-white cursor-pointer transition-colors">
-            <div className="flex items-center gap-3">
-              <Grid size={18} strokeWidth={2} />
-              <span>Tables</span>
-            </div>
-            <ChevronRight size={14} />
-          </div>
-
-          {/* Apps & Widgets */}
-          <div className="px-6 py-3 flex items-center justify-between text-[#8a8b9f] hover:text-white cursor-pointer transition-colors">
-            <div className="flex items-center gap-3">
-              <Layers size={18} strokeWidth={2} />
-              <span>Apps & Widgets</span>
-            </div>
-            <ChevronDown size={14} />
-          </div>
-
-          {/* Authentication */}
-          <div className="px-6 py-3 flex items-center justify-between text-[#8a8b9f] hover:text-white cursor-pointer transition-colors mt-2">
-            <div className="flex items-center gap-3">
-              <Lock size={18} strokeWidth={2} />
-              <span>Authentication</span>
-            </div>
-            <ChevronRight size={14} />
-          </div>
-
-          {/* Miscellaneous */}
-          <div className="px-6 py-3 flex items-center justify-between text-[#8a8b9f] hover:text-white cursor-pointer transition-colors">
-            <div className="flex items-center gap-3">
-              <AlertTriangle size={18} strokeWidth={2} />
-              <span>Miscellaneous</span>
-            </div>
-            <ChevronRight size={14} />
-          </div>
+                {!isActive && <ChevronRight size={14} color="#51546E" />}
+                {isActive && <ChevronDown size={14} color="#3B82F6" />}
+              </button>
+            )
+          })}
         </nav>
-
-        {/* Sidebar Bottom Illustration */}
-        <div className="mt-8 mb-6 mx-6 relative">
-          <svg viewBox="0 0 200 120" className="w-full h-auto opacity-90" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Background elements */}
-            <rect x="20" y="40" width="160" height="60" rx="8" fill="#2C2D43"/>
-            
-            {/* Connection lines */}
-            <path d="M70 70 L100 50 L130 70" stroke="#4A4C6B" strokeWidth="2" strokeDasharray="4 4"/>
-            <path d="M70 70 L100 90 L130 70" stroke="#4A4C6B" strokeWidth="2" strokeDasharray="4 4"/>
-            
-            {/* Avatar 1 (Left) */}
-            <circle cx="70" cy="70" r="16" fill="#3B82F6"/>
-            <circle cx="70" cy="65" r="6" fill="#1E3A8A"/>
-            <path d="M60 80 Q70 70 80 80" stroke="#1E3A8A" strokeWidth="3" strokeLinecap="round"/>
-            
-            {/* Avatar 2 (Top Middle) */}
-            <circle cx="100" cy="50" r="16" fill="#F43F5E"/>
-            <circle cx="100" cy="45" r="6" fill="#881337"/>
-            <path d="M90 60 Q100 50 110 60" stroke="#881337" strokeWidth="3" strokeLinecap="round"/>
-            
-            {/* Avatar 3 (Right) */}
-            <circle cx="130" cy="70" r="16" fill="#FBBF24"/>
-            <circle cx="130" cy="65" r="6" fill="#78350F"/>
-            <path d="M120 80 Q130 70 140 80" stroke="#78350F" strokeWidth="3" strokeLinecap="round"/>
-            
-            {/* Action elements */}
-            <rect x="15" y="60" width="16" height="16" rx="4" fill="#10B981"/>
-            <path d="M19 68 L22 71 L28 65" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            
-            <rect x="165" y="45" width="16" height="16" rx="4" fill="#3B82F6"/>
-            <path d="M169 53 H177 M173 49 V57" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        
+        {/* Bottom illustration placeholder */}
+        <div style={{ marginTop: 'auto', padding: '16px', display: 'flex', justifyContent: 'center', paddingBottom: '32px', opacity: 0.8 }}>
+          <svg width="120" height="80" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20" y="20" width="80" height="40" rx="4" fill="#2C2E4A"/>
+            <circle cx="60" cy="40" r="10" fill="#3B82F6"/>
+            <path d="M30 60 L40 50 L80 50 L90 60" stroke="#F43F5E" strokeWidth="2"/>
           </svg>
         </div>
       </aside>
 
-      {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      {/* 2. MAIN CONTENT AREA */}
+      <div className="admin-main-area">
         
         {/* TOP NAVBAR */}
-        <header className="h-[70px] bg-white flex items-center justify-between px-6 flex-shrink-0 z-10 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        <header className="admin-header">
           {/* Left: Hamburger & Search */}
-          <div className="flex items-center gap-5">
-            <button className="text-[#3B82F6] hover:bg-blue-50 p-2 rounded transition-colors">
-              <Menu size={20} strokeWidth={2.5} />
+          <div className="admin-header-left">
+            <button className="admin-icon-btn">
+              <Menu size={22} strokeWidth={2} />
             </button>
-            <div className="bg-[#F3F4F6] rounded flex items-center px-4 py-2 w-[320px]">
-              <input 
-                type="text" 
-                placeholder="Search" 
-                className="bg-transparent border-none outline-none text-[13px] text-gray-600 w-full placeholder-gray-500 font-medium" 
-              />
-              <Search size={16} className="text-gray-400 ml-2" />
+            <div className="admin-search-bar">
+              <input type="text" placeholder="Search" />
+              <Search size={16} color="#9ca3af" style={{ marginLeft: '8px' }} />
             </div>
           </div>
           
           {/* Right: Icons & Avatar */}
-          <div className="flex items-center gap-3">
-            <button className="text-[#3B82F6] hover:bg-blue-50 p-2 rounded-full transition-colors">
+          <div className="admin-header-right">
+            <button className="admin-icon-btn">
               <Moon size={18} strokeWidth={2} />
             </button>
-            <button className="text-[#3B82F6] hover:bg-blue-50 p-2 rounded-full transition-colors relative">
+            <button className="admin-icon-btn" style={{ position: 'relative' }}>
               <Bell size={18} strokeWidth={2} />
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#F43F5E] rounded-full border border-white"></span>
+              <span style={{ position: 'absolute', top: '8px', right: '8px', width: '6px', height: '6px', backgroundColor: '#F43F5E', borderRadius: '50%', border: '1px solid #ffffff' }}></span>
             </button>
-            <button className="text-[#3B82F6] hover:bg-blue-50 p-2 rounded-full transition-colors">
+            <button className="admin-icon-btn">
               <MessageSquare size={18} strokeWidth={2} />
             </button>
-            <button className="text-gray-400 hover:bg-gray-100 p-2 rounded-full transition-colors text-[18px]">
+            <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px', fontSize: '18px' }}>
               🇺🇸
             </button>
-            <button className="text-[#3B82F6] hover:bg-blue-50 p-2 rounded-full transition-colors">
+            <button className="admin-icon-btn">
               <Maximize size={18} strokeWidth={2} />
             </button>
-            <button className="text-[#3B82F6] hover:bg-blue-50 p-2 rounded-full transition-colors">
+            <button className="admin-icon-btn">
               <Sliders size={18} strokeWidth={2} />
             </button>
-            <button onClick={handleLogout} className="text-[#3B82F6] hover:bg-red-50 p-2 rounded-full transition-colors" title="Sign Out">
+            <button onClick={onBackToApp} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: '#6b7280', margin: '0 8px' }}>Live Site</button>
+            <button onClick={handleLogout} className="admin-icon-btn" style={{ color: '#F43F5E' }} title="Sign Out">
               <LogOut size={18} strokeWidth={2} />
             </button>
-            <div className="w-9 h-9 rounded-full ml-3 overflow-hidden flex items-center justify-center cursor-pointer border-2 border-gray-100 bg-[#E0E7FF]">
-               <img src="https://i.pravatar.cc/150?u=employx_admin" alt="User" className="w-full h-full object-cover" 
-                    onError={(e) => { e.target.onerror = null; e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23DBEAFE"/><text x="50" y="65" font-family="Arial" font-size="40" font-weight="bold" fill="%232563EB" text-anchor="middle">A</text></svg>' }} />
+            <div style={{ width: '36px', height: '36px', borderRadius: '50%', marginLeft: '8px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px solid #ffffff', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', backgroundColor: '#dbeafe' }}>
+               <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.onerror = null; e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23DBEAFE"/><text x="50" y="65" font-family="Arial" font-size="40" font-weight="bold" fill="%232563EB" text-anchor="middle">A</text></svg>' }} />
             </div>
           </div>
         </header>
 
-        {/* CONTENT */}
-        <main className="flex-1 p-6 overflow-y-auto bg-[#F4F7FE] custom-scrollbar">
-          
-          {/* Breadcrumbs */}
-          <div className="flex items-center gap-3 mb-6">
-            <h1 className="text-[18px] font-semibold text-gray-800 tracking-wide">Tickets</h1>
-            <div className="flex items-center gap-2 text-[12px] text-gray-500 font-medium">
-              <Home size={12} className="text-gray-500" />
-              <span>-</span>
-              <span className="text-[#3B82F6]">Extra</span>
-              <span>-</span>
-              <span>Tickets</span>
-            </div>
-          </div>
-
-          {/* TOP ROW GRID */}
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-6">
-            
-            {/* 4 STATS CARDS (2x2) */}
-            <div className="xl:col-span-1 grid grid-cols-2 gap-4">
-              
-              {/* Total Tickets */}
-              <div className="bg-white rounded-md shadow-sm overflow-hidden flex flex-col h-[150px]">
-                <div className="p-4 flex-1 flex flex-col items-center justify-center text-center">
-                  <h3 className="text-[26px] text-gray-800 font-semibold">+{totalStudents}</h3>
-                  <p className="text-gray-500 text-[12px] mt-0.5">Total Tickets</p>
-                </div>
-                <div className="bg-[#6366F1] text-white p-3 flex justify-center items-center h-[55px]">
-                  <Ticket size={24} strokeWidth={2} />
-                </div>
-              </div>
-
-              {/* Responded */}
-              <div className="bg-white rounded-md shadow-sm overflow-hidden flex flex-col h-[150px]">
-                <div className="p-4 flex-1 flex flex-col items-center justify-center text-center">
-                  <h3 className="text-[26px] text-gray-800 font-semibold">{totalAssessed || 175}</h3>
-                  <p className="text-gray-500 text-[12px] mt-0.5">Responded</p>
-                </div>
-                <div className="bg-[#FBBF24] text-white p-3 flex justify-center items-center h-[55px]">
-                  <MessageSquare size={24} strokeWidth={2} />
-                </div>
-              </div>
-
-              {/* Resolve */}
-              <div className="bg-white rounded-md shadow-sm overflow-hidden flex flex-col h-[150px]">
-                <div className="p-4 flex-1 flex flex-col items-center justify-center text-center">
-                  <h3 className="text-[26px] text-gray-800 font-semibold">{institutionsCount || 110}</h3>
-                  <p className="text-gray-500 text-[12px] mt-0.5">Resolve</p>
-                </div>
-                <div className="bg-[#10B981] text-white p-3 flex justify-center items-center h-[55px]">
-                  <ThumbsUp size={24} strokeWidth={2} />
-                </div>
-              </div>
-
-              {/* Pending */}
-              <div className="bg-white rounded-md shadow-sm overflow-hidden flex flex-col h-[150px]">
-                <div className="p-4 flex-1 flex flex-col items-center justify-center text-center">
-                  <h3 className="text-[26px] text-gray-800 font-semibold">{pendingCount || 59}</h3>
-                  <p className="text-gray-500 text-[12px] mt-0.5">Pending</p>
-                </div>
-                <div className="bg-[#F43F5E] text-white p-3 flex justify-center items-center h-[55px]">
-                  <Ticket size={24} strokeWidth={2} />
-                </div>
-              </div>
-
-            </div>
-
-            {/* PIE CHART */}
-            <div className="bg-white rounded-md shadow-sm p-6 xl:col-span-1 h-[316px] flex flex-col">
-              <h3 className="text-[14px] text-gray-800 font-medium mb-4">Tickets share per category</h3>
-              <div className="flex-1 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={45}
-                      outerRadius={75}
-                      paddingAngle={0}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </RechartsPieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-4 space-y-2.5">
-                {pieData.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-[12px] font-medium">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
-                      <span className="text-gray-800">{item.name}</span>
-                    </div>
-                    <span className="text-gray-500">{item.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* BAR CHART */}
-            <div className="bg-white rounded-md shadow-sm p-6 xl:col-span-2 h-[316px] relative">
-              <h3 className="text-[14px] text-gray-800 font-medium mb-6">Tickets share per agent</h3>
-              <div className="h-[220px] w-1/2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={barData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }} barGap={2} barCategoryGap={4}>
-                    <Tooltip cursor={{ fill: '#F3F4F6' }} />
-                    <Bar dataKey="val1" fill="#6366F1" radius={[2, 2, 0, 0]} barSize={14} />
-                    <Bar dataKey="val2" fill="#F97316" radius={[2, 2, 0, 0]} barSize={14} />
-                    <Bar dataKey="val3" fill="#10B981" radius={[2, 2, 0, 0]} barSize={14} />
-                    <Bar dataKey="val4" fill="#F43F5E" radius={[2, 2, 0, 0]} barSize={14} />
-                    <Bar dataKey="val5" fill="#FBBF24" radius={[2, 2, 0, 0]} barSize={14} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              
-              {/* Absolute Legend matching screenshot */}
-              <div className="absolute right-12 bottom-12 flex flex-col gap-2 text-[12px] text-gray-600 font-medium">
-                <div className="flex justify-between items-center w-[120px]">
-                  <span>Andrew</span> 
-                  <span className="bg-[#6366F1] text-white px-1.5 py-0.5 rounded text-[10px]">154</span>
-                </div>
-                <div className="flex justify-between items-center w-[120px]">
-                  <span>Benjamin</span> 
-                  <span className="bg-[#8B5CF6] text-white px-1.5 py-0.5 rounded text-[10px]">154</span>
-                </div>
-                <div className="flex justify-between items-center w-[120px]">
-                  <span>Elijah</span> 
-                  <span className="bg-[#10B981] text-white px-1.5 py-0.5 rounded text-[10px]">254</span>
-                </div>
-                <div className="flex justify-between items-center w-[120px]">
-                  <span>Chloe</span> 
-                  <span className="bg-[#F43F5E] text-white px-1.5 py-0.5 rounded text-[10px]">854</span>
-                </div>
-                <div className="flex justify-between items-center w-[120px]">
-                  <span>Daniel</span> 
-                  <span className="bg-[#FBBF24] text-white px-1.5 py-0.5 rounded text-[10px]">215</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* BOTTOM TABLE */}
-          <div className="bg-white rounded-md shadow-sm">
-            <div className="p-6 pb-2">
-                <h2 className="text-[16px] text-gray-800 font-medium">Support Ticket List</h2>
-                <p className="text-[13px] text-gray-400 mt-1">List of ticket opend by customers</p>
-            </div>
-            
-            <div className="px-6 py-4 flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] text-gray-800 font-medium">Show</span>
-                <select className="border border-gray-200 rounded px-2 py-1 text-[13px] outline-none text-gray-600 bg-white">
-                  <option>10</option>
-                  <option>25</option>
-                  <option>50</option>
-                </select>
-                <span className="text-[13px] text-gray-800 font-medium">entries</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] text-gray-800 font-medium">Search:</span>
-                <input type="text" className="border border-gray-200 rounded px-3 py-1.5 outline-none text-[13px] w-[220px]" />
-              </div>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full text-left whitespace-nowrap">
-                <thead>
-                  <tr className="border-t border-b border-gray-200 bg-white">
-                    <th className="px-6 py-3 text-[12px] font-bold text-gray-800">ID <span className="text-gray-300 font-normal ml-1">↓↑</span></th>
-                    <th className="px-6 py-3 text-[12px] font-bold text-gray-800">Ope. by <span className="text-gray-300 font-normal ml-1">↓↑</span></th>
-                    <th className="px-6 py-3 text-[12px] font-bold text-gray-800">Cust. Email <span className="text-gray-300 font-normal ml-1">↓↑</span></th>
-                    <th className="px-6 py-3 text-[12px] font-bold text-gray-800">Subject <span className="text-gray-300 font-normal ml-1">↓↑</span></th>
-                    <th className="px-6 py-3 text-[12px] font-bold text-gray-800">Status <span className="text-gray-300 font-normal ml-1">↓↑</span></th>
-                    <th className="px-6 py-3 text-[12px] font-bold text-gray-800">Ass. to <span className="text-gray-300 font-normal ml-1">↓↑</span></th>
-                    <th className="px-6 py-3 text-[12px] font-bold text-gray-800">Date <span className="text-gray-300 font-normal ml-1">↓↑</span></th>
-                    <th className="px-6 py-3 text-[12px] font-bold text-gray-800">Action <span className="text-gray-300 font-normal ml-1">↓↑</span></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {students.slice(0, 10).map((student, idx) => (
-                    <tr key={student.id || idx} className="hover:bg-gray-50 bg-white transition-colors">
-                      <td className="px-6 py-4 text-[13px] text-gray-800 font-medium">10{idx + 11}</td>
-                      <td className="px-6 py-4 text-[13px] text-[#3B82F6] cursor-pointer hover:underline">{student.name || (idx%2===0?'Sophia':'Mia')}</td>
-                      <td className="px-6 py-4 text-[13px] text-gray-600">{student.email || 'sophia@gmail.com'}</td>
-                      <td className="px-6 py-4 text-[13px] text-gray-600">How to customize the template?</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 text-[11px] rounded bg-[#FBBF24] text-white font-medium`}>
-                          New
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-[13px] text-gray-600">Elijah</td>
-                      <td className="px-6 py-4 text-[13px] text-gray-600">14-10-2018</td>
-                      <td className="px-6 py-4 text-[13px] text-[#F43F5E] cursor-pointer">
-                         <Trash2 size={16} strokeWidth={2} />
-                      </td>
-                    </tr>
-                  ))}
-                  {/* Fallback mock data if students are empty to ensure it looks like the screenshot */}
-                  {students.length === 0 && [1,2].map((item, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50 bg-white transition-colors">
-                      <td className="px-6 py-4 text-[13px] text-gray-800 font-medium">1011</td>
-                      <td className="px-6 py-4 text-[13px] text-[#3B82F6] cursor-pointer hover:underline">Sophia</td>
-                      <td className="px-6 py-4 text-[13px] text-gray-600">sophia@gmail.com</td>
-                      <td className="px-6 py-4 text-[13px] text-gray-600">How to customize the template?</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 text-[11px] rounded bg-[#FBBF24] text-white font-medium`}>
-                          New
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-[13px] text-gray-600">Elijah</td>
-                      <td className="px-6 py-4 text-[13px] text-gray-600">14-10-2018</td>
-                      <td className="px-6 py-4 text-[13px] text-[#F43F5E] cursor-pointer">
-                         <Trash2 size={16} strokeWidth={2} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            {/* Pagination placeholder as seen in some tables */}
-            <div className="p-6 flex justify-end">
-              <div className="w-10 h-10 bg-[#FBBF24] rounded-md flex items-center justify-center cursor-pointer shadow-md transform rotate-45 hover:scale-105 transition-transform">
-                <ChevronRight size={18} className="text-white transform -rotate-45" strokeWidth={3} />
-              </div>
-            </div>
-          </div>
-          
+        {/* MAIN TAB CONTENT */}
+        <main className="admin-main-content">
+          {renderTabContent()}
         </main>
       </div>
       
-      {/* Custom styles for scrollbar */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-          height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #D1D5DB;
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #9CA3AF;
-        }
-        aside.custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #3f4056;
-        }
-      `}} />
     </div>
   );
 }
