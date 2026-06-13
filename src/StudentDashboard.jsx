@@ -359,6 +359,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [showAssessment, setShowAssessment] = useState(false);
   const [localUserData, setLocalUserData] = useState(userData || {});
   const [showProfileForm, setShowProfileForm] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   // ── Photo edit popup state ──
   const [photoPopup, setPhotoPopup] = useState(null); // 'cover' | 'avatar' | null
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -599,27 +600,44 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   useEffect(() => { if (userData) setLocalUserData(userData); }, [userData]);
 
   useEffect(() => {
-    if (!auth?.currentUser) return;
-    const unsub = onSnapshot(doc(db, 'users', auth.currentUser.uid), (userDoc) => {
+    if (!auth?.currentUser) {
+      setIsLoading(false);
+      return;
+    }
+    const unsub = onSnapshot(doc(db, 'students', auth.currentUser.uid), (userDoc) => {
       if (userDoc.exists()) {
         const data = userDoc.data();
-        if (data.track) { setUserTrack(data.track); } else { setUserTrack('hybrid'); }
-        if ((data.track === 'counselling' || data.track === 'hybrid') && !data.hasCompletedClinicalIntake) {
+        
+        const mappedData = {
+          ...data,
+          name: data.profile?.name || '',
+          riasecCode: data.careerDNA?.riasec || null,
+          activeDivisions: data.activeDivisions || []
+        };
+        
+        if (mappedData.activeDivisions.includes('clinical') && !data.hasCompletedClinicalIntake) {
           setShowClinicalIntake(true);
         }
-        setLocalUserData(data);
-        if (data.profileComplete) {
-          setProfileData({
-            age: data.age || '', gender: data.gender || '',
-            schoolName: data.schoolName || '', gradeLevel: data.gradeLevel || '',
-            marks10th: data.marks10th || '', marks11th: data.marks11th || '',
-            stream1112: data.stream1112 || '', marks12th: data.marks12th || '',
-            ugCourse: data.ugCourse || '', ugCGPA: data.ugCGPA || '',
-            pgCourse: data.pgCourse || '', pgCGPA: data.pgCGPA || ''
-          });
+        
+        setLocalUserData(mappedData);
+        
+        if (data.profile) {
+          setProfileData(prev => ({
+            ...prev,
+            age: data.profile.age || '', gender: data.profile.gender || '',
+            schoolName: data.profile.schoolName || '', gradeLevel: data.profile.gradeLevel || '',
+            marks10th: data.profile.marks10th || '', marks11th: data.profile.marks11th || '',
+            stream1112: data.profile.stream1112 || '', marks12th: data.profile.marks12th || '',
+            ugCourse: data.profile.ugCourse || '', ugCGPA: data.profile.ugCGPA || '',
+            pgCourse: data.profile.pgCourse || '', pgCGPA: data.profile.pgCGPA || ''
+          }));
         }
       }
-    }, (e) => { console.error('Error listening to user data:', e); });
+      setIsLoading(false);
+    }, (e) => { 
+      console.error('Error listening to user data:', e); 
+      setIsLoading(false);
+    });
     return () => unsub();
   }, []);
 
@@ -773,6 +791,18 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
       <button className="db-btn" onClick={() => setShowAssessment(true)} style={{ fontSize: "16px", padding: "14px 32px" }}>Start Assessment 🚀</button>
     </div>
   );
+
+  if (isLoading) {
+    return (
+      <div className="db-root" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ border: '4px solid #F3F4F6', borderTop: '4px solid var(--saffron)', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+          <div style={{ color: 'var(--muted)', fontWeight: '600' }}>Loading Dashboard...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (showAssessment) {
     return (
