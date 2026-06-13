@@ -1018,6 +1018,19 @@ export default function App() {
     if (currentPath.startsWith('/auth')) {
       return <AuthPage onAuthSuccess={handleAuthSuccess} />;
     }
+    if (currentPath.startsWith('/counsellor/student/')) {
+      if (!currentUser) { navigate('/auth'); return null; }
+      const studentId = currentPath.split('/counsellor/student/')[1];
+      const CaseFileViewer = lazy(() => import('./components/vidyavantage/CaseFileViewer'));
+      return (
+        <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>Loading...</div>}>
+          <CaseFileViewer
+            studentId={studentId}
+            navigate={navigate}
+          />
+        </Suspense>
+      );
+    }
     if (currentPath.startsWith('/counsellor-dashboard')) {
       if (!currentUser) { navigate('/auth'); return null; }
       const CounsellorDashboard = lazy(() => import('./components/dashboards/CounsellorDashboard'));
@@ -1123,7 +1136,7 @@ export default function App() {
     );
   };
 
-  const isAppShell = currentPath.startsWith('/admin') || currentPath.startsWith('/dashboard') || currentPath.startsWith('/intake');
+  const isAppShell = currentPath.startsWith('/admin') || currentPath.startsWith('/dashboard') || currentPath.startsWith('/intake') || currentPath.startsWith('/counsellor');
 
   return (
     <DashboardProvider navigate={navigate}>

@@ -36,7 +36,7 @@ const CSS = `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ── SOCIAL LAYOUT ROOT ── */
-.db-root { font-family: 'Plus Jakarta Sans', sans-serif; background: #F0F4F8; min-height: 100vh; color: var(--ink); overflow-x: hidden; }
+.db-root { font-family: 'Plus Jakarta Sans', sans-serif; background: #FF0000; min-height: 100vh; color: var(--ink); overflow-x: hidden; }
 
 /* ── TOP NAV BAR ── */
 .db-topnav { background: var(--ink); height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }

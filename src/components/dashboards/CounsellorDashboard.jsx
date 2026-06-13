@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { auth } from '../../firebase';
 import { getAssignedStudents } from '../../services/studentService';
 
-const CounsellorDashboard = () => {
+const CounsellorDashboard = ({ navigate }) => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,7 +32,7 @@ const CounsellorDashboard = () => {
   }, []);
 
   const handleViewCaseFile = (studentId) => {
-    console.log(studentId);
+    navigate(`/counsellor/student/${studentId}`);
   };
 
   if (loading) {
