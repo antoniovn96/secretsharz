@@ -124,8 +124,8 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             {/* TOP ROW: Sparkline Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               {/* Card 1 */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-                <div className="p-6 pb-2">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+                <div className="pb-2">
                   <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Total Registered</span>
                   <div className="text-3xl font-bold text-gray-900 mt-1">{students.length}</div>
                 </div>
@@ -139,8 +139,8 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
 
               {/* Card 2 */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-                <div className="p-6 pb-2">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+                <div className="pb-2">
                   <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Assessed Students</span>
                   <div className="text-3xl font-bold text-gray-900 mt-1">{totalAssessed}</div>
                 </div>
@@ -154,8 +154,8 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
 
               {/* Card 3 */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-                <div className="p-6 pb-2">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+                <div className="pb-2">
                   <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Action Queue</span>
                   <div className="text-3xl font-bold text-amber-500 mt-1">{pendingCount}</div>
                 </div>
@@ -303,100 +303,43 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   // ── MAIN LAYOUT RENDER ──────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex bg-[#F4F7FE] font-sans text-gray-900 w-full overflow-hidden">
-      
-      {/* 1. FIXED SIDEBAR (Matches HTML .main-sidebar width: 260px) */}
+      {/* 1. FIXED SIDEBAR */}
       <aside className="w-[260px] bg-[#1A1F36] text-white flex-shrink-0 flex flex-col h-screen sticky top-0 shadow-[4px_0_24px_rgba(0,0,0,0.15)] z-20">
         <div className="h-[68px] flex items-center px-6 border-b border-gray-800 flex-shrink-0">
-          <div className="flex items-center gap-3 cursor-pointer">
-            <div className="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-lg shadow-lg">V</div>
-            <span className="text-xl font-bold tracking-tight">VidyaVantage</span>
-          </div>
+          <div className="text-xl font-bold tracking-tight">EmployX Admin</div>
         </div>
-        
-        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 px-2 mt-2">Main Menu</p>
+        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           {allowedTabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                activeTab === tab.id 
-                  ? 'bg-blue-600/20 text-blue-400 border-l-2 border-blue-500' 
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white border-l-2 border-transparent'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                activeTab === tab.id ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'
               }`}
             >
-              <span className={activeTab === tab.id ? 'text-blue-500' : 'text-gray-500'}>{tab.icon}</span>
+              <span className="text-lg">{tab.icon}</span>
               <span className="font-medium text-sm">{tab.label}</span>
             </button>
           ))}
         </nav>
       </aside>
 
-      {/* 2. MAIN CONTENT AREA (.content-wrapper) */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#F4F7FE]">
-        
-        {/* TOP HEADER (.main-header) */}
+      {/* 2. MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="h-[68px] bg-white shadow-sm border-b border-gray-100 flex items-center justify-between px-8 flex-shrink-0 z-10">
-          <div className="flex items-center gap-4">
-            <button className="text-gray-400 hover:text-blue-600 transition-colors">
-              <Menu size={20} />
-            </button>
-            <div className="relative hidden md:block">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className="pl-10 pr-4 py-2 bg-gray-50 border-none rounded-lg w-64 focus:ring-2 focus:ring-blue-100 text-sm outline-none transition-all"
-              />
-            </div>
+          <div className="text-xl font-bold text-gray-800">
+             {allowedTabs.find(t => t.id === activeTab)?.label || 'Dashboard'}
           </div>
-
-          <div className="flex items-center gap-6">
-            <button className="text-gray-400 hover:text-gray-700 relative">
-              <Bell size={20} />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-            
-            <div className="h-6 w-px bg-gray-200"></div>
-
-            <div className="relative">
-              <button 
-                onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-3 focus:outline-none"
-              >
-                <div className="text-right hidden md:block">
-                  <p className="text-sm font-bold text-gray-800 leading-tight">{profile?.name || 'Admin'}</p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">{profile?.role?.replace('_', ' ')}</p>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
-                  {(profile?.name || 'A').charAt(0).toUpperCase()}
-                </div>
-                <ChevronDown size={14} className="text-gray-400" />
-              </button>
-
-              {profileOpen && (
-                <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2">
-                  <button onClick={onBackToApp} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600">🌐 Live Site</button>
-                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">🚪 Sign Out</button>
-                </div>
-              )}
-            </div>
+          <div className="flex items-center gap-4">
+            <button onClick={onBackToApp} className="text-sm font-semibold text-blue-600">Live Site</button>
+            <button onClick={handleLogout} className="text-sm font-semibold text-red-500">Sign Out</button>
           </div>
         </header>
 
-        {/* SCROLLABLE PAGE CONTENT (.content) */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-8">
           {renderTabContent()}
         </main>
       </div>
-
-      {/* Global Styles for Scrollbars to match EmployX */}
-      <style dangerouslySetContent={{ __html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.3); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(156, 163, 175, 0.5); }
-      `}} />
     </div>
   );
 }
