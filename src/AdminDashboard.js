@@ -302,9 +302,9 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
 
   // ── MAIN LAYOUT RENDER ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex bg-[#F4F7FE] font-sans text-gray-900 w-full overflow-hidden">
+    <div className="fixed inset-0 z-[9999] min-h-screen flex bg-[#F4F7FE] font-sans text-gray-900 w-full overflow-hidden">
       {/* 1. FIXED SIDEBAR */}
-      <aside className="w-[260px] bg-[#1A1F36] text-white flex-shrink-0 flex flex-col h-screen sticky top-0 shadow-[4px_0_24px_rgba(0,0,0,0.15)] z-20">
+      <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-[#1A1F36] text-white flex-shrink-0 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.15)] z-20">
         <div className="h-[68px] flex items-center px-6 border-b border-gray-800 flex-shrink-0">
           <div className="text-xl font-bold tracking-tight">EmployX Admin</div>
         </div>
@@ -325,7 +325,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
       </aside>
 
       {/* 2. MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="absolute left-[260px] right-0 top-0 bottom-0 flex flex-col overflow-hidden">
         <header className="h-[68px] bg-white shadow-sm border-b border-gray-100 flex items-center justify-between px-8 flex-shrink-0 z-10">
           <div className="text-xl font-bold text-gray-800">
              {allowedTabs.find(t => t.id === activeTab)?.label || 'Dashboard'}
