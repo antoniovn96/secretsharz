@@ -2016,7 +2016,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         onChange={(e) => { if (e.target.files[0]) handlePhotoUpload(e.target.files[0], 'avatar'); e.target.value = ''; }}
       />
 
-      <div className="social-dashboard-layout" style={{paddingTop: '60px'}}>
+      <div className="!max-w-7xl !mx-auto !px-4 !py-8 !flex !flex-col md:!flex-row !gap-8 !bg-[#F4F7FE] !min-h-screen">
         <input
           type="file"
           id="coverPhotoUpload"
@@ -2047,7 +2047,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             e.target.value = '';
           }}
         />
-        <main className="social-main-content">
+        <aside className="!w-full md:!w-[300px] !flex-shrink-0 !bg-white !rounded-2xl !p-6 !shadow-sm !border !border-gray-100">
           <div className="profile-hero-container">
             <div className="profile-cover-photo" style={{ backgroundImage: userProfile?.coverPhoto ? `url(${userProfile.coverPhoto})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
               {/* Cover photo edit button */}
@@ -2213,8 +2213,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             </div>
           </div>
           {/* NESTED ABOUT SECTION */}
-          <div className="!flex !flex-col !md:flex-row !gap-6 !max-w-7xl !mx-auto !p-6">
-            <div className="about-sidebar">
+            <div className="about-sidebar" style={{marginTop: '20px'}}>
               <h3>About</h3>
               <div className={`about-nav-item ${activeAboutTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveAboutTab('overview')}>Overview</div>
               <div className={`about-nav-item ${activeAboutTab === 'personal-info' ? 'active' : ''}`} onClick={() => setActiveAboutTab('personal-info')}>Personal Information</div>
@@ -2236,7 +2235,9 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               )}
               <div className={`about-nav-item ${activeAboutTab === 'messages' ? 'active' : ''}`} onClick={() => setActiveAboutTab('messages')}>💬 Messages {unreadCount > 0 && <span style={{background: 'red', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '12px', marginLeft: '5px'}}>{unreadCount}</span>}</div>
             </div>
+          </aside>
 
+          <main className="!flex-1 !flex !flex-col !gap-6">
             <div className="about-content">
               {activeAboutTab === 'overview' && (
                 <div>
@@ -2267,7 +2268,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                     </div>
 
                     {/* ── Clarity Index Stats ── */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                    <div className="!grid !grid-cols-2 !gap-4">
                       <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
                         <div style={{ fontSize: '22px', marginBottom: '6px' }}>🎯</div>
                         <div style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: '700', color: '#E4E6EB', lineHeight: '1' }}>{hasAssessment ? '8' : '0'}</div>
@@ -3467,7 +3468,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               )}
               {activeAboutTab === 'messages' && <ChatWidget activeChat={activeChat} setActiveChat={setActiveChat} />}
             </div>
-          </div>
+          </main>
 
           {/* ── PROFILE FORM MODAL ── */}
           {showCareerMatchesModal && (
@@ -3478,7 +3479,6 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
           <ChatWidget />
           {showTermsModal && ( <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}> <div style={{ background: 'var(--bg-surface, #1e1e1e)', padding: '30px', borderRadius: '10px', maxWidth: '500px', width: '90%', border: '1px solid var(--border)' }}> <h2 style={{ color: '#fff', marginBottom: '15px' }}>Terms & Conditions</h2> <p style={{ color: '#aaa', fontSize: '14px', lineHeight: '1.6', marginBottom: '20px' }}> By accessing the Secret Sharz dashboard, you consent that all personal, academic, and psychological information provided on this platform will be strictly utilized for Career Guidance and professional Counseling purposes. Your data is securely managed and will only be accessible to your assigned counselors and platform administrators. </p> <div style={{ display: 'flex', justifyContent: 'flex-end' }}> <button onClick={handleAcceptTerms} style={{ background: 'var(--primary-blue, #0066ff)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}> I Agree & Continue </button> </div> </div> </div> )}
           {showClinicalIntake && <ClinicalIntakeModal onComplete={() => setShowClinicalIntake(false)} />}
-        </main>
       </div>
     </div>
   );
