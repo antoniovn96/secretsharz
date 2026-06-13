@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { useDashboard } from './context/DashboardContext';
 
 // Helper: format relative time
@@ -23,7 +23,7 @@ function getNotifColor(priority, isRead) {
 }
 
 export default function Header({ navigate, currentUser, handleLogout, isAdmin }) {
-  const location = useLocation();
+  const router = useRouter();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
@@ -81,7 +81,7 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
   };
 
   // 🚀 HIDE HEADER ON ADMIN ROUTE 🚀
-  if (location.pathname.startsWith('/admin')) {
+  if (router.pathname && router.pathname.startsWith('/admin')) {
     return null;
   }
 
