@@ -944,9 +944,9 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
 
       case 'overview':
       const pieData = [
-        { name: 'Pending', value: funnelCounts.pending, color: '#F59E0B' },
-        { name: 'In Progress', value: funnelCounts.inProgress, color: '#3B82F6' },
-        { name: 'Completed', value: funnelCounts.completed, color: '#10B981' }
+        { name: 'Pending', value: students.filter(s => !s.assignedCounsellorId && s.riasecCode).length, color: '#F59E0B' },
+        { name: 'In Progress', value: students.filter(s => s.counsellingStatus === 'In Progress').length, color: '#3B82F6' },
+        { name: 'Completed', value: students.filter(s => s.counsellingStatus === 'Completed').length, color: '#10B981' }
       ];
       return (
         <div className="space-y-6">
