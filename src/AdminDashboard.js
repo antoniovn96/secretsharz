@@ -448,7 +448,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate, currentPat
 
   // ── MAIN LAYOUT RENDER ──────────────────────────────────────────────────────
   return (
-    <div className="admin-layout">
+    <div className="flex min-h-screen w-full bg-gray-50">
       
       {/* 1. FIXED SIDEBAR */}
       <aside className="admin-sidebar">

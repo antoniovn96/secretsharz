@@ -837,10 +837,11 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const LeftProfileCard = () => (
     <div className="db-profile-card">
       <div className="db-profile-banner">
+        {coverPhoto && <img src={coverPhoto} alt="Cover" className="w-full h-48 md:h-64 object-cover rounded-t-2xl" />}
         <div className="db-profile-avatar-wrap">
           <div className="db-profile-avatar">
-            {userProfile.profilePicture
-              ? <img src={userProfile.profilePicture} alt="avatar" className="object-cover w-full h-48" />
+            {profilePicture
+              ? <img src={profilePicture} alt="avatar" className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md relative -mt-16 ml-6" />
               : studentName.charAt(0)
             }
           </div>
