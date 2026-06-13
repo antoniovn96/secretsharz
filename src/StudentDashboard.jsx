@@ -724,7 +724,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const location = localUserData?.location || userProfile?.location || '';
   const coverPhoto = localUserData?.coverPhoto || userProfile?.coverPhoto || null;
   const profilePicture = localUserData?.profilePicture || userProfile?.profilePicture || null;
-  const studentName = localUserData?.name || user?.displayName || "Student";
+  const studentName = localUserData?.name || userProfile?.name || user?.displayName || "Student";
   const firstName = studentName.split(" ")[0];
   const hasAssessment = !!localUserData?.riasecCode;
   const exPoints = Number(userProfile.exPoints || 0);
@@ -2016,7 +2016,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         onChange={(e) => { if (e.target.files[0]) handlePhotoUpload(e.target.files[0], 'avatar'); e.target.value = ''; }}
       />
 
-      <div className="!max-w-7xl !mx-auto !px-4 !py-8 !flex !flex-col md:!flex-row !gap-8 !bg-[#F4F7FE] !min-h-screen">
+      <div className="!max-w-7xl !mx-auto !px-4 !py-8 !flex !flex-col lg:!flex-row !gap-8 !w-full">
         <input
           type="file"
           id="coverPhotoUpload"
@@ -2047,7 +2047,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             e.target.value = '';
           }}
         />
-        <aside className="!w-full md:!w-[300px] !flex-shrink-0 !bg-white !rounded-2xl !p-6 !shadow-sm !border !border-gray-100">
+        <aside className="!w-full lg:!w-[320px] !flex-shrink-0 !flex !flex-col !gap-6">
           <div className="profile-hero-container">
             <div className="profile-cover-photo" style={{ backgroundImage: userProfile?.coverPhoto ? `url(${userProfile.coverPhoto})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
               {/* Cover photo edit button */}
@@ -2160,7 +2160,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             </div>
             <div className="profile-identity-row">
               <div className="profile-name-section">
-                <h1>{userProfile?.name || 'Student'}</h1>
+                <h1>{studentName}</h1>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   {editingItem === 'bio' ? (
                     <input className="form-input" style={{ margin: 0, width: '300px' }} defaultValue={bio || '🚀 Ready to build my future • Passionate about Learning'} onBlur={() => setEditingItem(null)} autoFocus />
@@ -2237,7 +2237,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             </div>
           </aside>
 
-          <main className="!flex-1 !flex !flex-col !gap-6">
+          <main className="!flex-1 !flex !flex-col !gap-6 !min-w-0">
             <div className="about-content">
               {activeAboutTab === 'overview' && (
                 <div>
@@ -2268,7 +2268,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                     </div>
 
                     {/* ── Clarity Index Stats ── */}
-                    <div className="!grid !grid-cols-2 !gap-4">
+                    <div className="!grid !grid-cols-1 md:!grid-cols-2 !gap-4">
                       <div style={{ background: '#18191A', border: '1px solid #3A3B3C', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
                         <div style={{ fontSize: '22px', marginBottom: '6px' }}>🎯</div>
                         <div style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', fontWeight: '700', color: '#E4E6EB', lineHeight: '1' }}>{hasAssessment ? '8' : '0'}</div>
