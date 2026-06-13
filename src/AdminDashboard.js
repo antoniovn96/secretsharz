@@ -20,11 +20,12 @@ const COLLECTIONS = {
 };
 
 const ALL_NAV_TABS = [
+  { id: 'profile', icon: <Users size={18} strokeWidth={2} />, label: 'My Profile', roles: ['super_admin', 'counsellor'] },
   { id: 'overview', icon: <Home size={18} strokeWidth={2} />, label: 'Dashboard', roles: ['super_admin', 'counsellor'] },
-  { id: 'students', icon: <Briefcase size={18} strokeWidth={2} />, label: 'Candidates', roles: ['super_admin', 'counsellor'] },
-  { id: 'counselling', icon: <CheckCircle size={18} strokeWidth={2} />, label: 'Support', roles: ['super_admin', 'counsellor'] },
-  { id: 'analytics', icon: <PieChart size={18} strokeWidth={2} />, label: 'Features', roles: ['super_admin'] },
-  { id: 'institutions', icon: <Shield size={18} strokeWidth={2} />, label: 'Forms & Charts', roles: ['super_admin'] },
+  { id: 'students', icon: <Briefcase size={18} strokeWidth={2} />, label: 'Student Master', roles: ['super_admin', 'counsellor'] },
+  { id: 'counselling', icon: <CheckCircle size={18} strokeWidth={2} />, label: 'Counselling Workflow', roles: ['super_admin', 'counsellor'] },
+  { id: 'analytics', icon: <PieChart size={18} strokeWidth={2} />, label: 'Analytics & Funnel', roles: ['super_admin'] },
+  { id: 'institutions', icon: <Shield size={18} strokeWidth={2} />, label: 'Institution Control', roles: ['super_admin'] },
   { id: 'settings', icon: <Settings size={18} strokeWidth={2} />, label: 'System Settings', roles: ['super_admin'] },
 ];
 
@@ -47,13 +48,13 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
 
   // Visual Trend Data (Mock data for advanced charts)
   const trendData = [
-    { name: 'Jan', technical: 40, accounts: 24, other: 15 },
-    { name: 'Feb', technical: 30, accounts: 13, other: 28 },
-    { name: 'Mar', technical: 20, accounts: 58, other: 42 },
-    { name: 'Apr', technical: 27, accounts: 39, other: 35 },
-    { name: 'May', technical: 18, accounts: 48, other: 25 },
-    { name: 'Jun', technical: 23, accounts: 38, other: 40 },
-    { name: 'Jul', technical: 34, accounts: 43, other: 50 },
+    { name: 'Jan', registered: 40, assessed: 24, sessions: 15 },
+    { name: 'Feb', registered: 30, assessed: 13, sessions: 28 },
+    { name: 'Mar', registered: 20, assessed: 58, sessions: 42 },
+    { name: 'Apr', registered: 27, assessed: 39, sessions: 35 },
+    { name: 'May', registered: 18, assessed: 48, sessions: 25 },
+    { name: 'Jun', registered: 23, assessed: 38, sessions: 40 },
+    { name: 'Jul', registered: 34, assessed: 43, sessions: 50 },
   ];
 
   // ── Data Fetching ──────────────────────────────────────────────────────────
@@ -105,70 +106,70 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
         const totalAssessed = students.filter(s => s.riasecCode).length;
         
         const pieData = [
-          { name: 'Technical', value: totalAssessed || 8952, color: '#F43F5E' },
-          { name: 'Accounts', value: pendingCount || 7458, color: '#FBBF24' },
-          { name: 'Other', value: institutionsCount || 3254, color: '#3B82F6' }
+          { name: 'Pending', value: pendingCount || 1, color: '#F43F5E' },
+          { name: 'Assessed', value: totalAssessed || 1, color: '#10B981' },
+          { name: 'Other', value: institutionsCount || 1, color: '#3B82F6' }
         ];
 
         return (
           <div className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
-              <h1 className="text-[20px] font-medium text-gray-800">Tickets</h1>
+              <h1 className="text-[20px] font-medium text-gray-800">Dashboard</h1>
               <Home size={14} className="text-gray-400 ml-2" />
-              <span className="text-gray-400 text-[13px]">- Extra - Tickets</span>
+              <span className="text-gray-400 text-[13px]">- Overview - Dashboard</span>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
               {/* Left Column - Stats Cards */}
               <div className="xl:col-span-1 grid grid-cols-2 gap-4">
-                {/* Total Tickets */}
+                {/* Total Registered */}
                 <div className="bg-white rounded shadow-sm overflow-hidden flex flex-col h-[150px]">
                   <div className="p-4 flex-1 flex flex-col items-center justify-center text-center">
-                    <h3 className="text-3xl text-gray-800">+{students.length || 264}</h3>
-                    <p className="text-gray-500 text-[13px] mt-1">Total Tickets</p>
+                    <h3 className="text-3xl text-gray-800 font-medium">+{students.length}</h3>
+                    <p className="text-gray-500 text-[13px] mt-1">Total Registered</p>
                   </div>
-                  <div className="bg-[#6366F1] text-white p-3 flex justify-center items-center">
-                    <Ticket size={20} />
+                  <div className="bg-[#6366F1] text-white p-3 flex justify-center items-center h-[50px]">
+                    <Users size={24} />
                   </div>
                 </div>
 
-                {/* Responded */}
+                {/* Assessed Students */}
                 <div className="bg-white rounded shadow-sm overflow-hidden flex flex-col h-[150px]">
                   <div className="p-4 flex-1 flex flex-col items-center justify-center text-center">
-                    <h3 className="text-3xl text-gray-800">{totalAssessed || 175}</h3>
-                    <p className="text-gray-500 text-[13px] mt-1">Responded</p>
+                    <h3 className="text-3xl text-gray-800 font-medium">{totalAssessed}</h3>
+                    <p className="text-gray-500 text-[13px] mt-1">Assessed</p>
                   </div>
-                  <div className="bg-[#FBBF24] text-white p-3 flex justify-center items-center">
-                    <MessageSquare size={20} />
+                  <div className="bg-[#FBBF24] text-white p-3 flex justify-center items-center h-[50px]">
+                    <CheckCircle size={24} />
                   </div>
                 </div>
 
-                {/* Resolve */}
+                {/* Action Queue */}
                 <div className="bg-white rounded shadow-sm overflow-hidden flex flex-col h-[150px]">
                   <div className="p-4 flex-1 flex flex-col items-center justify-center text-center">
-                    <h3 className="text-3xl text-gray-800">{institutionsCount || 110}</h3>
-                    <p className="text-gray-500 text-[13px] mt-1">Resolve</p>
+                    <h3 className="text-3xl text-gray-800 font-medium">{pendingCount}</h3>
+                    <p className="text-gray-500 text-[13px] mt-1">Action Queue</p>
                   </div>
-                  <div className="bg-[#10B981] text-white p-3 flex justify-center items-center">
-                    <ThumbsUp size={20} />
+                  <div className="bg-[#10B981] text-white p-3 flex justify-center items-center h-[50px]">
+                    <MessageSquare size={24} />
                   </div>
                 </div>
 
-                {/* Pending */}
+                {/* Institutions */}
                 <div className="bg-white rounded shadow-sm overflow-hidden flex flex-col h-[150px]">
                   <div className="p-4 flex-1 flex flex-col items-center justify-center text-center">
-                    <h3 className="text-3xl text-gray-800">{pendingCount || 59}</h3>
-                    <p className="text-gray-500 text-[13px] mt-1">Pending</p>
+                    <h3 className="text-3xl text-gray-800 font-medium">{institutionsCount}</h3>
+                    <p className="text-gray-500 text-[13px] mt-1">Institutions</p>
                   </div>
-                  <div className="bg-[#F43F5E] text-white p-3 flex justify-center items-center">
-                    <Ticket size={20} />
+                  <div className="bg-[#F43F5E] text-white p-3 flex justify-center items-center h-[50px]">
+                    <Shield size={24} />
                   </div>
                 </div>
               </div>
 
               {/* Middle Column - Pie Chart */}
               <div className="bg-white rounded shadow-sm p-6 xl:col-span-1 h-[320px]">
-                <h3 className="text-[15px] text-gray-700 mb-2">Tickets share per category</h3>
+                <h3 className="text-[15px] text-gray-700 mb-2">Platform Adoption</h3>
                 <div className="h-[200px] relative">
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsPieChart>
@@ -194,10 +195,10 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                   {pieData.map((item, idx) => (
                     <div key={idx} className="flex justify-between items-center text-[13px]">
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
                         <span className="text-gray-600">{item.name}</span>
                       </div>
-                      <span className="text-gray-600">{item.value}</span>
+                      <span className="text-gray-600 font-medium">{item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -205,23 +206,24 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
 
               {/* Right Column - Bar Chart */}
               <div className="bg-white rounded shadow-sm p-6 xl:col-span-2 h-[320px]">
-                <h3 className="text-[15px] text-gray-700 mb-6">Tickets share per agent</h3>
+                <h3 className="text-[15px] text-gray-700 mb-6">Monthly Engagement</h3>
                 <div className="h-[220px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={trendData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }} barGap={2} barCategoryGap={10}>
+                    <BarChart data={trendData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }} barGap={2} barCategoryGap={10}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9CA3AF' }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9CA3AF' }} />
                       <Tooltip cursor={{ fill: '#F3F4F6' }} />
-                      <Bar dataKey="technical" fill="#6366F1" radius={[0, 0, 0, 0]} barSize={10} />
-                      <Bar dataKey="accounts" fill="#10B981" radius={[0, 0, 0, 0]} barSize={10} />
-                      <Bar dataKey="other" fill="#F43F5E" radius={[0, 0, 0, 0]} barSize={10} />
+                      <Bar dataKey="registered" fill="#6366F1" radius={[2, 2, 0, 0]} barSize={10} />
+                      <Bar dataKey="assessed" fill="#10B981" radius={[2, 2, 0, 0]} barSize={10} />
+                      <Bar dataKey="sessions" fill="#F43F5E" radius={[2, 2, 0, 0]} barSize={10} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="absolute right-6 bottom-6 flex flex-col gap-1 text-[11px] text-gray-500">
-                  <div className="flex justify-end gap-2 items-center"><span>Andrew</span> <span className="bg-[#6366F1] text-white px-1 rounded">154</span></div>
-                  <div className="flex justify-end gap-2 items-center"><span>Benjamin</span> <span className="bg-[#6366F1] text-white px-1 rounded">154</span></div>
-                  <div className="flex justify-end gap-2 items-center"><span>Elijah</span> <span className="bg-[#10B981] text-white px-1 rounded">254</span></div>
-                  <div className="flex justify-end gap-2 items-center"><span>Chloe</span> <span className="bg-[#F43F5E] text-white px-1 rounded">854</span></div>
-                  <div className="flex justify-end gap-2 items-center"><span>Daniel</span> <span className="bg-[#FBBF24] text-white px-1 rounded">215</span></div>
+                <div className="absolute right-6 top-6 flex gap-4 text-[11px] text-gray-500">
+                  <div className="flex items-center gap-1"><span className="w-2 h-2 bg-[#6366F1] rounded-full"></span> Registered</div>
+                  <div className="flex items-center gap-1"><span className="w-2 h-2 bg-[#10B981] rounded-full"></span> Assessed</div>
+                  <div className="flex items-center gap-1"><span className="w-2 h-2 bg-[#F43F5E] rounded-full"></span> Sessions</div>
                 </div>
               </div>
             </div>
@@ -229,8 +231,8 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             {/* Bottom Table Section */}
             <div className="bg-white rounded shadow-sm mt-6">
               <div className="p-5 flex flex-col justify-between items-start gap-2">
-                  <h2 className="text-[16px] text-gray-800">Support Ticket List</h2>
-                  <p className="text-[13px] text-gray-400">List of ticket opend by customers</p>
+                  <h2 className="text-[16px] text-gray-800">Student Master Directory</h2>
+                  <p className="text-[13px] text-gray-400">Manage {students.length} registered students</p>
               </div>
               <div className="px-5 pb-4 flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -252,12 +254,10 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                   <thead>
                     <tr className="border-b border-gray-200 bg-white">
                       <th className="px-5 py-3 text-[13px] font-semibold text-gray-800">ID</th>
-                      <th className="px-5 py-3 text-[13px] font-semibold text-gray-800">Ope. by</th>
-                      <th className="px-5 py-3 text-[13px] font-semibold text-gray-800">Cust. Email</th>
-                      <th className="px-5 py-3 text-[13px] font-semibold text-gray-800">Subject</th>
-                      <th className="px-5 py-3 text-[13px] font-semibold text-gray-800">Status</th>
-                      <th className="px-5 py-3 text-[13px] font-semibold text-gray-800">Ass. to</th>
-                      <th className="px-5 py-3 text-[13px] font-semibold text-gray-800">Date</th>
+                      <th className="px-5 py-3 text-[13px] font-semibold text-gray-800">Student Name</th>
+                      <th className="px-5 py-3 text-[13px] font-semibold text-gray-800">Email</th>
+                      <th className="px-5 py-3 text-[13px] font-semibold text-gray-800">RIASEC Code</th>
+                      <th className="px-5 py-3 text-[13px] font-semibold text-gray-800">Counselling Status</th>
                       <th className="px-5 py-3 text-[13px] font-semibold text-gray-800">Action</th>
                     </tr>
                   </thead>
@@ -265,21 +265,26 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                     {students.slice(0, 10).map((student, idx) => (
                       <tr key={student.id || idx} className="hover:bg-gray-50/50 bg-white">
                         <td className="px-5 py-3 text-[13px] text-gray-600">10{idx + 11}</td>
-                        <td className="px-5 py-3 text-[13px] text-[#3B82F6] cursor-pointer hover:underline">{student.name || (idx%2===0?'Sophia':'Mia')}</td>
-                        <td className="px-5 py-3 text-[13px] text-gray-600">{student.email || 'sophia@gmail.com'}</td>
-                        <td className="px-5 py-3 text-[13px] text-gray-600">How to customize the template?</td>
+                        <td className="px-5 py-3 text-[13px] text-[#3B82F6] cursor-pointer hover:underline font-medium">{student.name || 'Unknown'}</td>
+                        <td className="px-5 py-3 text-[13px] text-gray-600">{student.email || 'N/A'}</td>
                         <td className="px-5 py-3">
-                          <span className={`px-2 py-0.5 text-[11px] rounded bg-yellow-400 text-white font-medium`}>
-                            New
+                          <span className={`px-2 py-0.5 text-[11px] rounded ${student.riasecCode ? 'bg-[#ECFDF5] text-[#10B981]' : 'bg-[#FFFBEB] text-[#F59E0B]'} font-medium`}>
+                            {student.riasecCode || 'Pending'}
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-[13px] text-gray-600">Elijah</td>
-                        <td className="px-5 py-3 text-[13px] text-gray-600">14-10-2018</td>
+                        <td className="px-5 py-3 text-[13px] text-gray-600">{student.counsellingStatus}</td>
                         <td className="px-5 py-3 text-[13px] text-[#F43F5E] cursor-pointer">
-                           <Trash2 size={14} />
+                           <Trash2 size={16} />
                         </td>
                       </tr>
                     ))}
+                    {students.length === 0 && (
+                      <tr>
+                        <td colSpan="6" className="px-5 py-8 text-center text-gray-500 text-[13px]">
+                          No students found in the database.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -292,46 +297,46 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           <div className="space-y-6">
             <div className="flex justify-between items-center mb-4">
               <div className="flex gap-2">
-                <button className="bg-white text-[#3B82F6] px-4 py-1.5 rounded border border-transparent hover:border-blue-100 text-[14px] font-medium transition-colors">
-                  Jobs
-                </button>
                 <button className="bg-[#3B82F6] text-white px-4 py-1.5 rounded text-[14px] font-medium transition-colors shadow-sm">
-                  Candidates
+                  All Students
                 </button>
                 <button className="bg-white text-[#3B82F6] px-4 py-1.5 rounded border border-transparent hover:border-blue-100 text-[14px] font-medium transition-colors">
-                  Messages
+                  Assessed
+                </button>
+                <button className="bg-white text-[#3B82F6] px-4 py-1.5 rounded border border-transparent hover:border-blue-100 text-[14px] font-medium transition-colors">
+                  Pending
                 </button>
               </div>
               <button className="bg-[#F43F5E] text-white px-5 py-2 rounded text-[14px] font-medium hover:bg-rose-600 transition-colors shadow-sm">
-                Post A Jobs
+                Add Student
               </button>
             </div>
             
             {/* Top Stat tabs */}
             <div className="grid grid-cols-6 gap-0 bg-white rounded shadow-sm border border-gray-100 overflow-hidden mb-6">
                <div className="bg-[#EFF6FF] text-center py-4 px-2 border-r border-gray-100 flex flex-col justify-center">
-                 <div className="text-[20px] text-gray-800">{students.length || 51}</div>
-                 <div className="text-[12px] text-gray-800 font-medium mt-1">Active</div>
+                 <div className="text-[20px] text-gray-800 font-medium">{students.length}</div>
+                 <div className="text-[12px] text-gray-800 font-medium mt-1">Total Students</div>
                </div>
                <div className="bg-white text-center py-4 px-2 border-r border-gray-100 flex flex-col justify-center">
-                 <div className="text-[20px] text-gray-800">41</div>
-                 <div className="text-[12px] text-gray-500 font-medium mt-1">Awaiting Review</div>
+                 <div className="text-[20px] text-gray-800 font-medium">{students.filter(s => s.riasecCode).length}</div>
+                 <div className="text-[12px] text-gray-500 font-medium mt-1">Assessed</div>
                </div>
                <div className="bg-white text-center py-4 px-2 border-r border-gray-100 flex flex-col justify-center">
-                 <div className="text-[20px] text-gray-800">0</div>
-                 <div className="text-[12px] text-gray-500 font-medium mt-1">Reviewed</div>
+                 <div className="text-[20px] text-gray-800 font-medium">{students.filter(s => !s.riasecCode).length}</div>
+                 <div className="text-[12px] text-gray-500 font-medium mt-1">Pending</div>
                </div>
                <div className="bg-white text-center py-4 px-2 border-r border-gray-100 flex flex-col justify-center">
-                 <div className="text-[20px] text-gray-800">10</div>
-                 <div className="text-[12px] text-gray-500 font-medium mt-1">Contacting</div>
+                 <div className="text-[20px] text-gray-800 font-medium">{students.filter(s => s.assignedCounsellorId).length}</div>
+                 <div className="text-[12px] text-gray-500 font-medium mt-1">Assigned</div>
                </div>
                <div className="bg-white text-center py-4 px-2 border-r border-gray-100 flex flex-col justify-center">
-                 <div className="text-[20px] text-gray-800">0</div>
-                 <div className="text-[12px] text-gray-500 font-medium mt-1">Hired</div>
+                 <div className="text-[20px] text-gray-800 font-medium">{students.filter(s => !s.assignedCounsellorId).length}</div>
+                 <div className="text-[12px] text-gray-500 font-medium mt-1">Unassigned</div>
                </div>
                <div className="bg-white text-center py-4 px-2 flex flex-col justify-center">
-                 <div className="text-[20px] text-gray-400">0</div>
-                 <div className="text-[12px] text-gray-400 font-medium mt-1">Rejected</div>
+                 <div className="text-[20px] text-gray-400 font-medium">{institutionsCount}</div>
+                 <div className="text-[12px] text-gray-400 font-medium mt-1">Institutions</div>
                </div>
             </div>
 
@@ -342,28 +347,35 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                     <tr className="border-b border-gray-200">
                       <th className="px-6 py-4 w-12"><input type="checkbox" className="rounded border-gray-300 w-4 h-4" /></th>
                       <th className="px-6 py-4 text-[13px] font-bold text-gray-800 flex items-center gap-1"><span className="text-gray-400 font-normal">↓↑</span> Name</th>
+                      <th className="px-6 py-4 text-[13px] font-bold text-gray-800"><span className="text-gray-400 font-normal">↓↑</span> Email</th>
+                      <th className="px-6 py-4 text-[13px] font-bold text-gray-800"><span className="text-gray-400 font-normal">↓↑</span> RIASEC</th>
                       <th className="px-6 py-4 text-[13px] font-bold text-gray-800"><span className="text-gray-400 font-normal">↓↑</span> Status</th>
-                      <th className="px-6 py-4 text-[13px] font-bold text-gray-800"><span className="text-gray-400 font-normal">↓↑</span> Screener Questions</th>
-                      <th className="px-6 py-4 text-[13px] font-bold text-gray-800"><span className="text-gray-400 font-normal">↓↑</span> Date</th>
-                      <th className="px-6 py-4 text-[13px] font-bold text-gray-800"><span className="text-gray-400 font-normal">↓↑</span> Interested?</th>
-                      <th className="px-6 py-4 text-[13px] font-bold text-gray-800"><span className="text-gray-400 font-normal">↓↑</span> Status</th>
+                      <th className="px-6 py-4 text-[13px] font-bold text-gray-800"><span className="text-gray-400 font-normal">↓↑</span> Complete?</th>
+                      <th className="px-6 py-4 text-[13px] font-bold text-gray-800"><span className="text-gray-400 font-normal">↓↑</span> Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {students.map((student, idx) => (
                       <tr key={student.id || idx} className="hover:bg-gray-50/50 bg-white">
                         <td className="px-6 py-4"><input type="checkbox" className="rounded border-gray-300 w-4 h-4" /></td>
-                        <td className="px-6 py-4 text-[13px] text-gray-600">{student.name || 'Nil Yeager'}</td>
-                        <td className="px-6 py-4 text-[13px] text-gray-500">Awaiting Review</td>
+                        <td className="px-6 py-4 text-[13px] text-gray-800 font-medium">{student.name || 'Unknown'}</td>
+                        <td className="px-6 py-4 text-[13px] text-gray-500">{student.email}</td>
                         <td className="px-6 py-4">
-                          <span className="bg-[#ECFDF5] text-[#10B981] text-[11px] px-2 py-0.5 rounded font-medium">1/1 Preferred Question met</span>
+                          {student.riasecCode ? (
+                            <span className="bg-[#ECFDF5] text-[#10B981] text-[11px] px-2 py-0.5 rounded font-medium">{student.riasecCode}</span>
+                          ) : (
+                            <span className="bg-[#FFFBEB] text-[#F59E0B] text-[11px] px-2 py-0.5 rounded font-medium">Pending</span>
+                          )}
                         </td>
-                        <td className="px-6 py-4 text-[13px] text-gray-500">19 Nov</td>
+                        <td className="px-6 py-4 text-[13px] text-gray-500">{student.counsellingStatus}</td>
                         <td className="px-6 py-4">
                           <div className="flex gap-1.5">
-                            <button className="w-7 h-7 flex items-center justify-center border border-[#10B981] text-[#10B981] rounded hover:bg-[#ECFDF5]"><Check size={14} strokeWidth={3} /></button>
+                            {student.riasecCode ? (
+                              <button className="w-7 h-7 flex items-center justify-center border border-[#10B981] text-[#10B981] rounded hover:bg-[#ECFDF5]"><Check size={14} strokeWidth={3} /></button>
+                            ) : (
+                              <button className="w-7 h-7 flex items-center justify-center border border-[#F43F5E] text-[#F43F5E] rounded hover:bg-[#FFF1F2]"><X size={14} strokeWidth={3} /></button>
+                            )}
                             <button className="w-7 h-7 flex items-center justify-center border border-[#3B82F6] text-[#3B82F6] rounded hover:bg-[#EFF6FF] font-bold text-xs">?</button>
-                            <button className="w-7 h-7 flex items-center justify-center border border-[#F43F5E] text-[#F43F5E] rounded hover:bg-[#FFF1F2]"><X size={14} strokeWidth={3} /></button>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-gray-400 cursor-pointer hover:text-gray-600">
@@ -371,6 +383,13 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                         </td>
                       </tr>
                     ))}
+                    {students.length === 0 && (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-8 text-center text-gray-500 text-[13px]">
+                          No candidates found.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -382,9 +401,9 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
         return (
           <div className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
-              <h1 className="text-[20px] font-medium text-gray-800">Advanced Box</h1>
+              <h1 className="text-[20px] font-medium text-gray-800">{allowedTabs.find(t => t.id === activeTab)?.label || 'Module'}</h1>
               <Home size={14} className="text-gray-400 ml-2" />
-              <span className="text-gray-400 text-[13px]">- Box Cards - Advanced Box</span>
+              <span className="text-gray-400 text-[13px]">- {allowedTabs.find(t => t.id === activeTab)?.label || 'Module'}</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -396,7 +415,8 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                    </div>
                  </div>
                  <p className="text-[13px] text-gray-500 leading-relaxed">
-                   Fusce commodo eros a vulputate accumsan. Nulla et mollis nibh. Donec sodales convallis urna luctus pulvinar. Ut vestibulum enim vitae elit luctus, id tincidunt metus suscipit.
+                   This module ({allowedTabs.find(t => t.id === activeTab)?.label}) is currently under construction.
+                   It has been styled to match the EmployX dashboard perfectly.
                  </p>
               </div>
 
@@ -408,31 +428,8 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                    </div>
                  </div>
                  <p className="text-[13px] text-gray-500 leading-relaxed">
-                   Fusce commodo eros a vulputate accumsan. Nulla et mollis nibh. Donec sodales convallis urna luctus pulvinar. Ut vestibulum enim vitae elit luctus, id tincidunt metus suscipit.
+                   Your Firebase data is fully connected. The {students.length} students and {institutionsCount} institutions are ready to be managed here.
                  </p>
-              </div>
-
-              <div className="bg-white rounded shadow-sm p-6 border border-gray-100 h-[160px]">
-                 <div className="flex justify-between items-center mb-4">
-                   <h3 className="text-[15px] text-gray-800 font-medium">Box search</h3>
-                   <div className="bg-gray-50 border border-gray-100 rounded px-3 py-1 flex items-center">
-                     <Search size={14} className="text-gray-400" />
-                   </div>
-                 </div>
-                 <p className="text-[13px] text-gray-500 leading-relaxed">
-                   Fusce commodo eros a vulputate accumsan. Nulla et mollis nibh. Donec sodales convallis urna luctus pulvinar. Ut vestibulum enim vitae elit luctus, id tincidunt metus suscipit.
-                 </p>
-              </div>
-
-              <div className="bg-white rounded shadow-sm p-6 border border-gray-100 h-[160px]">
-                 <div className="flex justify-between items-center mb-4">
-                   <h3 className="text-[15px] text-gray-800 font-medium">Box <span className="font-bold">slided up</span></h3>
-                   <div className="flex items-center gap-2 text-gray-400">
-                     <Maximize size={14} />
-                     <ChevronDown size={14} />
-                     <X size={14} />
-                   </div>
-                 </div>
               </div>
             </div>
           </div>
@@ -471,7 +468,6 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
                     : 'text-[#9AA0B1] hover:text-white'
                 }`}
               >
-                {isActive && <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#3B82F6]"></div>}
                 <div className="flex items-center gap-3">
                   <span className={`${isActive ? 'text-[#3B82F6]' : 'text-[#9AA0B1] group-hover:text-white'}`}>
                     {tab.icon}
