@@ -11,6 +11,8 @@ import CareerMatchesModal from "./components/CareerMatchesModal";
 import { SCHOOLS, COLLEGES, INTERESTS, HOBBIES, TV_SHOWS, MOVIES, GAMES, SPORTS } from "./data/platformData";
 import * as platformData from './data/platformData';
 import ClinicalIntakeModal from "./components/ClinicalIntakeModal";
+import CareerMatches from "./components/vidyavantage/CareerMatches";
+import CareerRoadmap from "./components/vidyavantage/CareerRoadmap";
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
 
 const CSS = `
@@ -1175,6 +1177,16 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
           <div className="db-stat-mini-lbl">Expert</div>
         </div>
       </div>
+
+      {localUserData?.careerDNA?.riasec?.code && (
+        <>
+          <CareerMatches riasecCode={localUserData.careerDNA.riasec.code} />
+          <div className="mt-8 mb-4">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">Your Custom Career Roadmap</h3>
+            <CareerRoadmap />
+          </div>
+        </>
+      )}
 
       {/* Career Intelligence Report Card */}
       {hasAssessment && userTrack !== 'counselling' ? (
