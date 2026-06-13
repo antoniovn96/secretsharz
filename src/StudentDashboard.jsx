@@ -15,6 +15,7 @@ import CareerMatches from "./components/vidyavantage/CareerMatches";
 import CareerRoadmap from "./components/vidyavantage/CareerRoadmap";
 import CollegeShortlist from "./components/vidyavantage/CollegeShortlist";
 import CollegeExplorer from "./components/vidyavantage/CollegeExplorer";
+import StudentProfileView from "./components/vidyavantage/StudentProfileView";
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
 
 const CSS = `
@@ -381,7 +382,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const [showXpModal, setShowXpModal] = useState(false);
   const [showCareerMatchesModal, setShowCareerMatchesModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
-  const [activeAboutTab, setActiveAboutTab] = useState('overview');
+  const [activeView, setActiveView] = useState('overview');
   const [journalEntries, setJournalEntries] = useState([]);
   const [newJournalEntry, setNewJournalEntry] = useState('');
   const [roadmapTasks, setRoadmapTasks] = useState([]);
@@ -655,16 +656,16 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   useEffect(() => { if (initialTab) setActiveTab(initialTab); }, [initialTab]);
 
   useEffect(() => {
-    window.setActiveAboutTabGlobal = setActiveAboutTab;
+    window.setActiveAboutTabGlobal = setActiveView;
     const pending = sessionStorage.getItem('pendingAboutTab');
     if (pending) {
-      setActiveAboutTab(pending);
+      setActiveView(pending);
       sessionStorage.removeItem('pendingAboutTab');
     }
     return () => {
       delete window.setActiveAboutTabGlobal;
     };
-  }, [setActiveAboutTab]);
+  }, [setActiveView]);
   useEffect(() => { setAdvisoryMsg(ADVISORY_MESSAGES[Math.floor(Math.random() * ADVISORY_MESSAGES.length)]); }, []);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
@@ -2237,8 +2238,8 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 </div>
               </div>
               <div className="profile-actions">
-                <button className="btn-primary-social" onClick={() => { setActiveAboutTab('career-report'); document.querySelector('.about-container')?.scrollIntoView({ behavior: 'smooth' }); }}>📘 Full Report</button>
-                <button className="btn-secondary-social" onClick={() => { setActiveAboutTab('personal-info'); document.querySelector('.about-container').scrollIntoView({ behavior: 'smooth' }); }}>✏️ Edit</button>
+                <button className="btn-primary-social" onClick={() => { setActiveView('career-report'); document.querySelector('.about-container')?.scrollIntoView({ behavior: 'smooth' }); }}>📘 Full Report</button>
+                <button className="btn-secondary-social" onClick={() => { setActiveView('personal-info'); document.querySelector('.about-container').scrollIntoView({ behavior: 'smooth' }); }}>✏️ Edit</button>
                 <button className="btn-primary-social" style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }} onClick={handleSaveProfile}>💾 Save Profile</button>
               </div>
             </div>
@@ -2246,31 +2247,35 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
           {/* NESTED ABOUT SECTION */}
             <div className="about-sidebar" style={{marginTop: '20px'}}>
               <h3>About</h3>
-              <div className={`about-nav-item ${activeAboutTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveAboutTab('overview')}>Overview</div>
-              <div className={`about-nav-item ${activeAboutTab === 'personal-info' ? 'active' : ''}`} onClick={() => setActiveAboutTab('personal-info')}>Personal Information</div>
-              <div className={`about-nav-item ${activeAboutTab === 'education' ? 'active' : ''}`} onClick={() => setActiveAboutTab('education')}>Education</div>
-              <div className={`about-nav-item ${activeAboutTab === 'work-experience' ? 'active' : ''}`} onClick={() => setActiveAboutTab('work-experience')}>Work Experience</div>
-              <div className={`about-nav-item ${activeAboutTab === 'links' ? 'active' : ''}`} onClick={() => setActiveAboutTab('links')}>Project Links</div>
-              <div className={`about-nav-item ${activeAboutTab === 'hobbies' ? 'active' : ''}`} onClick={() => setActiveAboutTab('hobbies')}>Hobbies & Interests</div>
+              <div className={`about-nav-item ${activeView === 'overview' ? 'active' : ''}`} onClick={() => setActiveView('overview')}>Overview</div>
+              <div className={`about-nav-item ${activeView === 'profile' ? 'active' : ''}`} onClick={() => setActiveView('profile')}>My Profile</div>
+              <div className={`about-nav-item ${activeView === 'personal-info' ? 'active' : ''}`} onClick={() => setActiveView('personal-info')}>Personal Information</div>
+              <div className={`about-nav-item ${activeView === 'education' ? 'active' : ''}`} onClick={() => setActiveView('education')}>Education</div>
+              <div className={`about-nav-item ${activeView === 'work-experience' ? 'active' : ''}`} onClick={() => setActiveView('work-experience')}>Work Experience</div>
+              <div className={`about-nav-item ${activeView === 'links' ? 'active' : ''}`} onClick={() => setActiveView('links')}>Project Links</div>
+              <div className={`about-nav-item ${activeView === 'hobbies' ? 'active' : ''}`} onClick={() => setActiveView('hobbies')}>Hobbies & Interests</div>
               {userTrack !== 'career' && (
                 <>
-                  <div className={`about-nav-item ${activeAboutTab === 'journal' ? 'active' : ''}`} onClick={() => setActiveAboutTab('journal')}>📓 Clarity Journal</div>
-                  <div className={`about-nav-item ${activeAboutTab === 'life-skills' ? 'active' : ''}`} onClick={() => setActiveAboutTab('life-skills')}>🕸️ Life Skills Matrix</div>
+                  <div className={`about-nav-item ${activeView === 'journal' ? 'active' : ''}`} onClick={() => setActiveView('journal')}>📓 Clarity Journal</div>
+                  <div className={`about-nav-item ${activeView === 'life-skills' ? 'active' : ''}`} onClick={() => setActiveView('life-skills')}>🕸️ Life Skills Matrix</div>
                 </>
               )}
               {userTrack !== 'counselling' && (
                 <>
-                  <div className={`about-nav-item ${activeAboutTab === 'career-report' ? 'active' : ''}`} onClick={() => setActiveAboutTab('career-report')}>Career Report</div>
-                  <div className={`about-nav-item ${activeAboutTab === 'roadmap' ? 'active' : ''}`} onClick={() => setActiveAboutTab('roadmap')}>🗺️ Career Roadmap</div>
+                  <div className={`about-nav-item ${activeView === 'career-report' ? 'active' : ''}`} onClick={() => setActiveView('career-report')}>Career Report</div>
+                  <div className={`about-nav-item ${activeView === 'roadmap' ? 'active' : ''}`} onClick={() => setActiveView('roadmap')}>🗺️ Career Roadmap</div>
                 </>
               )}
-              <div className={`about-nav-item ${activeAboutTab === 'messages' ? 'active' : ''}`} onClick={() => setActiveAboutTab('messages')}>💬 Messages {unreadCount > 0 && <span style={{background: 'red', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '12px', marginLeft: '5px'}}>{unreadCount}</span>}</div>
+              <div className={`about-nav-item ${activeView === 'messages' ? 'active' : ''}`} onClick={() => setActiveView('messages')}>💬 Messages {unreadCount > 0 && <span style={{background: 'red', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '12px', marginLeft: '5px'}}>{unreadCount}</span>}</div>
             </div>
           </aside>
 
           <main className="!flex-1 !flex !flex-col !gap-6 !min-w-0">
             <div className="about-content">
-              {activeAboutTab === 'overview' && (
+              {activeView === 'profile' && (
+                <StudentProfileView studentDoc={localUserData} />
+              )}
+              {activeView === 'overview' && (
                 <div>
                   <div className="about-content-header">Dashboard Overview</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -2395,7 +2400,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               )}
 
               {/* ── PERSONAL INFORMATION TAB ── */}
-              {activeAboutTab === 'personal-info' && (
+              {activeView === 'personal-info' && (
                 <div>
                   <div className="about-content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>Personal Information</span>
@@ -2471,7 +2476,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               )}
 
               {/* ── EDUCATION TAB ── */}
-              {activeAboutTab === 'education' && (
+              {activeView === 'education' && (
                 <div>
                   <div className="about-content-header">
                     <span>Education</span>
@@ -2552,7 +2557,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               )}
 
               {/* ── WORK EXPERIENCE TAB ── */}
-              {activeAboutTab === 'work-experience' && (
+              {activeView === 'work-experience' && (
                 <div>
                   {/* Sub-section 1: Internships */}
                   <div style={{ borderBottom: '1px solid #3A3B3C', paddingBottom: '24px', marginBottom: '24px' }}>
@@ -2942,7 +2947,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               )}
 
               {/* ── PROJECT LINKS TAB ── */}
-              {activeAboutTab === 'links' && (
+              {activeView === 'links' && (
                 <div>
                   <div className="about-content-header">
                     <span>Project Links</span>
@@ -3065,7 +3070,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               )}
 
               {/* ── CAREER REPORT TAB ── */}
-              {activeAboutTab === 'career-report' && (
+              {activeView === 'career-report' && (
                 <div>
                   <div className="about-content-header">
                     <span>📄 Career Report</span>
@@ -3179,7 +3184,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
               )}
 
               {/* ── HOBBIES & INTERESTS TAB ── */}
-              {activeAboutTab === 'hobbies' && (
+              {activeView === 'hobbies' && (
                 <div>
                   <div className="about-content-header">
                     <span>Hobbies &amp; Interests</span>
@@ -3377,7 +3382,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                   </div>
                 </div>
               )}
-              {activeAboutTab === 'journal' && (
+              {activeView === 'journal' && (
                 <div className="db-tab">
                   <h3>📓 My Clarity Journal</h3>
                   <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
@@ -3433,7 +3438,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                   </div>
                 </div>
               )}
-              {activeAboutTab === 'life-skills' && (
+              {activeView === 'life-skills' && (
                 <div>
                   <div className="admin-card" style={{ borderTop: '3px solid var(--primary)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -3463,7 +3468,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                   </div>
                 </div>
               )}
-              {activeAboutTab === 'roadmap' && (
+              {activeView === 'roadmap' && (
                 <div>
                   <div className="admin-card" style={{ borderTop: '3px solid var(--primary)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -3497,7 +3502,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                   </div>
                 </div>
               )}
-              {activeAboutTab === 'messages' && <ChatWidget activeChat={activeChat} setActiveChat={setActiveChat} />}
+              {activeView === 'messages' && <ChatWidget activeChat={activeChat} setActiveChat={setActiveChat} />}
             </div>
           </main>
 
