@@ -14,6 +14,7 @@ import ClinicalIntakeModal from "./components/ClinicalIntakeModal";
 import CareerMatches from "./components/vidyavantage/CareerMatches";
 import CareerRoadmap from "./components/vidyavantage/CareerRoadmap";
 import CollegeShortlist from "./components/vidyavantage/CollegeShortlist";
+import CollegeExplorer from "./components/vidyavantage/CollegeExplorer";
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
 
 const CSS = `
@@ -1457,31 +1458,14 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   // ── COLLEGES TAB ──
   const renderCollegesTab = () => (
     <div className="db-tab">
-      {!hasAssessment ? renderLockedState("🏫", "College Explorer Locked") : collegesExt.length === 0 ? (
-        <div className="db-empty-state"><div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div><div style={{ fontFamily: "'Fraunces', serif", fontSize: '24px', fontWeight: '700', color: 'var(--ink)' }}>Fetching Colleges</div></div>
-      ) : (
+      {!hasAssessment ? renderLockedState("🏫", "College Explorer Locked") : (
         <>
-          <div style={{ marginBottom: "20px" }}>
-            <h2 style={{ fontFamily: "Fraunces", fontSize: "24px", color: "var(--ink)" }}>Target Colleges</h2>
-            <p style={{ color: "var(--muted)", fontSize: "14px" }}>Based on your {String(localUserData?.riasecCode || "profile")} and Stream.</p>
+          <div className="mb-6">
+            <CollegeShortlist collegeShortlist={localUserData?.collegeShortlist || { dream: [], target: [], safe: [] }} />
           </div>
-          {collegesExt.map((c, i) => (
-            <div key={i} className="db-college-ext">
-              <div className="db-avatar-sm">🏫</div>
-              <div className="db-college-ext-main">
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <div style={{ fontSize: "16px", fontWeight: "700", color: "var(--ink)" }}>{String(c.name)}</div>
-                  <span className="db-pill" style={{ background: "#D1FAE5", color: "#065F46" }}>Top Match</span>
-                </div>
-                <div className="db-college-stats">
-                  <div className="db-college-stat-pill">📍 {String(c.loc)}</div>
-                  <div className="db-college-stat-pill">🎯 {String(c.cutoffs)}</div>
-                  <div className="db-college-stat-pill">💰 {String(c.fees)}</div>
-                  <div className="db-college-stat-pill">📈 {String(c.placement)}</div>
-                </div>
-              </div>
-            </div>
-          ))}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <CollegeExplorer />
+          </div>
         </>
       )}
     </div>
