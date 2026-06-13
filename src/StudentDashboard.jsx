@@ -16,7 +16,6 @@ import CareerRoadmap from "./components/vidyavantage/CareerRoadmap";
 import CollegeShortlist from "./components/vidyavantage/CollegeShortlist";
 import CollegeExplorer from "./components/vidyavantage/CollegeExplorer";
 import StudentProfileView from "./components/vidyavantage/StudentProfileView";
-import './styles/StudentDashboard.css';
 
 const ADVISORY_MESSAGES = [
   "Answer with full concentration; your first instinct is usually the most accurate.",
