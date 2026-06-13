@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useDashboard } from './context/DashboardContext';
 
 // Helper: format relative time
@@ -22,6 +23,8 @@ function getNotifColor(priority, isRead) {
 }
 
 export default function Header({ navigate, currentUser, handleLogout, isAdmin }) {
+  const location = useLocation();
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const alertsRef = useRef(null);
@@ -63,7 +66,7 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
   const handleNav = (path) => {
     setIsMenuOpen(false);
 
-    // 🚀 THE FIX: If navigating to the main blog page while inside a specific post,
+    // THE FIX: If navigating to the main blog page while inside a specific post,
     // force a clean navigation to reset the Blog component's internal state.
     if (path === '/blog' && window.location.pathname.startsWith('/blog/')) {
       window.location.href = '/blog';
@@ -76,6 +79,11 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
       window.location.href = path;
     }
   };
+
+  // 🚀 HIDE HEADER ON ADMIN ROUTE 🚀
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <>

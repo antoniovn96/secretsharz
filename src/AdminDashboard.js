@@ -966,7 +966,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           
           {/* Top Row: Sparkline Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-hidden">
               <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Total Registered</span>
               <div className="text-4xl font-bold text-gray-900 mb-4">{totalRegistered}</div>
               <div style={{ width: '100%', height: 60 }}>
@@ -978,7 +978,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
             </div>
             
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-hidden">
               <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Assessed Students</span>
               <div className="text-4xl font-bold text-gray-900 mb-4">{totalAssessed}</div>
               <div style={{ width: '100%', height: 60 }}>
@@ -990,7 +990,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
             </div>
             
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 overflow-hidden">
               <span className="text-gray-500 text-sm font-semibold uppercase tracking-wider mb-2">Active Sessions</span>
               <div className="text-4xl font-bold text-gray-900 mb-4">{students.reduce((acc, s) => acc + (s.sessions?.length || 0), 0)}</div>
               <div style={{ width: '100%', height: 60 }}>
@@ -1502,124 +1502,43 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
   };
 
   return (
-    <div className={`min-h-screen bg-[#F4F7FE] flex font-sans ${typeof darkMode !== 'undefined' && darkMode ? "dark" : ""}`}>
-      <div className="admin-root" style={{ height: 'auto', minHeight: 'unset', width: '100%' }}>
+    <div className="min-h-screen flex bg-[#F4F7FE] font-sans text-gray-900">
+      
+      {/* 1. SIDEBAR */}
+      <aside className="w-64 bg-[#1A1F36] text-white flex-shrink-0 flex flex-col h-screen sticky top-0 overflow-y-auto">
+        <div className="p-6 text-xl font-bold border-b border-gray-700">VidyaVantage Admin</div>
+        <nav className="flex-1 p-4 space-y-2">
+          {allowedTabs.map(tab => (
+            <button
+              key={tab.id}
+              className={`flex items-center gap-3 w-full p-3 rounded-lg text-left transition-colors ${activeTab === tab.id ? 'bg-blue-600' : 'hover:bg-blue-600'}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <span>{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </aside>
 
-                  {/* ── SIDEBAR ── */}
-                  <div className="admin-sidebar">
-                    <div className="admin-brand" onClick={() => setActiveTab('overview')}>
-                      <h2>Secret Sharz</h2>
-                      <div className="admin-brand-sub">Admin Portal</div>
-                    </div>
+      {/* 2. MAIN CONTENT WRAPPER */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        
+        {/* TOP HEADER */}
+        <header className="h-20 bg-white shadow-sm border-b border-gray-100 flex items-center justify-between px-8 flex-shrink-0">
+          <div className="text-lg font-bold">Admin Command Center</div>
+          <div className="flex items-center gap-4">
+            <button onClick={onBackToApp} className="text-blue-600 font-semibold text-sm">Live Site</button>
+            <button onClick={handleLogout} className="text-red-500 font-semibold text-sm">Sign Out</button>
+          </div>
+        </header>
 
-                    <div className="nav-section-label">Navigation</div>
-                    {allowedTabs.map(tab => (
-                      <button
-                        key={tab.id}
-                        className={`nav-btn ${activeTab === tab.id ? 'active' : ''}`}
-                        onClick={() => setActiveTab(tab.id)}
-                      >
-                        <span className="nav-btn-icon">{tab.icon}</span>
-                        {tab.label}
-                      </button>
-                    ))}
+        {/* SCROLLABLE PAGE CONTENT */}
+        <main className="flex-1 overflow-y-auto p-8">
+          {renderTabContent()}
+        </main>
 
-                    {/* Portal Switcher */}
-                    <div style={{ flex: 1 }} />
-                    <div className="portal-switcher">
-                      <div className="portal-switcher-label">Switch Portal</div>
-                      <button className="portal-btn current">
-                        <span className="portal-btn-dot" style={{ background: '#5B6EF5' }} />
-                        Admin Portal
-                      </button>
-                      {navigate && (
-                        <button className="portal-btn" onClick={() => navigate('/counsellor')}>
-                          <span className="portal-btn-dot" style={{ background: '#10B981' }} />
-                          Counsellor Portal
-                        </button>
-                      )}
-                      {navigate && (
-                        <button className="portal-btn" onClick={() => navigate('/dashboard')}>
-                          <span className="portal-btn-dot" style={{ background: '#F59E0B' }} />
-                          Student Portal
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* ── MAIN ── */}
-                  <div className="admin-main">
-                    {/* Top Header */}
-                    <div className="top-header">
-                      <div className="top-header-left">
-                        <span className={`admin-badge ${isCounsellor ? 'badge-primary' : 'badge-success'}`}>
-                          {profile.role?.replace('_', ' ').toUpperCase()}
-                        </span>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: '500' }}>
-                          {profile.name || user?.email}
-                        </span>
-                      </div>
-
-                      <div className="header-actions">
-                        {/* Download Button */}
-                        <button
-                          onClick={downloadStudentData}
-                          className="admin-btn-outline"
-                          style={{ borderColor: 'var(--success)', color: 'var(--success)' }}
-                        >
-                          📥 Export CSV
-                        </button>
-
-                        {/* Notifications */}
-                        <div style={{ position: 'relative' }}>
-                          <button className="notify-bell" onClick={() => setNotifyOpen(!notifyOpen)}>
-                            🔔
-                            {notifications.length > 0 && <div className="notify-badge">{notifications.length}</div>}
-                          </button>
-                          {notifyOpen && (
-                            <div className="dropdown-content" style={{ width: '300px' }}>
-                              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-main)' }}>
-                                Notifications
-                              </div>
-                              {notifications.length === 0 ? (
-                                <div style={{ padding: '16px', color: 'var(--text-muted)', fontSize: '0.875rem' }}>No new alerts</div>
-                              ) : (
-                                notifications.map(n => (
-                                  <button key={n.id} className="notify-item" style={{ color: n.type === 'warning' ? 'var(--warning)' : 'var(--success)' }}>
-                                    {n.type === 'warning' ? '⚠️' : '✅'} {n.text}
-                                  </button>
-                                ))
-                              )}
-                            </div>
-                          )}
-                        </div>
-
-                        <button onClick={onBackToApp} className="site-link">🌐 Live Site</button>
-
-                        <div style={{ position: 'relative' }}>
-                          <div className="avatar-btn" onClick={() => setProfileOpen(!profileOpen)}>
-                            {(profile.name || 'A').charAt(0).toUpperCase()}
-                          </div>
-                          {profileOpen && (
-                            <div className="dropdown-content">
-                              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
-                                <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.9rem' }}>{profile.name}</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>{user?.email}</div>
-                              </div>
-                              <button onClick={() => { setProfileOpen(false); setActiveTab('profile'); }}>👤 My Profile</button>
-                              <button style={{ color: 'var(--danger)' }} onClick={handleLogout}>🚪 Sign Out</button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="main-content">
-                      {renderTabContent()}
-                    </div>
-                  </div>
-
-                </div>{/* end admin-root */}
+      </div>
 
         {/* ── TOAST NOTIFICATIONS ── */}
         {toast && (
