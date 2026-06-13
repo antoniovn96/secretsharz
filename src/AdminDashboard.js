@@ -325,7 +325,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
       </aside>
 
       {/* 2. MAIN CONTENT AREA */}
-      <div className="!absolute !left-[260px] !right-0 !top-0 !bottom-0 !flex !flex-col !overflow-y-auto !p-8">
+      <div className="!absolute !left-[260px] !w-[calc(100vw-260px)] !top-0 !bottom-0 !flex !flex-col !overflow-y-auto !p-8">
         <header className="h-[68px] bg-white shadow-sm border-b border-gray-100 flex items-center justify-between px-8 flex-shrink-0 z-10">
           <div className="text-xl font-bold text-gray-800">
              {allowedTabs.find(t => t.id === activeTab)?.label || 'Dashboard'}
@@ -336,7 +336,7 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="!block !w-full !min-h-full">
           {renderTabContent()}
         </main>
       </div>
