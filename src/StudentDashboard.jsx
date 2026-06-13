@@ -1780,7 +1780,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   };
 
   return (
-    <div className="!min-h-screen !bg-[#F4F7FE] !font-sans !text-gray-900">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Hidden file inputs */}
       <input
         ref={coverPhotoInputRef}
