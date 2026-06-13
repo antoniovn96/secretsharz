@@ -13,6 +13,7 @@ import * as platformData from './data/platformData';
 import ClinicalIntakeModal from "./components/ClinicalIntakeModal";
 import CareerMatches from "./components/vidyavantage/CareerMatches";
 import CareerRoadmap from "./components/vidyavantage/CareerRoadmap";
+import CollegeShortlist from "./components/vidyavantage/CollegeShortlist";
 const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');`;
 
 const CSS = `
@@ -837,7 +838,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
         <div className="db-profile-avatar-wrap">
           <div className="db-profile-avatar">
             {userProfile.profilePicture
-              ? <img src={userProfile.profilePicture} alt="avatar" />
+              ? <img src={userProfile.profilePicture} alt="avatar" className="object-cover w-full h-48" />
               : studentName.charAt(0)
             }
           </div>
@@ -1184,6 +1185,10 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
           <div className="mt-8 mb-4">
             <h3 className="text-2xl font-bold text-gray-900 mb-6">Your Custom Career Roadmap</h3>
             <CareerRoadmap />
+          </div>
+          <div className="mt-8 mb-4">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">Your College Shortlist</h3>
+            <CollegeShortlist collegeShortlist={localUserData?.collegeShortlist || { dream: [], target: [], safe: [] }} />
           </div>
         </>
       )}
@@ -2149,7 +2154,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
                 style={{ cursor: 'pointer' }}
               >
                 {userProfile?.profilePicture
-                  ? <img src={userProfile.profilePicture} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ? <img src={userProfile.profilePicture} alt="avatar" className="object-cover w-full h-48" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : <span className="profile-avatar-fallback">{userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : 'S'}</span>
                 }
                 <div className="avatar-camera-overlay">
