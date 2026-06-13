@@ -124,12 +124,12 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             {/* TOP ROW: Sparkline Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               {/* Card 1 */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col" style={{ minHeight: '150px' }}>
                 <div className="pb-2">
                   <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Total Registered</span>
                   <div className="text-3xl font-bold text-gray-900 mt-1">{students.length}</div>
                 </div>
-                <div style={{ height: 60, width: '100%' }}>
+                <div style={{ width: '100%', height: '60px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={trendData}>
                       <Area type="monotone" dataKey="registered" stroke="#3B82F6" fill="#EFF6FF" strokeWidth={2} />
@@ -139,12 +139,12 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
 
               {/* Card 2 */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col" style={{ minHeight: '150px' }}>
                 <div className="pb-2">
                   <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Assessed Students</span>
                   <div className="text-3xl font-bold text-gray-900 mt-1">{totalAssessed}</div>
                 </div>
-                <div style={{ height: 60, width: '100%' }}>
+                <div style={{ width: '100%', height: '60px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={trendData}>
                       <Area type="monotone" dataKey="assessed" stroke="#10B981" fill="#ECFDF5" strokeWidth={2} />
@@ -154,12 +154,12 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
 
               {/* Card 3 */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col" style={{ minHeight: '150px' }}>
                 <div className="pb-2">
                   <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">Action Queue</span>
                   <div className="text-3xl font-bold text-amber-500 mt-1">{pendingCount}</div>
                 </div>
-                <div style={{ height: 60, width: '100%' }}>
+                <div style={{ width: '100%', height: '60px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={trendData}>
                       <Area type="monotone" dataKey="sessions" stroke="#F59E0B" fill="#FFFBEB" strokeWidth={2} />
@@ -172,9 +172,9 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
             {/* MIDDLE ROW: Advanced Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Gauge Chart */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col" style={{ minHeight: '300px' }}>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Platform Adoption</h3>
-                <div style={{ height: 200, width: '100%' }}>
+                <div style={{ width: '100%', height: '250px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -203,9 +203,9 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
 
               {/* Stacked Bar Chart */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col" style={{ minHeight: '300px' }}>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Monthly Engagement</h3>
-                <div style={{ height: 220, width: '100%' }}>
+                <div style={{ width: '100%', height: '250px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={trendData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -220,9 +220,9 @@ export default function AdminDashboard({ user, onBackToApp, navigate }) {
               </div>
 
               {/* Overlapping Area Chart */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col" style={{ minHeight: '300px' }}>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Platform Traffic</h3>
-                <div style={{ height: 220, width: '100%' }}>
+                <div style={{ width: '100%', height: '250px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={trendData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
