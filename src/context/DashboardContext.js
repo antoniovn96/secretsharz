@@ -104,58 +104,7 @@ const DEFAULT_USER_PROFILE = {
 };
 
 // ── MOCK SOCIAL FEED ─────────────────────────────────────────────────────────
-const INITIAL_SOCIAL_FEED = [
-  {
-    id: 'feed-001',
-    type: 'platform_update',
-    title: '🚀 Secret Sharz 2.0 is Live!',
-    body: 'We have rolled out a brand-new gamified dashboard experience. Earn XP, unlock badges, and track your career journey like never before!',
-    author: 'Secret Sharz Team',
-    authorAvatar: null,
-    timestamp: '2026-05-30T09:00:00.000Z',
-    likes: 142,
-    comments: 18,
-    tags: ['platform', 'update', 'gamification'],
-  },
-  {
-    id: 'feed-002',
-    type: 'blog_post',
-    title: '📚 Top 10 Career Paths After Class 12 Science',
-    body: 'Confused about what to do after your boards? Our latest blog breaks down the top 10 career options for PCB and PCM students with real salary data and growth projections.',
-    author: 'Dr. Meera Nair',
-    authorAvatar: null,
-    timestamp: '2026-05-28T11:30:00.000Z',
-    likes: 89,
-    comments: 34,
-    tags: ['blog', 'career', 'science', 'class12'],
-    readUrl: '/blog/top-10-careers-after-class-12-science',
-  },
-  {
-    id: 'feed-003',
-    type: 'blog_post',
-    title: '🎓 How to Choose the Right College: A Step-by-Step Guide',
-    body: 'Choosing a college is one of the most important decisions of your life. In this post, Prof. Arjun Kapoor walks you through a structured framework to evaluate colleges beyond just rankings.',
-    author: 'Prof. Arjun Kapoor',
-    authorAvatar: null,
-    timestamp: '2026-05-25T08:00:00.000Z',
-    likes: 67,
-    comments: 22,
-    tags: ['blog', 'college', 'admissions', 'guide'],
-    readUrl: '/blog/how-to-choose-the-right-college',
-  },
-  {
-    id: 'feed-004',
-    type: 'platform_update',
-    title: '🧠 New Feature: RIASEC Career Assessment v2',
-    body: 'Our upgraded career assessment now includes 60 questions, a detailed personality breakdown, and AI-powered career match scores. Retake your assessment to see your updated results!',
-    author: 'Secret Sharz Team',
-    authorAvatar: null,
-    timestamp: '2026-05-20T10:00:00.000Z',
-    likes: 203,
-    comments: 41,
-    tags: ['platform', 'feature', 'assessment', 'riasec'],
-  },
-];
+const INITIAL_SOCIAL_FEED = [];
 
 // ── MOCK NOTIFICATIONS ───────────────────────────────────────────────────────
 const INITIAL_NOTIFICATIONS = [

@@ -585,7 +585,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const LeftProfileCard = () => (
     <div className="db-profile-card">
       <div className="db-profile-banner">
-        {coverPhoto && <img src={coverPhoto} alt="Cover" className="w-full h-48 md:h-64 object-cover rounded-t-2xl" />}
+        {coverPhoto && <img src={coverPhoto} alt="Cover" className="w-full h-48 md:h-64 object-cover rounded-xl" />}
         <div className="db-profile-avatar-wrap">
           <div className="db-profile-avatar">
             {profilePicture
@@ -1068,7 +1068,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
       <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--muted)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px', marginTop: '4px' }}>
         📰 Latest from Secret Sharz
       </div>
-      {socialFeed.map((post) => {
+      {socialFeed.length > 0 ? socialFeed.map((post) => {
         const style = getPostStyle(post.type);
         return (
           <div key={post.id} className="db-post-card">
@@ -1111,7 +1111,11 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
             </div>
           </div>
         );
-      })}
+      }) : (
+        <div style={{ textAlign: 'center', padding: '32px', color: 'var(--muted)', background: 'var(--surface)', borderRadius: 'var(--r-md)', border: '1px dashed var(--border)' }}>
+          No new updates right now.
+        </div>
+      )}
     </div>
     );
   };
@@ -1871,4 +1875,5 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     </div>
   );
 }
+
 
