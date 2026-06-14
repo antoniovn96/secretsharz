@@ -13,6 +13,7 @@ const CareerExplorer = lazy(() => import('./CareerExplorer'));
 const VidyaVantageBlog = lazy(() => import('./VidyaVantageBlog'));
 const AuthPage = lazy(() => import('./AuthPage'));
 const CareerStudentView = lazy(() => import('./dashboards/student/CareerStudentView'));
+const OnboardingGateway = lazy(() => import('./dashboards/student/OnboardingGateway'));
 const MindSpace = lazy(() => import('./MindSpace'));
 const SharzWall = lazy(() => import('./SharzWall'));
 const AdminDashboard = lazy(() => import('./AdminDashboard'));
@@ -1046,10 +1047,14 @@ export default function App() {
         </Suspense>
       );
     }
+    if (currentPath.startsWith('/dashboard/career')) {
+      if (!currentUser) { navigate('/auth'); return null; }
+      return <CareerStudentView />;
+    }
     if (currentPath.startsWith('/dashboard')) {
       if (!currentUser) { navigate('/auth'); return null; }
       return (
-        <CareerStudentView />
+        <OnboardingGateway />
       );
     }
     if (currentPath.startsWith('/mindspace')) {
