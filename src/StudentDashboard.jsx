@@ -497,7 +497,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const profilePicture = localUserData?.profilePicture || userProfile?.profilePicture || null;
   const studentName = localUserData?.name || userProfile?.name || user?.displayName || "Student";
   const firstName = studentName.split(" ")[0];
-  const hasAssessment = !!localUserData?.riasecCode;
+  const hasAssessment = !!(localUserData?.riasecScores && Object.keys(localUserData.riasecScores).length > 0);
   const exPoints = Number(userProfile.exPoints || 0);
   const maxXp = 300;
   const xpPct = Math.min(100, Math.round((exPoints / maxXp) * 100));
@@ -585,7 +585,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
   const LeftProfileCard = () => (
     <div className="db-profile-card">
       <div className="db-profile-banner">
-        {coverPhoto && <img src={coverPhoto} alt="Cover" className="w-full h-48 md:h-64 object-cover rounded-xl" />}
+        {coverPhoto && <img src={coverPhoto} alt="Cover" style={{ width: '100%', height: '250px', objectFit: 'cover', borderRadius: '0.75rem' }} />}
         <div className="db-profile-avatar-wrap">
           <div className="db-profile-avatar">
             {profilePicture
@@ -888,7 +888,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
       <div className="db-welcome">
         <div className="db-welcome-text">
           <div className="db-welcome-eyebrow">Welcome Back</div>
-          <h1 className="db-welcome-h1">Hey {firstName},<br /><em>own your future.</em></h1>
+          <h1 className="db-welcome-h1">Hey {localUserData?.name || user?.displayName || 'Student'},<br /><em>own your future.</em></h1>
           <p className="db-welcome-p">
             {hasAssessment
               ? `Your RIASEC code is ${String(localUserData.riasecCode)}. Your best path is ${String(bestCareer?.title || '')}.`
@@ -1302,10 +1302,7 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
       '05:00 PM – 05:45 PM',
     ];
 
-    const COUNSELLORS = [
-      { id: 'dr-meera', name: 'Dr. Meera Nair', spec: 'Clinical Psych', emoji: '👩‍⚕️' },
-      { id: 'prof-arjun', name: 'Prof. Arjun Kapoor', spec: 'Career Coach', emoji: '👨‍🏫' },
-    ];
+    const COUNSELLORS = [];
 
     const handleSubmit = () => {
       if (!selectedDate) { setBookingError('Please select a date.'); return; }
