@@ -107,52 +107,7 @@ const DEFAULT_USER_PROFILE = {
 const INITIAL_SOCIAL_FEED = [];
 
 // ── MOCK NOTIFICATIONS ───────────────────────────────────────────────────────
-const INITIAL_NOTIFICATIONS = [
-  {
-    id: 'notif-001',
-    type: 'system_alert',
-    title: 'Complete Your Profile to Earn 200 XP!',
-    message: 'Your profile is 40% complete. Add your education details, hobbies, and a profile picture to unlock bonus experience points and get better career recommendations.',
-    isRead: false,
-    priority: 'high',
-    timestamp: '2026-06-01T08:00:00.000Z',
-    actionLabel: 'Complete Profile',
-    actionUrl: '/student-dashboard/profile',
-  },
-  {
-    id: 'notif-002',
-    type: 'counsellor_message',
-    title: 'Dr. Meera Nair sent you a message',
-    message: 'Hi! I have reviewed your RIASEC results. Please check your homework task for this week — research 3 psychology colleges and their admission criteria.',
-    isRead: false,
-    priority: 'medium',
-    timestamp: '2026-05-31T14:30:00.000Z',
-    actionLabel: 'View Message',
-    actionUrl: '/student-dashboard/counsellor',
-  },
-  {
-    id: 'notif-003',
-    type: 'platform_update',
-    title: 'New Blog Post: Top 10 Careers After Class 12',
-    message: 'A new article has been published that matches your interests. Check out the top career paths for Science students.',
-    isRead: true,
-    priority: 'low',
-    timestamp: '2026-05-28T11:30:00.000Z',
-    actionLabel: 'Read Now',
-    actionUrl: '/blog/top-10-careers-after-class-12-science',
-  },
-  {
-    id: 'notif-004',
-    type: 'achievement',
-    title: '🏆 Achievement Unlocked: First Assessment!',
-    message: 'Congratulations! You completed your first RIASEC Career Assessment. You have earned 100 XP. Keep going to unlock more achievements!',
-    isRead: true,
-    priority: 'low',
-    timestamp: '2026-05-15T16:00:00.000Z',
-    actionLabel: 'View Achievements',
-    actionUrl: '/student-dashboard/achievements',
-  },
-];
+const INITIAL_NOTIFICATIONS = [];
 
 const INITIAL_STUDENTS = [
   {

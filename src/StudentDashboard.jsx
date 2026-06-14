@@ -862,9 +862,6 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
 
   // ── CENTER FEED: Home Tab ──
   const renderHomeFeed = () => {
-    if (userTrack === 'career') {
-      return <CareerDashboardView collegesExt={collegesExt} localUserData={localUserData} />;
-    }
     return (
     <div className="db-feed db-tab">
       {/* Profile Completion Banner */}
@@ -1872,5 +1869,3 @@ export default function StudentDashboard({ user, userData, initialTab = "home", 
     </div>
   );
 }
-
-
