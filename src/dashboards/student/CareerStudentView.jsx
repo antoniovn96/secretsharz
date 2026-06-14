@@ -1,14 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
+import CareerAssessment from '../../CareerAssessment';
 
 const CareerStudentView = ({ studentData, currentUser }) => {
+  const [isTakingTest, setIsTakingTest] = useState(false);
+  
   const dynamicName = studentData?.name || currentUser?.displayName || 'Student';
   const profileImage = currentUser?.photoURL || 'https://via.placeholder.com/150';
   
   const hasAssessment = !!(studentData?.riasecScores || studentData?.careerDNA?.riasec || studentData?.riasecCode);
 
   const handleTakeAssessment = () => {
-    console.log("Open Assessment Modal");
+    setIsTakingTest(true);
   };
+
+  if (isTakingTest) {
+    return (
+      <CareerAssessment 
+        onBack={() => setIsTakingTest(false)} 
+        onSaveResults={(results) => {
+          setIsTakingTest(false);
+        }} 
+      />
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-50">

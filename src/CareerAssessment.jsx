@@ -1512,16 +1512,20 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
     // Save to Firestore using dot notation
     if (auth?.currentUser) {
       try {
-        const studentRef = doc(db, 'students', auth.currentUser.uid);
+        const userRef = doc(db, 'users', auth.currentUser.uid);
         const caseFileRef = doc(db, 'caseFiles', auth.currentUser.uid);
         
-        // 1. Save the RIASEC data to the Student Master Record using dot notation
-        await updateDoc(studentRef, {
-          'careerDNA.riasec': {
-            scores: finalScores,
-            code: hollandCode.join('')
+        // 1. Save the RIASEC data to the Student Master Record using setDoc with merge: true
+        await setDoc(userRef, {
+          riasecScores: finalScores,
+          riasecCode: hollandCode.join(''),
+          careerDNA: {
+            riasec: {
+              scores: finalScores,
+              code: hollandCode.join('')
+            }
           }
-        });
+        }, { merge: true });
         
         // 2. Log the event in the Case File history timeline
         await updateDoc(caseFileRef, {
@@ -1530,6 +1534,8 @@ export default function CareerAssessment({ onBack, onExplore, savedResults, onSa
             title: 'Completed RIASEC Career Assessment',
             timestamp: new Date().toISOString()
           })
+        }).catch(() => {
+           // Ignore if caseFile doesn't exist yet
         });
       } catch (err) {
         console.error('Error updating Firebase:', err);
