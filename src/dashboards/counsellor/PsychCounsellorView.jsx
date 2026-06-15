@@ -186,7 +186,11 @@ const PsychCounsellorView = ({ userData, currentUser }) => {
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-sm">
                           {caseload.map((student) => (
-                            <tr key={student.uid} className="hover:bg-slate-50 transition-colors">
+                            <tr 
+                              key={student.uid} 
+                              className="hover:bg-slate-50 transition-colors cursor-pointer"
+                              onClick={() => navigate(`/provider/psychologist/case/${student.uid}`)}
+                            >
                               <td className="px-6 py-4 font-bold text-slate-800">{student.name}</td>
                               <td className="px-6 py-4 text-slate-600">{student.grade}</td>
                               <td className="px-6 py-4 text-slate-500">
@@ -208,7 +212,15 @@ const PsychCounsellorView = ({ userData, currentUser }) => {
                                 )}
                               </td>
                               <td className="px-6 py-4">
-                                <button className="text-indigo-600 font-semibold hover:text-indigo-800">View</button>
+                                <button 
+                                  className="text-indigo-600 font-semibold hover:text-indigo-800"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/provider/psychologist/case/${student.uid}`);
+                                  }}
+                                >
+                                  View
+                                </button>
                               </td>
                             </tr>
                           ))}
@@ -253,9 +265,12 @@ const PsychCounsellorView = ({ userData, currentUser }) => {
                               {alert.moodLabel} {alert.emoji}
                             </span>
                           </p>
-                          <button className={`mt-3 text-xs font-bold uppercase tracking-wide transition-colors ${
-                            alert.moodValue === 1 ? 'text-rose-600 hover:text-rose-800' : 'text-orange-600 hover:text-orange-800'
-                          }`}>
+                          <button 
+                            className={`mt-3 text-xs font-bold uppercase tracking-wide transition-colors ${
+                              alert.moodValue === 1 ? 'text-rose-600 hover:text-rose-800' : 'text-orange-600 hover:text-orange-800'
+                            }`}
+                            onClick={() => navigate(`/provider/psychologist/case/${alert.studentId}`)}
+                          >
                             Review Case File →
                           </button>
                         </div>

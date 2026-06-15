@@ -23,6 +23,8 @@ const Blog = lazy(() => import('./Blog'));
 const Resources = lazy(() => import('./Resources'));
 const AboutUs = lazy(() => import('./AboutUs'));
 const PsychCounsellorView = lazy(() => import('./dashboards/counsellor/PsychCounsellorView'));
+const CaseFileView = lazy(() => import('./dashboards/counsellor/CaseFileView'));
+const SENCounsellorView = lazy(() => import('./dashboards/counsellor/SENCounsellorView'));
 
 // ✅ NEW BLOG IMPORTS ADDED HERE
 const JournalingDeepDiveBlog = lazy(() => import('./blogss/2026/January/JournalingDeepDiveBlog'));
@@ -1050,6 +1052,22 @@ export default function App() {
         </Suspense>
       );
     }
+    if (currentPath.startsWith('/provider/psychologist/case/')) {
+      if (!currentUser) { navigate('/auth'); return null; }
+      if (userData?.role !== 'counsellor' && userData?.role !== 'psychologist' && userData?.role !== 'educator' && !isAdmin) {
+        navigate('/dashboard'); 
+        return null;
+      }
+      const studentId = currentPath.split('/provider/psychologist/case/')[1];
+      return (
+        <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>Loading...</div>}>
+          <CaseFileView 
+            studentId={studentId}
+            currentUser={currentUser} 
+          />
+        </Suspense>
+      );
+    }
     if (currentPath.startsWith('/provider/psychologist')) {
       if (!currentUser) { navigate('/auth'); return null; }
       if (userData?.role !== 'counsellor' && userData?.role !== 'psychologist' && userData?.role !== 'educator' && !isAdmin) {
@@ -1059,6 +1077,21 @@ export default function App() {
       return (
         <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>Loading...</div>}>
           <PsychCounsellorView 
+            currentUser={currentUser} 
+            userData={userData} 
+          />
+        </Suspense>
+      );
+    }
+    if (currentPath.startsWith('/provider/educator')) {
+      if (!currentUser) { navigate('/auth'); return null; }
+      if (userData?.role !== 'educator' && !isAdmin) {
+        navigate('/dashboard'); 
+        return null;
+      }
+      return (
+        <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>Loading...</div>}>
+          <SENCounsellorView 
             currentUser={currentUser} 
             userData={userData} 
           />
