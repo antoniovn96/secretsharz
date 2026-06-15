@@ -25,6 +25,9 @@ const AboutUs = lazy(() => import('./AboutUs'));
 const PsychCounsellorView = lazy(() => import('./dashboards/counsellor/PsychCounsellorView'));
 const CaseFileView = lazy(() => import('./dashboards/counsellor/CaseFileView'));
 const SENCounsellorView = lazy(() => import('./dashboards/counsellor/SENCounsellorView'));
+const IEPBuilderView = lazy(() => import('./dashboards/counsellor/IEPBuilderView'));
+const CareerCounsellorView = lazy(() => import('./dashboards/counsellor/CareerCounsellorView'));
+const CareerRoadmapView = lazy(() => import('./dashboards/counsellor/CareerRoadmapView'));
 
 // ✅ NEW BLOG IMPORTS ADDED HERE
 const JournalingDeepDiveBlog = lazy(() => import('./blogss/2026/January/JournalingDeepDiveBlog'));
@@ -1083,6 +1086,22 @@ export default function App() {
         </Suspense>
       );
     }
+    if (currentPath.startsWith('/provider/educator/case/')) {
+      if (!currentUser) { navigate('/auth'); return null; }
+      if (userData?.role !== 'educator' && !isAdmin) {
+        navigate('/dashboard'); 
+        return null;
+      }
+      const studentId = currentPath.split('/provider/educator/case/')[1];
+      return (
+        <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>Loading...</div>}>
+          <IEPBuilderView 
+            studentId={studentId}
+            currentUser={currentUser} 
+          />
+        </Suspense>
+      );
+    }
     if (currentPath.startsWith('/provider/educator')) {
       if (!currentUser) { navigate('/auth'); return null; }
       if (userData?.role !== 'educator' && !isAdmin) {
@@ -1092,6 +1111,37 @@ export default function App() {
       return (
         <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>Loading...</div>}>
           <SENCounsellorView 
+            currentUser={currentUser} 
+            userData={userData} 
+          />
+        </Suspense>
+      );
+    }
+    if (currentPath.startsWith('/provider/career/case/')) {
+      if (!currentUser) { navigate('/auth'); return null; }
+      if (userData?.role !== 'career_counsellor' && userData?.role !== 'career_coach' && userData?.role !== 'counsellor' && !isAdmin) {
+        navigate('/dashboard'); 
+        return null;
+      }
+      const studentId = currentPath.split('/provider/career/case/')[1];
+      return (
+        <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>Loading...</div>}>
+          <CareerRoadmapView 
+            studentId={studentId}
+            currentUser={currentUser} 
+          />
+        </Suspense>
+      );
+    }
+    if (currentPath.startsWith('/provider/career')) {
+      if (!currentUser) { navigate('/auth'); return null; }
+      if (userData?.role !== 'career_counsellor' && userData?.role !== 'career_coach' && userData?.role !== 'counsellor' && !isAdmin) {
+        navigate('/dashboard'); 
+        return null;
+      }
+      return (
+        <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>Loading...</div>}>
+          <CareerCounsellorView 
             currentUser={currentUser} 
             userData={userData} 
           />

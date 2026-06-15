@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { useDashboard } from '../../context/DashboardContext';
 
 const SENCounsellorView = ({ userData, currentUser }) => {
+  const { navigate } = useDashboard();
   const dynamicName = userData?.name || currentUser?.displayName || 'Special Educator';
   const profileImage = currentUser?.photoURL || 'https://via.placeholder.com/150';
 
@@ -154,7 +156,7 @@ const SENCounsellorView = ({ userData, currentUser }) => {
                               <td className="px-6 py-4">
                                 <button 
                                   className="text-amber-600 font-bold hover:text-amber-800 uppercase text-xs tracking-wider transition-colors flex items-center gap-1"
-                                  onClick={() => console.log(`Navigate to IEP File for ${student.uid}`)}
+                                  onClick={() => navigate(`/provider/educator/case/${student.uid}`)}
                                 >
                                   Review IEP <span className="text-base leading-none">→</span>
                                 </button>
