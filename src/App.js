@@ -28,6 +28,7 @@ const SENCounsellorView = lazy(() => import('./dashboards/counsellor/SENCounsell
 const IEPBuilderView = lazy(() => import('./dashboards/counsellor/IEPBuilderView'));
 const CareerCounsellorView = lazy(() => import('./dashboards/counsellor/CareerCounsellorView'));
 const CareerRoadmapView = lazy(() => import('./dashboards/counsellor/CareerRoadmapView'));
+const ParentPortalView = lazy(() => import('./dashboards/parent/ParentPortalView'));
 
 // ✅ NEW BLOG IMPORTS ADDED HERE
 const JournalingDeepDiveBlog = lazy(() => import('./blogss/2026/January/JournalingDeepDiveBlog'));
@@ -1159,6 +1160,21 @@ export default function App() {
     if (currentPath.startsWith('/dashboard/sen')) {
       if (!currentUser) { navigate('/auth'); return null; }
       return <SENStudentView />;
+    }
+    if (currentPath.startsWith('/dashboard/parent')) {
+      if (!currentUser) { navigate('/auth'); return null; }
+      if (userData?.role !== 'parent' && !isAdmin) {
+        navigate('/dashboard'); 
+        return null;
+      }
+      return (
+        <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>Loading...</div>}>
+          <ParentPortalView 
+            currentUser={currentUser} 
+            userData={userData} 
+          />
+        </Suspense>
+      );
     }
     if (currentPath.startsWith('/dashboard')) {
       if (!currentUser) { navigate('/auth'); return null; }
