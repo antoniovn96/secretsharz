@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import CareerAssessment from '../../CareerAssessment';
+import UnifiedIntakeForm from '../../components/forms/UnifiedIntakeForm';
 
 const CareerStudentView = ({ studentData, currentUser }) => {
   const [isTakingTest, setIsTakingTest] = useState(false);
@@ -7,6 +8,9 @@ const CareerStudentView = ({ studentData, currentUser }) => {
   const dynamicName = studentData?.name || currentUser?.displayName || 'Student';
   const profileImage = currentUser?.photoURL || 'https://via.placeholder.com/150';
   
+  const isProfileIncomplete = !studentData?.grade || !studentData?.parentName;
+  const [showIntake, setShowIntake] = useState(isProfileIncomplete);
+
   const hasAssessment = !!(studentData?.riasecScores || studentData?.careerDNA?.riasec || studentData?.riasecCode);
 
   const handleTakeAssessment = () => {
@@ -25,11 +29,13 @@ const CareerStudentView = ({ studentData, currentUser }) => {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
+      {showIntake && <UnifiedIntakeForm onComplete={() => setShowIntake(false)} />}
+      
       {/* Left Sidebar */}
       <div className="w-64 flex-shrink-0 p-6">
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
-          <div className="h-24 bg-indigo-100"></div>
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col border border-indigo-100/50">
+          <div className="h-24 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
           <div className="px-6 pb-6 relative flex flex-col items-center text-center">
             <img 
               src={profileImage} 
@@ -40,13 +46,13 @@ const CareerStudentView = ({ studentData, currentUser }) => {
             <p className="text-sm text-gray-500 mb-6">Student</p>
             
             <nav className="w-full flex flex-col gap-2">
-              <button className="flex items-center gap-3 w-full px-4 py-2.5 bg-indigo-50 text-indigo-700 font-semibold rounded-lg transition-colors">
+              <button className="flex items-center gap-3 w-full px-4 py-2.5 bg-indigo-50 text-indigo-700 font-bold rounded-lg transition-all hover:bg-indigo-100">
                 <span>🏠</span> Home
               </button>
-              <button className="flex items-center gap-3 w-full px-4 py-2.5 text-gray-600 hover:bg-gray-50 font-medium rounded-lg transition-colors">
+              <button className="flex items-center gap-3 w-full px-4 py-2.5 text-slate-600 hover:bg-slate-100 font-semibold rounded-lg transition-all">
                 <span>🎯</span> Careers
               </button>
-              <button className="flex items-center gap-3 w-full px-4 py-2.5 text-gray-600 hover:bg-gray-50 font-medium rounded-lg transition-colors">
+              <button className="flex items-center gap-3 w-full px-4 py-2.5 text-slate-600 hover:bg-slate-100 font-semibold rounded-lg transition-all">
                 <span>🏫</span> Colleges
               </button>
             </nav>
@@ -58,18 +64,18 @@ const CareerStudentView = ({ studentData, currentUser }) => {
       <div className="flex-1 p-6 lg:p-8 overflow-y-auto">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Welcome Banner */}
-          <div className="bg-white rounded-xl p-8 shadow-sm">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome to VidyaVantage, {dynamicName}
+          <div className="bg-white rounded-xl p-8 shadow-sm border border-indigo-50/50">
+            <h1 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">
+              Welcome to VidyaVantage, {dynamicName} ⚡
             </h1>
-            <p className="text-gray-600">
+            <p className="text-slate-600 text-lg font-medium">
               Your career roadmap starts here. Explore, discover, and build your future.
             </p>
           </div>
 
           {/* Assessment State Logic */}
           {!hasAssessment ? (
-            <div className="bg-white rounded-xl p-8 shadow-sm flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-200 py-16">
+            <div className="bg-white rounded-xl p-8 shadow-sm flex flex-col items-center justify-center text-center border border-indigo-100 py-16 transition-all hover:shadow-md">
               <div className="text-4xl mb-4">📝</div>
               <h2 className="text-xl font-bold text-gray-800 mb-2">Assessment Pending</h2>
               <p className="text-gray-500 max-w-md">
@@ -77,13 +83,13 @@ const CareerStudentView = ({ studentData, currentUser }) => {
               </p>
               <button 
                 onClick={handleTakeAssessment}
-                className="mt-6 px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors"
+                className="mt-6 px-8 py-3.5 bg-blue-600 text-white font-extrabold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all"
               >
                 Take Career Assessment
               </button>
             </div>
           ) : (
-            <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-xl p-8 shadow-sm border border-indigo-50/50">
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <div className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">Career Intelligence Report</div>
