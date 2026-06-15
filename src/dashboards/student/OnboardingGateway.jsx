@@ -3,12 +3,10 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
 import { useDashboard } from '../../context/DashboardContext';
 
-const OnboardingGateway = () => {
+const OnboardingGateway = ({ navigate }) => {
   const [routingState, setRoutingState] = useState(null);
   const [isRouting, setIsRouting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  
-  const { navigate } = useDashboard();
 
   const handleDivisionSelect = async (divisionName) => {
     if (isRouting) return;
@@ -21,17 +19,23 @@ const OnboardingGateway = () => {
     if (divisionName === 'Learning Support') pathCode = 'sen';
     if (divisionName === 'Career Planning') pathCode = 'career';
     
+    const user = auth.currentUser;
+    if (!user) { 
+      console.error("No user ID found"); 
+      setErrorMsg("No logged in user found.");
+      setIsRouting(false);
+      setRoutingState(null);
+      return; 
+    }
+
     try {
-      const user = auth.currentUser;
-      if (user) {
-        await setDoc(doc(db, 'users', user.uid), {
-          primary_path: pathCode,
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-      } else {
-        throw new Error("No logged in user found.");
-      }
+      console.log(`Writing path ${pathCode} to Firestore for user ${user.uid}...`);
+      await setDoc(doc(db, 'users', user.uid), {
+        primary_path: pathCode,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
       
+      console.log(`Firestore write successful. Navigating to /dashboard/${pathCode === 'career' ? 'career' : pathCode}...`);
       // Dynamic Redirection
       if (pathCode === 'career') {
         navigate('/dashboard/career');

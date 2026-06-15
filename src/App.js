@@ -1064,7 +1064,7 @@ export default function App() {
     if (currentPath.startsWith('/dashboard')) {
       if (!currentUser) { navigate('/auth'); return null; }
       return (
-        <OnboardingGateway />
+        <OnboardingGateway navigate={navigate} />
       );
     }
     if (currentPath.startsWith('/mindspace')) {
