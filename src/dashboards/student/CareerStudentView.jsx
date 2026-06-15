@@ -30,8 +30,6 @@ const CareerStudentView = ({ studentData, currentUser }) => {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
-      {showIntake && <UnifiedIntakeForm onComplete={() => setShowIntake(false)} />}
-      
       {/* Left Sidebar */}
       <div className="w-64 flex-shrink-0 p-6">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col border border-indigo-100/50">
@@ -175,6 +173,8 @@ const CareerStudentView = ({ studentData, currentUser }) => {
           )}
         </div>
       </div>
+      
+      {showIntake && <UnifiedIntakeForm onComplete={() => setShowIntake(false)} />}
     </div>
   );
 };

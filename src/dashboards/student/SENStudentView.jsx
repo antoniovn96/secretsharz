@@ -10,8 +10,6 @@ const SENStudentView = ({ studentData, currentUser }) => {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-yellow-100">
-      {showIntake && <UnifiedIntakeForm onComplete={() => setShowIntake(false)} />}
-      
       {/* Left Sidebar */}
       <div className="w-64 flex-shrink-0 p-6">
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-orange-200/50 shadow-xl overflow-hidden flex flex-col border border-orange-100 transition-all duration-300 hover:-translate-y-2">
@@ -136,6 +134,8 @@ const SENStudentView = ({ studentData, currentUser }) => {
 
         </div>
       </div>
+      
+      {showIntake && <UnifiedIntakeForm onComplete={() => setShowIntake(false)} />}
     </div>
   );
 };

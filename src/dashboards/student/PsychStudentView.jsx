@@ -11,8 +11,6 @@ const PsychStudentView = ({ studentData, currentUser }) => {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-teal-50 to-emerald-50">
-      {showIntake && <UnifiedIntakeForm onComplete={() => setShowIntake(false)} />}
-      
       {/* Left Sidebar */}
       <div className="w-64 flex-shrink-0 p-6 animate-in fade-in duration-500">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm overflow-hidden flex flex-col border border-teal-100">
@@ -98,6 +96,8 @@ const PsychStudentView = ({ studentData, currentUser }) => {
 
         </div>
       </div>
+      
+      {showIntake && <UnifiedIntakeForm onComplete={() => setShowIntake(false)} />}
     </div>
   );
 };
