@@ -22,6 +22,7 @@ const AdminDashboard = lazy(() => import('./AdminDashboard'));
 const Blog = lazy(() => import('./Blog'));
 const Resources = lazy(() => import('./Resources'));
 const AboutUs = lazy(() => import('./AboutUs'));
+const PsychCounsellorView = lazy(() => import('./dashboards/counsellor/PsychCounsellorView'));
 
 // ✅ NEW BLOG IMPORTS ADDED HERE
 const JournalingDeepDiveBlog = lazy(() => import('./blogss/2026/January/JournalingDeepDiveBlog'));
@@ -1045,6 +1046,21 @@ export default function App() {
             onBack={() => navigate('/')}
             onLogout={handleLogout}
             navigate={navigate}
+          />
+        </Suspense>
+      );
+    }
+    if (currentPath.startsWith('/provider/psychologist')) {
+      if (!currentUser) { navigate('/auth'); return null; }
+      if (userData?.role !== 'counsellor' && userData?.role !== 'psychologist' && userData?.role !== 'educator' && !isAdmin) {
+        navigate('/dashboard'); 
+        return null;
+      }
+      return (
+        <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>Loading...</div>}>
+          <PsychCounsellorView 
+            currentUser={currentUser} 
+            userData={userData} 
           />
         </Suspense>
       );
