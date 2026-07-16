@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Strength Shield</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#2D6BE4;--blue-pale:#EBF1FD;--blue-mid:#94B8F3;
+  --amber:#F0A500;--amber-pale:#FEF3D0;--amber-mid:#F8CC6A;
+  --teal:#0F8C6E;--teal-pale:#E1F4EF;--teal-mid:#5ECBA8;
+  --lavender:#7C3AED;--lav-pale:#F0EBFD;--lav-mid:#B89AF5;
+  --rose:#E83A5A;--rose-pale:#FDE8EC;
+  --ink:#1A1A2E;--ink-soft:#3D4A60;--muted:#6B7A99;--border:#E0E8F4;
+  --surface:#F7F9FD;--card:#FFFFFF;
+  --r:16px;--r-lg:24px;--r-xl:32px;
+  --shadow:0 4px 24px rgba(45,107,228,0.10);
+  --shadow-lg:0 12px 48px rgba(45,107,228,0.16);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito',sans-serif;background:var(--surface);color:var(--ink);min-height:100vh;overflow-x:hidden}
+
+/* ── HERO ── */
+.hero{
+  background:linear-gradient(135deg,#0D1B4B 0%,#1A2E6B 50%,#0D2545 100%);
+  padding:72px 40px 80px;text-align:center;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 20% 50%,rgba(45,107,228,.25) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 30%,rgba(240,165,0,.12) 0%,transparent 55%);
+}
+.hero-content{position:relative;z-index:1;max-width:680px;margin:0 auto}
+.hero-eyebrow{
+  display:inline-block;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  color:var(--amber-mid);font-size:12px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;padding:6px 18px;border-radius:30px;margin-bottom:24px;
+  animation:fadeSlideUp .6s ease both;
+}
+.hero h1{
+  font-family:'Fraunces',serif;font-size:clamp(36px,6vw,60px);font-weight:700;
+  color:#fff;line-height:1.1;letter-spacing:-1px;margin-bottom:20px;
+  animation:fadeSlideUp .6s .1s ease both;
+}
+.hero h1 em{font-style:italic;color:var(--amber-mid)}
+.hero p{
+  font-size:18px;color:rgba(255,255,255,.65);line-height:1.75;max-width:560px;
+  margin:0 auto 36px;font-weight:400;animation:fadeSlideUp .6s .2s ease both;
+}
+.hero-steps{
+  display:flex;justify-content:center;gap:32px;flex-wrap:wrap;
+  animation:fadeSlideUp .6s .3s ease both;
+}
+.hero-step{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.6);font-size:14px;font-weight:600}
+.hero-step-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hero-step-dot.blue{background:var(--blue-mid)}
+.hero-step-dot.amber{background:var(--amber-mid)}
+.hero-step-dot.teal{background:var(--teal-mid)}
+.hero-step-dot.lav{background:var(--lav-mid)}
+
+/* ── MAIN LAYOUT ── */
+.main{max-width:1100px;margin:0 auto;padding:60px 24px 80px;display:grid;grid-template-columns:1fr 340px;gap:48px;align-items:start}
+@media(max-width:900px){.main{grid-template-columns:1fr;padding:40px 16px 60px}}
+
+/* ── SHIELD AREA ── */
+.shield-area{display:flex;flex-direction:column;align-items:center;gap:24px}
+.shield-label{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+
+.shield-svg-wrap{position:relative;width:100%;max-width:440px}
+.shield-svg-wrap svg{width:100%;height:auto;filter:drop-shadow(0 8px 32px rgba(45,107,228,.18))}
+
+.shield-quadrant{cursor:pointer;transition:opacity .2s}
+.shield-quadrant:hover .q-fill{filter:brightness(1.07)}
+.shield-quadrant.done .q-fill{animation:pulseGlow .6s ease}
+
+.q-fill{transition:fill .5s ease,opacity .4s}
+.q-border{fill:none;stroke:rgba(255,255,255,.25);stroke-width:1.5}
+
+/* quadrant labels inside shield */
+.q-label{pointer-events:none;font-family:'Nunito',sans-serif;fill:rgba(255,255,255,.9);font-weight:700;font-size:13px;text-anchor:middle}
+.q-icon{font-size:26px;text-anchor:middle;dominant-baseline:middle}
+.q-sublabel{fill:rgba(255,255,255,.6);font-size:11px;font-weight:600;text-anchor:middle}
+
+/* progress ring */
+.progress-track{fill:none;stroke:var(--border);stroke-width:6;stroke-linecap:round}
+.progress-ring{fill:none;stroke-width:6;stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:283;transition:stroke-dashoffset 1s ease,stroke .5s}
+
+/* ── PANEL (right sidebar) ── */
+.panel-area{display:flex;flex-direction:column;gap:16px}
+.panel-intro{
+  background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-lg);
+  padding:28px;text-align:center;
+}
+.panel-intro h3{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.panel-intro p{font-size:14px;color:var(--muted);line-height:1.65}
+
+/* progress indicator */
+.progress-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.prog-card{
+  background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);
+  padding:12px 14px;transition:all .3s;
+}
+.prog-card.done{background:var(--teal-pale);border-color:var(--teal-mid)}
+.prog-card-icon{font-size:18px;margin-bottom:4px}
+.prog-card-name{font-size:12px;font-weight:700;color:var(--ink-soft);line-height:1.3}
+.prog-card.done .prog-card-name{color:var(--teal)}
+.prog-card-check{display:none;font-size:14px}
+.prog-card.done .prog-card-check{display:inline}
+
+/* ── QUADRANT PANELS (expanded editors) ── */
+.q-panels{display:flex;flex-direction:column;gap:16px;margin-top:0}
+
+.q-panel{
+  background:var(--card);border-radius:var(--r-lg);
+  border:1.5px solid var(--border);overflow:hidden;
+  transition:all .35s cubic-bezier(.4,0,.2,1);
+}
+.q-panel-header{
+  display:flex;align-items:center;gap:14px;padding:18px 22px;cursor:pointer;
+  transition:background .2s;user-select:none;
+}
+.q-panel-header:hover{background:var(--surface)}
+.q-panel-icon{
+  width:42px;height:42px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:20px;flex-shrink:0;transition:transform .2s;
+}
+.q-panel-header:hover .q-panel-icon{transform:scale(1.08)}
+.q-panel-meta{flex:1}
+.q-panel-title{font-size:15px;font-weight:800;color:var(--ink);margin-bottom:2px}
+.q-panel-subtitle{font-size:12px;font-weight:600;color:var(--muted)}
+.q-panel-arrow{font-size:18px;color:var(--muted);transition:transform .3s}
+.q-panel.open .q-panel-arrow{transform:rotate(180deg)}
+.q-panel-body{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1)}
+.q-panel.open .q-panel-body{max-height:600px}
+.q-panel-inner{padding:0 22px 22px}
+
+/* ── Q1 SUPERPOWERS ── */
+.power-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.power-tag{
+  background:var(--blue-pale);color:var(--blue);border:1.5px solid var(--blue-mid);
+  padding:6px 14px;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;
+  transition:all .2s;user-select:none;
+}
+.power-tag:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.power-tag.selected{background:var(--blue);color:#fff;border-color:var(--blue)}
+.custom-input-wrap{display:flex;gap:8px;margin-top:8px}
+.custom-input{
+  flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r);
+  font-size:14px;font-family:inherit;color:var(--ink);background:var(--surface);
+  outline:none;transition:border-color .2s;
+}
+.custom-input:focus{border-color:var(--blue)}
+.add-btn{
+  padding:10px 16px;border-radius:var(--r);border:none;font-family:inherit;
+  font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.add-btn.blue{background:var(--blue);color:#fff}
+.add-btn.blue:hover{background:#2055cc}
+.add-btn.amber{background:var(--amber);color:#fff}
+.add-btn.amber:hover{background:#d49200}
+.add-btn.teal{background:var(--teal);color:#fff}
+.add-btn.teal:hover{background:#0a7059}
+.add-btn.lav{background:var(--lavender);color:#fff}
+.add-btn.lav:hover{background:#6026d0}
+
+.custom-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.custom-tag{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 10px 5px 14px;border-radius:30px;font-size:13px;font-weight:700;
+}
+.custom-tag.blue{background:var(--blue);color:#fff}
+.custom-tag.amber{background:var(--amber);color:#fff}
+.custom-tag.teal{background:var(--teal);color:#fff}
+.custom-tag.lav{background:var(--lavender);color:#fff}
+.tag-remove{
+  background:rgba(255,255,255,.3);border:none;border-radius:50%;
+  width:18px;height:18px;font-size:11px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;color:#fff;font-weight:700;
+  transition:background .2s;
+}
+.tag-remove:hover{background:rgba(255,255,255,.5)}
+
+/* ── Q2 SUPPORT SQUAD ── */
+.contact-cards{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.contact-card{
+  display:flex;align-items:center;gap:12px;padding:10px 14px;
+  background:var(--amber-pale);border:1.5px solid var(--amber-mid);border-radius:var(--r);
+}
+.contact-avatar{
+  width:36px;height:36px;border-radius:50%;background:var(--amber);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:14px;color:#fff;flex-shrink:0;
+}
+.contact-info{flex:1}
+.contact-name{font-size:14px;font-weight:700;color:var(--ink)}
+.contact-role{font-size:12px;font-weight:600;color:var(--muted)}
+.contact-remove{background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:4px;transition:color .2s}
+.contact-remove:hover{color:var(--rose)}
+
+.contact-input-grid{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:6px}
+.role-select{
+  margin-top:6px;width:100%;padding:9px 14px;border:1.5px solid var(--border);
+  border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--ink);
+  background:var(--surface);outline:none;transition:border-color .2s;
+}
+.role-select:focus{border-color:var(--amber)}
+
+/* ── Q3 COPING ARMOR ── */
+.coping-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.coping-btn{
+  background:var(--teal-pale);border:1.5px solid transparent;border-radius:var(--r);
+  padding:12px 8px;text-align:center;cursor:pointer;transition:all .22s;font-family:inherit;
+}
+.coping-btn:hover{border-color:var(--teal-mid);transform:translateY(-2px)}
+.coping-btn.selected{background:var(--teal);border-color:var(--teal)}
+.coping-emoji{font-size:22px;display:block;margin-bottom:4px}
+.coping-name{font-size:11px;font-weight:700;color:var(--teal);line-height:1.2}
+.coping-btn.selected .coping-name{color:#fff}
+
+/* ── Q4 CORE VALUES ── */
+.mantra-wrap{position:relative;margin-bottom:12px}
+.mantra-textarea{
+  width:100%;min-height:90px;padding:14px 16px;
+  border:1.5px solid var(--border);border-radius:var(--r);
+  font-size:15px;font-family:'Fraunces',serif;font-style:italic;font-weight:500;
+  color:var(--lavender);background:var(--lav-pale);outline:none;resize:none;
+  transition:border-color .2s;line-height:1.7;
+}
+.mantra-textarea:focus{border-color:var(--lav-mid)}
+.mantra-textarea::placeholder{color:var(--lav-mid)}
+.value-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.value-tag{
+  background:var(--lav-pale);color:var(--lavender);border:1.5px solid var(--lav-mid);
+  padding:6px 14px;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.value-tag:hover{background:var(--lavender);color:#fff;border-color:var(--lavender)}
+.value-tag.selected{background:var(--lavender);color:#fff}
+
+/* ── FORGE BUTTON ── */
+.forge-wrap{text-align:center;padding:32px 40px;position:relative}
+.forge-btn{
+  display:inline-flex;align-items:center;gap:12px;
+  padding:18px 44px;border-radius:50px;border:none;
+  background:linear-gradient(135deg,var(--teal) 0%,var(--blue) 100%);
+  color:#fff;font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;
+  cursor:pointer;transition:all .3s;box-shadow:0 8px 32px rgba(45,107,228,.3);
+  position:relative;overflow:hidden;
+}
+.forge-btn:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(45,107,228,.4)}
+.forge-btn:active{transform:translateY(0)}
+.forge-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.forge-btn .btn-glow{
+  position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
+  pointer-events:none;
+}
+.forge-progress-text{font-size:13px;color:var(--muted);font-weight:600;margin-top:12px}
+
+/* ── COMPLETE CELEBRATION ── */
+.celebration{display:none;text-align:center;padding:32px;animation:fadeSlideUp .6s ease}
+.celebration.show{display:block}
+.celebration-emoji{font-size:60px;margin-bottom:16px;animation:bounce 1s ease}
+.celebration h2{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--ink);margin-bottom:10px}
+.celebration p{font-size:15px;color:var(--muted);line-height:1.7;max-width:480px;margin:0 auto 24px}
+.save-btn{
+  padding:14px 36px;border-radius:50px;border:none;
+  background:linear-gradient(135deg,var(--amber) 0%,#E8650A 100%);
+  color:#fff;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;
+  box-shadow:0 8px 28px rgba(240,165,0,.35);transition:all .2s;
+}
+.save-btn:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(240,165,0,.45)}
+
+/* ── CONFETTI ── */
+.confetti-container{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:9999;overflow:hidden;
+}
+.confetti-piece{
+  position:absolute;width:10px;height:10px;border-radius:2px;
+  animation:confettiFall linear forwards;opacity:0;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeSlideUp{
+  from{opacity:0;transform:translateY(24px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes pulseGlow{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.03)}
+  100%{transform:scale(1)}
+}
+@keyframes bounce{
+  0%,100%{transform:translateY(0)}
+  40%{transform:translateY(-16px)}
+  60%{transform:translateY(-8px)}
+}
+@keyframes confettiFall{
+  0%{opacity:1;transform:translateY(-20px) rotate(0deg)}
+  100%{opacity:0;transform:translateY(100vh) rotate(720deg)}
+}
+@keyframes shimmer{
+  0%{opacity:.6}50%{opacity:1}100%{opacity:.6}
+}
+
+/* ── DIVIDER ── */
+.section-divider{
+  max-width:1100px;margin:0 auto;padding:0 24px 40px;
+  display:flex;align-items:center;gap:16px;
+}
+.divider-line{flex:1;height:1px;background:var(--border)}
+.divider-text{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap}
+
+/* ── TOOLTIP ── */
+.q-panel.done .q-panel-header{border-bottom:2px solid transparent}
+.q-panel.done{border-color:transparent}
+.q-panel.done-blue{border-color:var(--blue-mid);background:linear-gradient(to right,var(--blue-pale),var(--card))}
+.q-panel.done-amber{border-color:var(--amber-mid);background:linear-gradient(to right,var(--amber-pale),var(--card))}
+.q-panel.done-teal{border-color:var(--teal-mid);background:linear-gradient(to right,var(--teal-pale),var(--card))}
+.q-panel.done-lav{border-color:var(--lav-mid);background:linear-gradient(to right,var(--lav-pale),var(--card))}
+
+.done-check{
+  display:none;width:22px;height:22px;border-radius:50%;
+  align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;
+}
+.q-panel.done-blue .done-check{display:flex;background:var(--blue);color:#fff}
+.q-panel.done-amber .done-check{display:flex;background:var(--amber);color:#fff}
+.q-panel.done-teal .done-check{display:flex;background:var(--teal);color:#fff}
+.q-panel.done-lav .done-check{display:flex;background:var(--lavender);color:#fff}
+
+</style>
+</head>
+<body>
+
+<div class="confetti-container" id="confettiContainer"></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">✦ A tool for young minds</div>
+    <h1>My Strength <em>Shield</em></h1>
+    <p>Every hero has armour. Yours is built from who you are — your strengths, your people, your coping skills, and your values. Build yours now.</p>
+    <div class="hero-steps">
+      <div class="hero-step"><div class="hero-step-dot blue"></div>Superpowers</div>
+      <div class="hero-step"><div class="hero-step-dot amber"></div>Support squad</div>
+      <div class="hero-step"><div class="hero-step-dot teal"></div>Armour</div>
+      <div class="hero-step"><div class="hero-step-dot lav"></div>Core values</div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: SHIELD -->
+  <div class="shield-area">
+    <div class="shield-label">Your shield builds as you fill each section</div>
+
+    <div class="shield-svg-wrap">
+      <svg viewBox="0 0 420 480" xmlns="http://www.w3.org/2000/svg" id="shieldSvg" aria-label="My Strength Shield">
+
+        <!-- Shield outer shape clip -->
+        <defs>
+          <clipPath id="shieldClip">
+            <path d="M210 16 L396 80 L396 240 Q396 380 210 464 Q24 380 24 240 L24 80 Z"/>
+          </clipPath>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- Shield background -->
+        <path d="M210 16 L396 80 L396 240 Q396 380 210 464 Q24 380 24 240 L24 80 Z" fill="#1A2E6B" stroke="none"/>
+
+        <!-- Q1: Top-left — Superpowers (blue) -->
+        <g class="shield-quadrant" id="sq1" onclick="togglePanel('q1')">
+          <path class="q-fill" id="q1fill"
+            d="M210 16 L396 80 L396 240 L210 240 Z"
+            fill="#223080" opacity="0.9"/>
+          <path class="q-border" d="M210 16 L396 80 L396 240 L210 240 Z"/>
+          <text class="q-icon" x="300" y="130" font-size="30">⚡</text>
+          <text class="q-label" x="300" y="170">Superpowers</text>
+          <text class="q-sublabel" x="300" y="186">click to explore</text>
+        </g>
+
+        <!-- Q2: Top-right — Support Squad (amber) -->
+        <g class="shield-quadrant" id="sq2" onclick="togglePanel('q2')">
+          <path class="q-fill" id="q2fill"
+            d="M210 16 L24 80 L24 240 L210 240 Z"
+            fill="#1A2E6B" opacity="0.9"/>
+          <path class="q-border" d="M210 16 L24 80 L24 240 L210 240 Z"/>
+          <text class="q-icon" x="115" y="130" font-size="30">🤝</text>
+          <text class="q-label" x="115" y="170">My Squad</text>
+          <text class="q-sublabel" x="115" y="186">click to explore</text>
+        </g>
+
+        <!-- Q3: Bottom-left — Armor (teal) -->
+        <g class="shield-quadrant" id="sq3" onclick="togglePanel('q3')">
+          <path class="q-fill" id="q3fill"
+            d="M210 240 L396 240 Q396 380 210 464 Z"
+            fill="#1A2E6B" opacity="0.9"/>
+          <path class="q-border" d="M210 240 L396 240 Q396 380 210 464 Z"/>
+          <text class="q-icon" x="300" y="340" font-size="30">🛡️</text>
+          <text class="q-label" x="298" y="380">My Armour</text>
+          <text class="q-sublabel" x="298" y="396">click to explore</text>
+        </g>
+
+        <!-- Q4: Bottom-right — Core (lavender) -->
+        <g class="shield-quadrant" id="sq4" onclick="togglePanel('q4')">
+          <path class="q-fill" id="q4fill"
+            d="M210 240 L24 240 Q24 380 210 464 Z"
+            fill="#1A2E6B" opacity="0.9"/>
+          <path class="q-border" d="M210 240 L24 240 Q24 380 210 464 Z"/>
+          <text class="q-icon" x="117" y="340" font-size="30">💎</text>
+          <text class="q-label" x="117" y="380">My Core</text>
+          <text class="q-sublabel" x="117" y="396">click to explore</text>
+        </g>
+
+        <!-- Divider lines -->
+        <line x1="210" y1="24" x2="210" y2="456" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+        <line x1="30" y1="240" x2="390" y2="240" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+
+        <!-- Center emblem -->
+        <circle cx="210" cy="240" r="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+        <circle cx="210" cy="240" r="18" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+        <text x="210" y="240" text-anchor="middle" dominant-baseline="middle" font-size="18" fill="rgba(255,255,255,0.9)">★</text>
+
+        <!-- Shield border -->
+        <path d="M210 16 L396 80 L396 240 Q396 380 210 464 Q24 380 24 240 L24 80 Z"
+          fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+
+        <!-- Progress ring around shield -->
+        <circle id="progressTrack" class="progress-track" cx="210" cy="240" r="194"/>
+        <circle id="progressRing" class="progress-ring" cx="210" cy="240" r="194"
+          stroke="#5ECBA8" transform="rotate(-90 210 240)"/>
+
+      </svg>
+    </div>
+
+    <!-- Progress chips below shield -->
+    <div class="progress-cards">
+      <div class="prog-card" id="pc1">
+        <div class="prog-card-icon">⚡</div>
+        <div class="prog-card-name">Superpowers <span class="prog-card-check">✓</span></div>
+      </div>
+      <div class="prog-card" id="pc2">
+        <div class="prog-card-icon">🤝</div>
+        <div class="prog-card-name">My Squad <span class="prog-card-check">✓</span></div>
+      </div>
+      <div class="prog-card" id="pc3">
+        <div class="prog-card-icon">🛡️</div>
+        <div class="prog-card-name">My Armour <span class="prog-card-check">✓</span></div>
+      </div>
+      <div class="prog-card" id="pc4">
+        <div class="prog-card-icon">💎</div>
+        <div class="prog-card-name">My Core <span class="prog-card-check">✓</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: PANELS -->
+  <div class="panel-area">
+
+    <div class="panel-intro">
+      <h3>Build your shield ✦</h3>
+      <p>Click each section on the shield (or use the panels below) to fill in your story. Each completed section lights up your shield.</p>
+    </div>
+
+    <!-- Q1 Panel -->
+    <div class="q-panel" id="q1panel">
+      <div class="q-panel-header" onclick="togglePanel('q1')">
+        <div class="q-panel-icon" style="background:var(--blue-pale)">⚡</div>
+        <div class="q-panel-meta">
+          <div class="q-panel-title">My Superpowers</div>
+          <div class="q-panel-subtitle">What are you genuinely good at?</div>
+        </div>
+        <div class="done-check" id="dc1">✓</div>
+        <div class="q-panel-arrow">▾</div>
+      </div>
+      <div class="q-panel-body">
+        <div class="q-panel-inner">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px;font-weight:600">Tap a strength badge to claim it, or add your own below:</p>
+          <div class="power-tags" id="powerTags">
+            <div class="power-tag" onclick="toggleTag(this,'q1')">Kind-hearted</div>
+            <div class="power-tag" onclick="toggleTag(this,'q1')">Creative</div>
+            <div class="power-tag" onclick="toggleTag(this,'q1')">Determined</div>
+            <div class="power-tag" onclick="toggleTag(this,'q1')">Curious</div>
+            <div class="power-tag" onclick="toggleTag(this,'q1')">Empathetic</div>
+            <div class="power-tag" onclick="toggleTag(this,'q1')">Problem-solver</div>
+            <div class="power-tag" onclick="toggleTag(this,'q1')">Brave</div>
+            <div class="power-tag" onclick="toggleTag(this,'q1')">Honest</div>
+            <div class="power-tag" onclick="toggleTag(this,'q1')">Good listener</div>
+            <div class="power-tag" onclick="toggleTag(this,'q1')">Funny</div>
+            <div class="power-tag" onclick="toggleTag(this,'q1')">Thoughtful</div>
+            <div class="power-tag" onclick="toggleTag(this,'q1')">Hardworking</div>
+          </div>
+          <div class="custom-input-wrap">
+            <input class="custom-input" id="q1input" placeholder="Add your own strength..." onkeydown="if(event.key==='Enter')addCustom('q1')"/>
+            <button class="add-btn blue" onclick="addCustom('q1')">+ Add</button>
+          </div>
+          <div class="custom-tags" id="q1customs"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q2 Panel -->
+    <div class="q-panel" id="q2panel">
+      <div class="q-panel-header" onclick="togglePanel('q2')">
+        <div class="q-panel-icon" style="background:var(--amber-pale)">🤝</div>
+        <div class="q-panel-meta">
+          <div class="q-panel-title">My Support Squad</div>
+          <div class="q-panel-subtitle">Who has your back?</div>
+        </div>
+        <div class="done-check" id="dc2">✓</div>
+        <div class="q-panel-arrow">▾</div>
+      </div>
+      <div class="q-panel-body">
+        <div class="q-panel-inner">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px;font-weight:600">Add the people in your corner:</p>
+          <div class="contact-cards" id="contactCards"></div>
+          <input class="custom-input" id="q2name" placeholder="Name (e.g. Mum, Mr. Singh, Priya...)" style="margin-bottom:8px;width:100%"/>
+          <select class="role-select" id="q2role">
+            <option value="">Their role in your life...</option>
+            <option>Parent / Guardian</option>
+            <option>Sibling</option>
+            <option>Best friend</option>
+            <option>Teacher / Mentor</option>
+            <option>School counsellor</option>
+            <option>Relative</option>
+            <option>Coach / Guide</option>
+            <option>Other</option>
+          </select>
+          <div style="margin-top:10px">
+            <button class="add-btn amber" onclick="addContact()" style="width:100%">+ Add to my squad</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3 Panel -->
+    <div class="q-panel" id="q3panel">
+      <div class="q-panel-header" onclick="togglePanel('q3')">
+        <div class="q-panel-icon" style="background:var(--teal-pale)">🛡️</div>
+        <div class="q-panel-meta">
+          <div class="q-panel-title">My Armour</div>
+          <div class="q-panel-subtitle">What helps when things get tough?</div>
+        </div>
+        <div class="done-check" id="dc3">✓</div>
+        <div class="q-panel-arrow">▾</div>
+      </div>
+      <div class="q-panel-body">
+        <div class="q-panel-inner">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px;font-weight:600">Select what works for you (pick as many as you like):</p>
+          <div class="coping-grid">
+            <button class="coping-btn" onclick="toggleCoping(this,'q3')"><span class="coping-emoji">🎵</span><span class="coping-name">Music</span></button>
+            <button class="coping-btn" onclick="toggleCoping(this,'q3')"><span class="coping-emoji">🌬️</span><span class="coping-name">Deep breathing</span></button>
+            <button class="coping-btn" onclick="toggleCoping(this,'q3')"><span class="coping-emoji">🏃</span><span class="coping-name">Exercise</span></button>
+            <button class="coping-btn" onclick="toggleCoping(this,'q3')"><span class="coping-emoji">📓</span><span class="coping-name">Journaling</span></button>
+            <button class="coping-btn" onclick="toggleCoping(this,'q3')"><span class="coping-emoji">🎨</span><span class="coping-name">Art / Drawing</span></button>
+            <button class="coping-btn" onclick="toggleCoping(this,'q3')"><span class="coping-emoji">🧘</span><span class="coping-name">Meditation</span></button>
+            <button class="coping-btn" onclick="toggleCoping(this,'q3')"><span class="coping-emoji">📞</span><span class="coping-name">Talk to someone</span></button>
+            <button class="coping-btn" onclick="toggleCoping(this,'q3')"><span class="coping-emoji">🌿</span><span class="coping-name">Nature walk</span></button>
+            <button class="coping-btn" onclick="toggleCoping(this,'q3')"><span class="coping-emoji">📚</span><span class="coping-name">Reading</span></button>
+            <button class="coping-btn" onclick="toggleCoping(this,'q3')"><span class="coping-emoji">🐾</span><span class="coping-name">Pets</span></button>
+            <button class="coping-btn" onclick="toggleCoping(this,'q3')"><span class="coping-emoji">🎮</span><span class="coping-name">Gaming</span></button>
+            <button class="coping-btn" onclick="toggleCoping(this,'q3')"><span class="coping-emoji">🍵</span><span class="coping-name">Quiet time</span></button>
+          </div>
+          <div class="custom-input-wrap">
+            <input class="custom-input" id="q3input" placeholder="Something else that helps you..." onkeydown="if(event.key==='Enter')addCustom('q3')"/>
+            <button class="add-btn teal" onclick="addCustom('q3')">+ Add</button>
+          </div>
+          <div class="custom-tags" id="q3customs"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q4 Panel -->
+    <div class="q-panel" id="q4panel">
+      <div class="q-panel-header" onclick="togglePanel('q4')">
+        <div class="q-panel-icon" style="background:var(--lav-pale)">💎</div>
+        <div class="q-panel-meta">
+          <div class="q-panel-title">My Core</div>
+          <div class="q-panel-subtitle">Your mantra and deepest values</div>
+        </div>
+        <div class="done-check" id="dc4">✓</div>
+        <div class="q-panel-arrow">▾</div>
+      </div>
+      <div class="q-panel-body">
+        <div class="q-panel-inner">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:10px;font-weight:600">Choose core values that feel like you:</p>
+          <div class="value-tags" id="valueTags">
+            <div class="value-tag" onclick="toggleTag(this,'q4')">Courage</div>
+            <div class="value-tag" onclick="toggleTag(this,'q4')">Kindness</div>
+            <div class="value-tag" onclick="toggleTag(this,'q4')">Growth</div>
+            <div class="value-tag" onclick="toggleTag(this,'q4')">Family</div>
+            <div class="value-tag" onclick="toggleTag(this,'q4')">Integrity</div>
+            <div class="value-tag" onclick="toggleTag(this,'q4')">Freedom</div>
+            <div class="value-tag" onclick="toggleTag(this,'q4')">Learning</div>
+            <div class="value-tag" onclick="toggleTag(this,'q4')">Connection</div>
+            <div class="value-tag" onclick="toggleTag(this,'q4')">Creativity</div>
+            <div class="value-tag" onclick="toggleTag(this,'q4')">Hope</div>
+          </div>
+          <p style="font-size:13px;color:var(--muted);margin:14px 0 8px;font-weight:600">Write your personal mantra (your words of power):</p>
+          <div class="mantra-wrap">
+            <textarea class="mantra-textarea" id="mantraText" placeholder="e.g. I am enough, and I am always growing..." oninput="checkQ4()"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORGE BUTTON -->
+    <div id="forgeSection">
+      <div class="forge-wrap">
+        <button class="forge-btn" id="forgeBtn" disabled onclick="forgeShield()">
+          <div class="btn-glow"></div>
+          <span>⚔️</span>
+          <span>Forge My Shield</span>
+        </button>
+        <div class="forge-progress-text" id="forgeProgressText">Complete all 4 sections to forge your shield</div>
+      </div>
+    </div>
+
+    <div class="celebration" id="celebrationBlock">
+      <div class="celebration-emoji">🏆</div>
+      <h2>Your shield is forged!</h2>
+      <p>You've discovered your superpowers, named your squad, equipped your armour, and anchored your core. You are stronger than you know — carry this shield with you always.</p>
+      <button class="save-btn" onclick="printShield()">🖨️ Save my shield</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const state = {
+  q1: { selectedTags:[], customs:[] },
+  q2: { contacts:[] },
+  q3: { coping:[], customs:[] },
+  q4: { values:[], mantra:'' },
+  done: { q1:false, q2:false, q3:false, q4:false }
+};
+
+const qColors = {
+  q1:{ fill:'#2D6BE4', light:'rgba(45,107,228,.22)', panelClass:'done-blue' },
+  q2:{ fill:'#F0A500', light:'rgba(240,165,0,.22)', panelClass:'done-amber' },
+  q3:{ fill:'#0F8C6E', light:'rgba(15,140,110,.22)', panelClass:'done-teal' },
+  q4:{ fill:'#7C3AED', light:'rgba(124,58,237,.22)', panelClass:'done-lav' }
+};
+
+function togglePanel(id) {
+  const panels = ['q1','q2','q3','q4'];
+  panels.forEach(p => {
+    const el = document.getElementById(p+'panel');
+    if(p===id) el.classList.toggle('open');
+    else el.classList.remove('open');
+  });
+}
+
+function toggleTag(el, qid) {
+  el.classList.toggle('selected');
+  if(qid==='q1') {
+    const name=el.textContent;
+    if(el.classList.contains('selected')) state.q1.selectedTags.push(name);
+    else state.q1.selectedTags=state.q1.selectedTags.filter(t=>t!==name);
+    checkQ1();
+  } else if(qid==='q4') {
+    const name=el.textContent;
+    if(el.classList.contains('selected')) state.q4.values.push(name);
+    else state.q4.values=state.q4.values.filter(t=>t!==name);
+    checkQ4();
+  }
+}
+
+function addCustom(qid) {
+  const input=document.getElementById(qid+'input');
+  const val=input.value.trim();
+  if(!val) return;
+  const wrap=document.getElementById(qid+'customs');
+  const colors={q1:'blue',q3:'teal'};
+  const c=colors[qid]||'blue';
+  const tag=document.createElement('div');
+  tag.className='custom-tag '+c;
+  tag.innerHTML=val+'<button class="tag-remove" onclick="this.parentElement.remove();updateCustoms(\''+qid+'\')">×</button>';
+  wrap.appendChild(tag);
+  if(qid==='q1'){state.q1.customs.push(val);checkQ1();}
+  if(qid==='q3'){state.q3.customs.push(val);checkQ3();}
+  input.value='';
+}
+
+function updateCustoms(qid) {
+  const wrap=document.getElementById(qid+'customs');
+  const tags=[...wrap.querySelectorAll('.custom-tag')].map(t=>t.firstChild.textContent.trim());
+  if(qid==='q1'){state.q1.customs=tags;checkQ1();}
+  if(qid==='q3'){state.q3.customs=tags;checkQ3();}
+}
+
+function checkQ1() {
+  const total=state.q1.selectedTags.length+state.q1.customs.length;
+  if(total>0 && !state.done.q1){markDone('q1');}
+  else if(total===0 && state.done.q1){markUndone('q1');}
+}
+
+function addContact() {
+  const name=document.getElementById('q2name').value.trim();
+  const role=document.getElementById('q2role').value;
+  if(!name) return;
+  const initial=name.charAt(0).toUpperCase();
+  const wrap=document.getElementById('contactCards');
+  const card=document.createElement('div');
+  card.className='contact-card';
+  card.innerHTML=`<div class="contact-avatar">${initial}</div><div class="contact-info"><div class="contact-name">${name}</div><div class="contact-role">${role||'In my corner'}</div></div><button class="contact-remove" onclick="this.parentElement.remove();updateContacts()">✕</button>`;
+  wrap.appendChild(card);
+  state.q2.contacts.push({name,role});
+  document.getElementById('q2name').value='';
+  document.getElementById('q2role').value='';
+  if(!state.done.q2) markDone('q2');
+}
+
+function updateContacts(){
+  const cards=[...document.querySelectorAll('.contact-card')];
+  if(cards.length===0 && state.done.q2) markUndone('q2');
+}
+
+function toggleCoping(el, qid) {
+  el.classList.toggle('selected');
+  const count=document.querySelectorAll('.coping-btn.selected').length+state.q3.customs.length;
+  if(count>0 && !state.done.q3) markDone('q3');
+  else if(count===0 && state.done.q3) markUndone('q3');
+}
+
+function checkQ3() {
+  const coping=document.querySelectorAll('.coping-btn.selected').length;
+  const customs=state.q3.customs.length;
+  if(coping+customs>0 && !state.done.q3) markDone('q3');
+  else if(coping+customs===0 && state.done.q3) markUndone('q3');
+}
+
+function checkQ4() {
+  const mantra=document.getElementById('mantraText').value.trim();
+  const values=document.querySelectorAll('.value-tag.selected').length;
+  if((mantra.length>3 || values>0) && !state.done.q4) markDone('q4');
+  else if(mantra.length<=3 && values===0 && state.done.q4) markUndone('q4');
+}
+
+function markDone(qid) {
+  state.done[qid]=true;
+  const fills={q1:'q1fill',q2:'q2fill',q3:'q3fill',q4:'q4fill'};
+  const sqs={q1:'sq1',q2:'sq2',q3:'sq3',q4:'sq4'};
+  const pcs={q1:'pc1',q2:'pc2',q3:'pc3',q4:'pc4'};
+  const nums={q1:1,q2:2,q3:3,q4:4};
+
+  // Light up shield quadrant
+  const fillEl=document.getElementById(fills[qid]);
+  fillEl.style.fill=qColors[qid].fill;
+  fillEl.style.opacity='1';
+
+  // Panel done styling
+  const panel=document.getElementById(qid+'panel');
+  panel.classList.add(qColors[qid].panelClass);
+  document.getElementById('dc'+nums[qid]).style.display='flex';
+
+  // Progress card
+  document.getElementById(pcs[qid]).classList.add('done');
+
+  updateProgress();
+}
+
+function markUndone(qid) {
+  state.done[qid]=false;
+  const fills={q1:'q1fill',q2:'q2fill',q3:'q3fill',q4:'q4fill'};
+  const nums={q1:1,q2:2,q3:3,q4:4};
+  const pcs={q1:'pc1',q2:'pc2',q3:'pc3',q4:'pc4'};
+
+  document.getElementById(fills[qid]).style.fill='#1A2E6B';
+  const panel=document.getElementById(qid+'panel');
+  panel.classList.remove(qColors[qid].panelClass);
+  document.getElementById('dc'+nums[qid]).style.display='none';
+  document.getElementById(pcs[qid]).classList.remove('done');
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const doneCount=Object.values(state.done).filter(Boolean).length;
+  const pct=doneCount/4;
+  const circumference=283*Math.PI;
+  const ring=document.getElementById('progressRing');
+  const dashArr=2*Math.PI*194;
+  ring.style.strokeDasharray=dashArr;
+  ring.style.strokeDashoffset=dashArr*(1-pct);
+
+  const btn=document.getElementById('forgeBtn');
+  const txt=document.getElementById('forgeProgressText');
+  if(doneCount===4){
+    btn.disabled=false;
+    txt.textContent='All sections complete — forge your shield!';
+    txt.style.color='var(--teal)';
+  } else {
+    btn.disabled=true;
+    txt.textContent=`${4-doneCount} section${4-doneCount!==1?'s':''} remaining`;
+    txt.style.color='var(--muted)';
+  }
+}
+
+function forgeShield() {
+  launchConfetti();
+  document.getElementById('forgeSection').style.display='none';
+  const cel=document.getElementById('celebrationBlock');
+  cel.classList.add('show');
+  // Final pulse on shield
+  ['q1fill','q2fill','q3fill','q4fill'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.style.filter='brightness(1.25)';
+    setTimeout(()=>el.style.filter='',800);
+  });
+}
+
+function launchConfetti() {
+  const container=document.getElementById('confettiContainer');
+  const colors=['#2D6BE4','#F0A500','#0F8C6E','#7C3AED','#E83A5A','#5ECBA8','#F8CC6A'];
+  for(let i=0;i<90;i++){
+    setTimeout(()=>{
+      const piece=document.createElement('div');
+      piece.className='confetti-piece';
+      piece.style.left=Math.random()*100+'vw';
+      piece.style.top='-20px';
+      piece.style.background=colors[Math.floor(Math.random()*colors.length)];
+      piece.style.width=(6+Math.random()*10)+'px';
+      piece.style.height=(6+Math.random()*10)+'px';
+      piece.style.borderRadius=Math.random()>0.5?'50%':'2px';
+      piece.style.animationDuration=(2+Math.random()*3)+'s';
+      piece.style.animationDelay='0s';
+      container.appendChild(piece);
+      setTimeout(()=>piece.remove(),6000);
+    },i*40);
+  }
+}
+
+function printShield(){window.print()}
+
+// Init progress ring
+(function(){
+  const dashArr=2*Math.PI*194;
+  const ring=document.getElementById('progressRing');
+  ring.style.strokeDasharray=dashArr;
+  ring.style.strokeDashoffset=dashArr;
+})();
+
+// Open first panel on load
+setTimeout(()=>togglePanel('q1'),600);
+</script>
+</body>
+</html>
