@@ -430,9 +430,9 @@ const ACTIVITIES = [
     ],
     debrief: [ { q: "Was it easy or difficult to look below your waterline?", note: "Validate difficulty." }, { q: "Has someone responded to just your tip?", note: "Creates resonance." } ],
     watchOutFor: [ "Student disclosing something serious. Have referral process ready." ]
-  },
-  {
+  },{
     id: "l_sa_2", title: "My Strengths Shield", themeShort: ["Self-awareness"], grade: "5–7", gradeKey: "lower", duration: "40 min", formats: ["Art activity", "Pairs"], color: "#F1C40F", colorPale: "#FEF9E7", imagePath: "/resources/lifeskills/placeholder.jpg",
+    worksheetPdf: "/resources/lifeskills/strengthsshield/mystrengthshield.html",
     energyLevel: "Medium", complexity: "Easy", rating: 4.6, usedBy: 289,
     bestUsedWhen: "Post-exams or during periods of low class morale.",
     whyItWorks: "Art-based reflection bypasses the analytical brain, allowing expression without verbal pressure.",
