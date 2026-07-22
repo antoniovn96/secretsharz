@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { useDashboard } from '../../context/DashboardContext';
 
 // Helper to format relative time
 function relativeTime(date) {
@@ -26,6 +27,7 @@ function getInitials(name) {
 }
 
 const PsychCounsellorView = ({ userData, currentUser }) => {
+  const { navigate } = useDashboard();
   const dynamicName = userData?.name || currentUser?.displayName || 'Psychologist';
   const profileImage = currentUser?.photoURL || 'https://via.placeholder.com/150';
 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
-import { useDashboard } from '../../context/DashboardContext';
 
 const OnboardingGateway = ({ navigate }) => {
   const [routingState, setRoutingState] = useState(null);

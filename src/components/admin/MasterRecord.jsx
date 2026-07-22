@@ -47,7 +47,7 @@ export default function MasterRecord({ studentId, navigate, adminUser }) {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const staffSnap = await getDocs(collection(db, COLLECTIONS.STAFF || 'staff'));
+        const staffSnap = await getDocs(collection(db, COLLECTIONS.STAFF));
         const staff = staffSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         setStaffList(staff);
       } catch (err) {

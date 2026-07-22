@@ -1151,15 +1151,15 @@ export default function App() {
     }
     if (currentPath.startsWith('/dashboard/career')) {
       if (!currentUser) { navigate('/auth'); return null; }
-      return <CareerStudentView />;
+      return <CareerStudentView studentData={userData} currentUser={currentUser} />;
     }
     if (currentPath.startsWith('/dashboard/wellbeing')) {
       if (!currentUser) { navigate('/auth'); return null; }
-      return <PsychStudentView />;
+      return <PsychStudentView studentData={userData} currentUser={currentUser} />;
     }
     if (currentPath.startsWith('/dashboard/sen')) {
       if (!currentUser) { navigate('/auth'); return null; }
-      return <SENStudentView />;
+      return <SENStudentView studentData={userData} currentUser={currentUser} />;
     }
     if (currentPath.startsWith('/dashboard/parent')) {
       if (!currentUser) { navigate('/auth'); return null; }

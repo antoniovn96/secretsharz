@@ -4,7 +4,7 @@ import { db } from '../../firebase';
 import { COLLECTIONS } from '../../utils/constants';
 import { Users, Filter, Eye, UserPlus, CheckCircle, Clock } from 'lucide-react';
 
-export default function AdminCommandCenter({ navigate }) {
+export default function AdminCommandCenter() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all', 'onboarding', 'active'
