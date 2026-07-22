@@ -676,7 +676,7 @@ export default function CounsellorDashboard({ navigate }) {
         <div className="c-portal-switcher">
           <div className="c-portal-label">Switch Portal</div>
           {navigate && (
-            <button className="c-portal-btn" onClick={() => navigate('/admin')}>
+            <button className="c-portal-btn" onClick={() => navigate('/dashboard/admin')}>
               <span className="c-portal-dot" style={{ background: '#5B6EF5' }} />Admin Portal
             </button>
           )}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import Head from 'next/head';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { DashboardProvider } from './context/DashboardContext';
 
@@ -18,7 +18,7 @@ const SENStudentView = lazy(() => import('./dashboards/student/SENStudentView'))
 const OnboardingGateway = lazy(() => import('./dashboards/student/OnboardingGateway'));
 const MindSpace = lazy(() => import('./MindSpace'));
 const SharzWall = lazy(() => import('./SharzWall'));
-const AdminDashboard = lazy(() => import('./AdminDashboard'));
+const SuperAdminView = lazy(() => import('./dashboards/admin/SuperAdminView'));
 const Blog = lazy(() => import('./Blog'));
 const Resources = lazy(() => import('./Resources'));
 const AboutUs = lazy(() => import('./AboutUs'));
@@ -957,8 +957,22 @@ export default function App() {
     }
   };
 
-  const isMasterEmail = currentUser?.email && btoa(currentUser.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
+  // MASTER KEY: Override for antonio.antonio.noronha@gmail.com
+  const MASTER_EMAIL = 'antonio.antonio.noronha@gmail.com';
+  const isMasterEmail = currentUser?.email?.toLowerCase() === MASTER_EMAIL;
   const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
+
+  // SELF-HEALING: If master email logs in, ensure they have super_admin role in Firestore
+  useEffect(() => {
+    if (isMasterEmail && currentUser && userData?.role !== 'super_admin') {
+      console.log('[MASTER KEY] Self-healing: Setting super_admin role for', MASTER_EMAIL);
+      const userRef = doc(db, 'users', currentUser.uid);
+      updateDoc(userRef, { role: 'super_admin' }).then(() => {
+        console.log('[MASTER KEY] Successfully updated role to super_admin');
+        setUserData(prev => ({ ...prev, role: 'super_admin' }));
+      }).catch(err => console.error('[MASTER KEY] Failed to update role:', err));
+    }
+  }, [isMasterEmail, currentUser, userData?.role]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -974,7 +988,7 @@ export default function App() {
         if (typeof window !== 'undefined') {
           const path = window.location.pathname.replace(/\/+$/, '') || '/';
           if (path === '/auth') {
-            navigate(isAdmin ? '/admin' : '/dashboard');
+            navigate(isAdmin ? '/dashboard/admin' : '/dashboard');
           }
         }
       } else {
@@ -1001,7 +1015,7 @@ export default function App() {
     
     // Route based on role
     if (userRole === 'super_admin') {
-      navigate('/admin');
+      navigate('/dashboard/admin');
     } else if (userRole === 'counsellor' || userRole === 'psychologist' || userRole === 'educator') {
       navigate('/counsellor-dashboard');
     } else {
@@ -1021,9 +1035,29 @@ export default function App() {
   if (!authChecked) return null;
 
   const renderRoute = () => {
-    if (currentPath.startsWith('/admin')) {
-      if (!isAdmin) { navigate('/'); return null; }
-      return <AdminDashboard user={currentUser} onBackToApp={() => navigate('/')} navigate={navigate} currentPath={currentPath} />;
+    // DEBUG: Log current path and user role for diagnostics
+    console.log('[ROUTING DEBUG] Path:', currentPath, '| UserRole:', userData?.role, '| isAdmin:', isAdmin);
+
+    // Super Admin Command Center - catches BOTH /dashboard/admin AND legacy /admin
+    // This MUST be before /dashboard to prevent interception
+    if (currentPath.startsWith('/dashboard/admin') || currentPath === '/admin') {
+      console.log('[ROUTING] Entering SuperAdminView (admin path detected)');
+      if (!currentUser) { console.log('[ROUTING] No user, redirecting to /auth'); navigate('/auth'); return null; }
+      if (userData?.role !== 'super_admin' && !isAdmin) { 
+        console.log('[ROUTING] Role check failed, redirecting to /dashboard'); 
+        navigate('/dashboard'); 
+        return null; 
+      }
+      console.log('[ROUTING] Rendering SuperAdminView');
+      return (
+        <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#0F172A', color: 'white', fontFamily: "'Plus Jakarta Sans', sans-serif"}}>Loading Super Admin...</div>}>
+          <SuperAdminView 
+            user={currentUser}
+            userData={userData}
+            onBackToApp={() => navigate('/')}
+          />
+        </Suspense>
+      );
     }
     if (currentPath.startsWith('/auth')) {
       return <AuthPage onAuthSuccess={handleAuthSuccess} />;
@@ -1176,7 +1210,8 @@ export default function App() {
         </Suspense>
       );
     }
-    if (currentPath.startsWith('/dashboard')) {
+    if (currentPath.startsWith('/dashboard') && !currentPath.startsWith('/dashboard/admin')) {
+      console.log('[ROUTING] Entering OnboardingGateway route');
       if (!currentUser) { navigate('/auth'); return null; }
       return (
         <OnboardingGateway navigate={navigate} />
@@ -1255,7 +1290,7 @@ export default function App() {
     );
   };
 
-  const isAppShell = currentPath.startsWith('/admin') || currentPath.startsWith('/dashboard') || currentPath.startsWith('/intake') || currentPath.startsWith('/counsellor');
+  const isAppShell = currentPath.startsWith('/admin') || currentPath.startsWith('/dashboard') || currentPath.startsWith('/dashboard/admin') || currentPath.startsWith('/intake') || currentPath.startsWith('/counsellor');
 
   return (
     <DashboardProvider navigate={navigate}>
