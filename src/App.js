@@ -19,6 +19,7 @@ const OnboardingGateway = lazy(() => import('./dashboards/student/OnboardingGate
 const MindSpace = lazy(() => import('./MindSpace'));
 const SharzWall = lazy(() => import('./SharzWall'));
 const AdminDashboard = lazy(() => import('./AdminDashboard'));
+const SuperAdminView = lazy(() => import('./dashboards/admin/SuperAdminView'));
 const Blog = lazy(() => import('./Blog'));
 const Resources = lazy(() => import('./Resources'));
 const AboutUs = lazy(() => import('./AboutUs'));
@@ -1021,6 +1022,23 @@ export default function App() {
   if (!authChecked) return null;
 
   const renderRoute = () => {
+    // Super Admin Command Center - NEW SuperAdminView
+    if (currentPath.startsWith('/dashboard/admin')) {
+      if (!currentUser) { navigate('/auth'); return null; }
+      if (userData?.role !== 'super_admin' && !isAdmin) { 
+        navigate('/dashboard'); 
+        return null; 
+      }
+      return (
+        <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#0F172A', color: 'white', fontFamily: "'Plus Jakarta Sans', sans-serif"}}>Loading Super Admin...</div>}>
+          <SuperAdminView 
+            user={currentUser}
+            userData={userData}
+            onBackToApp={() => navigate('/')}
+          />
+        </Suspense>
+      );
+    }
     if (currentPath.startsWith('/admin')) {
       if (!isAdmin) { navigate('/'); return null; }
       return <AdminDashboard user={currentUser} onBackToApp={() => navigate('/')} navigate={navigate} currentPath={currentPath} />;
@@ -1255,7 +1273,7 @@ export default function App() {
     );
   };
 
-  const isAppShell = currentPath.startsWith('/admin') || currentPath.startsWith('/dashboard') || currentPath.startsWith('/intake') || currentPath.startsWith('/counsellor');
+  const isAppShell = currentPath.startsWith('/admin') || currentPath.startsWith('/dashboard') || currentPath.startsWith('/dashboard/admin') || currentPath.startsWith('/intake') || currentPath.startsWith('/counsellor');
 
   return (
     <DashboardProvider navigate={navigate}>
