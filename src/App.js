@@ -1022,13 +1022,19 @@ export default function App() {
   if (!authChecked) return null;
 
   const renderRoute = () => {
-    // Super Admin Command Center - NEW SuperAdminView
+    // DEBUG: Log current path and user role for diagnostics
+    console.log('[ROUTING DEBUG] Path:', currentPath, '| UserRole:', userData?.role, '| isAdmin:', isAdmin);
+
+    // Super Admin Command Center - MUST check BEFORE /dashboard (more specific)
     if (currentPath.startsWith('/dashboard/admin')) {
-      if (!currentUser) { navigate('/auth'); return null; }
+      console.log('[ROUTING] Entering SuperAdminView route');
+      if (!currentUser) { console.log('[ROUTING] No user, redirecting to /auth'); navigate('/auth'); return null; }
       if (userData?.role !== 'super_admin' && !isAdmin) { 
+        console.log('[ROUTING] Role check failed, redirecting to /dashboard'); 
         navigate('/dashboard'); 
         return null; 
       }
+      console.log('[ROUTING] Rendering SuperAdminView');
       return (
         <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#0F172A', color: 'white', fontFamily: "'Plus Jakarta Sans', sans-serif"}}>Loading Super Admin...</div>}>
           <SuperAdminView 
@@ -1040,6 +1046,7 @@ export default function App() {
       );
     }
     if (currentPath.startsWith('/admin')) {
+      console.log('[ROUTING] Entering legacy AdminDashboard route');
       if (!isAdmin) { navigate('/'); return null; }
       return <AdminDashboard user={currentUser} onBackToApp={() => navigate('/')} navigate={navigate} currentPath={currentPath} />;
     }
@@ -1194,7 +1201,8 @@ export default function App() {
         </Suspense>
       );
     }
-    if (currentPath.startsWith('/dashboard')) {
+    if (currentPath.startsWith('/dashboard') && !currentPath.startsWith('/dashboard/admin')) {
+      console.log('[ROUTING] Entering OnboardingGateway route');
       if (!currentUser) { navigate('/auth'); return null; }
       return (
         <OnboardingGateway navigate={navigate} />
