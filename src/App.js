@@ -18,7 +18,6 @@ const SENStudentView = lazy(() => import('./dashboards/student/SENStudentView'))
 const OnboardingGateway = lazy(() => import('./dashboards/student/OnboardingGateway'));
 const MindSpace = lazy(() => import('./MindSpace'));
 const SharzWall = lazy(() => import('./SharzWall'));
-const AdminDashboard = lazy(() => import('./AdminDashboard'));
 const SuperAdminView = lazy(() => import('./dashboards/admin/SuperAdminView'));
 const Blog = lazy(() => import('./Blog'));
 const Resources = lazy(() => import('./Resources'));
@@ -1002,7 +1001,7 @@ export default function App() {
     
     // Route based on role
     if (userRole === 'super_admin') {
-      navigate('/admin');
+      navigate('/dashboard/admin');
     } else if (userRole === 'counsellor' || userRole === 'psychologist' || userRole === 'educator') {
       navigate('/counsellor-dashboard');
     } else {
@@ -1025,9 +1024,10 @@ export default function App() {
     // DEBUG: Log current path and user role for diagnostics
     console.log('[ROUTING DEBUG] Path:', currentPath, '| UserRole:', userData?.role, '| isAdmin:', isAdmin);
 
-    // Super Admin Command Center - MUST check BEFORE /dashboard (more specific)
-    if (currentPath.startsWith('/dashboard/admin')) {
-      console.log('[ROUTING] Entering SuperAdminView route');
+    // Super Admin Command Center - catches BOTH /dashboard/admin AND legacy /admin
+    // This MUST be before /dashboard to prevent interception
+    if (currentPath.startsWith('/dashboard/admin') || currentPath === '/admin') {
+      console.log('[ROUTING] Entering SuperAdminView (admin path detected)');
       if (!currentUser) { console.log('[ROUTING] No user, redirecting to /auth'); navigate('/auth'); return null; }
       if (userData?.role !== 'super_admin' && !isAdmin) { 
         console.log('[ROUTING] Role check failed, redirecting to /dashboard'); 
@@ -1044,11 +1044,6 @@ export default function App() {
           />
         </Suspense>
       );
-    }
-    if (currentPath.startsWith('/admin')) {
-      console.log('[ROUTING] Entering legacy AdminDashboard route');
-      if (!isAdmin) { navigate('/'); return null; }
-      return <AdminDashboard user={currentUser} onBackToApp={() => navigate('/')} navigate={navigate} currentPath={currentPath} />;
     }
     if (currentPath.startsWith('/auth')) {
       return <AuthPage onAuthSuccess={handleAuthSuccess} />;
