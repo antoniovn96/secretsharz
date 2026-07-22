@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import Head from 'next/head';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { DashboardProvider } from './context/DashboardContext';
 
@@ -957,8 +957,22 @@ export default function App() {
     }
   };
 
-  const isMasterEmail = currentUser?.email && btoa(currentUser.email.toLowerCase().trim()) === 'YW50b25pby5hbnRvbmlvLm5vcm9uaGFAZ21haWwuY29t';
+  // MASTER KEY: Override for antonio.antonio.noronha@gmail.com
+  const MASTER_EMAIL = 'antonio.antonio.noronha@gmail.com';
+  const isMasterEmail = currentUser?.email?.toLowerCase() === MASTER_EMAIL;
   const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
+
+  // SELF-HEALING: If master email logs in, ensure they have super_admin role in Firestore
+  useEffect(() => {
+    if (isMasterEmail && currentUser && userData?.role !== 'super_admin') {
+      console.log('[MASTER KEY] Self-healing: Setting super_admin role for', MASTER_EMAIL);
+      const userRef = doc(db, 'users', currentUser.uid);
+      updateDoc(userRef, { role: 'super_admin' }).then(() => {
+        console.log('[MASTER KEY] Successfully updated role to super_admin');
+        setUserData(prev => ({ ...prev, role: 'super_admin' }));
+      }).catch(err => console.error('[MASTER KEY] Failed to update role:', err));
+    }
+  }, [isMasterEmail, currentUser, userData?.role]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -974,7 +988,7 @@ export default function App() {
         if (typeof window !== 'undefined') {
           const path = window.location.pathname.replace(/\/+$/, '') || '/';
           if (path === '/auth') {
-            navigate(isAdmin ? '/admin' : '/dashboard');
+            navigate(isAdmin ? '/dashboard/admin' : '/dashboard');
           }
         }
       } else {
