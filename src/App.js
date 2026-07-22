@@ -34,7 +34,7 @@ const ParentPortalView = lazy(() => import('./dashboards/parent/ParentPortalView
 const JournalingDeepDiveBlog = lazy(() => import('./blogss/2026/January/JournalingDeepDiveBlog'));
 const MentalHealthResetBlog = lazy(() => import('./blogss/2026/February/MentalHealthResetBlog'));
 
-const LandingPage = lazy(() => import('./LandingPage'));
+
 
 // Header and Footer stay synchronous
 import Header from './Header';
@@ -1243,7 +1243,6 @@ export default function App() {
     if (currentPath.startsWith('/wall')) return <SharzWall Maps={navigate} />;
 
     if (currentPath === '/') {
-      if (!currentUser) return <LandingPage onNavigate={navigate} />;
       return <HomePage currentUser={currentUser} isAdmin={isAdmin} setModal={setModal} setShowQuiz={setShowQuiz} navigate={navigate} />;
     }
     
