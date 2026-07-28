@@ -132,17 +132,16 @@ const CSS = `
 
   /* ── PAIN MIRROR SECTION ── */
   .pain-mirror { padding: 80px 48px; background: var(--sand); text-align: center; }
-  .pain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 1000px; margin: 40px auto; }
+  .pain-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1200px; margin: 40px auto; }
   .pain-card { background: white; border: 1px solid var(--border); border-radius: var(--r-md); padding: 32px 24px; font-size: 18px; color: var(--ink-soft); font-weight: 600; font-style: italic; box-shadow: var(--shadow-sm); }
   .pain-card::before { content: '"'; font-family: 'Fraunces', serif; font-size: 32px; color: var(--sage-light); display: block; margin-bottom: 10px; line-height: 0.5; }
 
   /* ── JOURNEY VISUALIZATION ── */
-  .journey-container { display: flex; align-items: center; justify-content: space-between; overflow-x: auto; padding: 20px 0 40px; gap: 16px; scrollbar-width: none; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
-  .journey-container::-webkit-scrollbar { display: none; }
-  .journey-step { flex: 1; min-width: 160px; text-align: center; background: white; padding: 28px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2; box-shadow: 0 8px 32px rgba(0,0,0,0.2); scroll-snap-align: center; }
-  .journey-arrow { color: var(--sage-light); font-weight: bold; font-size: 24px; flex-shrink: 0; }
-  .journey-emoji { font-size: 36px; margin-bottom: 16px; }
-  .journey-label { font-size: 16px; font-weight: 700; color: var(--ink); }
+  .journey-container { display: flex; align-items: center; justify-content: center; padding: 20px 0 40px; gap: 12px; flex-wrap: wrap; }
+  .journey-step { flex: 0 0 auto; min-width: 120px; max-width: 140px; text-align: center; background: white; padding: 20px 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+  .journey-arrow { color: var(--sage-light); font-weight: bold; font-size: 20px; flex-shrink: 0; }
+  .journey-emoji { font-size: 32px; margin-bottom: 12px; }
+  .journey-label { font-size: 14px; font-weight: 700; color: var(--ink); }
 
   /* ── S.H.A.R.E. Timeline ── */
   .share-grid{display:flex;flex-direction:column;gap:20px;max-width:800px;margin:40px auto 0;}
@@ -225,6 +224,46 @@ const CSS = `
   
   .quiz-entry-strip{background:linear-gradient(135deg,var(--lav-pale),var(--peach-pale));border:1.5px solid rgba(124,111,160,0.2);border-radius:var(--r-md);padding:32px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;max-width:1100px;margin:0 auto 40px;flex-wrap:wrap;}
   .quiz-entry-btn{background:var(--lavender);color:white;border:none;padding:16px 32px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;white-space:nowrap;}
+  .quiz-overlay{position:fixed;inset:0;z-index:9999;background:rgba(30,40,32,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.2s ease;}
+  .quiz-modal{background:white;border-radius:var(--r-lg);padding:40px;max-width:560px;width:100%;box-shadow:var(--shadow-lg);animation:floatUp 0.3s ease;position:relative;max-height:90vh;overflow-y:auto;}
+  .quiz-header{text-align:center;margin-bottom:24px;}
+  .quiz-close{position:absolute;top:16px;right:16px;background:var(--sand);border:none;width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all 0.2s;}
+  .quiz-close:hover{background:var(--sage-pale);color:var(--sage);}
+  .quiz-progress-bar{height:8px;background:var(--sand);border-radius:4px;overflow:hidden;}
+  .quiz-progress-fill{height:100%;background:var(--lavender);transition:width 0.3s ease;}
+  .quiz-body{margin-bottom:24px;}
+  .quiz-q-meta{display:flex;justify-content:space-between;margin-bottom:16px;font-size:13px;color:var(--muted);}
+  .quiz-score-live{color:var(--sage);font-weight:600;}
+  .quiz-question{font-size:18px;font-weight:600;color:var(--ink);margin-bottom:20px;text-align:center;line-height:1.5;}
+  .quiz-options{display:flex;flex-direction:column;gap:12px;}
+  .quiz-opt{background:white;border:2px solid var(--border);border-radius:12px;padding:16px 20px;text-align:left;font-size:15px;color:var(--ink);cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:12px;font-family:inherit;}
+  .quiz-opt:hover{border-color:var(--lavender);background:var(--lav-pale);}
+  .quiz-opt.correct{border-color:var(--success);background:rgba(76,175,80,0.1);}
+  .quiz-opt.wrong{border-color:#C0392B;background:rgba(192,57,43,0.1);}
+  .quiz-opt.neutral-reveal{opacity:0.6;}
+  .quiz-opt:disabled{cursor:default;}
+  .quiz-opt-icon{width:24px;height:24px;border-radius:50%;background:var(--sand);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+  .quiz-opt.correct .quiz-opt-icon{background:var(--success);color:white;}
+  .quiz-opt.wrong .quiz-opt-icon{background:#C0392B;color:white;}
+  .quiz-reveal{margin-top:20px;padding:20px;background:var(--sage-pale);border-radius:12px;border-left:4px solid var(--sage);}
+  .quiz-reveal-badge{font-weight:700;margin-bottom:12px;}
+  .quiz-reveal-badge.myth{color:#C0392B;}
+  .quiz-reveal-badge.fact{color:var(--sage);}
+  .quiz-reveal-text{font-size:14px;color:var(--ink-soft);line-height:1.6;}
+  .quiz-footer{text-align:center;}
+  .quiz-next-btn{background:var(--lavender);color:white;border:none;padding:16px 32px;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;}
+  .quiz-next-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,111,160,0.3);}
+  .quiz-results{text-align:center;padding:20px 0;}
+  .quiz-results-trophy{font-size:72px;margin-bottom:16px;}
+  .quiz-results-score{font-family:'Fraunces',serif;font-size:48px;font-weight:700;color:var(--lavender);margin-bottom:4px;}
+  .quiz-results-sub{font-size:16px;color:var(--muted);margin-bottom:20px;}
+  .quiz-results-msg{font-size:15px;color:var(--ink-soft);line-height:1.6;margin-bottom:24px;font-style:italic;padding:0 12px;}
+  .quiz-results-breakdown{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+  .qrb-item{background:var(--sand);padding:16px;border-radius:12px;}
+  .qrb-label{font-size:12px;color:var(--muted);margin-bottom:4px;}
+  .qrb-value{font-size:18px;font-weight:700;}
+  .quiz-retake-btn{background:var(--lav-pale);color:var(--lavender);border:none;padding:12px 24px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;margin-right:12px;}
+  .quiz-close-btn{background:transparent;color:var(--muted);border:2px solid var(--border);padding:12px 24px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;}
   
   /* ── MOBILE ENHANCEMENTS ── */
   @media(max-width:900px){
@@ -249,12 +288,19 @@ const CSS = `
     .aha-headline {font-size: 36px;}
     
     .relief-grid { grid-template-columns: 1fr; }
-    .pain-grid { grid-template-columns: 1fr; }
+    .pain-grid { grid-template-columns: repeat(2, 1fr); }
     
     .core-truth-bullets { padding: 0; }
     .core-truth-bullet { flex-direction: column; text-align: center; gap: 16px; padding: 24px; }
     
-    .journey-container { padding-bottom: 20px; }
+    .journey-container { flex-wrap: wrap; justify-content: center; }
+    .journey-step { min-width: 100px; max-width: 120px; padding: 16px 10px; }
+    .journey-arrow { font-size: 16px; }
+    .journey-emoji { font-size: 28px; margin-bottom: 10px; }
+    .journey-label { font-size: 12px; }
+    
+    .quiz-results-breakdown { grid-template-columns: repeat(2, 1fr); }
+    .quiz-modal { padding: 24px; }
     
     .share-item { flex-direction: column; align-items: center; text-align: center; padding: 24px; }
     .share-text h4 { justify-content: center; }
@@ -276,6 +322,10 @@ const CSS = `
     .modal { padding: 32px 24px; max-height: 90vh; overflow-y: auto;}
     .sp-slider{padding:0 24px 24px;}
     .stats-strip { gap: 30px; }
+  }
+  
+  @media(max-width:600px){
+    .pain-grid { grid-template-columns: 1fr; }
   }
 `;
 
@@ -1303,7 +1353,11 @@ export default function App() {
         <style dangerouslySetInnerHTML={{ __html: FONTS + CSS }} />
 
         <Suspense fallback={<div style={{minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#FDFCFA', color: '#4A7C59', fontFamily: "'Fraunces', serif", fontSize: '24px'}}>Loading...</div>}>
-          {showQuiz && <MythFactQuiz onClose={() => setShowQuiz(false)} />}
+          {showQuiz && (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}>
+              <MythFactQuiz onClose={() => setShowQuiz(false)} />
+            </div>
+          )}
           {modal === 'talk' && (
             <div className="modal-overlay" onClick={() => setModal(null)}>
               <div className="modal" onClick={e => e.stopPropagation()}>
