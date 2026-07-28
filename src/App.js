@@ -137,12 +137,12 @@ const CSS = `
   .pain-card::before { content: '"'; font-family: 'Fraunces', serif; font-size: 32px; color: var(--sage-light); display: block; margin-bottom: 10px; line-height: 0.5; }
 
   /* ── JOURNEY VISUALIZATION ── */
-  .journey-container { display: flex; align-items: center; justify-content: center; overflow-x: auto; padding: 20px 24px 40px; gap: 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-  .journey-container::-webkit-scrollbar { display: none; }
-  .journey-step { flex: 0 0 auto; min-width: 130px; max-width: 130px; text-align: center; background: white; padding: 20px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
-  .journey-arrow { color: var(--sage-light); font-weight: bold; font-size: 20px; flex-shrink: 0; }
-  .journey-emoji { font-size: 32px; margin-bottom: 12px; }
-  .journey-label { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .journey-section { overflow: visible; }
+  .journey-container { display: flex; align-items: center; justify-content: center; padding: 20px 24px 40px; gap: 16px; width: fit-content; margin: 0 auto; }
+  .journey-step { flex: 0 0 auto; min-width: 140px; max-width: 140px; text-align: center; background: white; padding: 28px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+  .journey-arrow { color: var(--sage-light); font-weight: bold; font-size: 24px; flex-shrink: 0; }
+  .journey-emoji { font-size: 36px; margin-bottom: 16px; }
+  .journey-label { font-size: 16px; font-weight: 700; color: var(--ink); }
 
   /* ── S.H.A.R.E. Timeline ── */
   .share-grid{display:flex;flex-direction:column;gap:20px;max-width:800px;margin:40px auto 0;}
@@ -294,11 +294,7 @@ const CSS = `
     .core-truth-bullets { padding: 0; }
     .core-truth-bullet { flex-direction: column; text-align: center; gap: 16px; padding: 24px; }
     
-    .journey-container { overflow-x: auto; padding-bottom: 20px; }
-    .journey-step { min-width: 110px; max-width: 110px; padding: 16px 8px; }
-    .journey-emoji { font-size: 28px; }
-    .journey-label { font-size: 12px; }
-    .journey-arrow { font-size: 16px; }
+    .journey-container { padding-bottom: 20px; }
     
     .quiz-results-breakdown { grid-template-columns: repeat(2, 1fr); }
     .quiz-modal { padding: 24px; }
@@ -822,7 +818,7 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
       </section>
 
       {/* JOURNEY VISUALIZATION */}
-      <section className="section" style={{ background: 'var(--ink)', color: 'white', textAlign: 'center', padding: '80px 24px' }}>
+      <section className="section journey-section" style={{ background: 'var(--ink)', color: 'white', textAlign: 'center', padding: '80px 0' }}>
         <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', marginBottom: '40px' }}>The Secret Sharz Transformation</h2>
         <div className="journey-container">
           <div className="journey-step"><div className="journey-emoji">😵</div><div className="journey-label">Overwhelmed</div></div>

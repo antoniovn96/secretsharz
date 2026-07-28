@@ -14,3 +14,9 @@
  GET / 200 in 11ms
  GET /android-chrome-192x192.png 200 in 6ms
  GET /android-chrome-192x192.png 200 in 12ms
+ ✓ Compiled in 1453ms (1563 modules)
+ ✓ Compiled in 804ms (1563 modules)
+ ✓ Compiled in 752ms (1563 modules)
+ ✓ Compiled in 779ms (1563 modules)
+ ✓ Compiled in 469ms (1563 modules)
+[?25h
