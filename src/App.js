@@ -137,8 +137,8 @@ const CSS = `
   .pain-card::before { content: '"'; font-family: 'Fraunces', serif; font-size: 32px; color: var(--sage-light); display: block; margin-bottom: 10px; line-height: 0.5; }
 
   /* ── JOURNEY VISUALIZATION ── */
-  .journey-section { overflow: visible; }
-  .journey-container { display: flex; align-items: center; justify-content: center; padding: 20px 24px 40px; gap: 16px; width: fit-content; margin: 0 auto; }
+  .journey-section { max-width: 1200px; margin: 0 auto; }
+  .journey-container { display: flex; align-items: center; justify-content: center; padding: 20px 24px 40px; gap: 16px; }
   .journey-step { flex: 0 0 auto; min-width: 140px; max-width: 140px; text-align: center; background: white; padding: 28px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; z-index: 2; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
   .journey-arrow { color: var(--sage-light); font-weight: bold; font-size: 24px; flex-shrink: 0; }
   .journey-emoji { font-size: 36px; margin-bottom: 16px; }
@@ -818,7 +818,7 @@ function HomePage({ currentUser, isAdmin, setModal, setShowQuiz, navigate }) {
       </section>
 
       {/* JOURNEY VISUALIZATION */}
-      <section className="section journey-section" style={{ background: 'var(--ink)', color: 'white', textAlign: 'center', padding: '80px 0' }}>
+      <section className="section journey-section" style={{ background: 'var(--ink)', color: 'white', textAlign: 'center' }}>
         <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '28px', marginBottom: '40px' }}>The Secret Sharz Transformation</h2>
         <div className="journey-container">
           <div className="journey-step"><div className="journey-emoji">😵</div><div className="journey-label">Overwhelmed</div></div>
