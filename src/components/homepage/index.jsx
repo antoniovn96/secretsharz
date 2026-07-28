@@ -1,0 +1,9 @@
+export { default as Hero } from './Hero';
+export { default as WhoAreYou } from './WhoAreYou';
+export { default as WhySecretSharz } from './WhySecretSharz';
+export { default as JourneyTimeline } from './JourneyTimeline';
+export { default as Outcomes } from './Outcomes';
+export { default as Solutions } from './Solutions';
+export { default as StoriesImpact } from './StoriesImpact';
+export { default as KnowledgeHub } from './KnowledgeHub';
+export { default as FinalCTA } from './FinalCTA';
