@@ -1,0 +1,16 @@
+
+> secretsharz@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.5
+  - Local:        http://localhost:3000
+  - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 1018ms
+ ○ Compiling / ...
+ ✓ Compiled / in 4s (1563 modules)
+ GET / 200 in 4196ms
+ GET / 200 in 11ms
+ GET /android-chrome-192x192.png 200 in 6ms
+ GET /android-chrome-192x192.png 200 in 12ms
