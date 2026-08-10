@@ -45,11 +45,26 @@ service cloud.firestore {
     }
 
     // Case Files & Session Notes
+    // Staff ownership is established from the incoming document on create,
+    // then becomes immutable for staff updates. This prevents an authorised
+    // staff member from moving a case file to another student or staff member.
     match /caseFiles/{fileId} {
       allow read: if isAdmin()
         || (isStaff() && resource.data.staffId == request.auth.uid)
         || (request.auth.uid == resource.data.studentId && resource.data.isPrivate == false);
-      allow write: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid);
+
+      allow create: if isAdmin()
+        || (isStaff() && request.resource.data.staffId == request.auth.uid);
+
+      allow update: if isAdmin()
+        || (isStaff()
+          && resource.data.staffId == request.auth.uid
+          && request.resource.data.staffId == resource.data.staffId
+          && request.resource.data.studentId == resource.data.studentId
+          && request.resource.data.isPrivate == resource.data.isPrivate);
+
+      allow delete: if isAdmin()
+        || (isStaff() && resource.data.staffId == request.auth.uid);
     }
 
     // User profiles.
