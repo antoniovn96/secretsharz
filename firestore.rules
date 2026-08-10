@@ -52,18 +52,25 @@ service cloud.firestore {
       allow write: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid);
     }
 
-    // User profiles: users can maintain their own non-privileged profile data,
-    // but cannot create/change role, admin or permissions fields. Privileged
-    // role changes belong to trusted administrative tooling.
+    // User profiles.
+    // A self-created profile may only be a student profile. Parent/staff/admin
+    // accounts must be provisioned by trusted administrative tooling.
+    // Existing users may update their own non-privileged profile fields, but
+    // role/admin/permissions remain protected fields.
     match /users/{userId} {
       allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
-      allow create: if request.auth != null
-        && request.auth.uid == userId
-        && !request.resource.data.keys().hasAny(['role', 'admin', 'permissions']);
+
+      allow create: if isAdmin()
+        || (request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.role == 'student'
+          && !request.resource.data.keys().hasAny(['admin', 'permissions']));
+
       allow update: if isAdmin()
         || (request.auth != null
           && request.auth.uid == userId
           && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'admin', 'permissions']));
+
       allow delete: if isAdmin();
     }
 
