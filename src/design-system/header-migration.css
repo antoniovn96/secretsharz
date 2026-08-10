@@ -1,0 +1,80 @@
+.ss-header,
+.ss-header-inner,
+.ss-mobile-menu,
+.ss-alert-panel {
+  font-family: var(--ss-font-body);
+}
+
+.ss-header {
+  background: color-mix(in srgb, var(--ss-color-surface) 96%, transparent);
+  border-bottom-color: var(--ss-color-border);
+  box-shadow: var(--ss-shadow-sm);
+}
+
+.ss-header-inner {
+  max-width: var(--ss-container);
+  min-height: 72px;
+  padding-inline: var(--ss-gutter);
+}
+
+.ss-nav-link {
+  color: var(--ss-color-text);
+  border-radius: var(--ss-radius-md);
+  transition: background-color var(--ss-motion-fast) var(--ss-motion-ease), color var(--ss-motion-fast) var(--ss-motion-ease), transform var(--ss-motion-fast) var(--ss-motion-ease);
+}
+
+.ss-nav-link:hover,
+.ss-nav-link.is-active {
+  background: var(--ss-color-surface-soft);
+  color: var(--ss-color-primary-hover);
+}
+
+.ss-dashboard-btn,
+.ss-join-btn {
+  background: var(--ss-color-primary);
+  border-radius: var(--ss-radius-md);
+  box-shadow: var(--ss-shadow-sm);
+  transition: background-color var(--ss-motion-fast) var(--ss-motion-ease), transform var(--ss-motion-fast) var(--ss-motion-ease), box-shadow var(--ss-motion-fast) var(--ss-motion-ease);
+}
+
+.ss-dashboard-btn:hover,
+.ss-join-btn:hover {
+  background: var(--ss-color-primary-hover);
+  box-shadow: var(--ss-shadow-md);
+}
+
+.ss-accessibility-btn,
+.ss-icon-btn,
+.ss-menu-btn {
+  border-color: var(--ss-color-border);
+  border-radius: var(--ss-radius-md);
+  color: var(--ss-color-ink);
+}
+
+.ss-accessibility-btn:hover,
+.ss-icon-btn:hover,
+.ss-menu-btn:hover {
+  border-color: var(--ss-color-primary);
+  background: var(--ss-color-surface-soft);
+}
+
+.ss-alert-panel {
+  border-color: var(--ss-color-border);
+  border-radius: var(--ss-radius-xl);
+  box-shadow: var(--ss-shadow-lg);
+}
+
+.ss-mobile-menu {
+  background: var(--ss-color-surface);
+}
+
+.ss-mobile-link:hover,
+.ss-mobile-link.is-active {
+  background: var(--ss-color-surface-soft);
+  color: var(--ss-color-primary-hover);
+}
+
+.ss-mobile-join {
+  background: var(--ss-color-primary);
+  border-radius: var(--ss-radius-md);
+}
