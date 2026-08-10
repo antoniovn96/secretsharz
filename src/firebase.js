@@ -1,14 +1,12 @@
 // ─────────────────────────────────────────────────────────────
-//  firebase.js  —  VidyaVantage / Secret Sharz
-//  INSTRUCTIONS: Replace the values below with YOUR Firebase
-//  project config (from Firebase Console > Project Settings)
+// firebase.js — Secret Sharz Firebase client
 // ─────────────────────────────────────────────────────────────
-import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 
-// ⚠️  REPLACE THESE WITH YOUR REAL VALUES FROM FIREBASE CONSOLE
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -18,12 +16,27 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-const app      = initializeApp(firebaseConfig);
-export const auth     = getAuth(app);
-export const db       = getFirestore(app);
-export const storage  = getStorage(app);
-export const googleProvider   = new GoogleAuthProvider();
+const app = initializeApp(firebaseConfig);
+
+// App Check is deliberately opt-in until the production reCAPTCHA Enterprise
+// site key has been configured and traffic has been monitored. Firebase
+// recommends App Check as a complementary layer to Authentication + Rules.
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY) {
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY),
+      isTokenAutoRefreshEnabled: true
+    });
+  } catch (error) {
+    // Do not block the application if App Check has not yet been configured.
+    console.warn('[Secret Sharz] App Check is not active:', error?.message || error);
+  }
+}
+
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+export const googleProvider = new GoogleAuthProvider();
 export const facebookProvider = new FacebookAuthProvider();
 
-// Customise Google login prompt
-googleProvider.setCustomParameters({ prompt: "select_account" });
+googleProvider.setCustomParameters({ prompt: 'select_account' });
