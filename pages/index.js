@@ -52,7 +52,8 @@ export default function IndexPage() {
     return <SecretSharzApp />;
   }
 
-  const isAdmin = userData?.role === 'super_admin';
+  // UI visibility only. Real admin authorisation must remain server/rules enforced.
+  const isAdmin = userData?.role === 'super_admin' || currentUser?.email === 'antonio.antonio.noronha@gmail.com';
   const handleLogout = async () => {
     await auth.signOut();
     navigate('/');
