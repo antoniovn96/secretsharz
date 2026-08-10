@@ -4,8 +4,9 @@ import FoundationHomepage from '../src/FoundationHomepage';
 import LiveYouTubeSection from '../src/LiveYouTubeSection';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import AccountConsentGate from '../src/components/consent/AccountConsentGate';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { collection, doc, getDocs, getDoc, limit, query, where } from 'firebase/firestore';
 import { auth, db } from '../src/firebase';
 
 function usePathname() {
@@ -20,23 +21,52 @@ function usePathname() {
   return path;
 }
 
+async function hasAccountConsent(uid) {
+  const consentQuery = query(
+    collection(db, 'consentEvents'),
+    where('userId', '==', uid),
+    limit(100)
+  );
+  const snapshot = await getDocs(consentQuery);
+  return snapshot.docs.some((item) => {
+    const data = item.data();
+    return data.type === 'account_privacy'
+      && data.action === 'granted'
+      && data.policyVersion === '1.0.0';
+  });
+}
+
 export default function IndexPage() {
   const path = usePathname();
   const [currentUser, setCurrentUser] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [accountConsent, setAccountConsent] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user || null);
+      setConsentChecked(false);
+
       if (!user) {
         setUserData(null);
+        setAccountConsent(false);
+        setConsentChecked(true);
         return;
       }
+
       try {
-        const snapshot = await getDoc(doc(db, 'users', user.uid));
-        setUserData(snapshot.exists() ? snapshot.data() : null);
+        const [profileSnapshot, consentGranted] = await Promise.all([
+          getDoc(doc(db, 'users', user.uid)),
+          hasAccountConsent(user.uid),
+        ]);
+        setUserData(profileSnapshot.exists() ? profileSnapshot.data() : null);
+        setAccountConsent(consentGranted);
       } catch (_) {
         setUserData(null);
+        setAccountConsent(false);
+      } finally {
+        setConsentChecked(true);
       }
     });
     return unsubscribe;
@@ -49,7 +79,23 @@ export default function IndexPage() {
     window.dispatchEvent(new PopStateEvent('popstate'));
   };
 
-  if (path !== '/') return <SecretSharzApp />;
+  if (path !== '/') {
+    // Private routes are admitted only after the account privacy consent event
+    // exists. This is a UX gate; Firestore Rules remain the real authorization boundary.
+    if (currentUser && consentChecked && !accountConsent) {
+      return (
+        <AccountConsentGate
+          user={currentUser}
+          onAccepted={() => setAccountConsent(true)}
+          onDecline={async () => {
+            await signOut(auth);
+            navigate('/');
+          }}
+        />
+      );
+    }
+    return <SecretSharzApp />;
+  }
 
   // UI visibility only. Real admin authorisation must remain server/rules enforced.
   const isAdmin = userData?.role === 'super_admin' || currentUser?.email === 'antonio.antonio.noronha@gmail.com';
