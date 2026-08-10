@@ -60,10 +60,37 @@ export function Dialog({ open, onClose, title, children, labelledById }) {
   useEffect(() => {
     if (!open) return undefined;
     const previous = document.activeElement;
-    dialogRef.current?.focus();
+    const focusableSelector = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+    const focusable = () => Array.from(dialogRef.current?.querySelectorAll(focusableSelector) || []);
+
+    requestAnimationFrame(() => {
+      focusable()[0]?.focus();
+      if (!focusable().length) dialogRef.current?.focus();
+    });
+
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') onClose?.();
+      if (event.key === 'Escape') {
+        onClose?.();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const nodes = focusable();
+      if (!nodes.length) {
+        event.preventDefault();
+        dialogRef.current?.focus();
+        return;
+      }
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
+
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
