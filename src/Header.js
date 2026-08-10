@@ -1,696 +1,293 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/router';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDashboard } from './context/DashboardContext';
 
-// Helper: format relative time
-function relativeTime(isoString) {
-  const diff = Date.now() - new Date(isoString).getTime();
-  const days = Math.floor(diff / 86400000);
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days}d ago`;
-  return new Date(isoString).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-}
-
-// Helper: notification priority color
-function getNotifColor(priority, isRead) {
-  if (isRead) return '#6B7280';
-  switch (priority) {
-    case 'high': return '#EF4444';
-    case 'medium': return '#F59E0B';
-    default: return '#10B981';
-  }
-}
-
+/**
+ * Secret Sharz Foundation Header
+ *
+ * Accessibility-first navigation for the public and authenticated shell.
+ * Security note: visibility of admin controls is UX only. Authorisation must
+ * be enforced by Firebase Security Rules / trusted server code.
+ */
 export default function Header({ navigate, currentUser, handleLogout, isAdmin }) {
-  const router = useRouter();
-
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAlertsOpen, setIsAlertsOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const alertsRef = useRef(null);
+  const firstMenuItemRef = useRef(null);
 
-  // Safely try to use DashboardContext — it may not be available on all pages
   let notifications = [];
   let unreadCount = 0;
   let markNotificationRead = () => {};
   let markAllNotificationsRead = () => {};
+
   try {
     const ctx = useDashboard();
     notifications = ctx.notifications || [];
-    unreadCount = notifications.filter(n => !n.isRead).length;
-    markNotificationRead = ctx.markNotificationRead;
-    markAllNotificationsRead = ctx.markAllNotificationsRead;
+    unreadCount = notifications.filter((n) => !n.isRead).length;
+    markNotificationRead = ctx.markNotificationRead || (() => {});
+    markAllNotificationsRead = ctx.markAllNotificationsRead || (() => {});
   } catch (_) {
-    // DashboardContext not available — bell icon hidden
+    // DashboardContext is not available on some public routes.
   }
 
-  // Close menu / alerts dropdown when pressing escape or clicking outside
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+
   useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === 'Escape') { setIsMenuOpen(false); setIsAlertsOpen(false); }
-    };
-    const handleClickOutside = (e) => {
-      if (alertsRef.current && !alertsRef.current.contains(e.target)) {
-        setIsAlertsOpen(false);
+    const saved = window.localStorage.getItem('secretsharz-reduced-motion');
+    const systemReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    setReducedMotion(saved === 'true' || (saved === null && systemReduced));
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        setAlertsOpen(false);
       }
     };
-    window.addEventListener('keydown', handleEsc);
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      window.removeEventListener('keydown', handleEsc);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  // Helper to handle navigation and close menu automatically
-  const handleNav = (path) => {
-    setIsMenuOpen(false);
+  useEffect(() => {
+    if (menuOpen) firstMenuItemRef.current?.focus();
+  }, [menuOpen]);
 
-    // THE FIX: If navigating to the main blog page while inside a specific post,
-    // force a clean navigation to reset the Blog component's internal state.
-    if (path === '/blog' && window.location.pathname.startsWith('/blog/')) {
-      window.location.href = '/blog';
-      return;
-    }
+  useEffect(() => {
+    const onPointerDown = (event) => {
+      if (alertsRef.current && !alertsRef.current.contains(event.target)) setAlertsOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, []);
 
-    if (navigate) {
-      navigate(path);
-    } else {
-      window.location.href = path;
-    }
+  const toggleReducedMotion = () => {
+    const next = !reducedMotion;
+    setReducedMotion(next);
+    window.localStorage.setItem('secretsharz-reduced-motion', String(next));
+    document.documentElement.dataset.reducedMotion = next ? 'true' : 'false';
   };
 
-  // 🚀 HIDE HEADER ON ADMIN ROUTE 🚀
-  const currentPath = typeof window !== 'undefined' ? window.location.pathname : (router.asPath || router.pathname);
-  if (currentPath && currentPath.startsWith('/admin')) {
-    return null;
-  }
+  const go = (path) => {
+    setMenuOpen(false);
+    setAlertsOpen(false);
+    if (navigate) navigate(path);
+    else window.location.href = path;
+  };
+
+  const navItems = [
+    { label: 'Home', path: '/' },
+    { label: 'Support', path: '/mindspace' },
+    { label: 'Career', path: '/vidyavantage' },
+    { label: 'Community', path: '/wall' },
+    { label: 'Resources', path: '/resources' },
+    { label: 'About', path: '/about' },
+  ];
+
+  if (currentPath.startsWith('/admin')) return null;
+
+  const relativeTime = (value) => {
+    if (!value) return '';
+    const diff = Date.now() - new Date(value).getTime();
+    const days = Math.floor(diff / 86400000);
+    if (days <= 0) return 'Today';
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    return new Date(value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  };
 
   return (
     <>
-      <header className="main-header">
-        {/* CLICKABLE LOGO */}
-        <div 
-          className="logo-container" 
-          onClick={() => handleNav('/')}
-          title="Go to Homepage"
-        >
-          <img 
-            src="/secret-sharz-logo.png" 
-            alt="Secret Sharz Logo" 
-            className="header-logo"
-          />
-        </div>
+      <a className="ss-skip-link" href="#main-content">Skip to main content</a>
 
-        {/* DESKTOP NAVIGATION (Visible on larger screens) */}
-        <nav className="desktop-nav">
-          <button onClick={() => handleNav('/')} className="nav-link">Home</button>
-          
-          {/* ABOUT US (Moved before Mind Space, styling fixed) */}
-          <button onClick={() => handleNav('/about')} className="nav-link">About Us</button>          
-          
-          <button onClick={() => handleNav('/mindspace')} className="nav-link">Mind Space</button>
-          <button onClick={() => handleNav('/resources')} className="nav-link">Resources</button>
-          <button onClick={() => handleNav('/wall')} className="nav-link">Sharz Wall</button>
-          <button onClick={() => handleNav('/blog')} className="nav-link">Blog</button>
-          <button onClick={() => handleNav('/vidyavantage')} className="nav-link highlight-link">VidyaVantage</button>
+      <header className="ss-header" data-reduced-motion={reducedMotion ? 'true' : 'false'}>
+        <div className="ss-header-inner">
+          <button className="ss-brand" onClick={() => go('/')} aria-label="Secret Sharz home">
+            <img src="/secret-sharz-logo.png" alt="Secret Sharz" className="ss-brand-logo" />
+          </button>
 
-          <div className="nav-divider"></div>
-
-          {currentUser ? (
-            <>
-              {isAdmin && (
-                <button onClick={() => handleNav('/admin')} className="nav-link admin-link">Admin Panel</button>
-              )}
-              <button onClick={() => handleNav('/dashboard')} className="nav-link">My Dashboard</button>
-
-              {/* ── MESSENGER ICON ── */}
-              <div
-                style={{ position: 'relative', cursor: 'pointer', marginRight: '15px' }}
-                onClick={() => {
-                  if (window.setActiveAboutTabGlobal) {
-                    window.setActiveAboutTabGlobal('messages');
-                  } else {
-                    sessionStorage.setItem('pendingAboutTab', 'messages');
-                    handleNav('/dashboard');
-                  }
-                }}
+          <nav className="ss-desktop-nav" aria-label="Primary navigation">
+            {navItems.map((item) => (
+              <button
+                key={item.path}
+                className={`ss-nav-link ${currentPath === item.path ? 'is-active' : ''}`}
+                onClick={() => go(item.path)}
+                aria-current={currentPath === item.path ? 'page' : undefined}
               >
-                <span style={{ fontSize: '20px' }}>💬</span>
-                {unreadCount > 0 && (
-                  <span style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'red', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '10px', fontWeight: 'bold' }}>
-                    {unreadCount}
-                  </span>
-                )}
-              </div>
+                {item.label}
+              </button>
+            ))}
+          </nav>
 
-              {/* ── BELL ICON WITH DROPDOWN ── */}
-              <div ref={alertsRef} style={{ position: 'relative' }}>
+          <div className="ss-header-actions">
+            <button
+              className="ss-accessibility-btn"
+              onClick={toggleReducedMotion}
+              aria-pressed={reducedMotion}
+              title={reducedMotion ? 'Animations reduced' : 'Reduce motion'}
+            >
+              {reducedMotion ? 'Motion reduced' : 'Reduce motion'}
+            </button>
+
+            {currentUser && (
+              <div className="ss-alert-wrap" ref={alertsRef}>
                 <button
-                  className="bell-btn"
-                  onClick={() => setIsAlertsOpen(prev => !prev)}
-                  aria-label="Notifications"
-                  title="Alerts"
+                  className="ss-icon-btn"
+                  onClick={() => setAlertsOpen((open) => !open)}
+                  aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}
+                  aria-expanded={alertsOpen}
+                  aria-haspopup="dialog"
                 >
-                  🔔
-                  {unreadCount > 0 && (
-                    <span className="bell-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
-                  )}
+                  <span aria-hidden="true">🔔</span>
+                  {unreadCount > 0 && <span className="ss-alert-badge" aria-hidden="true">{unreadCount > 9 ? '9+' : unreadCount}</span>}
                 </button>
 
-                {isAlertsOpen && (
-                  <div className="alerts-dropdown">
-                    <div className="alerts-dropdown-header">
-                      <span className="alerts-dropdown-title">
-                        🔔 Alerts
-                        {unreadCount > 0 && (
-                          <span className="alerts-unread-badge">{unreadCount}</span>
-                        )}
-                      </span>
+                {alertsOpen && (
+                  <section className="ss-alert-panel" role="dialog" aria-label="Notifications">
+                    <div className="ss-alert-heading">
+                      <h2>Notifications</h2>
                       {unreadCount > 0 && (
-                        <button
-                          className="alerts-mark-all"
-                          onClick={() => markAllNotificationsRead()}
-                        >
-                          Mark all read
-                        </button>
+                        <button className="ss-text-btn" onClick={markAllNotificationsRead}>Mark all as read</button>
                       )}
                     </div>
-                    <div className="alerts-dropdown-body">
-                      {notifications.length === 0 ? (
-                        <div className="alerts-empty">No notifications yet.</div>
-                      ) : (
-                        notifications.map((notif) => (
-                          <div
-                            key={notif.id}
-                            className="alerts-item"
-                            style={{ opacity: notif.isRead ? 0.6 : 1 }}
+                    {notifications.length === 0 ? (
+                      <p className="ss-alert-empty">You have no new notifications.</p>
+                    ) : (
+                      <div className="ss-alert-list">
+                        {notifications.map((notification) => (
+                          <button
+                            key={notification.id}
+                            className={`ss-alert-item ${notification.isRead ? 'is-read' : ''}`}
                             onClick={() => {
-                              if (!notif.isRead) markNotificationRead(notif.id);
-                              setIsAlertsOpen(false);
-                              handleNav('/dashboard');
+                              if (!notification.isRead) markNotificationRead(notification.id);
+                              go('/dashboard');
                             }}
                           >
-                            <div
-                              className="alerts-dot"
-                              style={{ background: notif.isRead ? 'transparent' : getNotifColor(notif.priority, notif.isRead) }}
-                            />
-                            <div className="alerts-content">
-                              <div className="alerts-notif-title">{String(notif.title)}</div>
-                              <div className="alerts-notif-msg">
-                                {String(notif.message).substring(0, 80)}{notif.message.length > 80 ? '…' : ''}
-                              </div>
-                              <div className="alerts-notif-time">{relativeTime(notif.timestamp)}</div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
+                            <span className="ss-alert-dot" aria-hidden="true" />
+                            <span>
+                              <strong>{String(notification.title || 'Notification')}</strong>
+                              <span>{String(notification.message || '')}</span>
+                              <small>{relativeTime(notification.timestamp)}</small>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </section>
                 )}
               </div>
+            )}
 
-              <button onClick={() => handleLogout && handleLogout()} className="nav-link logout-link">Sign Out</button>
-            </>
-          ) : (
-            <button onClick={() => handleNav('/auth')} className="nav-cta">
-              Sign In / Join
-            </button>
-          )}
-        </nav>
+            {currentUser ? (
+              <>
+                {isAdmin && <button className="ss-admin-link" onClick={() => go('/admin')}>Admin</button>}
+                <button className="ss-dashboard-btn" onClick={() => go('/dashboard')}>My space</button>
+                <button className="ss-signout-btn" onClick={() => handleLogout?.()}>Sign out</button>
+              </>
+            ) : (
+              <button className="ss-join-btn" onClick={() => go('/auth')}>Join Secret Sharz</button>
+            )}
+          </div>
 
-        {/* MOBILE HAMBURGER BUTTON (Visible only on small screens) */}
-        <button 
-          className="hamburger-btn"
-          onClick={() => setIsMenuOpen(true)}
-          aria-label="Open Menu"
-        >
-          <div className="hamburger-line"></div>
-          <div className="hamburger-line"></div>
-          <div className="hamburger-line"></div>
-        </button>
+          <button
+            className="ss-menu-btn"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open navigation menu"
+            aria-expanded={menuOpen}
+            aria-controls="secretsharz-mobile-menu"
+          >
+            <span aria-hidden="true">☰</span>
+          </button>
+        </div>
       </header>
 
-      {/* OVERLAY BACKDROP FOR MOBILE MENU */}
-      <div 
-        className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} 
-        onClick={() => setIsMenuOpen(false)}
-      ></div>
+      {menuOpen && (
+        <div className="ss-mobile-layer" role="presentation">
+          <button className="ss-mobile-backdrop" onClick={() => setMenuOpen(false)} aria-label="Close navigation menu" />
+          <aside
+            id="secretsharz-mobile-menu"
+            className="ss-mobile-menu"
+            aria-label="Mobile navigation"
+            aria-modal="true"
+            role="dialog"
+          >
+            <div className="ss-mobile-heading">
+              <span>Secret Sharz</span>
+              <button className="ss-icon-btn" onClick={() => setMenuOpen(false)} aria-label="Close navigation menu">×</button>
+            </div>
 
-      {/* MOBILE SIDE DRAWER MENU */}
-      <div className={`side-drawer ${isMenuOpen ? 'open' : ''}`}>
-        <div className="drawer-header">
-          <span style={{ fontFamily: 'Fraunces, serif', fontSize: '20px', color: 'var(--sage)', fontWeight: 'bold' }}>
-            Menu
-          </span>
-          <button className="close-btn" onClick={() => setIsMenuOpen(false)}>✕</button>
-        </div>
-
-        <nav className="drawer-nav">
-          <button onClick={() => handleNav('/')} className="drawer-link">
-            <span>🏠</span> Home
-          </button>
-          
-          {/* ABOUT US ADDED HERE FOR MOBILE (Before Mind Space) */}
-          <button onClick={() => handleNav('/about')} className="drawer-link">
-            <span>ℹ️</span> About Us
-          </button>
-
-          <button onClick={() => handleNav('/mindspace')} className="drawer-link">
-            <span>🧠</span> Mind Space
-          </button>
-          <button onClick={() => handleNav('/resources')} className="drawer-link">
-            <span>📚</span> Resources
-          </button>
-          <button onClick={() => handleNav('/wall')} className="drawer-link">
-            <span>💬</span> Sharz Wall
-          </button>
-          <button onClick={() => handleNav('/blog')} className="drawer-link">
-            <span>📰</span> Blog
-          </button>
-          <button onClick={() => handleNav('/vidyavantage')} className="drawer-link highlight-link-mobile">
-            <span>🎓</span> VidyaVantage
-          </button>
-
-          <div className="drawer-divider"></div>
-
-          {currentUser ? (
-            <>
-              {isAdmin && (
-                <button onClick={() => handleNav('/admin')} className="drawer-link admin-link">
-                  <span>⚙️</span> Admin Panel
+            <nav className="ss-mobile-nav" aria-label="Mobile primary navigation">
+              {navItems.map((item, index) => (
+                <button
+                  key={item.path}
+                  ref={index === 0 ? firstMenuItemRef : undefined}
+                  className={`ss-mobile-link ${currentPath === item.path ? 'is-active' : ''}`}
+                  onClick={() => go(item.path)}
+                  aria-current={currentPath === item.path ? 'page' : undefined}
+                >
+                  {item.label}
                 </button>
-              )}
-              <button onClick={() => handleNav('/dashboard')} className="drawer-link">
-                <span>👤</span> My Dashboard
-              </button>
-              <button onClick={() => { setIsMenuOpen(false); handleLogout && handleLogout(); }} className="drawer-link logout-link">
-                <span>🚪</span> Sign Out
-              </button>
-            </>
-          ) : (
-            <>
-              <button onClick={() => handleNav('/auth')} className="drawer-link">
-                <span>🔑</span> Sign In
-              </button>
-              <button onClick={() => handleNav('/auth')} className="drawer-cta-mobile">
-                Join Secret Sharz
-              </button>
-            </>
-          )}
-        </nav>
-      </div>
+              ))}
+            </nav>
 
-      {/* CSS STYLES */}
+            <div className="ss-mobile-divider" />
+            <button className="ss-mobile-link" onClick={toggleReducedMotion} aria-pressed={reducedMotion}>
+              {reducedMotion ? '✓ Motion reduced' : 'Reduce motion'}
+            </button>
+            {currentUser ? (
+              <>
+                {isAdmin && <button className="ss-mobile-link" onClick={() => go('/admin')}>Admin</button>}
+                <button className="ss-mobile-link" onClick={() => go('/dashboard')}>My space</button>
+                <button className="ss-mobile-link danger" onClick={() => { setMenuOpen(false); handleLogout?.(); }}>Sign out</button>
+              </>
+            ) : (
+              <button className="ss-mobile-join" onClick={() => go('/auth')}>Join Secret Sharz</button>
+            )}
+          </aside>
+        </div>
+      )}
+
       <style>{`
-        /* MAIN HEADER */
-        .main-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px 48px;
-          background-color: #0f172a;
-          border-bottom: 1px solid #334155;
-          z-index: 1000;
-          position: sticky;
-          top: 0;
-          height: 65px;
-        }
-
-        .logo-container {
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-        }
-
-        .header-logo {
-          height: 40px;
-          width: auto;
-          transition: transform 0.2s ease;
-        }
-
-        /* DESKTOP NAVIGATION */
-        .desktop-nav {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-        }
-
-        .nav-link {
-          background: transparent;
-          border: none;
-          color: rgba(255, 255, 255, 0.8);
-          font-family: inherit;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: color 0.2s ease;
-          padding: 8px 12px;
-          border-radius: 8px;
-        }
-        
-        .nav-link:hover {
-          color: white;
-          background: rgba(255, 255, 255, 0.05);
-        }
-
-        .highlight-link {
-          color: #E8650A;
-          font-weight: 600;
-        }
-        .highlight-link:hover {
-          color: #F0A500;
-        }
-
-        .nav-divider {
-          width: 1px;
-          height: 24px;
-          background: rgba(255, 255, 255, 0.15);
-          margin: 0 5px;
-        }
-
-        .admin-link {
-          color: #F59E0B;
-        }
-        .logout-link {
-          color: #ef4444;
-        }
-
-        .nav-cta {
-          background: var(--sage, #4A7C59);
-          color: white;
-          border: none;
-          padding: 8px 20px;
-          border-radius: 50px;
-          font-size: 14px;
-          font-weight: bold;
-          cursor: pointer;
-          font-family: inherit;
-          transition: background 0.2s ease, transform 0.2s ease;
-        }
-        .nav-cta:hover {
-          background: var(--moss, #2D5240);
-          transform: translateY(-1px);
-        }
-
-        /* HAMBURGER BUTTON */
-        .hamburger-btn {
-          display: none;
-          flex-direction: column;
-          justify-content: space-between;
-          height: 20px;
-          width: 30px;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          z-index: 1001;
-        }
-        .hamburger-line {
-          height: 3px;
-          width: 100%;
-          background-color: white;
-          border-radius: 10px;
-          transition: all 0.3s ease;
-        }
-
-        /* DRAWER STYLES */
-        .side-drawer {
-          position: fixed;
-          top: 0;
-          right: -350px;
-          width: 320px;
-          height: 100vh;
-          background: #0f172a;
-          box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
-          z-index: 2000;
-          transition: right 0.4s cubic-bezier(0.82, 0.085, 0.395, 0.895);
-          display: flex;
-          flex-direction: column;
-          padding: 30px;
-        }
-        .side-drawer.open {
-          right: 0;
-        }
-
-        .menu-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          background: rgba(15, 23, 42, 0.6);
-          backdrop-filter: blur(4px);
-          z-index: 1999;
-          opacity: 0;
-          visibility: hidden;
-          transition: all 0.3s ease;
-        }
-        .menu-overlay.open {
-          opacity: 1;
-          visibility: visible;
-        }
-
-        .drawer-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 40px;
-          border-bottom: 1px solid rgba(255,255,255,0.1);
-          padding-bottom: 15px;
-        }
-        .close-btn {
-          background: rgba(255,255,255,0.1);
-          border: none;
-          color: white;
-          width: 35px;
-          height: 35px;
-          border-radius: 50%;
-          font-size: 16px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.2s;
-        }
-        .close-btn:hover {
-          background: #ef4444;
-        }
-
-        .drawer-nav {
-          display: flex;
-          flex-direction: column;
-          gap: 15px;
-        }
-        
-        .drawer-link {
-          background: transparent;
-          border: none;
-          color: white;
-          font-size: 16px;
-          font-weight: 500;
-          text-align: left;
-          padding: 12px 15px;
-          border-radius: 10px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          transition: all 0.2s ease;
-          font-family: inherit;
-        }
-        .drawer-link span {
-          font-size: 20px;
-        }
-        .drawer-link:hover {
-          background: rgba(255,255,255,0.05);
-          transform: translateX(5px);
-        }
-
-        .highlight-link-mobile {
-          background: rgba(232, 101, 10, 0.15); 
-          color: #F0A500;
-        }
-
-        .drawer-divider {
-          height: 1px;
-          background: rgba(255,255,255,0.1);
-          margin: 15px 0;
-        }
-
-        .drawer-cta-mobile {
-          background: var(--sage, #4A7C59);
-          color: white;
-          border: none;
-          padding: 15px;
-          border-radius: 12px;
-          font-size: 16px;
-          font-weight: bold;
-          cursor: pointer;
-          text-align: center;
-          transition: all 0.2s ease;
-          margin-top: 10px;
-        }
-
-        /* ── BELL ICON ── */
-        .bell-btn {
-          position: relative;
-          background: rgba(255,255,255,0.08);
-          border: 1px solid rgba(255,255,255,0.12);
-          color: white;
-          width: 38px;
-          height: 38px;
-          border-radius: 50%;
-          font-size: 16px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.2s, transform 0.2s;
-          flex-shrink: 0;
-        }
-        .bell-btn:hover {
-          background: rgba(255,255,255,0.15);
-          transform: scale(1.08);
-        }
-        .bell-badge {
-          position: absolute;
-          top: -4px;
-          right: -4px;
-          background: #EF4444;
-          color: white;
-          font-size: 9px;
-          font-weight: 800;
-          min-width: 16px;
-          height: 16px;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0 3px;
-          border: 1.5px solid #0f172a;
-          line-height: 1;
-        }
-
-        /* ── ALERTS DROPDOWN ── */
-        .alerts-dropdown {
-          position: absolute;
-          top: calc(100% + 10px);
-          right: 0;
-          width: 340px;
-          background: #1E293B;
-          border: 1px solid #334155;
-          border-radius: 14px;
-          box-shadow: 0 16px 48px rgba(0,0,0,0.45);
-          z-index: 3000;
-          overflow: hidden;
-          animation: alertsSlideDown 0.2s ease;
-        }
-        @keyframes alertsSlideDown {
-          from { opacity: 0; transform: translateY(-8px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .alerts-dropdown-header {
-          padding: 14px 16px;
-          border-bottom: 1px solid #334155;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .alerts-dropdown-title {
-          font-size: 14px;
-          font-weight: 700;
-          color: #E4E6EB;
-          display: flex;
-          align-items: center;
-          gap: 7px;
-        }
-        .alerts-unread-badge {
-          background: #EF4444;
-          color: white;
-          font-size: 10px;
-          font-weight: 800;
-          padding: 2px 7px;
-          border-radius: 10px;
-        }
-        .alerts-mark-all {
-          font-size: 11px;
-          font-weight: 700;
-          color: #60A5FA;
-          background: none;
-          border: none;
-          cursor: pointer;
-          font-family: inherit;
-          transition: color 0.15s;
-        }
-        .alerts-mark-all:hover { color: #93C5FD; }
-        .alerts-dropdown-body {
-          max-height: 360px;
-          overflow-y: auto;
-          padding: 6px 0;
-        }
-        .alerts-dropdown-body::-webkit-scrollbar { width: 4px; }
-        .alerts-dropdown-body::-webkit-scrollbar-track { background: transparent; }
-        .alerts-dropdown-body::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        .alerts-empty {
-          padding: 24px 16px;
-          text-align: center;
-          font-size: 13px;
-          color: #6B7280;
-        }
-        .alerts-item {
-          padding: 10px 16px;
-          display: flex;
-          gap: 10px;
-          align-items: flex-start;
-          cursor: pointer;
-          transition: background 0.15s;
-          border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        .alerts-item:last-child { border-bottom: none; }
-        .alerts-item:hover { background: rgba(255,255,255,0.04); }
-        .alerts-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          flex-shrink: 0;
-          margin-top: 5px;
-        }
-        .alerts-content { flex: 1; }
-        .alerts-notif-title {
-          font-size: 12px;
-          font-weight: 700;
-          color: #E4E6EB;
-          line-height: 1.4;
-          margin-bottom: 2px;
-        }
-        .alerts-notif-msg {
-          font-size: 11px;
-          color: #9CA3AF;
-          line-height: 1.5;
-        }
-        .alerts-notif-time {
-          font-size: 10px;
-          color: #6B7280;
-          font-weight: 600;
-          margin-top: 3px;
-        }
-
-        /* RESPONSIVE BREAKPOINTS */
-        @media (max-width: 950px) {
-          .main-header {
-            padding: 10px 24px;
-          }
-          .desktop-nav {
-            display: none;
-          }
-          .hamburger-btn {
-            display: flex;
-          }
-          .side-drawer {
-            width: 80vw;
-            right: -80vw;
-          }
-        }
+        .ss-skip-link{position:fixed;left:16px;top:-100px;z-index:10000;background:#17352a;color:#fff;padding:12px 18px;border-radius:10px;font-weight:700;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+        .ss-skip-link:focus{top:16px;outline:3px solid #F4C95D;outline-offset:3px}
+        .ss-header{position:sticky;top:0;z-index:3000;background:rgba(253,252,250,.96);border-bottom:1px solid rgba(30,40,32,.12);backdrop-filter:blur(16px)}
+        .ss-header-inner{max-width:1440px;margin:0 auto;min-height:72px;padding:10px 28px;display:flex;align-items:center;gap:24px}
+        .ss-brand{border:0;background:none;padding:4px;display:flex;align-items:center;cursor:pointer;border-radius:12px}
+        .ss-brand-logo{display:block;height:42px;width:auto}
+        .ss-desktop-nav{display:flex;align-items:center;gap:4px;margin-left:auto}
+        .ss-nav-link,.ss-admin-link,.ss-signout-btn,.ss-text-btn{font:inherit;border:0;background:transparent;cursor:pointer}
+        .ss-nav-link{color:#33443a;font-size:14px;font-weight:650;padding:10px 12px;border-radius:10px}
+        .ss-nav-link:hover,.ss-nav-link.is-active{background:#EBF4EE;color:#24583a}
+        .ss-nav-link:focus-visible,.ss-admin-link:focus-visible,.ss-signout-btn:focus-visible,.ss-accessibility-btn:focus-visible,.ss-icon-btn:focus-visible,.ss-dashboard-btn:focus-visible,.ss-join-btn:focus-visible,.ss-menu-btn:focus-visible,.ss-mobile-link:focus-visible,.ss-mobile-join:focus-visible{outline:3px solid #1F6B46;outline-offset:3px}
+        .ss-header-actions{display:flex;align-items:center;gap:8px}
+        .ss-accessibility-btn{border:1px solid #9CAAA0;background:#fff;color:#26372d;border-radius:10px;padding:9px 11px;font-size:12px;font-weight:700;cursor:pointer}
+        .ss-icon-btn{position:relative;width:42px;height:42px;border-radius:11px;border:1px solid #CBD5CE;background:#fff;color:#20352a;cursor:pointer;font-size:18px}
+        .ss-alert-badge{position:absolute;right:-5px;top:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:#B42318;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+        .ss-dashboard-btn,.ss-join-btn{border:0;background:#2E6B4A;color:#fff;border-radius:12px;padding:11px 16px;font-weight:800;cursor:pointer}
+        .ss-dashboard-btn:hover,.ss-join-btn:hover{background:#214F37}
+        .ss-admin-link{color:#8A5B00;font-size:13px;font-weight:800;padding:9px}
+        .ss-signout-btn{color:#7A2E2E;font-size:13px;font-weight:750;padding:9px}
+        .ss-menu-btn{display:none;width:44px;height:44px;border-radius:11px;border:1px solid #CBD5CE;background:#fff;font-size:24px;cursor:pointer;color:#1E2820}
+        .ss-alert-wrap{position:relative}
+        .ss-alert-panel{position:absolute;right:0;top:52px;width:min(390px,calc(100vw - 32px));background:#fff;border:1px solid #D7DED9;border-radius:18px;box-shadow:0 20px 60px rgba(30,40,32,.16);overflow:hidden}
+        .ss-alert-heading{padding:16px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #E7ECE8}
+        .ss-alert-heading h2{font-size:16px;margin:0;color:#1E2820}
+        .ss-text-btn{font-size:12px;color:#24583a;font-weight:800}
+        .ss-alert-empty{padding:24px;color:#66736b;font-size:14px}
+        .ss-alert-list{max-height:420px;overflow:auto}
+        .ss-alert-item{width:100%;display:grid;grid-template-columns:10px 1fr;gap:10px;text-align:left;padding:14px 18px;border:0;border-bottom:1px solid #EEF1EF;background:#fff;cursor:pointer;color:#1E2820}
+        .ss-alert-item:hover{background:#F7FAF8}
+        .ss-alert-item.is-read{opacity:.65}
+        .ss-alert-item strong,.ss-alert-item span,.ss-alert-item small{display:block}
+        .ss-alert-item strong{font-size:13px;margin-bottom:3px}.ss-alert-item span{font-size:12px;color:#56635B}.ss-alert-item small{font-size:11px;color:#849088;margin-top:4px}
+        .ss-alert-dot{width:7px;height:7px;background:#2E6B4A;border-radius:50%;margin-top:5px}
+        .ss-mobile-layer{position:fixed;inset:0;z-index:4000}
+        .ss-mobile-backdrop{position:absolute;inset:0;border:0;background:rgba(15,23,42,.5);cursor:pointer}
+        .ss-mobile-menu{position:absolute;right:0;top:0;height:100%;width:min(380px,92vw);background:#FDFCFA;box-shadow:-20px 0 70px rgba(0,0,0,.2);padding:24px;overflow:auto}
+        .ss-mobile-heading{display:flex;align-items:center;justify-content:space-between;font-family:Fraunces,serif;font-size:24px;font-weight:700;color:#24583a;margin-bottom:24px}
+        .ss-mobile-nav{display:flex;flex-direction:column;gap:6px}.ss-mobile-link{border:0;background:transparent;text-align:left;color:#24342b;font:inherit;font-size:17px;font-weight:700;padding:14px 12px;border-radius:12px;cursor:pointer}.ss-mobile-link:hover,.ss-mobile-link.is-active{background:#EBF4EE;color:#24583a}.ss-mobile-link.danger{color:#8B2E2E}.ss-mobile-divider{height:1px;background:#DCE3DE;margin:18px 0}.ss-mobile-join{width:100%;border:0;background:#2E6B4A;color:#fff;border-radius:12px;padding:14px;font:inherit;font-weight:800;cursor:pointer;margin-top:8px}
+        @media(max-width:1100px){.ss-desktop-nav{gap:0}.ss-nav-link{padding-inline:8px}.ss-accessibility-btn{display:none}}
+        @media(max-width:860px){.ss-desktop-nav,.ss-header-actions{display:none}.ss-menu-btn{display:block;margin-left:auto}.ss-header-inner{padding:10px 18px}.ss-brand-logo{height:38px}}
+        @media(prefers-reduced-motion:reduce){.ss-header *{scroll-behavior:auto!important;transition:none!important;animation:none!important}.ss-mobile-menu,.ss-mobile-backdrop{transition:none!important}}
+        html[data-reduced-motion="true"] *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
       `}</style>
     </>
   );
