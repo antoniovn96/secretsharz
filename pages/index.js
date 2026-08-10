@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import SecretSharzApp from '../src/App';
 import FoundationHomepage from '../src/FoundationHomepage';
+import LiveYouTubeSection from '../src/LiveYouTubeSection';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -48,9 +49,7 @@ export default function IndexPage() {
     window.dispatchEvent(new PopStateEvent('popstate'));
   };
 
-  if (path !== '/') {
-    return <SecretSharzApp />;
-  }
+  if (path !== '/') return <SecretSharzApp />;
 
   // UI visibility only. Real admin authorisation must remain server/rules enforced.
   const isAdmin = userData?.role === 'super_admin' || currentUser?.email === 'antonio.antonio.noronha@gmail.com';
@@ -61,19 +60,11 @@ export default function IndexPage() {
 
   return (
     <>
-      <Header
-        navigate={navigate}
-        currentUser={currentUser}
-        handleLogout={handleLogout}
-        isAdmin={isAdmin}
-      />
+      <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
       <FoundationHomepage navigate={navigate} currentUser={currentUser} />
-      <Footer
-        navigate={navigate}
-        currentUser={currentUser}
-        handleLogout={handleLogout}
-        setModal={() => {}}
-      />
+      <LiveYouTubeSection navigate={navigate} />
+      <style>{`/* The legacy FoundationHomepage video is intentionally hidden here. The live channel feed above is the production source of truth. */ .ss-foundation-page .ss-fh-video{display:none!important}`}</style>
+      <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={() => {}} />
     </>
   );
 }
