@@ -1,0 +1,61 @@
+.ss-foundation-page{
+  --fh-ink:var(--ss-color-ink);
+  --fh-text:var(--ss-color-text);
+  --fh-muted:var(--ss-color-muted);
+  --fh-green:var(--ss-color-primary);
+  --fh-deep:var(--ss-color-primary-hover);
+  --fh-pale:var(--ss-color-surface-soft);
+  --fh-cream:var(--ss-color-surface-subtle);
+  --fh-line:var(--ss-color-border);
+  font-family:var(--ss-font-body);
+}
+
+.ss-foundation-page .ss-fh-hero{
+  background:linear-gradient(135deg,var(--ss-color-surface) 0%,var(--ss-color-surface-subtle) 100%);
+}
+
+.ss-foundation-page .ss-fh-primary{
+  background:var(--ss-color-primary);
+  border-radius:var(--ss-radius-md);
+  box-shadow:var(--ss-shadow-sm);
+  transition:background-color var(--ss-motion-fast) var(--ss-motion-ease),transform var(--ss-motion-fast) var(--ss-motion-ease),box-shadow var(--ss-motion-fast) var(--ss-motion-ease);
+}
+
+.ss-foundation-page .ss-fh-primary:hover{background:var(--ss-color-primary-hover);box-shadow:var(--ss-shadow-md)}
+
+.ss-foundation-page .ss-fh-secondary{
+  border-color:var(--ss-color-border);
+  border-radius:var(--ss-radius-md);
+  color:var(--ss-color-ink);
+}
+
+.ss-foundation-page .ss-fh-secondary:hover{border-color:var(--ss-color-primary);background:var(--ss-color-surface-soft)}
+
+.ss-foundation-page .ss-fh-path-card,
+.ss-foundation-page .ss-fh-service-card,
+.ss-foundation-page .ss-fh-video-frame,
+.ss-foundation-page .ss-fh-art-card{
+  border-color:var(--ss-color-border);
+}
+
+.ss-foundation-page .ss-fh-path-card,
+.ss-foundation-page .ss-fh-service-card{
+  border-radius:var(--ss-radius-xl);
+  box-shadow:var(--ss-shadow-sm);
+  transition:transform var(--ss-motion-standard) var(--ss-motion-ease),box-shadow var(--ss-motion-standard) var(--ss-motion-ease),border-color var(--ss-motion-standard) var(--ss-motion-ease);
+}
+
+.ss-foundation-page .ss-fh-path-card:hover,
+.ss-foundation-page .ss-fh-service-card:hover{transform:translateY(-3px);box-shadow:var(--ss-shadow-md);border-color:var(--ss-color-primary)}
+
+.ss-foundation-page .ss-fh-art-card{border-radius:var(--ss-radius-xl);box-shadow:var(--ss-shadow-lg)}
+
+.ss-foundation-page .ss-fh-video-frame{border-radius:var(--ss-radius-xl);box-shadow:var(--ss-shadow-md);overflow:hidden}
+
+.ss-foundation-page :where(a,button):focus-visible{outline:3px solid var(--ss-color-focus);outline-offset:4px}
+
+@media (prefers-reduced-motion:reduce){
+  .ss-foundation-page .ss-fh-primary:hover,
+  .ss-foundation-page .ss-fh-path-card:hover,
+  .ss-foundation-page .ss-fh-service-card:hover{transform:none}
+}
