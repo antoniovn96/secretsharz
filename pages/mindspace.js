@@ -8,9 +8,9 @@ export default function MindSpacePage() {
       title="MindSpace | Emotional First Aid | Secret Sharz"
       description="A calm starting point for emotional first aid, grounding and everyday wellbeing tools."
     >
-      {({ currentUser, navigate }) => (
+      {({ currentUser, userData, navigate }) => (
         <MindSpace
-          userData={null}
+          userData={userData}
           onNavigate={(targetTab) => {
             if (!currentUser) {
               navigate('/auth');
