@@ -3,35 +3,89 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // SECURITY FOUNDATION
-    // The founder account is recognised only when Firebase Auth confirms the
-    // verified email. This is a bootstrap safeguard while the platform moves
-    // to server-managed custom claims for long-term role authority.
+    // Client navigation is never an authorization boundary.
+    // Long-term privileged access is issued through trusted Firebase Admin tooling
+    // and Firebase Auth custom claims. The Firestore user-document role remains a
+    // transitional compatibility path until claims are fully deployed.
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function hasClaimRole(role) {
+      return isSignedIn() && request.auth.token.role == role;
+    }
+
     function isFounderAdmin() {
-      return request.auth != null
+      return isSignedIn()
         && request.auth.token.email_verified == true
         && request.auth.token.email == 'antonio.antonio.noronha@gmail.com';
     }
 
     function isAdmin() {
       return isFounderAdmin()
-        || (request.auth != null
+        || hasClaimRole('super_admin')
+        || (isSignedIn()
           && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin');
     }
 
     function isParent() {
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'parent';
+      return isSignedIn()
+        && (hasClaimRole('parent')
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'parent');
     }
 
     function isStaff() {
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-          in ['counsellor', 'psychologist', 'educator'];
+      return isSignedIn() && (
+        request.auth.token.role in ['counsellor', 'psychologist', 'educator']
+        || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+          in ['counsellor', 'psychologist', 'educator']
+      );
     }
 
-    // Master Record Access
+    function validConsentEventCreate() {
+      return isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.type in [
+          'account_privacy',
+          'counselling',
+          'sen',
+          'career_guidance',
+          'community',
+          'ai_feature'
+        ]
+        && request.resource.data.action in ['granted', 'withdrawn', 'updated']
+        && request.resource.data.actorType == 'self'
+        && request.resource.data.policyVersion == '1.0.0'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.keys().hasOnly([
+          'userId',
+          'type',
+          'action',
+          'actorType',
+          'relationshipId',
+          'serviceContext',
+          'policyVersion',
+          'createdAt'
+        ]);
+    }
+
+    // Consent is an append-only event stream. Clients may create their own
+    // self-consent events, but may never rewrite or delete historical consent.
+    // Guardian/professional/admin consent will be added through trusted workflows.
+    match /consentEvents/{eventId} {
+      allow create: if validConsentEventCreate();
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    // Master Record Access — LEGACY COMPATIBILITY LAYER.
+    // New sensitive domains must not be added to this document. Sensitive data
+    // should live in separate protected collections so Firestore rules can grant
+    // different access to different domains.
     match /students/{studentId} {
-      allow read: if request.auth != null && (
+      allow read: if isSignedIn() && (
         request.auth.uid == studentId ||
         (isParent() && resource.data.parent.userId == request.auth.uid) ||
         (isStaff() && (
@@ -44,14 +98,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Case Files & Session Notes
-    // Staff ownership is established from the incoming document on create,
-    // then becomes immutable for staff updates. This prevents an authorised
-    // staff member from moving a case file to another student or staff member.
+    // Case Files & Session Notes — LEGACY COMPATIBILITY LAYER.
     match /caseFiles/{fileId} {
       allow read: if isAdmin()
         || (isStaff() && resource.data.staffId == request.auth.uid)
-        || (request.auth.uid == resource.data.studentId && resource.data.isPrivate == false);
+        || (isSignedIn() && request.auth.uid == resource.data.studentId && resource.data.isPrivate == false);
 
       allow create: if isAdmin()
         || (isStaff() && request.resource.data.staffId == request.auth.uid);
@@ -73,20 +124,38 @@ service cloud.firestore {
     // Existing users may update their own non-privileged profile fields, but
     // role/admin/permissions remain protected fields.
     match /users/{userId} {
-      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
 
       allow create: if isAdmin()
-        || (request.auth != null
+        || (isSignedIn()
           && request.auth.uid == userId
           && request.resource.data.role == 'student'
           && !request.resource.data.keys().hasAny(['admin', 'permissions']));
 
       allow update: if isAdmin()
-        || (request.auth != null
+        || (isSignedIn()
           && request.auth.uid == userId
           && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'admin', 'permissions']));
 
       allow delete: if isAdmin();
+    }
+
+    // Explicit protected-domain placeholders. These remain denied until each
+    // domain has its own reviewed schema and relationship-aware rules.
+    match /counselling/{document=**} {
+      allow read, write: if false;
+    }
+    match /sen/{document=**} {
+      allow read, write: if false;
+    }
+    match /career/{document=**} {
+      allow read, write: if false;
+    }
+    match /safeguarding/{document=**} {
+      allow read, write: if false;
+    }
+    match /auditEvents/{document=**} {
+      allow read, write: if false;
     }
 
     // Default deny: every collection not explicitly declared above remains protected.
