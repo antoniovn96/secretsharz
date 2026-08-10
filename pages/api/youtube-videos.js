@@ -1,0 +1,111 @@
+const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
+const CHANNEL_HANDLE = '@secretsharz8427';
+
+function jsonError(res, status, message) {
+  res.status(status).json({ error: message });
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET');
+    return jsonError(res, 405, 'Method not allowed');
+  }
+
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) {
+    return jsonError(res, 503, 'The Secret Sharz video library is not configured yet.');
+  }
+
+  const requestedPageSize = Number(req.query.limit || 24);
+  const maxResults = Math.min(50, Math.max(1, Number.isFinite(requestedPageSize) ? requestedPageSize : 24));
+  const pageToken = typeof req.query.pageToken === 'string' ? req.query.pageToken : '';
+
+  try {
+    // Resolve the channel from the public handle. This keeps the channel handle
+    // as the source of truth instead of hard-coding a channel ID in the UI.
+    const channelUrl = new URL(`${YOUTUBE_API_BASE}/channels`);
+    channelUrl.searchParams.set('part', 'id,contentDetails,snippet');
+    channelUrl.searchParams.set('forHandle', CHANNEL_HANDLE);
+    channelUrl.searchParams.set('key', apiKey);
+
+    const channelResponse = await fetch(channelUrl.toString());
+    if (!channelResponse.ok) throw new Error(`YouTube channel lookup failed: ${channelResponse.status}`);
+    const channelData = await channelResponse.json();
+    const channel = channelData.items?.[0];
+
+    if (!channel?.id || !channel?.contentDetails?.relatedPlaylists?.uploads) {
+      return jsonError(res, 404, 'The Secret Sharz YouTube channel could not be found.');
+    }
+
+    const uploadsPlaylistId = channel.contentDetails.relatedPlaylists.uploads;
+    const playlistUrl = new URL(`${YOUTUBE_API_BASE}/playlistItems`);
+    playlistUrl.searchParams.set('part', 'snippet,contentDetails');
+    playlistUrl.searchParams.set('playlistId', uploadsPlaylistId);
+    playlistUrl.searchParams.set('maxResults', String(maxResults));
+    if (pageToken) playlistUrl.searchParams.set('pageToken', pageToken);
+    playlistUrl.searchParams.set('key', apiKey);
+
+    const playlistResponse = await fetch(playlistUrl.toString());
+    if (!playlistResponse.ok) throw new Error(`YouTube uploads lookup failed: ${playlistResponse.status}`);
+    const playlistData = await playlistResponse.json();
+
+    const videoIds = (playlistData.items || [])
+      .map((item) => item.contentDetails?.videoId)
+      .filter(Boolean);
+
+    let videoDetails = {};
+    if (videoIds.length) {
+      const videoUrl = new URL(`${YOUTUBE_API_BASE}/videos`);
+      videoUrl.searchParams.set('part', 'contentDetails,status');
+      videoUrl.searchParams.set('id', videoIds.join(','));
+      videoUrl.searchParams.set('key', apiKey);
+
+      const videoResponse = await fetch(videoUrl.toString());
+      if (!videoResponse.ok) throw new Error(`YouTube video details lookup failed: ${videoResponse.status}`);
+      const videoData = await videoResponse.json();
+      videoDetails = Object.fromEntries((videoData.items || []).map((video) => [video.id, video]));
+    }
+
+    const items = (playlistData.items || [])
+      .map((item) => {
+        const videoId = item.contentDetails?.videoId;
+        const details = videoDetails[videoId];
+        return {
+          videoId,
+          title: item.snippet?.title || 'Untitled video',
+          description: item.snippet?.description || '',
+          publishedAt: item.contentDetails?.videoPublishedAt || item.snippet?.publishedAt || null,
+          thumbnail: item.snippet?.thumbnails?.maxres?.url
+            || item.snippet?.thumbnails?.high?.url
+            || item.snippet?.thumbnails?.medium?.url
+            || item.snippet?.thumbnails?.default?.url
+            || null,
+          duration: details?.contentDetails?.duration || null,
+          privacyStatus: details?.status?.privacyStatus || 'unknown',
+          watchUrl: `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`,
+          embedUrl: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`,
+        };
+      })
+      .filter((item) => item.videoId && item.privacyStatus !== 'private');
+
+    // Cache the public feed briefly. This reduces quota pressure while still
+    // allowing new uploads to appear automatically without a manual update.
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    return res.status(200).json({
+      channel: {
+        id: channel.id,
+        title: channel.snippet?.title || 'Secret Sharz',
+        description: channel.snippet?.description || '',
+        thumbnail: channel.snippet?.thumbnails?.high?.url || channel.snippet?.thumbnails?.default?.url || null,
+        url: `https://www.youtube.com/${CHANNEL_HANDLE}`,
+      },
+      items,
+      nextPageToken: playlistData.nextPageToken || null,
+      pageInfo: playlistData.pageInfo || null,
+      source: 'YouTube Data API v3',
+    });
+  } catch (error) {
+    console.error('[YouTube] video library error:', error);
+    return jsonError(res, 502, 'We could not load the Secret Sharz video library right now. Please try again.');
+  }
+}
