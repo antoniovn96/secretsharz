@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import AboutUs from '../src/AboutUs';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
@@ -7,6 +8,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../src/firebase';
 
 export default function AboutPage() {
+  const router = useRouter();
   const [currentUser, setCurrentUser] = useState(null);
   const [userData, setUserData] = useState(null);
 
@@ -27,18 +29,13 @@ export default function AboutPage() {
     return unsubscribe;
   }, []);
 
-  const navigate = (path) => {
-    if (typeof window === 'undefined') return;
-    if (window.location.pathname === path) return;
-    window.history.pushState({}, '', path);
-    window.dispatchEvent(new PopStateEvent('popstate'));
-  };
+  const navigate = (path) => router.push(path);
 
   const handleLogout = async () => {
     await signOut(auth);
     setCurrentUser(null);
     setUserData(null);
-    navigate('/');
+    router.push('/');
   };
 
   const isAdmin = userData?.role === 'super_admin' || currentUser?.email?.toLowerCase() === 'antonio.antonio.noronha@gmail.com';
