@@ -3,11 +3,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // SECURITY FOUNDATION
-    //
     // The founder account is recognised only when Firebase Auth confirms the
-    // email address and it is verified. This is a bootstrap safeguard while
-    // the platform moves to server-managed custom claims for role authority.
-    // UI checks are never treated as the security boundary.
+    // verified email. This is a bootstrap safeguard while the platform moves
+    // to server-managed custom claims for long-term role authority.
     function isFounderAdmin() {
       return request.auth != null
         && request.auth.token.email_verified == true
@@ -54,14 +52,19 @@ service cloud.firestore {
       allow write: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid);
     }
 
-    // User role documents are intentionally not client-writable.
-    // Privileged role changes must happen through trusted administrative tooling.
+    // User profiles: users can maintain their own non-privileged profile data,
+    // but cannot create/change role, admin or permissions fields. Privileged
+    // role changes belong to trusted administrative tooling.
     match /users/{userId} {
-      allow read: if request.auth != null && (
-        request.auth.uid == userId || isAdmin()
-      );
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update, delete: if isAdmin();
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && !request.resource.data.keys().hasAny(['role', 'admin', 'permissions']);
+      allow update: if isAdmin()
+        || (request.auth != null
+          && request.auth.uid == userId
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'admin', 'permissions']));
+      allow delete: if isAdmin();
     }
 
     // Default deny: every collection not explicitly declared above remains protected.
