@@ -5,10 +5,16 @@
 Secret Sharz uses three layers:
 
 1. **Firebase Authentication** — establishes identity.
-2. **Firestore Security Rules** — enforce access to Firestore data.
-3. **Trusted server/admin tooling** — provisions privileged roles and performs operations that should never depend on client-side authority.
+2. **Firestore Security Rules** — enforce client access to Firestore data.
+3. **Trusted server/admin tooling** — provisions privileged roles, manages high-trust workflows and performs operations that must never depend on client-side authority.
 
-Client-side role checks are for navigation and user experience only.
+Client-side role checks and route gates are UX controls only. They are never the final authorization boundary.
+
+## Core access principle
+
+> **Role + Relationship + Data Domain + Purpose + Consent + Safeguarding + Time/Status = Access decision.**
+
+A role by itself never grants unrestricted access.
 
 ## Roles
 
@@ -35,36 +41,67 @@ Role changes must be performed through trusted administrative tooling.
 
 ## Founder bootstrap
 
-The founder bootstrap rule currently recognises the verified founder email in `firestore.rules`. This is a transitional safeguard while server-managed custom claims are introduced.
+The founder account `antonio.antonio.noronha@gmail.com` remains recognised as the bootstrap administrator only when Firebase Authentication confirms the verified email. This is a transitional safeguard.
 
-The long-term target is:
+The long-term authority path is:
 
 ```text
 Trusted admin tooling
         ↓
 Firebase Admin SDK
         ↓
-Custom claims
+Firebase Auth custom claims
         ↓
 Firebase ID token
         ↓
 Firestore Security Rules
 ```
 
+Custom claims are for authorization attributes only; profile and sensitive data do not belong in claims.
+
+## Consent
+
+Account privacy consent is represented as an immutable event in `consentEvents`.
+
+- Clients may create their own self-consent events using the allowlisted schema.
+- Historical consent events cannot be edited or deleted by clients.
+- Guardian, professional, safeguarding and administrative consent events will use trusted workflows.
+- Specialist consent is separate from account consent.
+
+The current implementation includes an authenticated account-consent gate. The next onboarding milestone will move consent recording fully in front of profile creation so the profile is not created until the account consent transaction succeeds.
+
 ## Sensitive data principles
 
 - Deny by default.
+- Separate sensitive domains into separate collections/documents.
 - Give users access only to their own data unless an explicit relationship grants access.
-- Staff access should be limited to assigned cases.
-- Admin access is broader but still auditable.
+- Staff access is limited to assigned cases and authorised domains.
+- Parent/institution access is relationship- and service-specific.
+- Admin access is broad only where necessary and remains auditable.
 - Never rely on hidden buttons or client-side route guards as security controls.
-- Do not place service-account credentials in the browser or repository.
+- Never place service-account credentials in the browser or repository.
+
+Firestore reads are document-level, so sensitive fields that need different access must be stored separately rather than relying on field hiding inside a shared document.
+
+## Legacy compatibility boundary
+
+`students` and `caseFiles` remain temporarily available for existing application functionality. New sensitive data must not be added to these records. Dedicated `counselling`, `sen`, `career`, `safeguarding` and `auditEvents` domains are explicitly protected until their relationship-aware schemas and tests are approved.
+
+## App Check
+
+The client App Check foundation exists. Production enforcement remains a deployment gate: configure the production reCAPTCHA Enterprise site key, monitor traffic, then enforce App Check for the appropriate Firebase services.
 
 ## Current implementation status
 
 - Founder verification-aware admin rule: implemented.
+- Claims-aware role helpers: implemented, with legacy user-role fallback.
 - Self-assigned privileged roles blocked: implemented.
 - Central role vocabulary: implemented.
+- Versioned consent policy model: implemented.
+- Immutable self-consent event rules: implemented.
+- Authenticated account-consent gate: implemented.
 - App Check client foundation: implemented but not enforced until configured and monitored.
 - Server-managed custom claims: next security milestone.
+- Pre-profile consent transaction: next onboarding milestone.
+- Dedicated domain schemas/rules: next security milestone.
 - Automated security-rule tests: required before production enforcement.
