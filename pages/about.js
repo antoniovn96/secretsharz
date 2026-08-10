@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
 import AboutUs from '../src/AboutUs';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
@@ -8,7 +7,6 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../src/firebase';
 
 export default function AboutPage() {
-  const router = useRouter();
   const [currentUser, setCurrentUser] = useState(null);
   const [userData, setUserData] = useState(null);
 
@@ -29,13 +27,18 @@ export default function AboutPage() {
     return unsubscribe;
   }, []);
 
-  const navigate = (path) => router.push(path);
+  // The existing platform uses pages/index.js as its catch-all client router.
+  // Full navigation keeps all legacy application routes working until the
+  // route layer is migrated to Next.js pages in a later foundation phase.
+  const navigate = (path) => {
+    if (typeof window !== 'undefined') window.location.assign(path);
+  };
 
   const handleLogout = async () => {
     await signOut(auth);
     setCurrentUser(null);
     setUserData(null);
-    router.push('/');
+    navigate('/');
   };
 
   const isAdmin = userData?.role === 'super_admin' || currentUser?.email?.toLowerCase() === 'antonio.antonio.noronha@gmail.com';
