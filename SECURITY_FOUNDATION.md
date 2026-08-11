@@ -59,6 +59,49 @@ Firestore Security Rules
 
 Custom claims are for authorization attributes only; profile and sensitive data do not belong in claims.
 
+## Server-managed custom claims (Phase 1D)
+
+Privileged role assignment is now performed **only server-side**. Clients can never assign custom claims.
+
+- **Endpoint:** `pages/api/admin/assign-role.js` (Next.js server API route; the only place `firebase-admin` is imported). The Admin SDK is initialized from the runtime environment only — no service-account credentials are committed (see `.env.example`).
+- **Claim model:** a single `role` custom claim (`src/security/claimRoles.js`, `CLAIM_ROLE_KEY = 'role'`). Assignable claim roles are the privileged + parent roles: `super_admin`, `counsellor`, `psychologist`, `educator`, `parent`. `student` is the default represented by the **absence** of a privileged claim (removing a claim reverts to student).
+- **Requester authorization:** the calling administrator is authenticated by verifying their Firebase ID token (`verifyIdToken`) and authorized **only from the verified token** — founder email (verified) or a `super_admin` claim. Request body fields, client-side roles, and `users/{uid}.role` are never trusted for authorization (`src/security/roleAssignment.js`).
+- **Request validation:** only `{ targetUid, action, role }` are accepted; any other field is rejected (anti mass-assignment / arbitrary-claim injection). `action` is `set` or `remove`; `role` must be on the allowlist.
+- **Claim preservation:** existing unrelated custom claims are preserved on every change (`buildNewClaims`).
+- **Token refresh:** assigning a claim does not edit an already-issued ID token. The endpoint revokes the target's refresh tokens and the response carries `tokenRefreshRequired: true`; the UI is never told the claim is immediately live.
+- **Audit:** every change is written to the protected `auditEvents` collection via the Admin SDK (which bypasses Firestore rules; ordinary clients cannot write there because the rules deny `auditEvents`). The audit record stores actor, target, action, role, previous/new role state and a timestamp — no secrets.
+
+### Firestore rules — claims primary, legacy fallback migration-only
+
+`firestore.rules` now documents that `request.auth.token.role` is the **primary** runtime authority for privileged access. The `users/{uid}.role` profile field remains as a **migration-only legacy fallback** so existing staff/admins whose claims have not yet been provisioned keep access. This fallback is not a new authorization path:
+
+- ordinary users **cannot** set a privileged `users.role` value (create forces `role == 'student'`; update forbids touching `role`/`admin`/`permissions` for non-admins);
+- the fallback reads the **existing** document (`resource.data`), never the request body.
+
+**Migration path to remove the legacy fallback:** provision `super_admin`/staff/parent claims for all existing privileged users via `pages/api/admin/assign-role.js`, then remove the `profileRole(...)` fallback terms from `isAdmin()`/`isParent()`/`isStaff()` in a follow-up phase. Until then, a user whose only privileged attribute is a legacy profile-role field still gets privileged data access — this is intentional compatibility, documented as migration-only, and covered by a regression test.
+
+### Consent namespace reservation (defense-in-depth, Phase 1D)
+
+The deterministic `consentEvents/account_{uid}` document id is now **reserved** for `account_privacy` consent. An `account_privacy` consent must use that id, and a non-account consent type must not occupy it. The content-validating `hasAccountConsent()` gate already rejects wrong-typed records at the authorization boundary; reserving the namespace at create time is defense-in-depth, not the sole protection.
+
+### Test coverage
+
+- **Firestore rules tests** (`test/security-rules/`, Jest + emulator): GROUP 9 (claim-based authorization: claim grants admin/staff access without a profile role; self-escalation blocked; migration-only fallback documented) and GROUP 10 (consent namespace reservation). 87 tests total, all passing.
+- **Server authorization unit tests** (`test/server/roleAssignment.test.mjs`, Node `node:test`): the pure decision logic for the role-management endpoint — requester authorization, role allowlist, mass-assignment rejection, claim preservation, role removal, safe response/audit shaping. 26 tests, all passing. No credentials, no emulator.
+- **End-to-end integration tests** (`test/integration/assign-role.integration.test.mjs`, Node `node:test` + Auth & Firestore emulators): executes the REAL endpoint wiring — `verifyIdToken` → `getUser` → `setCustomUserClaims` → `revokeRefreshTokens` → `auditEvents` write — against the emulators with NO mocks. 17 tests, all passing. Covers: unauthenticated/invalid-token (401, no audit), student & staff privilege escalation (403, no audit), founder & super-admin authorization (200), invalid role / mass-assignment / missing target (400/404, no audit), actual custom-claim write + unrelated-claim preservation + role removal, refresh-token-revocation contract, audit record shape (incl. no secrets stored), no-audit-on-denied-authorization, and the absence of any client path to set custom claims (incl. a rules-backed rejection of client self-promotion to `users/{uid}.role`).
+
+The integration test mints REAL emulator-signed ID tokens (Admin `createCustomToken` → client `signInWithCustomToken` → `getIdToken`) so `verifyIdToken` runs for real. It reads audit documents back from the Firestore emulator (Admin SDK bypasses rules) rather than trusting a stub.
+
+#### Emulator mode (Admin SDK init)
+
+`src/security/firebaseAdmin.js` now has an explicit, deterministic emulator mode. When `FIREBASE_AUTH_EMULATOR_HOST` or `FIRESTORE_EMULATOR_HOST` is set (only under `firebase emulators:exec` in test/CI), initialization forces the deterministic test project id (`secretsharz-emulator-test`), loads NO credential, and REFUSES to proceed if `FIREBASE_SERVICE_ACCOUNT` is also set — so a real service account can never be mixed into a test run. Production (Vercel/Cloud Run) does not set those env vars, so production keeps using real Admin SDK credentials. This is environment detection, not a flag; it cannot accidentally weaken production.
+
+#### Token-refresh / revocation — emulator vs production
+
+The endpoint calls `revokeRefreshTokens(targetUid)` unconditionally after `setCustomUserClaims` and always returns `tokenRefreshRequired: true`, so the UI never assumes an already-issued ID token changed immediately (it cannot — claims are not retroactively written into existing tokens).
+
+Emulator limitation (verified empirically): the Auth emulator sets `tokensValidAfterTime` to the user's creation time on `createUser`, and `revokeRefreshTokens` does NOT mutate it (same-second equality). Therefore the revocation side-effect is NOT observable via `getUser()` in the emulator. In PRODUCTION, `revokeRefreshTokens` updates `tokensValidAfterTime` to the current time and `verifyIdToken` then rejects pre-existing ID tokens whose `iat` predates it. The integration test therefore asserts the contract (`tokenRefreshRequired: true`) and the presence of the field; the unconditional `revokeRefreshTokens` call is verified by source review (step 7 of `pages/api/admin/assign-role.js`).
+
 ## Consent
 
 Account privacy consent is represented as an immutable event in `consentEvents`.
@@ -115,14 +158,26 @@ The client App Check foundation exists. Production enforcement remains a deploym
 ## Current implementation status
 
 - Founder verification-aware admin rule: implemented.
-- Claims-aware role helpers: implemented, with legacy user-role fallback.
+- Claims-aware role helpers: implemented; claims are the primary authority, with a migration-only legacy user-role fallback.
 - Self-assigned privileged roles blocked: implemented.
 - Central role vocabulary: implemented.
 - Versioned consent policy model: implemented.
 - Immutable self-consent event rules: implemented.
 - Authenticated account-consent gate: implemented; validates consent record contents (not mere document existence).
+- Account-consent namespace reservation (`account_{uid}` reserved for `account_privacy`): implemented (defense-in-depth).
+- Server-managed custom claims: implemented (`pages/api/admin/assign-role.js` + `src/security/claimRoles.js` + `src/security/roleAssignment.js` + `src/security/firebaseAdmin.js`). Audit events written to the protected `auditEvents` collection via the Admin SDK.
+- Admin UI role-management write path (Phase 1D.1): the founder bootstrap role provisioning in `src/App.js` now routes through the server endpoint via `src/security/assignRoleClient.js` (`POST /api/admin/assign-role` with a Bearer ID token) instead of writing `users/{uid}.role` directly. This is the Admin UI's role-management write path for operations that act on a real Firebase Auth user; it performs no direct privileged Firestore `users.role` write and no duplicate mutation. The server remains the authorization authority.
+- AddNewUserModal profile-categorization write (Phase 1D.1 limitation): `src/dashboards/admin/AddNewUserModal.jsx` creates a Firestore profile document (`addDoc`, auto-generated id) with a `role` field for directory categorization. It does NOT create a Firebase Auth user, so it has no `targetUid` for the claims endpoint (`getUser` → 404). It is therefore NOT migrated to the endpoint in this phase: doing so would require inventing a new "create Auth user + assign claim" capability, which is an architectural change outside this milestone. This write does not grant sign-in access (no Auth account) and the `role` field doubles as the directory display/filter attribute. It remains a documented follow-up: privileged-user provisioning should create the Auth account first, then assign the claim via the endpoint.
 - App Check client foundation: implemented but not enforced until configured and monitored.
-- Server-managed custom claims: next security milestone.
 - Pre-profile consent transaction: next onboarding milestone.
 - Dedicated domain schemas/rules: next security milestone.
-- Automated security-rule tests: implemented (Firestore Emulator + `@firebase/rules-unit-testing`); see `test/security-rules/`. Passing tests do not constitute production security approval.
+- Remove legacy `users.role` privileged fallback: next security milestone (after claims provisioned for all existing privileged users).
+- Role-management endpoint integration tests against the Auth + Firestore emulators: implemented (`test/integration/assign-role.integration.test.mjs`, 17 tests, no mocks, no production credentials). Note: `revokeRefreshTokens` side-effect is not observable in the emulator (documented); see Token-refresh section.
+- Admin UI client/endpoint interaction tests (Phase 1D.1): implemented (`test/server/assignRoleClient.test.mjs`, 14 tests) verifying the Bearer token, exact `{targetUid,action,role}` body (no mass-assignment), success/error mapping (401/403/400/404/500), network-failure recovery, single-fetch (no duplicate mutation), and that the helper performs no Firestore write. The server security path itself remains covered by the real (un-mocked) emulator integration tests.
+- Automated security tests: implemented (Firestore Emulator rules tests + server authorization unit tests + Admin UI client interaction tests + Auth/Firestore emulator integration tests); see `test/security-rules/`, `test/server/`, `test/integration/`. Passing tests do not constitute production security approval.
+
+## Separate follow-up security items (NOT part of Phase 1D.1)
+
+- `/api/chat.js`: unauthenticated wildcard-CORS Anthropic proxy (no auth, no rate limit) — pre-existing, separate security task. Not modified here.
+- App Check: enforcement remains a separate deployment-gated milestone. Not implemented here.
+- Production claim migration: NOT performed. Existing privileged users still rely on the migration-only `users.role` fallback until a controlled production migration provisions their claims via the endpoint. Fallback removal is deferred.

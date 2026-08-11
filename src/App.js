@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import Head from 'next/head';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { DashboardProvider } from './context/DashboardContext';
+import { assignRoleViaServer } from './security/assignRoleClient';
 
 // 🚀 OPTIMIZATION 1: LAZY LOADING HEAVY ROUTES
 const VidyaVantage = lazy(() => import('./VidyaVantage'));
@@ -962,17 +963,41 @@ export default function App() {
   const isMasterEmail = currentUser?.email?.toLowerCase() === MASTER_EMAIL;
   const isAdmin = (userData && userData.role === 'super_admin') || isMasterEmail;
 
-  // SELF-HEALING: If master email logs in, ensure they have super_admin role in Firestore
+  // FOUNDER CLAIM BOOTSTRAP (Phase 1D.1): if the founder signs in without a
+  // `super_admin` custom claim, provision it through the server-managed
+  // role endpoint (pages/api/admin/assign-role.js) — the audited, auditable
+  // path. This REPLACES the previous direct `updateDoc(users/{uid}, {role})`
+  // write. The founder's runtime access is independent of this: Firestore rules
+  // grant admin via isFounderAdmin() (verified email) and the UI via
+  // isMasterEmail, so a pending/failed claim never locks the founder out.
+  // The claim is the AUTHORITATIVE privilege; users.role is migration fallback.
   useEffect(() => {
-    if (isMasterEmail && currentUser && userData?.role !== 'super_admin') {
-      console.log('[MASTER KEY] Self-healing: Setting super_admin role for', MASTER_EMAIL);
-      const userRef = doc(db, 'users', currentUser.uid);
-      updateDoc(userRef, { role: 'super_admin' }).then(() => {
-        console.log('[MASTER KEY] Successfully updated role to super_admin');
-        setUserData(prev => ({ ...prev, role: 'super_admin' }));
-      }).catch(err => console.error('[MASTER KEY] Failed to update role:', err));
-    }
-  }, [isMasterEmail, currentUser, userData?.role]);
+    if (!isMasterEmail || !currentUser) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const tokenResult = await currentUser.getIdTokenResult();
+        if (tokenResult?.claims?.role === 'super_admin') return; // already provisioned
+        const idToken = await currentUser.getIdToken();
+        const result = await assignRoleViaServer({
+          idToken,
+          targetUid: currentUser.uid,
+          action: 'set',
+          role: 'super_admin'
+        });
+        if (cancelled) return;
+        if (result.ok) {
+          console.log('[MASTER KEY] super_admin claim provisioned via server endpoint.');
+          setUserData(prev => ({ ...prev, role: 'super_admin' }));
+        } else {
+          console.error('[MASTER KEY] Claim provisioning failed:', result.message);
+        }
+      } catch (err) {
+        if (!cancelled) console.error('[MASTER KEY] Claim bootstrap error:', err?.message || err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isMasterEmail, currentUser]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {

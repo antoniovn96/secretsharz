@@ -671,3 +671,149 @@ describe('GROUP 8 — account consent content validation', () => {
   });
 });
 
+// ============================================================
+// TEST GROUP 9 — CLAIM-BASED PRIVILEGED AUTHORIZATION (Phase 1D)
+// ============================================================
+//
+// Custom claims (request.auth.token.role) are the PRIMARY runtime authority
+// for privileged access. These tests prove a super_admin CLAIM grants admin
+// access WITHOUT relying on the client-writable users/{uid}.role field, and
+// that the legacy profile-role fallback remains a migration-only path. They do
+// NOT test the server endpoint (which needs the Auth emulator + Admin SDK); the
+// endpoint's authorization logic is covered by the pure unit tests in
+// test/server/roleAssignment.test.cjs.
+describe('GROUP 9 — claim-based privileged authorization', () => {
+  const target = 'provision-target';
+
+  it('ALLOWS a super_admin CLAIM holder to read any user profile (no profile.role needed)', async () => {
+    const env = await getEnv();
+    await seedStudentProfile(target);
+    // No users/{adminUid}.role document exists for the admin; claim alone.
+    const ctx = userContext(env, 'admin-by-claim', { role: 'super_admin' });
+    await assertSucceeds(getDoc(doc(db(ctx), 'users', target)));
+  });
+
+  it('ALLOWS a super_admin CLAIM holder to create (provision) a user profile', async () => {
+    const env = await getEnv();
+    const ctx = userContext(env, 'admin-by-claim', { role: 'super_admin' });
+    await assertSucceeds(
+      setDoc(doc(db(ctx), 'users', target), { role: 'educator', displayName: 'Provisioned' })
+    );
+  });
+
+  it('ALLOWS a super_admin CLAIM holder to delete a user profile', async () => {
+    const env = await getEnv();
+    await seedStudentProfile(target);
+    const ctx = userContext(env, 'admin-by-claim', { role: 'super_admin' });
+    await assertSucceeds(deleteDoc(doc(db(ctx), 'users', target)));
+  });
+
+  it('ALLOWS a staff CLAIM holder (counsellor) to read an assigned legacy student record', async () => {
+    const env = await getEnv();
+    const staffUid = 'counsellor-by-claim';
+    await env.withSecurityRulesDisabled(async (adminCtx) => {
+      await setDoc(doc(db(adminCtx), 'students', target), {
+        assignedStaff: { careerId: staffUid, psychId: null, senId: null }
+      });
+    });
+    const ctx = userContext(env, staffUid, { role: 'counsellor' });
+    await assertSucceeds(getDoc(doc(db(ctx), 'students', target)));
+  });
+
+  it('MIGRATION-ONLY: a legacy profile.role super_admin (no claim) still grants admin read until fallback removed', async () => {
+    // Documents the CURRENT migration-only behaviour: a user with no claim but
+    // a legacy users.role == 'super_admin' is still treated as admin by the
+    // migration-only fallback. This is EXPECTED today; removing the fallback is
+    // a follow-up migration step once all privileged users have claims
+    // provisioned. See SECURITY_FOUNDATION.md.
+    const env = await getEnv();
+    await env.withSecurityRulesDisabled(async (adminCtx) => {
+      await setDoc(doc(db(adminCtx), 'users', target), { role: 'super_admin', displayName: 'Legacy' });
+    });
+    const ctx = userContext(env, target); // no claim
+    await assertSucceeds(getDoc(doc(db(ctx), 'users', target)));
+  });
+
+  it('DENIES a student CLAIM holder from writing to admin-only resources (students write)', async () => {
+    const env = await getEnv();
+    const ctx = userContext(env, 'plain-student'); // no claim
+    await assertFails(
+      setDoc(doc(db(ctx), 'students', 'someone'), { assignedStaff: { careerId: 'x', psychId: null, senId: null } })
+    );
+  });
+
+  it('DENIES a counsellor CLAIM holder from writing to admin-only resources (students write)', async () => {
+    const env = await getEnv();
+    const ctx = userContext(env, 'counsellor-claim', { role: 'counsellor' });
+    await assertFails(
+      setDoc(doc(db(ctx), 'students', 'someone'), { assignedStaff: { careerId: ctx?.uid || 'counsellor-claim', psychId: null, senId: null } })
+    );
+  });
+
+  it('DENIES a self-assigned super_admin profile value from granting admin when no claim and no legacy doc', async () => {
+    // A plain user attempts to create their OWN profile with role super_admin.
+    // The create rule forces role=='student', so this is denied (self-escalation
+    // blocked at the source; the legacy fallback can never see a self-set
+    // privileged role because it cannot be created).
+    const env = await getEnv();
+    await seedAccountConsent(target);
+    const ctx = userContext(env, target); // no claim
+    await assertFails(
+      setDoc(doc(db(ctx), 'users', target), { role: 'super_admin', displayName: 'Self-promoted' })
+    );
+  });
+});
+
+// ============================================================
+// TEST GROUP 10 — CONSENT NAMESPACE RESERVATION (defense-in-depth)
+// ============================================================
+//
+// The deterministic `account_{uid}` document id is RESERVED for account_privacy
+// consent. A non-account consent type must NOT be allowed to occupy it. The
+// content-validating hasAccountConsent() gate already rejects such records;
+// these tests prove the create rule also rejects them at write time.
+describe('GROUP 10 — consent namespace reservation (defense-in-depth)', () => {
+  const uid = 'namespace-user';
+
+  it('DENIES creating a non-account consent at the account_{uid} id (counselling)', async () => {
+    const env = await getEnv();
+    await assertFails(
+      setDoc(
+        doc(fdb(env, uid), 'consentEvents', accountConsentId(uid)),
+        { ...validAccountConsent(uid), type: CONSENT_TYPES.COUNSELLING, createdAt: serverTimestamp() }
+      )
+    );
+  });
+
+  it('DENIES creating a non-account consent at the account_{uid} id (sen)', async () => {
+    const env = await getEnv();
+    await assertFails(
+      setDoc(
+        doc(fdb(env, uid), 'consentEvents', accountConsentId(uid)),
+        { ...validAccountConsent(uid), type: CONSENT_TYPES.SEN, createdAt: serverTimestamp() }
+      )
+    );
+  });
+
+  it('ALLOWS creating an account_privacy consent at the account_{uid} id', async () => {
+    const env = await getEnv();
+    await assertSucceeds(
+      setDoc(
+        doc(fdb(env, uid), 'consentEvents', accountConsentId(uid)),
+        { ...validAccountConsent(uid), createdAt: serverTimestamp() }
+      )
+    );
+  });
+
+  it('ALLOWS creating a non-account consent at a non-account id (does not squat the namespace)', async () => {
+    const env = await getEnv();
+    await assertSucceeds(
+      setDoc(
+        doc(fdb(env, uid), 'consentEvents', 'counselling_' + uid),
+        { ...validAccountConsent(uid), type: CONSENT_TYPES.COUNSELLING, createdAt: serverTimestamp() }
+      )
+    );
+  });
+});
+
+

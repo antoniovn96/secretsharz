@@ -7,11 +7,16 @@
     "build": "next build",
     "start": "next start",
     "test:rules": "firebase emulators:exec --project secretsharz-emulator-test --only firestore \"npx jest --config jest.rules.config.cjs\"",
-    "test": "npm run test:rules"
+    "test:server": "node --test test/server/*.test.mjs",
+    "test:integration": "firebase emulators:exec --project secretsharz-emulator-test --only auth,firestore \"node --test test/integration/*.integration.test.mjs\"",
+    "test": "npm run test:server && npm run test:integration && npm run test:rules",
+    "dry-run:migration": "node scripts/dry-run-claim-migration.mjs",
+    "inventory:production": "node scripts/production-claim-inventory.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.1",
     "firebase": "^10.8.1",
+    "firebase-admin": "^12.7.0",
     "lucide-react": "^1.18.0",
     "mongoose": "^9.4.1",
     "next": "14.2.5",
