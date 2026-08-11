@@ -19,10 +19,13 @@ const {
   validAccountConsent,
   validStudentProfile,
   seedAccountConsent,
+  seedConsentDoc,
+  seedRawConsentDoc,
   seedStudentProfile,
   accountConsentId,
   CONSENT_TYPES,
   POLICY_VERSION,
+  STATIC_TIMESTAMP,
   assertSucceeds,
   assertFails
 } = require('./helpers.cjs');
@@ -546,3 +549,125 @@ describe('GROUP 7 — currently supported legitimate access', () => {
     await assertFails(getDoc(doc(db(ctx), 'students', studentId)));
   });
 });
+
+// ============================================================
+// TEST GROUP 8 — ACCOUNT CONSENT CONTENT VALIDATION (regression)
+// ============================================================
+//
+// These tests prove the account-consent gate validates the consent RECORD
+// CONTENTS, not merely the existence of a document at the deterministic path.
+// A malformed or wrong-typed document at consentEvents/account_{uid} must NOT
+// satisfy the profile-creation boundary. Consent records are seeded bypassing
+// the rules to isolate the gate (hasAccountConsent) under test.
+describe('GROUP 8 — account consent content validation', () => {
+  const uid = 'content-user';
+
+  // Helper: attempt to create users/{uid} as the authenticated user uid.
+  async function attemptProfileCreate(env, u) {
+    return assertFails(
+      setDoc(doc(fdb(env, u), 'users', u), validStudentProfile())
+    );
+  }
+
+  it('1. ALLOWS profile creation when a correct account consent exists', async () => {
+    const env = await getEnv();
+    await seedAccountConsent(uid);
+    await assertSucceeds(
+      setDoc(doc(fdb(env, uid), 'users', uid), validStudentProfile())
+    );
+  });
+
+  it('2. DENIES profile creation when the consent type is wrong (counselling)', async () => {
+    const env = await getEnv();
+    // A counselling-type event squatting at account_{uid} must not count.
+    await seedConsentDoc(uid, { type: CONSENT_TYPES.COUNSELLING });
+    await attemptProfileCreate(env, uid);
+  });
+
+  it('3. DENIES profile creation when the consent userId is wrong', async () => {
+    const env = await getEnv();
+    // Document path is account_UID_A but userId belongs to UID_B.
+    await seedRawConsentDoc(accountConsentId(uid), {
+      ...validAccountConsent('someone-else'),
+      createdAt: STATIC_TIMESTAMP
+    });
+    await attemptProfileCreate(env, uid);
+  });
+
+  it('4. DENIES profile creation when the consent policy version is wrong', async () => {
+    const env = await getEnv();
+    await seedConsentDoc(uid, { policyVersion: '0.0.0' });
+    await attemptProfileCreate(env, uid);
+  });
+
+  it('5. DENIES profile creation when consent is withdrawn', async () => {
+    const env = await getEnv();
+    await seedConsentDoc(uid, { action: 'withdrawn' });
+    await attemptProfileCreate(env, uid);
+  });
+
+  it('6. DENIES profile creation when the consent record is missing a required field', async () => {
+    const env = await getEnv();
+    // Missing actorType: value-checked fields pass, but hasAll (valid record)
+    // structural check fails, exercising the "valid consent record" boundary.
+    const { actorType, ...missingField } = validAccountConsent(uid);
+    await seedRawConsentDoc(accountConsentId(uid), {
+      ...missingField,
+      createdAt: STATIC_TIMESTAMP
+    });
+    await attemptProfileCreate(env, uid);
+  });
+
+  it('7. DENIES profile creation using a different deterministic consent id', async () => {
+    const env = await getEnv();
+    // A valid consent exists at account_UID, but the attacker targets UID_2.
+    await seedAccountConsent(uid);
+    const other = 'content-user-2';
+    await assertFails(
+      setDoc(doc(fdb(env, other), 'users', other), validStudentProfile())
+    );
+  });
+
+  it('8. DENIES a user creating a valid account consent event for another user', async () => {
+    const env = await getEnv();
+    const a = 'cross-a';
+    const b = 'cross-b';
+    // User A attempts to write account_B as account_privacy consent.
+    await assertFails(
+      setDoc(
+        doc(fdb(env, a), 'consentEvents', accountConsentId(b)),
+        { ...validAccountConsent(b), createdAt: serverTimestamp() }
+      )
+    );
+    // And B still cannot create a profile (no consent for B).
+    await assertFails(
+      setDoc(doc(fdb(env, b), 'users', b), validStudentProfile())
+    );
+  });
+
+  it('9. DENIES update and delete of a valid account consent event', async () => {
+    const env = await getEnv();
+    await seedAccountConsent(uid);
+    await assertFails(
+      updateDoc(doc(fdb(env, uid), 'consentEvents', accountConsentId(uid)), {
+        action: 'withdrawn'
+      })
+    );
+    await assertFails(
+      deleteDoc(doc(fdb(env, uid), 'consentEvents', accountConsentId(uid)))
+    );
+  });
+
+  it('also DENIES when consent type is a different valid (non-account) type', async () => {
+    const env = await getEnv();
+    await seedConsentDoc(uid, { type: CONSENT_TYPES.SEN });
+    await attemptProfileCreate(env, uid);
+  });
+
+  it('also DENIES when consent action is "updated" (not granted)', async () => {
+    const env = await getEnv();
+    await seedConsentDoc(uid, { action: 'updated' });
+    await attemptProfileCreate(env, uid);
+  });
+});
+

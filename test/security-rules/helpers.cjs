@@ -16,6 +16,11 @@ const {
 
 const PROJECT_ID = 'secretsharz-emulator-test';
 
+// A concrete timestamp used when seeding consent records that bypass the
+// rules. hasAccountConsent only checks createdAt is PRESENT (hasAll), not its
+// value, so a fixed Date is sufficient and avoids serverTimestamp quirks.
+const STATIC_TIMESTAMP = new Date('2025-01-01T00:00:00Z');
+
 // Consent policy version — single source of truth mirrored from
 // src/security/consentPolicy.js (CONSENT_POLICY_VERSION).
 const POLICY_VERSION = '1.0.0';
@@ -96,16 +101,36 @@ function validStudentProfile() {
   return { role: 'student', displayName: 'Test Student' };
 }
 
-// Create a user's own account-consent event, bypassing rules, so that
+// Seed (bypassing rules) a consent document with a concrete createdAt so the
+// hasAccountConsent content checks (which require createdAt present) pass for
+// a valid record. `overrides` mutate the base valid consent; `docIdOverride`
+// lets regression tests place a record at a different deterministic id.
+async function seedConsentDoc(uid, overrides = {}, docIdOverride = null) {
+  const env = await getEnv();
+  const base = { ...validAccountConsent(uid), createdAt: STATIC_TIMESTAMP, ...overrides };
+  // If an override explicitly drops createdAt via `createdAt: undefined`, the
+  // spread still leaves the key absent only if removed; handle missing fields
+  // by rebuilding from the override object directly when requested.
+  const docId = docIdOverride || accountConsentId(uid);
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await ctx.firestore().doc(`consentEvents/${docId}`).set(base);
+  });
+}
+
+// Create a user's own valid account-consent event, bypassing rules, so that
 // hasAccountConsent(uid) is true for subsequent tests. Used to seed the
 // positive-path state without relying on the rule under test.
 async function seedAccountConsent(uid) {
+  await seedConsentDoc(uid);
+}
+
+// Seed (bypassing rules) an EXACT consent document body, used to construct
+// malformed/missing-field records for negative regression tests. Firestore
+// omits `undefined` fields, so callers control the exact key set here.
+async function seedRawConsentDoc(docId, data) {
   const env = await getEnv();
   await env.withSecurityRulesDisabled(async (ctx) => {
-    await ctx
-      .firestore()
-      .doc(`consentEvents/${accountConsentId(uid)}`)
-      .set(validAccountConsent(uid));
+    await ctx.firestore().doc(`consentEvents/${docId}`).set(data);
   });
 }
 
@@ -121,6 +146,7 @@ module.exports = {
   PROJECT_ID,
   POLICY_VERSION,
   CONSENT_TYPES,
+  STATIC_TIMESTAMP,
   accountConsentId,
   getEnv,
   clearDb,
@@ -130,6 +156,8 @@ module.exports = {
   founderContext,
   validAccountConsent,
   validStudentProfile,
+  seedConsentDoc,
+  seedRawConsentDoc,
   seedAccountConsent,
   seedStudentProfile,
   assertSucceeds,

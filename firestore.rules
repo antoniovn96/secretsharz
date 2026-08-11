@@ -11,7 +11,23 @@ service cloud.firestore {
     // src/security/consentPolicy.js). Firestore path interpolation cannot span
     // a partial path segment (`account_$(uid)` does not compile), so the full
     // segment is built with a string-concatenation expression inside `$(...)`.
-    function hasAccountConsent(uid) { return exists(/databases/$(database)/documents/consentEvents/$('account_' + uid)); }
+    //
+    // The account-consent authorization boundary validates the consent RECORD
+    // CONTENTS, not merely document existence. A document sitting at the
+    // deterministic path is NOT sufficient: it must belong to the same user,
+    // be an account_privacy consent, be currently granted, use the approved
+    // policy version, and carry the full valid consent schema. get()/exists()
+    // results are cached within a single rule evaluation, so the repeated
+    // lookups below incur a single document read.
+    function hasAccountConsent(uid) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/consentEvents/$('account_' + uid))
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.userId == uid
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.type == 'account_privacy'
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.action == 'granted'
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.policyVersion == '1.0.0'
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.keys().hasAll(['userId','type','action','actorType','relationshipId','serviceContext','policyVersion','createdAt']);
+    }
 
     function validConsentEventCreate() {
       return isSignedIn()

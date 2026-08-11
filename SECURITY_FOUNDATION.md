@@ -79,6 +79,18 @@ The Firestore emulator security-rule tests (`test/security-rules/`) surfaced two
 
 Neither change weakens security; both restore the consent gate to its intended, architecture-defined behaviour. Regression tests cover both paths.
 
+### Account-consent content validation (Phase 1c follow-up)
+
+The account-consent authorization boundary validates the consent RECORD CONTENTS, not merely document existence. The existence of a document at `consentEvents/account_{uid}` is not sufficient; `hasAccountConsent(uid)` additionally requires, via `get()`, that the stored consent record:
+
+- belongs to the same user (`userId == uid`);
+- is an account privacy consent (`type == 'account_privacy'`);
+- is currently granted (`action == 'granted'`);
+- uses the approved policy version (`policyVersion == '1.0.0'`);
+- carries the full valid consent schema (`keys().hasAll([...])`).
+
+This means a wrong-typed (e.g. `counselling`), wrong-userId, withdrawn, wrong-policy-version, or malformed document placed at the deterministic path cannot satisfy the profile-creation boundary. `get()`/`exists()` results are cached within a single rule evaluation, so the repeated lookups incur a single document read. Regression tests in GROUP 8 prove each of these rejection paths. This enforces the existing consent model (the `account_privacy` type that `AccountConsentGate` already writes); it is not a new architectural decision.
+
 ## Sensitive data principles
 
 - Deny by default.
@@ -108,7 +120,7 @@ The client App Check foundation exists. Production enforcement remains a deploym
 - Central role vocabulary: implemented.
 - Versioned consent policy model: implemented.
 - Immutable self-consent event rules: implemented.
-- Authenticated account-consent gate: implemented.
+- Authenticated account-consent gate: implemented; validates consent record contents (not mere document existence).
 - App Check client foundation: implemented but not enforced until configured and monitored.
 - Server-managed custom claims: next security milestone.
 - Pre-profile consent transaction: next onboarding milestone.
