@@ -1,13 +1,16 @@
 const fs = require('fs');
 const mongoose = require('mongoose');
 
-<<<<<<< HEAD
-// ⚠️ REPLACE THIS STRING WITH YOUR ACTUAL MONGODB CREDENTIALS ⚠️
-const MONGO_URI = "mongodb+srv://avnoronhav96:431996@Ntonio@cluster0.o5hch.mongodb.net/vidyavantage?retryWrites=true&w=majority";
-=======
-// ⚠️ REPLACE THIS STRING WITH YOUR ACTUAL MONGODB STRING ⚠️
-const MONGO_URI = "mongodb+srv://uploaduser:Vidya12345@vidyavantage.ywduj5u.mongodb.net/?appName=VidyaVantage";
->>>>>>> b2e3173 (Added colleges directory)
+// MongoDB connection string is read from the environment ONLY. Never hard-code
+// credentials in source. Provide MONGODB_URI at runtime (e.g. via a local
+// untracked .env file). See .env.example. The two Atlas credentials that were
+// previously hard-coded here have been REMOVED for security; they MUST be
+// rotated because they remain in git history.
+const MONGO_URI = process.env.MONGODB_URI;
+if (!MONGO_URI) {
+  console.error('MONGODB_URI environment variable is not set. Aborting import.');
+  process.exit(1);
+}
 
 const collegeSchema = new mongoose.Schema({}, { strict: false }); 
 const College = mongoose.model('College', collegeSchema);
