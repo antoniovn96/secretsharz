@@ -47,6 +47,10 @@ const SECRET_PATTERNS = [
 ];
 
 const ALLOWED_PLACEHOLDER_FILES = new Set(['.env.example']);
+// This scanner file legitimately contains the secret PATTERN DEFINITIONS
+// (regex literals like `-----BEGIN PRIVATE KEY-----` and `service_account`).
+// It is not itself a secret; exclude it from the scan to avoid self-tripping.
+const SELF = 'test/server/noCommittedSecrets.test.mjs';
 
 test('no credential-bearing secrets are tracked in the repository', () => {
   const files = trackedFiles();
@@ -55,6 +59,7 @@ test('no credential-bearing secrets are tracked in the repository', () => {
   const findings = [];
   for (const rel of files) {
     if (/\.(png|jpe?g|gif|webp|ico|svg|woff2?|ttf|otf|mp4|webm|mp3|pdf|zip|jar)$/i.test(rel)) continue;
+    if (rel === SELF) continue; // scanner file holds the pattern definitions, not secrets
     const content = readTracked(rel);
     if (content == null) continue;
     for (const pat of SECRET_PATTERNS) {
