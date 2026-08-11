@@ -10,3 +10,5 @@ firestore-debug.log
 firebase-debug.log
 ui-debug.log
 .cache/
+reports/claim-migration-dry-run.json
+reports/production-claim-migration-inventory.json
