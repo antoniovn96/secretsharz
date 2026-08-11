@@ -16,8 +16,9 @@ import assert from 'node:assert/strict';
 import { execSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const REPO_ROOT = join(new URL('../../', import.meta.url).pathname);
+const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 
 function readTracked(rel) {
   const abs = join(REPO_ROOT, rel);
