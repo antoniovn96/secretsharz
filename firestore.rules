@@ -4,9 +4,26 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function hasClaimRole(role) { return isSignedIn() && request.auth.token.role == role; }
     function isFounderAdmin() { return isSignedIn() && request.auth.token.email_verified == true && request.auth.token.email == 'antonio.antonio.noronha@gmail.com'; }
-    function isAdmin() { return isFounderAdmin() || hasClaimRole('super_admin') || (isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin'); }
-    function isParent() { return isSignedIn() && (hasClaimRole('parent') || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'parent'); }
-    function isStaff() { return isSignedIn() && (request.auth.token.role in ['counsellor','psychologist','educator'] || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['counsellor','psychologist','educator']); }
+    // ── Privileged authorization model (Phase 1D) ─────────────────────────
+    // Custom claims (request.auth.token.role) are the PRIMARY runtime authority
+    // for privileged access. They are assigned ONLY server-side via the
+    // pages/api/admin/assign-role.js endpoint (Firebase Admin SDK); clients can
+    // never set their own claims.
+    //
+    // MIGRATION-ONLY LEGACY FALLBACK: the users/{uid}.role profile field is
+    // still consulted as a temporary fallback so existing staff/admins whose
+    // claims have not yet been provisioned keep access. This fallback is NOT
+    // a new authorization path: ordinary users CANNOT set a privileged
+    // users.role value (create forces role=='student'; update forbids touching
+    // 'role'/'admin'/'permissions' for non-admins). The fallback reads the
+    // EXISTING document (resource.data), never the request body. Migration
+    // path: provision claims via the server endpoint, then remove the legacy
+    // get(...).data.role terms below in a follow-up phase. See
+    // SECURITY_FOUNDATION.md.
+    function profileRole(uid) { return get(/databases/$(database)/documents/users/$(uid)).data.role; }
+    function isAdmin() { return isFounderAdmin() || hasClaimRole('super_admin') || (isSignedIn() && profileRole(request.auth.uid) == 'super_admin'); }
+    function isParent() { return isSignedIn() && (hasClaimRole('parent') || profileRole(request.auth.uid) == 'parent'); }
+    function isStaff() { return isSignedIn() && (request.auth.token.role in ['counsellor','psychologist','educator'] || profileRole(request.auth.uid) in ['counsellor','psychologist','educator']); }
     // The deterministic account-consent document id is `account_{uid}` (see
     // src/security/consentPolicy.js). Firestore path interpolation cannot span
     // a partial path segment (`account_$(uid)` does not compile), so the full
@@ -43,8 +60,14 @@ service cloud.firestore {
     // Account privacy consent has a deterministic document ID so profile creation
     // can be blocked unless the consent event exists first.
     match /consentEvents/{eventId} {
+      // Defense-in-depth (Phase 1D): the deterministic `account_{uid}` id is
+      // RESERVED for account_privacy consent. An account_privacy consent MUST
+      // use that id, and any other (non-account) consent type MUST NOT occupy
+      // it. This prevents a wrong-typed record from squatting the account-consent
+      // path; the content-validating hasAccountConsent() gate already rejects
+      // such records, so this is defense-in-depth, not the sole protection.
       allow create: if validConsentEventCreate()
-        && (request.resource.data.type != 'account_privacy' || eventId == 'account_' + request.auth.uid);
+        && (request.resource.data.type == 'account_privacy') == (eventId == 'account_' + request.auth.uid);
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow update, delete: if false;
     }
