@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "test:rules": "firebase emulators:exec --project secretsharz-emulator-test --only firestore \"npx jest --config jest.rules.config.cjs\"",
-    "test:server": "node --test \"test/server/**/*.test.mjs\"",
+    "test:server": "node --test test/server/*.test.mjs",
     "test": "npm run test:server && npm run test:rules"
   },
   "dependencies": {
