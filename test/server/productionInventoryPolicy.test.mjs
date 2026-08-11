@@ -98,7 +98,7 @@ test('9. hasPrivilegedState detects role, claim, both, and neither', () => {
 // ---- Report shape ----
 
 test('10. buildProductionReport always sets production/readOnly/mutationsPerformed flags', () => {
-  const r = buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: [], policies: [] });
+  const r = buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: [], policies: [], authUserCount: 0 });
   assert.equal(r.production, true);
   assert.equal(r.readOnly, true);
   assert.equal(r.mutationsPerformed, false);
@@ -116,7 +116,7 @@ test('11. buildProductionReport aggregates founder + privileged + ordinary corre
     classifyProfile({ profile: PROF('done', 'counsellor', 'd@example.com'), authUser: AUTH('done', 'd@example.com', { claimRole: 'counsellor' }) })
   ];
   const ps = cs.map(applyProductionPolicy);
-  const r = buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps });
+  const r = buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: 6 });
   const s = r.summary;
   assert.equal(s.authUsers, 6);
   assert.equal(s.firestoreProfiles, 6);
@@ -136,7 +136,7 @@ test('12. ordinary (non-followup) users get NO personal detail in the report (ag
     classifyProfile({ profile: PROF('stu', 'student', 'private-student@example.com'), authUser: AUTH('stu', 'private-student@example.com') })
   ];
   const ps = cs.map(applyProductionPolicy);
-  const r = buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps });
+  const r = buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: 1 });
   assert.equal(r.otherUsers.length, 0); // student is aggregate only
   assert.equal(r.summary.nonMigration, 1);
   // The student's email must not appear in the detailed sections.
@@ -152,4 +152,101 @@ test('13. the policy module performs NO mutation methods and imports no Firebase
   }
   assert.equal(/from\s+['"]firebase-admin/.test(src), false, 'must not import firebase-admin');
   assert.equal(/from\s+['"]firebase\/(firestore|app|auth)['"]/.test(src), false, 'must not import client SDK');
+});
+
+// ---- authUsers vs firestoreProfiles: independent sources (Task 1 regression) ----
+
+test('14. authUsers comes from the explicit Auth count, NOT classifications.length', () => {
+  // Simulate the production reality: 4 Auth users but 5 Firestore profiles
+  // (an orphan profile with no Auth account, e.g. a legacy fixture doc).
+  const cs = [
+    classifyProfile({ profile: PROF('f', 'super_admin', FOUNDER_EMAIL), authUser: AUTH('f', FOUNDER_EMAIL, { claimRole: 'super_admin' }) }),
+    classifyProfile({ profile: PROF('stu1', 'student', 's1@example.com'), authUser: AUTH('stu1', 's1@example.com') }),
+    classifyProfile({ profile: PROF('stu2', 'student', 's2@example.com'), authUser: AUTH('stu2', 's2@example.com') }),
+    classifyProfile({ profile: PROF('stu3', 'student', 's3@example.com'), authUser: AUTH('stu3', 's3@example.com') }),
+    classifyProfile({ profile: PROF('mock-student-id', 'super_admin', null), authUser: null }) // orphan: no Auth account
+  ];
+  const ps = cs.map(applyProductionPolicy);
+  const r = buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: 4 });
+  assert.equal(r.summary.authUsers, 4);       // actual Auth count (byUid.size)
+  assert.equal(r.summary.firestoreProfiles, 5); // classification/profile count
+  assert.notEqual(r.summary.authUsers, r.summary.firestoreProfiles); // the two CAN differ
+});
+
+test('15. firestoreProfiles is always classifications.length regardless of authUserCount', () => {
+  const cs = [
+    classifyProfile({ profile: PROF('a', 'student', 'a@example.com'), authUser: AUTH('a', 'a@example.com') }),
+    classifyProfile({ profile: PROF('b', 'student', 'b@example.com'), authUser: AUTH('b', 'b@example.com') })
+  ];
+  const ps = cs.map(applyProductionPolicy);
+  // Even if Auth count is wrong/different, firestoreProfiles tracks profiles.
+  const r = buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: 7 });
+  assert.equal(r.summary.firestoreProfiles, 2);
+  assert.equal(r.summary.authUsers, 7);
+});
+
+test('16. buildProductionReport REJECTS missing/invalid authUserCount (no silent fallback to classifications.length)', () => {
+  const cs = [classifyProfile({ profile: PROF('a', 'student', 'a@example.com'), authUser: AUTH('a', 'a@example.com') })];
+  const ps = cs.map(applyProductionPolicy);
+  assert.throws(() => buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps }), /authUserCount/);
+  assert.throws(() => buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: undefined }), /authUserCount/);
+  assert.throws(() => buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: '4' }), /authUserCount/);
+  assert.throws(() => buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: NaN }), /authUserCount/);
+  // A user count is a finite non-negative integer: negatives and fractions are invalid.
+  assert.throws(() => buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: -1 }), /authUserCount/);
+  assert.throws(() => buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: 4.5 }), /authUserCount/);
+  assert.throws(() => buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: Infinity }), /authUserCount/);
+});
+
+// ---- privilegedNonMigration ⊆ otherUsers (Task 2 documentation regression) ----
+
+test('17. privilegedNonMigration is a SUBSET of otherUsers (same records, not an additional set)', () => {
+  const cs = [
+    classifyProfile({ profile: PROF('f', 'super_admin', FOUNDER_EMAIL), authUser: AUTH('f', FOUNDER_EMAIL, { claimRole: 'super_admin' }) }),
+    // privileged follow-up (orphan, privileged) → appears in BOTH arrays
+    classifyProfile({ profile: PROF('mock-student-id', 'super_admin', null), authUser: null }),
+    // non-privileged follow-up (invalid/unknown role → review, NOT privileged) → otherUsers only
+    classifyProfile({ profile: PROF('wiz', 'wizard', 'w@example.com'), authUser: AUTH('wiz', 'w@example.com') }),
+    // ordinary student → aggregate only (neither array)
+    classifyProfile({ profile: PROF('stu', 'student', 's@example.com'), authUser: AUTH('stu', 's@example.com') })
+  ];
+  const ps = cs.map(applyProductionPolicy);
+  const r = buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: 3 });
+  // privilegedNonMigration must be a subset of otherUsers by firestoreDocId.
+  const otherIds = new Set(r.otherUsers.map((d) => d.firestoreDocId));
+  for (const p of r.privilegedNonMigration) {
+    assert.ok(otherIds.has(p.firestoreDocId), `privileged record ${p.firestoreDocId} missing from otherUsers`);
+  }
+  assert.ok(r.privilegedNonMigration.length <= r.otherUsers.length, 'privilegedNonMigration must not exceed otherUsers');
+  // The privileged orphan is in both; the non-privileged invalid-role record is in otherUsers only.
+  assert.ok(r.privilegedNonMigration.some((d) => d.firestoreDocId === 'mock-student-id'));
+  assert.ok(r.otherUsers.some((d) => d.firestoreDocId === 'mock-student-id'));
+  assert.ok(r.otherUsers.some((d) => d.firestoreDocId === 'wiz'));
+  assert.ok(!r.privilegedNonMigration.some((d) => d.firestoreDocId === 'wiz'), 'non-privileged follow-up must NOT be in privilegedNonMigration');
+});
+
+test('18. the report documents the privilegedNonMigration ⊆ otherUsers relationship (schema clarity)', () => {
+  const cs = [classifyProfile({ profile: PROF('a', 'student', 'a@example.com'), authUser: AUTH('a', 'a@example.com') })];
+  const ps = cs.map(applyProductionPolicy);
+  const r = buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: 1 });
+  assert.ok(r.detailArrayRelationship, 'report must document the detail-array relationship');
+  assert.equal(r.detailArrayRelationship.privilegedNonMigration, 'subset_of_otherUsers');
+  assert.equal(typeof r.detailArrayRelationship.description, 'string');
+  assert.ok(r.detailArrayRelationship.description.toLowerCase().includes('subset'), 'description must explain the subset relationship');
+});
+
+test('19. summary counts do NOT double-count privileged records (privilegedUsersRequiringFollowup <= nonMigrationRequiresFollowup)', () => {
+  const cs = [
+    classifyProfile({ profile: PROF('f', 'super_admin', FOUNDER_EMAIL), authUser: AUTH('f', FOUNDER_EMAIL, { claimRole: 'super_admin' }) }),
+    classifyProfile({ profile: PROF('mock-student-id', 'super_admin', null), authUser: null }),
+    classifyProfile({ profile: PROF('stu', 'student', 's@example.com'), authUser: AUTH('stu', 's@example.com') })
+  ];
+  const ps = cs.map(applyProductionPolicy);
+  const r = buildProductionReport({ generatedAt: 't', projectId: 'secretsharz-f9aed', classifications: cs, policies: ps, authUserCount: 2 });
+  const s = r.summary;
+  assert.equal(s.nonMigrationRequiresFollowup, 1);
+  assert.equal(s.privilegedUsersRequiringFollowup, 1);
+  assert.ok(s.privilegedUsersRequiringFollowup <= s.nonMigrationRequiresFollowup, 'privileged count must never exceed follow-up count (no double counting)');
+  assert.equal(s.otherUsers, 2); // mock-student-id + stu (non-founder)
+  assert.equal(s.nonMigration, 1); // stu
 });

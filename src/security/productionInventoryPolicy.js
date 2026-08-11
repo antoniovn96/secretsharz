@@ -77,9 +77,24 @@ export function applyProductionPolicy(classification) {
 // always false. For ordinary (non-followup) users only aggregate counts are
 // emitted; detailed identity is included only for the founder and for users
 // requiring follow-up (the minimum necessary for human review).
-export function buildProductionReport({ generatedAt, projectId, classifications, policies }) {
+//
+// `authUserCount` is REQUIRED and must be the actual Firebase Auth user count
+// (the caller's byUid.size). It must NOT be derived from classifications.length,
+// because classifications is keyed off Firestore profiles (one entry per
+// users/ doc) and therefore classifications.length is the Firestore profile
+// count, which can differ from the Auth user count (e.g. orphan profiles with
+// no Auth account).
+export function buildProductionReport({ generatedAt, projectId, classifications, policies, authUserCount }) {
+  if (
+    typeof authUserCount !== 'number' ||
+    !Number.isFinite(authUserCount) ||
+    !Number.isInteger(authUserCount) ||
+    authUserCount < 0
+  ) {
+    throw new Error('buildProductionReport: authUserCount must be a finite non-negative integer (the actual Firebase Auth user count, i.e. byUid.size).');
+  }
   const summary = {
-    authUsers: classifications.length,
+    authUsers: authUserCount,
     firestoreProfiles: classifications.length,
     founderProtected: 0,
     otherUsers: 0,
@@ -153,6 +168,16 @@ export function buildProductionReport({ generatedAt, projectId, classifications,
       retainedPrivilegedAccount: FOUNDER_EMAIL,
       otherUsersMigration: 'DENIED'
     },
+    // Schema note (no data change): `privilegedNonMigration` is a SUBSET of
+    // `otherUsers`. Every record in privilegedNonMigration also appears in
+    // otherUsers — it is a convenience view of the privileged follow-up
+    // records only, not an additional set of users. The summary counts are
+    // independent and never double-count: privilegedUsersRequiringFollowup and
+    // nonMigrationRequiresFollowup are incremented once per qualifying record.
+    detailArrayRelationship: Object.freeze({
+      privilegedNonMigration: 'subset_of_otherUsers',
+      description: 'privilegedNonMigration is a subset of otherUsers: it is a filtered view of the privileged follow-up records only, not an additional set of users, and it does not affect summary counts.'
+    }),
     summary,
     founder,
     privilegedNonMigration,

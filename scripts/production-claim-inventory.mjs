@@ -147,7 +147,7 @@ async function run() {
   });
   const policies = classifications.map(applyProductionPolicy);
 
-  const report = buildProductionReport({ generatedAt, projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, classifications, policies });
+  const report = buildProductionReport({ generatedAt, projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, classifications, policies, authUserCount: byUid.size });
   writeReport(report);
 
   const s = report.summary;
