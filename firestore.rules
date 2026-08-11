@@ -7,7 +7,27 @@ service cloud.firestore {
     function isAdmin() { return isFounderAdmin() || hasClaimRole('super_admin') || (isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin'); }
     function isParent() { return isSignedIn() && (hasClaimRole('parent') || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'parent'); }
     function isStaff() { return isSignedIn() && (request.auth.token.role in ['counsellor','psychologist','educator'] || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['counsellor','psychologist','educator']); }
-    function hasAccountConsent(uid) { return exists(/databases/$(database)/documents/consentEvents/account_$(uid)); }
+    // The deterministic account-consent document id is `account_{uid}` (see
+    // src/security/consentPolicy.js). Firestore path interpolation cannot span
+    // a partial path segment (`account_$(uid)` does not compile), so the full
+    // segment is built with a string-concatenation expression inside `$(...)`.
+    //
+    // The account-consent authorization boundary validates the consent RECORD
+    // CONTENTS, not merely document existence. A document sitting at the
+    // deterministic path is NOT sufficient: it must belong to the same user,
+    // be an account_privacy consent, be currently granted, use the approved
+    // policy version, and carry the full valid consent schema. get()/exists()
+    // results are cached within a single rule evaluation, so the repeated
+    // lookups below incur a single document read.
+    function hasAccountConsent(uid) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/consentEvents/$('account_' + uid))
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.userId == uid
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.type == 'account_privacy'
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.action == 'granted'
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.policyVersion == '1.0.0'
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.keys().hasAll(['userId','type','action','actorType','relationshipId','serviceContext','policyVersion','createdAt']);
+    }
 
     function validConsentEventCreate() {
       return isSignedIn()
@@ -24,7 +44,7 @@ service cloud.firestore {
     // can be blocked unless the consent event exists first.
     match /consentEvents/{eventId} {
       allow create: if validConsentEventCreate()
-        && (request.resource.data.type != 'account_privacy' || eventId == 'account_$(request.auth.uid)');
+        && (request.resource.data.type != 'account_privacy' || eventId == 'account_' + request.auth.uid);
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow update, delete: if false;
     }

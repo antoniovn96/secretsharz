@@ -2,3 +2,9 @@ node_modules
 .next
 .env.local
 .aider*
+
+# Firebase emulator local artifacts (security-rule tests)
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
+.cache/
