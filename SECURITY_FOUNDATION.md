@@ -88,8 +88,19 @@ The deterministic `consentEvents/account_{uid}` document id is now **reserved** 
 
 - **Firestore rules tests** (`test/security-rules/`, Jest + emulator): GROUP 9 (claim-based authorization: claim grants admin/staff access without a profile role; self-escalation blocked; migration-only fallback documented) and GROUP 10 (consent namespace reservation). 87 tests total, all passing.
 - **Server authorization unit tests** (`test/server/roleAssignment.test.mjs`, Node `node:test`): the pure decision logic for the role-management endpoint — requester authorization, role allowlist, mass-assignment rejection, claim preservation, role removal, safe response/audit shaping. 26 tests, all passing. No credentials, no emulator.
+- **End-to-end integration tests** (`test/integration/assign-role.integration.test.mjs`, Node `node:test` + Auth & Firestore emulators): executes the REAL endpoint wiring — `verifyIdToken` → `getUser` → `setCustomUserClaims` → `revokeRefreshTokens` → `auditEvents` write — against the emulators with NO mocks. 17 tests, all passing. Covers: unauthenticated/invalid-token (401, no audit), student & staff privilege escalation (403, no audit), founder & super-admin authorization (200), invalid role / mass-assignment / missing target (400/404, no audit), actual custom-claim write + unrelated-claim preservation + role removal, refresh-token-revocation contract, audit record shape (incl. no secrets stored), no-audit-on-denied-authorization, and the absence of any client path to set custom claims (incl. a rules-backed rejection of client self-promotion to `users/{uid}.role`).
 
-The thin API handler wiring (`verifyIdToken` / `getUser` / `setCustomUserClaims` / audit write) is intentionally **not** covered by CI automated tests because it requires the Firebase Auth emulator + Admin SDK credentials not present in CI. All security-critical decisions are isolated in the tested pure module; the handler only wires those decisions to the Admin SDK. A real integration test against the Auth emulator is a recommended follow-up before production enforcement.
+The integration test mints REAL emulator-signed ID tokens (Admin `createCustomToken` → client `signInWithCustomToken` → `getIdToken`) so `verifyIdToken` runs for real. It reads audit documents back from the Firestore emulator (Admin SDK bypasses rules) rather than trusting a stub.
+
+#### Emulator mode (Admin SDK init)
+
+`src/security/firebaseAdmin.js` now has an explicit, deterministic emulator mode. When `FIREBASE_AUTH_EMULATOR_HOST` or `FIRESTORE_EMULATOR_HOST` is set (only under `firebase emulators:exec` in test/CI), initialization forces the deterministic test project id (`secretsharz-emulator-test`), loads NO credential, and REFUSES to proceed if `FIREBASE_SERVICE_ACCOUNT` is also set — so a real service account can never be mixed into a test run. Production (Vercel/Cloud Run) does not set those env vars, so production keeps using real Admin SDK credentials. This is environment detection, not a flag; it cannot accidentally weaken production.
+
+#### Token-refresh / revocation — emulator vs production
+
+The endpoint calls `revokeRefreshTokens(targetUid)` unconditionally after `setCustomUserClaims` and always returns `tokenRefreshRequired: true`, so the UI never assumes an already-issued ID token changed immediately (it cannot — claims are not retroactively written into existing tokens).
+
+Emulator limitation (verified empirically): the Auth emulator sets `tokensValidAfterTime` to the user's creation time on `createUser`, and `revokeRefreshTokens` does NOT mutate it (same-second equality). Therefore the revocation side-effect is NOT observable via `getUser()` in the emulator. In PRODUCTION, `revokeRefreshTokens` updates `tokensValidAfterTime` to the current time and `verifyIdToken` then rejects pre-existing ID tokens whose `iat` predates it. The integration test therefore asserts the contract (`tokenRefreshRequired: true`) and the presence of the field; the unconditional `revokeRefreshTokens` call is verified by source review (step 7 of `pages/api/admin/assign-role.js`).
 
 ## Consent
 
@@ -159,5 +170,5 @@ The client App Check foundation exists. Production enforcement remains a deploym
 - Pre-profile consent transaction: next onboarding milestone.
 - Dedicated domain schemas/rules: next security milestone.
 - Remove legacy `users.role` privileged fallback: next security milestone (after claims provisioned for all existing privileged users).
-- Role-management endpoint integration test against the Auth emulator: recommended follow-up before production enforcement.
-- Automated security tests: implemented (Firestore Emulator rules tests + server authorization unit tests); see `test/security-rules/` and `test/server/`. Passing tests do not constitute production security approval.
+- Role-management endpoint integration tests against the Auth + Firestore emulators: implemented (`test/integration/assign-role.integration.test.mjs`, 17 tests, no mocks, no production credentials). Note: `revokeRefreshTokens` side-effect is not observable in the emulator (documented); see Token-refresh section.
+- Automated security tests: implemented (Firestore Emulator rules tests + server authorization unit tests + Auth/Firestore emulator integration tests); see `test/security-rules/`, `test/server/`, `test/integration/`. Passing tests do not constitute production security approval.

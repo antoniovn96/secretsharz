@@ -34,6 +34,9 @@ jobs:
       - name: Fetch Firestore Emulator binary
         run: npx firebase setup:emulators:firestore
 
+      - name: Auth + Firestore emulator integration tests
+        run: npm run test:integration
+
       - name: Firestore security-rule tests
         run: npm run test:rules
 
