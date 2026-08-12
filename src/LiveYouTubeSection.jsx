@@ -9,13 +9,13 @@ export default function LiveYouTubeSection({ navigate }) {
   useEffect(() => {
     let active = true;
 
-    fetch('/api/youtube-videos?limit=3')
+    // The API key was added after an older cached 200/configured:false response
+    // had already reached the CDN. Version the request so the homepage gets a
+    // fresh production response immediately after configuration changes.
+    fetch('/api/youtube-videos?limit=3&feedVersion=2', { cache: 'no-store' })
       .then(async (response) => {
         const data = await response.json();
 
-        // A missing Vercel API key is a configuration state, not a page-level
-        // failure. The API returns 200 with configured:false in that case so
-        // the homepage remains fast and usable.
         if (!response.ok) throw new Error(data.error || 'Unable to load videos.');
 
         if (active) {
