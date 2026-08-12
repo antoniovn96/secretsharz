@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { GraduationCap, Plus, CheckCircle } from 'lucide-react';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import React, { useEffect, useMemo, useState } from 'react';
+import { CheckCircle, GraduationCap, Plus, Users, ClipboardCheck, UserCheck } from 'lucide-react';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebase';
 
 import UserDirectoryTable from './UserDirectoryTable';
@@ -11,103 +11,124 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 const StudentDirectoryTab = () => {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [notification, setNotification] = useState(null);
 
-  // Real-time Firestore listener for students
   useEffect(() => {
     setIsLoading(true);
-    
-    // Query: users collection where role == 'student'
-    const usersRef = collection(db, 'users');
-    const studentsQuery = query(
-      usersRef,
-      where('role', '==', 'student'),
-      orderBy('createdAt', 'desc')
-    );
+    setLoadError('');
 
-    // Subscribe to real-time updates
+    // Keep the query simple and sort client-side. This avoids requiring a
+    // composite Firestore index for role + createdAt while retaining live updates.
+    const studentsQuery = query(collection(db, 'users'), where('role', '==', 'student'));
+
     const unsubscribe = onSnapshot(
       studentsQuery,
       { includeMetadataChanges: true },
-      (snapshot) => {
-        const studentList = [];
-        snapshot.forEach((doc) => {
-          studentList.push({
-            id: doc.id,
-            ...doc.data(),
-          });
+      snapshot => {
+        const studentList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        studentList.sort((a, b) => {
+          const aTime = a.createdAt?.toMillis?.() || 0;
+          const bTime = b.createdAt?.toMillis?.() || 0;
+          return bTime - aTime;
         });
         setStudents(studentList);
         setIsLoading(false);
       },
-      (error) => {
+      error => {
         console.error('Error fetching students:', error);
+        setLoadError(error?.message || 'Unable to load the student directory.');
         setIsLoading(false);
       }
     );
 
-    // Cleanup subscription
     return () => unsubscribe();
   }, []);
 
-  // Handle viewing student details
-  const handleViewDetails = (student) => {
+  const metrics = useMemo(() => {
+    const assessmentComplete = students.filter(student => {
+      const code = student?.careerDNA?.riasec?.code || student?.riasecCode;
+      return typeof code === 'string' && code.trim();
+    }).length;
+    const profileComplete = students.filter(student => student?.profileComplete === true).length;
+    const assigned = students.filter(student => {
+      const path = student?.primary_path || student?.studentTrack;
+      return path && path !== 'unassigned';
+    }).length;
+    return {
+      total: students.length,
+      assessmentComplete,
+      profileComplete,
+      assigned,
+      assessmentPending: students.length - assessmentComplete,
+    };
+  }, [students]);
+
+  const handleViewDetails = student => {
     setSelectedStudent(student);
     setIsDetailPanelOpen(true);
   };
 
-  // Handle delete action
-  const handleDelete = (student) => {
-    setDeleteTarget(student);
-  };
+  const handleDelete = student => setDeleteTarget(student);
 
-  // Handle successful deletion
-  const handleDeleteSuccess = (deletedUser) => {
-    showNotification(`${deletedUser.name || 'User'} has been deleted successfully.`);
+  const handleDeleteSuccess = deletedUser => {
+    showNotification(`${deletedUser.name || 'Student'} has been deleted successfully.`);
     setDeleteTarget(null);
   };
 
-  // Handle successful user creation
-  const handleCreateSuccess = (newUser) => {
-    showNotification(`${newUser.name} has been added successfully!`);
+  const handleCreateSuccess = newUser => {
+    showNotification(`${newUser.name} has been added successfully.`);
   };
 
-  // Show notification toast
-  const showNotification = (message) => {
+  const showNotification = message => {
     setNotification(message);
-    setTimeout(() => setNotification(null), 4000);
+    window.setTimeout(() => setNotification(null), 4000);
   };
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Student Directory</h2>
-          <p className="text-slate-500 font-medium mt-1">
-            Manage all {students.length} student accounts and profiles
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <GraduationCap className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Student Master Control</h2>
+              <p className="text-slate-500 font-medium mt-1">Central directory for student accounts, pathways and readiness status.</p>
+            </div>
+          </div>
         </div>
-        <button 
+        <button
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all"
+          className="self-start flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all"
         >
-          <Plus className="w-5 h-5" />
-          Add New Student
+          <Plus className="w-5 h-5" /> Add New Student
         </button>
       </div>
 
-      {/* Live Status Banner */}
       <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100 w-fit">
-        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-        <span className="text-sm font-medium text-emerald-700">Real-time updates active</span>
+        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="text-sm font-medium text-emerald-700">Real-time student records active</span>
       </div>
 
-      {/* Data Table */}
+      {loadError && (
+        <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm font-medium">
+          Unable to load the student directory: {loadError}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <MetricCard icon={Users} label="Total Students" value={metrics.total} tone="blue" />
+        <MetricCard icon={ClipboardCheck} label="RIASEC Complete" value={metrics.assessmentComplete} detail={`${metrics.assessmentPending} pending`} tone="emerald" />
+        <MetricCard icon={UserCheck} label="Profiles Complete" value={metrics.profileComplete} detail={`${Math.round((metrics.profileComplete / Math.max(metrics.total, 1)) * 100)}% completion`} tone="violet" />
+        <MetricCard icon={GraduationCap} label="Assigned Path" value={metrics.assigned} detail={`${metrics.total - metrics.assigned} unassigned`} tone="amber" />
+      </div>
+
       <UserDirectoryTable
         users={students}
         isLoading={isLoading}
@@ -116,17 +137,15 @@ const StudentDirectoryTab = () => {
         userRole="student"
       />
 
-      {/* Slide-Out Detail Panel */}
       <SlideOutDetailPanel
         user={selectedStudent}
         isOpen={isDetailPanelOpen}
         onClose={() => {
           setIsDetailPanelOpen(false);
-          setTimeout(() => setSelectedStudent(null), 300);
+          window.setTimeout(() => setSelectedStudent(null), 300);
         }}
       />
 
-      {/* Add New Student Modal */}
       <AddNewUserModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -134,7 +153,6 @@ const StudentDirectoryTab = () => {
         userRole="student"
       />
 
-      {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
         user={deleteTarget}
         isOpen={!!deleteTarget}
@@ -142,7 +160,6 @@ const StudentDirectoryTab = () => {
         onSuccess={handleDeleteSuccess}
       />
 
-      {/* Success Notification Toast */}
       {notification && (
         <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
           <div className="flex items-center gap-3 px-5 py-4 bg-emerald-600 text-white rounded-xl shadow-2xl">
@@ -154,21 +171,29 @@ const StudentDirectoryTab = () => {
 
       <style jsx>{`
         @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
       `}</style>
     </div>
   );
 };
+
+const TONES = {
+  blue: 'bg-blue-50 text-blue-600',
+  emerald: 'bg-emerald-50 text-emerald-600',
+  violet: 'bg-violet-50 text-violet-600',
+  amber: 'bg-amber-50 text-amber-600',
+};
+
+const MetricCard = ({ icon: Icon, label, value, detail, tone }) => (
+  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+    <div className={`w-10 h-10 rounded-xl ${TONES[tone]} flex items-center justify-center mb-4`}><Icon className="w-5 h-5" /></div>
+    <p className="text-2xl font-bold text-slate-900">{Number(value || 0).toLocaleString()}</p>
+    <p className="text-sm font-semibold text-slate-600 mt-1">{label}</p>
+    {detail && <p className="text-xs text-slate-400 mt-1">{detail}</p>}
+  </div>
+);
 
 export default StudentDirectoryTab;
