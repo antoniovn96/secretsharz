@@ -12,3 +12,5 @@ ui-debug.log
 .cache/
 reports/claim-migration-dry-run.json
 reports/production-claim-migration-inventory.json
+.vercel
+.env*
