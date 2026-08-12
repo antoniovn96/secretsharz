@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import SecretSharzApp from '../src/App';
 import FoundationHomepage from '../src/FoundationHomepage';
 import LiveYouTubeSection from '../src/LiveYouTubeSection';
+import VideoLibraryPage from '../src/VideoLibraryPage';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
 import AccountConsentGate from '../src/components/consent/AccountConsentGate';
@@ -94,6 +95,23 @@ export default function IndexPage() {
         />
       );
     }
+
+    if (path === '/videos') {
+      const isAdmin = userData?.role === 'super_admin' || currentUser?.email === 'antonio.antonio.noronha@gmail.com';
+      const handleLogout = async () => {
+        await signOut(auth);
+        navigate('/');
+      };
+
+      return (
+        <>
+          <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
+          <VideoLibraryPage navigate={navigate} />
+          <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={() => {}} />
+        </>
+      );
+    }
+
     return <SecretSharzApp />;
   }
 
