@@ -3,6 +3,7 @@ import SecretSharzApp from '../src/App';
 import FoundationHomepage from '../src/FoundationHomepage';
 import LiveYouTubeSection from '../src/LiveYouTubeSection';
 import VideoLibraryPage from '../src/VideoLibraryPage';
+import SuperAdminView from '../src/dashboards/admin/SuperAdminView';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
 import AccountConsentGate from '../src/components/consent/AccountConsentGate';
@@ -109,6 +110,31 @@ export default function IndexPage() {
             await signOut(auth);
             navigate('/');
           }}
+        />
+      );
+    }
+
+    // IMPORTANT: /admin must be rendered outside SecretSharzApp/DashboardProvider.
+    // DashboardProvider performs its own Firestore profile read on auth changes;
+    // that read can enter a long offline retry path and delay the Admin Command
+    // Center. The founder is authorized here without requiring Firestore first.
+    if (path === '/admin' || path === '/dashboard/admin') {
+      const isAdmin = currentUser?.email?.toLowerCase() === MASTER_EMAIL || userData?.role === 'super_admin';
+
+      if (!currentUser) {
+        return <SecretSharzApp />;
+      }
+
+      if (!isAdmin) {
+        navigate('/');
+        return null;
+      }
+
+      return (
+        <SuperAdminView
+          user={currentUser}
+          userData={{ ...(userData || {}), role: 'super_admin' }}
+          onBackToApp={() => navigate('/')}
         />
       );
     }
