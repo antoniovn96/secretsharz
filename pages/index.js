@@ -11,10 +11,14 @@ import { collection, doc, getDocs, getDoc, limit, query, where } from 'firebase/
 import { auth, db } from '../src/firebase';
 
 function usePathname() {
-  const [path, setPath] = useState(() => (typeof window === 'undefined' ? '/' : window.location.pathname));
+  // Keep the first render identical on the server and browser. Reading
+  // window.location during initial state creation makes /videos, /admin,
+  // etc. render different markup during hydration and triggers React #418.
+  const [path, setPath] = useState('/');
 
   useEffect(() => {
     const sync = () => setPath(window.location.pathname);
+    sync();
     window.addEventListener('popstate', sync);
     return () => window.removeEventListener('popstate', sync);
   }, []);
