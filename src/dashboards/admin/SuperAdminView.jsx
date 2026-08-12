@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../../firebase';
-import { collection, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 
 import AdminSidebar from './AdminSidebar';
 import OverviewTab from './OverviewTab';
@@ -20,30 +20,38 @@ const SuperAdminView = ({ user, userData, onBackToApp }) => {
     completedAssessments: { value: 0, change: 0, trend: 'up' },
   });
 
-  // Fetch real-time platform stats from Firestore
+  // Firestore is an enhancement for live statistics, not a prerequisite for
+  // rendering the Admin Command Center. If the browser cannot establish the
+  // realtime transport, show the dashboard with safe zero/default stats rather
+  // than leaving the entire page on a spinner for minutes.
   useEffect(() => {
     let isMounted = true;
     let unsubscribe;
 
+    const fallbackTimer = setTimeout(() => {
+      if (isMounted) {
+        console.warn('[Secret Sharz] Admin stats realtime connection timed out; continuing with fallback stats.');
+        setIsLoading(false);
+      }
+    }, 2500);
+
     const fetchPlatformData = async () => {
       try {
-        // Subscribe to users collection for real-time updates
         unsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
           if (!isMounted) return;
-          
+
           const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           const totalUsers = users.length;
-          
-          // Calculate stats from Firestore data
-          // These are placeholder calculations - adjust based on actual data structure
+
           const activeUsers = users.filter(u => {
             const lastActive = u.lastActiveAt;
             if (!lastActive) return false;
-            const daysSinceActive = (Date.now() - lastActive.toDate?.()?.getTime()) / (1000 * 60 * 60 * 24);
+            const timestamp = lastActive.toDate?.()?.getTime?.();
+            if (!timestamp) return false;
+            const daysSinceActive = (Date.now() - timestamp) / (1000 * 60 * 60 * 24);
             return daysSinceActive < 7;
           }).length;
 
-          // Update stats
           setPlatformStats(prev => ({
             totalUsers: { ...prev.totalUsers, value: totalUsers },
             activeSessions: { ...prev.activeSessions, value: activeUsers },
@@ -52,10 +60,13 @@ const SuperAdminView = ({ user, userData, onBackToApp }) => {
           }));
 
           setIsLoading(false);
+        }, (error) => {
+          console.warn('[Secret Sharz] Admin stats unavailable:', error?.message || error);
+          if (isMounted) setIsLoading(false);
         });
       } catch (error) {
-        console.error('Error fetching platform data:', error);
-        setIsLoading(false);
+        console.warn('[Secret Sharz] Admin stats setup failed:', error?.message || error);
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -63,6 +74,7 @@ const SuperAdminView = ({ user, userData, onBackToApp }) => {
 
     return () => {
       isMounted = false;
+      clearTimeout(fallbackTimer);
       if (unsubscribe) unsubscribe();
     };
   }, []);
@@ -124,9 +136,8 @@ const SuperAdminView = ({ user, userData, onBackToApp }) => {
               {userData?.role || 'super_admin'}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-4">
-            {/* Search */}
             <div className="relative">
               <input
                 type="text"
@@ -134,18 +145,16 @@ const SuperAdminView = ({ user, userData, onBackToApp }) => {
                 className="w-64 pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
               />
               <svg className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-7 7 7 7 0 01-7-7 7 7 0 0114 0z" />
               </svg>
             </div>
 
-            {/* Quick Actions */}
             <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
             </button>
 
-            {/* Back to App */}
             <button
               onClick={onBackToApp}
               className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
@@ -155,7 +164,6 @@ const SuperAdminView = ({ user, userData, onBackToApp }) => {
           </div>
         </header>
 
-        {/* Scrollable Content */}
         <main className="flex-1 overflow-y-auto p-6">
           {renderTabContent()}
         </main>
