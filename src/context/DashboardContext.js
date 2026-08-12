@@ -356,7 +356,10 @@ export function DashboardProvider({ children, navigate }) {
    * @returns {number} The newly calculated exPoints total.
    */
   const calculateExPoints = useCallback((profileData) => {
-    const data = profileData || userProfile;
+    // Pure calculation: callers pass the profile snapshot they want scored.
+    // Keeping this function free of state updates prevents a dependency loop
+    // between calculateExPoints and the Firebase profile-loading effect.
+    const data = profileData || DEFAULT_USER_PROFILE;
     let points = 0;
 
     // ── Profile picture ──────────────────────────────────────────────────
@@ -402,11 +405,8 @@ export function DashboardProvider({ children, navigate }) {
     // Electives filled
     if (Array.isArray(edu.electives) && edu.electives.length > 0) points += 10;
 
-    // ── Persist to state ─────────────────────────────────────────────────
-    setUserProfile(prev => ({ ...prev, exPoints: points }));
-
     return points;
-  }, [userProfile]);
+  }, []);
 
   // ── FETCH SAVED DATA ON PAGE REFRESH ──
   useEffect(() => {
@@ -424,13 +424,10 @@ export function DashboardProvider({ children, navigate }) {
               if (dbData.education) {
                 merged.education = { ...prev.education, ...dbData.education };
               }
-              return merged;
+              // Calculate XP from the merged snapshot without scheduling a
+              // second state update or re-running the auth effect.
+              return { ...merged, exPoints: calculateExPoints(merged) };
             });
-            
-            // Recalculate the gamified XP points automatically after fetching
-            setTimeout(() => {
-              setUserProfile(curr => ({ ...curr, exPoints: calculateExPoints(curr) }));
-            }, 100);
           }
         } catch (err) {
           console.error("Failed to load profile on refresh:", err);
