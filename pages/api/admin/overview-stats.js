@@ -1,4 +1,4 @@
-import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { getAdminAuth, getAdminFirestore, getAdminApp } from '../../../src/security/firebaseAdmin.js';
 
 function bearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization;
@@ -63,6 +63,14 @@ function getWindowCounts(timestamps, now, windowMs) {
   };
 }
 
+function safeAuthErrorDetails(error) {
+  return {
+    code: error?.code || null,
+    message: error?.message || 'Unknown Firebase Auth verification error',
+    expectedProjectId: getAdminApp()?.options?.projectId || null,
+  };
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -76,6 +84,9 @@ export default async function handler(req, res) {
   try {
     decodedToken = await getAdminAuth().verifyIdToken(idToken);
   } catch (error) {
+    // Diagnostic information is intentionally server-side only. Never log the
+    // bearer token, service-account JSON, private key, or any other secret.
+    console.error('[admin overview auth] Firebase ID token verification failed:', safeAuthErrorDetails(error));
     return res.status(401).json({ error: 'Invalid or expired authentication token.' });
   }
 
