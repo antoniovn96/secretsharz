@@ -17,7 +17,9 @@ export default async function handler(req, res) {
   // The frontend can render the rest of the page and show a neutral video state
   // until the Vercel production environment is configured.
   if (!apiKey) {
-    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    // Never cache the unconfigured state. This prevents a temporary missing-key
+    // response from remaining visible after the Vercel environment is fixed.
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
     return res.status(200).json({
       configured: false,
       channel: {
