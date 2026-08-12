@@ -12,7 +12,24 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.YOUTUBE_API_KEY;
-  if (!apiKey) return jsonError(res, 503, 'The Secret Sharz video library is not configured yet.');
+
+  // A missing production key must not turn the entire homepage into a 503.
+  // The frontend can render the rest of the page and show a neutral video state
+  // until the Vercel production environment is configured.
+  if (!apiKey) {
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    return res.status(200).json({
+      configured: false,
+      channel: {
+        title: 'Secret Sharz',
+        url: `https://www.youtube.com/${CHANNEL_HANDLE}`,
+      },
+      items: [],
+      nextPageToken: null,
+      source: 'YouTube Data API v3',
+      message: 'The video feed is temporarily unavailable.',
+    });
+  }
 
   const requestedPageSize = Number(req.query.limit || 12);
   const maxResults = Math.min(50, Math.max(1, Number.isFinite(requestedPageSize) ? requestedPageSize : 12));
@@ -71,6 +88,7 @@ export default async function handler(req, res) {
 
     res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     return res.status(200).json({
+      configured: true,
       channel: { id: channel.id, title: channel.snippet?.title || 'Secret Sharz', url: `https://www.youtube.com/${CHANNEL_HANDLE}` },
       items,
       nextPageToken: playlistData.nextPageToken || null,
