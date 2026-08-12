@@ -133,7 +133,7 @@ const OverviewTab = ({ data }) => {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Platform Engagement Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <div className="lg:col-span-2 min-w-0 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-slate-900">Platform Engagement</h3>
@@ -145,8 +145,8 @@ const OverviewTab = ({ data }) => {
               <option>All time</option>
             </select>
           </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-72 min-w-0 w-full" style={{ minHeight: 288 }}>
+            <ResponsiveContainer width="100%" height={288} minWidth={1} minHeight={288}>
               <AreaChart data={engagementData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRegistrations" x1="0" y1="0" x2="0" y2="1">
@@ -204,13 +204,13 @@ const OverviewTab = ({ data }) => {
         </div>
 
         {/* User Distribution Donut Chart */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <div className="min-w-0 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
           <div className="mb-6">
             <h3 className="text-lg font-bold text-slate-900">User Distribution</h3>
             <p className="text-sm text-slate-500 font-medium">By learning path</p>
           </div>
-          <div className="h-52 relative">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-52 min-w-0 w-full relative" style={{ minHeight: 208 }}>
+            <ResponsiveContainer width="100%" height={208} minWidth={1} minHeight={208}>
               <PieChart>
                 <Pie
                   data={pathDistribution}

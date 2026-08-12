@@ -12,6 +12,8 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
   const [menuOpen, setMenuOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [currentPath, setCurrentPath] = useState('');
+  const [pathReady, setPathReady] = useState(false);
   const alertsRef = useRef(null);
   const firstMenuItemRef = useRef(null);
 
@@ -30,7 +32,17 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
     // DashboardContext is not available on some public routes.
   }
 
-  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+  useEffect(() => {
+    const updatePath = () => {
+      const path = window.location.pathname.replace(/\/+$/, '') || '/';
+      setCurrentPath(path);
+      setPathReady(true);
+    };
+
+    updatePath();
+    window.addEventListener('popstate', updatePath);
+    return () => window.removeEventListener('popstate', updatePath);
+  }, []);
 
   useEffect(() => {
     const saved = window.localStorage.getItem('secretsharz-reduced-motion');
@@ -105,16 +117,19 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
           </button>
 
           <nav className="ss-desktop-nav" aria-label="Primary navigation">
-            {navItems.map((item) => (
-              <button
-                key={item.path}
-                className={`ss-nav-link ${currentPath === item.path ? 'is-active' : ''}`}
-                onClick={() => go(item.path)}
-                aria-current={currentPath === item.path ? 'page' : undefined}
-              >
-                {item.label}
-              </button>
-            ))}
+            {navItems.map((item) => {
+              const isActive = pathReady && currentPath === item.path;
+              return (
+                <button
+                  key={item.path}
+                  className={`ss-nav-link ${isActive ? 'is-active' : ''}`}
+                  onClick={() => go(item.path)}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
           </nav>
 
           <div className="ss-header-actions">
@@ -215,17 +230,20 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
             </div>
 
             <nav className="ss-mobile-nav" aria-label="Mobile primary navigation">
-              {navItems.map((item, index) => (
-                <button
-                  key={item.path}
-                  ref={index === 0 ? firstMenuItemRef : undefined}
-                  className={`ss-mobile-link ${currentPath === item.path ? 'is-active' : ''}`}
-                  onClick={() => go(item.path)}
-                  aria-current={currentPath === item.path ? 'page' : undefined}
-                >
-                  {item.label}
-                </button>
-              ))}
+              {navItems.map((item, index) => {
+                const isActive = pathReady && currentPath === item.path;
+                return (
+                  <button
+                    key={item.path}
+                    ref={index === 0 ? firstMenuItemRef : undefined}
+                    className={`ss-mobile-link ${isActive ? 'is-active' : ''}`}
+                    onClick={() => go(item.path)}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
             </nav>
 
             <div className="ss-mobile-divider" />
@@ -284,10 +302,9 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
         .ss-mobile-menu{position:absolute;right:0;top:0;height:100%;width:min(380px,92vw);background:#FDFCFA;box-shadow:-20px 0 70px rgba(0,0,0,.2);padding:24px;overflow:auto}
         .ss-mobile-heading{display:flex;align-items:center;justify-content:space-between;font-family:Fraunces,serif;font-size:24px;font-weight:700;color:#24583a;margin-bottom:24px}
         .ss-mobile-nav{display:flex;flex-direction:column;gap:6px}.ss-mobile-link{border:0;background:transparent;text-align:left;color:#24342b;font:inherit;font-size:17px;font-weight:700;padding:14px 12px;border-radius:12px;cursor:pointer}.ss-mobile-link:hover,.ss-mobile-link.is-active{background:#EBF4EE;color:#24583a}.ss-mobile-link.danger{color:#8B2E2E}.ss-mobile-divider{height:1px;background:#DCE3DE;margin:18px 0}.ss-mobile-join{width:100%;border:0;background:#2E6B4A;color:#fff;border-radius:12px;padding:14px;font:inherit;font-weight:800;cursor:pointer;margin-top:8px}
-        @media(max-width:1100px){.ss-desktop-nav{gap:0}.ss-nav-link{padding-inline:8px}.ss-accessibility-btn{display:none}}
-        @media(max-width:860px){.ss-desktop-nav,.ss-header-actions{display:none}.ss-menu-btn{display:block;margin-left:auto}.ss-header-inner{padding:10px 18px}.ss-brand-logo{height:38px}}
-        @media(prefers-reduced-motion:reduce){.ss-header *{scroll-behavior:auto!important;transition:none!important;animation:none!important}.ss-mobile-menu,.ss-mobile-backdrop{transition:none!important}}
-        html[data-reduced-motion="true"] *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+        @media(max-width:1100px){.ss-desktop-nav{display:none}.ss-header-actions{margin-left:auto}.ss-menu-btn{display:block}}
+        @media(max-width:680px){.ss-header-inner{padding:10px 16px}.ss-brand-logo{height:38px}.ss-header-actions{gap:4px}.ss-accessibility-btn,.ss-admin-link,.ss-signout-btn{display:none}.ss-dashboard-btn,.ss-join-btn{padding:9px 12px;font-size:12px}}
+        @media(prefers-reduced-motion:reduce){.ss-header *{scroll-behavior:auto!important}}
       `}</style>
     </>
   );

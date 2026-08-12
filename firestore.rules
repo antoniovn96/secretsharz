@@ -1,97 +1,115 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // SECURITY FOUNDATION
-    // The founder account is recognised only when Firebase Auth confirms the
-    // verified email. This is a bootstrap safeguard while the platform moves
-    // to server-managed custom claims for long-term role authority.
-    function isFounderAdmin() {
-      return request.auth != null
-        && request.auth.token.email_verified == true
-        && request.auth.token.email == 'antonio.antonio.noronha@gmail.com';
+    function isSignedIn() { return request.auth != null; }
+    function hasClaimRole(role) { return isSignedIn() && request.auth.token.role == role; }
+    function isFounderAdmin() { return isSignedIn() && request.auth.token.email_verified == true && request.auth.token.email == 'antonio.antonio.noronha@gmail.com'; }
+    // ── Privileged authorization model (Phase 1D) ─────────────────────────
+    // Custom claims (request.auth.token.role) are the PRIMARY runtime authority
+    // for privileged access. They are assigned ONLY server-side via the
+    // pages/api/admin/assign-role.js endpoint (Firebase Admin SDK); clients can
+    // never set their own claims.
+    //
+    // MIGRATION-ONLY LEGACY FALLBACK: the users/{uid}.role profile field is
+    // still consulted as a temporary fallback so existing staff/admins whose
+    // claims have not yet been provisioned keep access. This fallback is NOT
+    // a new authorization path: ordinary users CANNOT set a privileged
+    // users.role value (create forces role=='student'; update forbids touching
+    // 'role'/'admin'/'permissions' for non-admins). The fallback reads the
+    // EXISTING document (resource.data), never the request body. Migration
+    // path: provision claims via the server endpoint, then remove the legacy
+    // get(...).data.role terms below in a follow-up phase. See
+    // SECURITY_FOUNDATION.md.
+    function profileRole(uid) { return get(/databases/$(database)/documents/users/$(uid)).data.role; }
+    function isAdmin() { return isFounderAdmin() || hasClaimRole('super_admin') || (isSignedIn() && profileRole(request.auth.uid) == 'super_admin'); }
+    function isParent() { return isSignedIn() && (hasClaimRole('parent') || profileRole(request.auth.uid) == 'parent'); }
+    function isStaff() { return isSignedIn() && (request.auth.token.role in ['counsellor','psychologist','educator'] || profileRole(request.auth.uid) in ['counsellor','psychologist','educator']); }
+    // The deterministic account-consent document id is `account_{uid}` (see
+    // src/security/consentPolicy.js). Firestore path interpolation cannot span
+    // a partial path segment (`account_$(uid)` does not compile), so the full
+    // segment is built with a string-concatenation expression inside `$(...)`.
+    //
+    // The account-consent authorization boundary validates the consent RECORD
+    // CONTENTS, not merely document existence. A document sitting at the
+    // deterministic path is NOT sufficient: it must belong to the same user,
+    // be an account_privacy consent, be currently granted, use the approved
+    // policy version, and carry the full valid consent schema. get()/exists()
+    // results are cached within a single rule evaluation, so the repeated
+    // lookups below incur a single document read.
+    function hasAccountConsent(uid) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/consentEvents/$('account_' + uid))
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.userId == uid
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.type == 'account_privacy'
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.action == 'granted'
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.policyVersion == '1.0.0'
+        && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.keys().hasAll(['userId','type','action','actorType','relationshipId','serviceContext','policyVersion','createdAt']);
     }
 
-    function isAdmin() {
-      return isFounderAdmin()
-        || (request.auth != null
-          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin');
+    function validConsentEventCreate() {
+      return isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.type in ['account_privacy','counselling','sen','career_guidance','community','ai_feature']
+        && request.resource.data.action in ['granted','withdrawn','updated']
+        && request.resource.data.actorType == 'self'
+        && request.resource.data.policyVersion == '1.0.0'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.keys().hasOnly(['userId','type','action','actorType','relationshipId','serviceContext','policyVersion','createdAt']);
     }
 
-    function isParent() {
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'parent';
+    // Account privacy consent has a deterministic document ID so profile creation
+    // can be blocked unless the consent event exists first.
+    match /consentEvents/{eventId} {
+      // Defense-in-depth (Phase 1D): the deterministic `account_{uid}` id is
+      // RESERVED for account_privacy consent. An account_privacy consent MUST
+      // use that id, and any other (non-account) consent type MUST NOT occupy
+      // it. This prevents a wrong-typed record from squatting the account-consent
+      // path; the content-validating hasAccountConsent() gate already rejects
+      // such records, so this is defense-in-depth, not the sole protection.
+      allow create: if validConsentEventCreate()
+        && (request.resource.data.type == 'account_privacy') == (eventId == 'account_' + request.auth.uid);
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow update, delete: if false;
     }
 
-    function isStaff() {
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-          in ['counsellor', 'psychologist', 'educator'];
-    }
-
-    // Master Record Access
+    // LEGACY COMPATIBILITY LAYER — new sensitive data must not be added here.
     match /students/{studentId} {
-      allow read: if request.auth != null && (
+      allow read: if isSignedIn() && (
         request.auth.uid == studentId ||
         (isParent() && resource.data.parent.userId == request.auth.uid) ||
-        (isStaff() && (
-          resource.data.assignedStaff.careerId == request.auth.uid ||
-          resource.data.assignedStaff.psychId == request.auth.uid ||
-          resource.data.assignedStaff.senId == request.auth.uid
-        )) ||
+        (isStaff() && (resource.data.assignedStaff.careerId == request.auth.uid || resource.data.assignedStaff.psychId == request.auth.uid || resource.data.assignedStaff.senId == request.auth.uid)) ||
         isAdmin()
       );
       allow write: if isAdmin();
     }
 
-    // Case Files & Session Notes
-    // Staff ownership is established from the incoming document on create,
-    // then becomes immutable for staff updates. This prevents an authorised
-    // staff member from moving a case file to another student or staff member.
     match /caseFiles/{fileId} {
-      allow read: if isAdmin()
-        || (isStaff() && resource.data.staffId == request.auth.uid)
-        || (request.auth.uid == resource.data.studentId && resource.data.isPrivate == false);
-
-      allow create: if isAdmin()
-        || (isStaff() && request.resource.data.staffId == request.auth.uid);
-
-      allow update: if isAdmin()
-        || (isStaff()
-          && resource.data.staffId == request.auth.uid
-          && request.resource.data.staffId == resource.data.staffId
-          && request.resource.data.studentId == resource.data.studentId
-          && request.resource.data.isPrivate == resource.data.isPrivate);
-
-      allow delete: if isAdmin()
-        || (isStaff() && resource.data.staffId == request.auth.uid);
+      allow read: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid) || (isSignedIn() && request.auth.uid == resource.data.studentId && resource.data.isPrivate == false);
+      allow create: if isAdmin() || (isStaff() && request.resource.data.staffId == request.auth.uid);
+      allow update: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid && request.resource.data.staffId == resource.data.staffId && request.resource.data.studentId == resource.data.studentId && request.resource.data.isPrivate == resource.data.isPrivate);
+      allow delete: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid);
     }
 
-    // User profiles.
-    // A self-created profile may only be a student profile. Parent/staff/admin
-    // accounts must be provisioned by trusted administrative tooling.
-    // Existing users may update their own non-privileged profile fields, but
-    // role/admin/permissions remain protected fields.
     match /users/{userId} {
-      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
-
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      // A self-created profile is permitted only after the deterministic account
+      // privacy consent event exists. This is the server-enforced consent-before-profile boundary.
       allow create: if isAdmin()
-        || (request.auth != null
+        || (isSignedIn()
           && request.auth.uid == userId
+          && hasAccountConsent(userId)
           && request.resource.data.role == 'student'
-          && !request.resource.data.keys().hasAny(['admin', 'permissions']));
-
+          && !request.resource.data.keys().hasAny(['admin','permissions']));
       allow update: if isAdmin()
-        || (request.auth != null
-          && request.auth.uid == userId
-          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'admin', 'permissions']));
-
+        || (isSignedIn() && request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role','admin','permissions']));
       allow delete: if isAdmin();
     }
 
-    // Default deny: every collection not explicitly declared above remains protected.
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    match /counselling/{document=**} { allow read, write: if false; }
+    match /sen/{document=**} { allow read, write: if false; }
+    match /career/{document=**} { allow read, write: if false; }
+    match /safeguarding/{document=**} { allow read, write: if false; }
+    match /auditEvents/{document=**} { allow read, write: if false; }
+    match /{document=**} { allow read, write: if false; }
   }
 }
