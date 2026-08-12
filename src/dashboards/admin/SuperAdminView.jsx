@@ -32,8 +32,27 @@ const SuperAdminView = ({ user, userData, onBackToApp }) => {
         const currentUser = auth.currentUser || user;
         if (!currentUser) throw new Error('Authentication required.');
 
-        const idToken = await currentUser.getIdToken();
-        const response = await fetch('/api/admin/overview-stats', { method: 'GET', headers: { Authorization: `Bearer ${idToken}` } });
+        // Always refresh the Firebase ID token before calling a protected API.
+        // This prevents a stale token surviving a Firebase/Vercel configuration
+        // change from being sent to Firebase Admin and rejected as invalid.
+        let idToken = await currentUser.getIdToken(true);
+        let response = await fetch('/api/admin/overview-stats', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${idToken}` },
+          cache: 'no-store'
+        });
+
+        // A single forced refresh/retry handles tokens that were invalidated
+        // between the initial auth-state callback and this request.
+        if (response.status === 401) {
+          idToken = await currentUser.getIdToken(true);
+          response = await fetch('/api/admin/overview-stats', {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${idToken}` },
+            cache: 'no-store'
+          });
+        }
+
         const payload = await response.json();
         if (!response.ok) throw new Error(payload?.error || 'Unable to load overview statistics.');
         if (isMounted) setOverviewData(payload);
