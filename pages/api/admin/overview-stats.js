@@ -121,8 +121,7 @@ export default async function handler(req, res) {
       return !['completed', 'closed', 'archived'].includes(status);
     });
 
-    const activeUserTimestamps = users.map(user => toMillis(user.lastActiveAt)).filter(Boolean);
-    const activeWindow = getWindowCounts(activeUserTimestamps, now, 7 * 24 * 60 * 60 * 1000);
+    const recentSessionWindow = getWindowCounts(sessionTimestamps, now, 7 * 24 * 60 * 60 * 1000);
     const registrationWindow = getWindowCounts(registrationTimestamps, now, 30 * 24 * 60 * 60 * 1000);
     const iepWindow = getWindowCounts(iepRecords.map(record => record.timestampMs), now, 30 * 24 * 60 * 60 * 1000);
 
@@ -151,11 +150,11 @@ export default async function handler(req, res) {
           trend: registrationWindow.current >= registrationWindow.previous ? 'up' : 'down',
           changeLabel: 'new users · 30d',
         },
-        activeUsers: {
-          value: activeWindow.current,
-          change: percentChange(activeWindow.current, activeWindow.previous),
-          trend: activeWindow.current >= activeWindow.previous ? 'up' : 'down',
-          changeLabel: 'active users · 7d',
+        recentSessions: {
+          value: recentSessionWindow.current,
+          change: percentChange(recentSessionWindow.current, recentSessionWindow.previous),
+          trend: recentSessionWindow.current >= recentSessionWindow.previous ? 'up' : 'down',
+          changeLabel: 'sessions · 7d',
         },
         pendingIEPs: {
           value: pendingIEPs.length,
