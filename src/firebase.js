@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 
@@ -18,23 +18,41 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// App Check is deliberately opt-in until the production reCAPTCHA Enterprise
-// site key has been configured and traffic has been monitored. Firebase
-// recommends App Check as a complementary layer to Authentication + Rules.
-if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY) {
+// Firestore can report the client as "offline" when a browser, proxy,
+// extension, or network path interferes with its streaming transport.
+// Auto-detect long polling gives production browsers a more resilient fallback.
+let firestore;
+try {
+  firestore = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+    useFetchStreams: false,
+  });
+} catch (_) {
+  // Safe fallback for environments where Firestore has already been initialized.
+  firestore = getFirestore(app);
+}
+
+// App Check is deliberately disabled unless production explicitly opts in.
+// Having a reCAPTCHA site key in Vercel must not silently activate App Check;
+// enforcement should only be enabled after the Firebase Console configuration
+// has been verified and traffic has been monitored.
+if (
+  typeof window !== 'undefined' &&
+  process.env.NEXT_PUBLIC_ENABLE_APP_CHECK === 'true' &&
+  process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY
+) {
   try {
     initializeAppCheck(app, {
       provider: new ReCaptchaEnterpriseProvider(process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY),
       isTokenAutoRefreshEnabled: true
     });
   } catch (error) {
-    // Do not block the application if App Check has not yet been configured.
     console.warn('[Secret Sharz] App Check is not active:', error?.message || error);
   }
 }
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = firestore;
 export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 export const facebookProvider = new FacebookAuthProvider();
