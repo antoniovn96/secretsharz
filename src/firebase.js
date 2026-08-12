@@ -18,13 +18,15 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Firestore can report the client as "offline" when a browser, proxy,
-// extension, or network path interferes with its streaming transport.
-// Auto-detect long polling gives production browsers a more resilient fallback.
+// Force Firestore to use HTTP long-polling rather than the streaming transport.
+// This is intentionally stronger than auto-detection because the production
+// browser path has been repeatedly falling back to "client is offline" after
+// long transport retries. Long-polling is slower per request but much more
+// reliable behind restrictive proxies, extensions and networks.
 let firestore;
 try {
   firestore = initializeFirestore(app, {
-    experimentalAutoDetectLongPolling: true,
+    experimentalForceLongPolling: true,
     useFetchStreams: false,
   });
 } catch (_) {
