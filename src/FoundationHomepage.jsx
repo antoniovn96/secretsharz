@@ -187,7 +187,7 @@ export default function FoundationHomepage({ navigate, currentUser }) {
         </section>
       </main>
 
-      <style>{`
+      <style suppressHydrationWarning>{`
         .ss-foundation-page{--fh-ink:#17231d;--fh-text:#33443a;--fh-muted:#68766d;--fh-green:#2E6B4A;--fh-deep:#17352A;--fh-pale:#EBF4EE;--fh-cream:#F8F6F1;--fh-line:#DCE4DE;background:#FDFCFA;color:var(--fh-ink);overflow:hidden}
         .ss-foundation-page *{box-sizing:border-box}
         .ss-foundation-page button{font:inherit}
