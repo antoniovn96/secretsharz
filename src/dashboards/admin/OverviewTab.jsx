@@ -145,8 +145,8 @@ const OverviewTab = ({ data }) => {
               <option>All time</option>
             </select>
           </div>
-          <div className="h-72 min-w-0 w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={288}>
+          <div className="h-72 min-w-0 w-full" style={{ minHeight: 288 }}>
+            <ResponsiveContainer width="100%" height={288} minWidth={1} minHeight={288}>
               <AreaChart data={engagementData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRegistrations" x1="0" y1="0" x2="0" y2="1">
@@ -209,8 +209,8 @@ const OverviewTab = ({ data }) => {
             <h3 className="text-lg font-bold text-slate-900">User Distribution</h3>
             <p className="text-sm text-slate-500 font-medium">By learning path</p>
           </div>
-          <div className="h-52 min-w-0 w-full relative">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={208}>
+          <div className="h-52 min-w-0 w-full relative" style={{ minHeight: 208 }}>
+            <ResponsiveContainer width="100%" height={208} minWidth={1} minHeight={208}>
               <PieChart>
                 <Pie
                   data={pathDistribution}
