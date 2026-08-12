@@ -5,6 +5,29 @@ function jsonError(res, status, message) {
   res.status(status).json({ error: message });
 }
 
+async function fetchYouTube(url, label) {
+  const response = await fetch(url.toString());
+  if (response.ok) return response.json();
+
+  let details = null;
+  try {
+    details = await response.json();
+  } catch (_) {
+    // Keep diagnostics useful even when the upstream response is not JSON.
+  }
+
+  const reason = details?.error?.errors?.[0]?.reason || details?.error?.status || 'unknown';
+  const message = details?.error?.message || `HTTP ${response.status}`;
+
+  // Never log the URL because it contains the private API key.
+  console.error(`[YouTube] ${label} failed: status=${response.status} reason=${reason} message=${message}`);
+
+  const error = new Error(`${label} failed: ${response.status}`);
+  error.status = response.status;
+  error.reason = reason;
+  throw error;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -13,12 +36,7 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.YOUTUBE_API_KEY;
 
-  // A missing production key must not turn the entire homepage into a 503.
-  // The frontend can render the rest of the page and show a neutral video state
-  // until the Vercel production environment is configured.
   if (!apiKey) {
-    // Never cache the unconfigured state. This prevents a temporary missing-key
-    // response from remaining visible after the Vercel environment is fixed.
     res.setHeader('Cache-Control', 'no-store, max-age=0');
     return res.status(200).json({
       configured: false,
@@ -42,9 +60,7 @@ export default async function handler(req, res) {
     channelUrl.searchParams.set('part', 'id,contentDetails,snippet');
     channelUrl.searchParams.set('forHandle', CHANNEL_HANDLE);
     channelUrl.searchParams.set('key', apiKey);
-    const channelResponse = await fetch(channelUrl.toString());
-    if (!channelResponse.ok) throw new Error(`Channel lookup failed: ${channelResponse.status}`);
-    const channelData = await channelResponse.json();
+    const channelData = await fetchYouTube(channelUrl, 'Channel lookup');
     const channel = channelData.items?.[0];
     const uploadsPlaylistId = channel?.contentDetails?.relatedPlaylists?.uploads;
     if (!channel?.id || !uploadsPlaylistId) return jsonError(res, 404, 'The Secret Sharz YouTube channel could not be found.');
@@ -55,9 +71,7 @@ export default async function handler(req, res) {
     playlistUrl.searchParams.set('maxResults', String(maxResults));
     if (pageToken) playlistUrl.searchParams.set('pageToken', pageToken);
     playlistUrl.searchParams.set('key', apiKey);
-    const playlistResponse = await fetch(playlistUrl.toString());
-    if (!playlistResponse.ok) throw new Error(`Uploads lookup failed: ${playlistResponse.status}`);
-    const playlistData = await playlistResponse.json();
+    const playlistData = await fetchYouTube(playlistUrl, 'Uploads lookup');
 
     const videoIds = (playlistData.items || []).map((item) => item.contentDetails?.videoId).filter(Boolean);
     let videoDetails = {};
@@ -66,9 +80,7 @@ export default async function handler(req, res) {
       videoUrl.searchParams.set('part', 'contentDetails,status');
       videoUrl.searchParams.set('id', videoIds.join(','));
       videoUrl.searchParams.set('key', apiKey);
-      const videoResponse = await fetch(videoUrl.toString());
-      if (!videoResponse.ok) throw new Error(`Video details lookup failed: ${videoResponse.status}`);
-      const videoData = await videoResponse.json();
+      const videoData = await fetchYouTube(videoUrl, 'Video details lookup');
       videoDetails = Object.fromEntries((videoData.items || []).map((video) => [video.id, video]));
     }
 
