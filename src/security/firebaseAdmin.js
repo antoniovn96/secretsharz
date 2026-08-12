@@ -7,9 +7,10 @@
 //
 // No service-account credentials are committed to the repository. The Admin
 // SDK is initialized from the runtime environment:
+//   - FIREBASE_SERVICE_ACCOUNT (JSON string; recommended for Vercel production),
 //   - GOOGLE_APPLICATION_CREDENTIALS (path to a service-account JSON), or
-//   - FIREBASE_SERVICE_ACCOUNT (JSON string), or
-//   - Google Application Default Credentials when running on Vercel/Cloud Run.
+//   - Google Application Default Credentials when running on a platform that
+//     provides ambient credentials.
 //
 // ── Emulator mode (tests/CI only) ──────────────────────────────────────────
 // When the Firebase emulator environment variables are present
