@@ -10,6 +10,8 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, doc, getDocs, getDoc, limit, query, where } from 'firebase/firestore';
 import { auth, db } from '../src/firebase';
 
+const MASTER_EMAIL = 'antonio.antonio.noronha@gmail.com';
+
 function usePathname() {
   const [path, setPath] = useState(() => (typeof window === 'undefined' ? '/' : window.location.pathname));
 
@@ -56,6 +58,19 @@ export default function IndexPage() {
         return;
       }
 
+      const isFounder = user.email?.toLowerCase() === MASTER_EMAIL;
+
+      // The founder/super-admin is already governed by the founder authorization
+      // boundary. Do not make /admin depend on a client-side Firestore consent
+      // lookup. This also prevents Firestore transport issues from blocking the
+      // admin command center.
+      if (isFounder) {
+        setUserData((prev) => ({ ...(prev || {}), role: 'super_admin' }));
+        setAccountConsent(true);
+        setConsentChecked(true);
+        return;
+      }
+
       try {
         const [profileSnapshot, consentGranted] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
@@ -82,8 +97,10 @@ export default function IndexPage() {
 
   if (path !== '/') {
     // Private routes are admitted only after the account privacy consent event
-    // exists. This is a UX gate; Firestore Rules remain the real authorization boundary.
-    if (currentUser && consentChecked && !accountConsent) {
+    // exists. The founder is explicitly exempt because the founder authorization
+    // boundary is independent of the account-consent UX gate.
+    const isFounder = currentUser?.email?.toLowerCase() === MASTER_EMAIL;
+    if (currentUser && consentChecked && !accountConsent && !isFounder) {
       return (
         <AccountConsentGate
           user={currentUser}
@@ -97,7 +114,7 @@ export default function IndexPage() {
     }
 
     if (path === '/videos') {
-      const isAdmin = userData?.role === 'super_admin' || currentUser?.email === 'antonio.antonio.noronha@gmail.com';
+      const isAdmin = userData?.role === 'super_admin' || currentUser?.email?.toLowerCase() === MASTER_EMAIL;
       const handleLogout = async () => {
         await signOut(auth);
         navigate('/');
@@ -116,7 +133,7 @@ export default function IndexPage() {
   }
 
   // UI visibility only. Real admin authorisation must remain server/rules enforced.
-  const isAdmin = userData?.role === 'super_admin' || currentUser?.email === 'antonio.antonio.noronha@gmail.com';
+  const isAdmin = userData?.role === 'super_admin' || currentUser?.email?.toLowerCase() === MASTER_EMAIL;
   const handleLogout = async () => {
     await auth.signOut();
     navigate('/');
