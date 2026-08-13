@@ -3,36 +3,14 @@
 // Creates a professional's Firebase Authentication account and directory
 // profile in one privileged server-side workflow. The browser never receives
 // or chooses a password and never receives Firebase Admin credentials.
-//
-// SECURITY
-// - Requester is authenticated from a verified Firebase ID token.
-// - Only an admin/founder may create staff accounts.
-// - Body keys are strictly allowlisted to prevent mass assignment.
-// - The professional role is validated against the server-side claim allowlist.
-// - A random temporary password is generated server-side only so the account
-//   can be created; it is never returned to the client.
-// - A Firebase password-reset/invitation link is generated and returned once so
-//   the admin can securely share it with the professional.
-// - The invitation link is NOT stored in Firestore.
-// - If Firestore provisioning fails after Auth creation, the Auth user is
-//   deleted to avoid an orphaned login account.
+import { randomUUID } from 'crypto';
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
-import {
-  isFounderRequester,
-  isRequesterAdmin,
-  isAssignableClaimRole,
-  buildAuditRecord
-} from '../../../src/security/roleAssignment.js';
+import { isFounderRequester, isRequesterAdmin, buildAuditRecord } from '../../../src/security/roleAssignment.js';
+import { isAssignableClaimRole } from '../../../src/security/claimRoles.js';
 
 const ALLOWED_BODY_KEYS = Object.freeze([
-  'name',
-  'email',
-  'phone',
-  'role',
-  'specialization',
-  'qualification',
-  'institutionName',
-  'registrationNumber'
+  'name', 'email', 'phone', 'role', 'specialization', 'qualification',
+  'institutionName', 'registrationNumber'
 ]);
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -68,6 +46,7 @@ function validateBody(body) {
   const email = cleanText(body.email, MAX.email)?.toLowerCase();
   const role = body.role;
 
+  // Only professional roles may be provisioned through this endpoint.
   if (!name) return { ok: false, error: 'Full name is required.' };
   if (!email || !EMAIL_RE.test(email)) return { ok: false, error: 'A valid email address is required.' };
   if (!isAssignableClaimRole(role) || role === 'super_admin' || role === 'parent') {
@@ -92,7 +71,7 @@ function validateBody(body) {
 function randomPassword() {
   // Firebase requires a password for createUser. This random value is never
   // returned; the professional sets their own password through the reset link.
-  return `SS-${crypto.randomUUID()}-Aa9!`;
+  return `SS-${randomUUID()}-Aa9!`;
 }
 
 export default async function handler(req, res) {
@@ -121,8 +100,8 @@ export default async function handler(req, res) {
 
   const adminAuth = getAdminAuth();
   const firestore = getAdminFirestore();
-
   let authUser = null;
+
   try {
     authUser = await adminAuth.createUser({
       email: professional.email,
@@ -132,8 +111,8 @@ export default async function handler(req, res) {
       disabled: false
     });
 
-    // The role is assigned server-side. Existing claims are preserved, even
-    // though a newly-created account normally starts with none.
+    // The role is assigned server-side. Newly-created accounts normally have
+    // no claims, so this establishes the authoritative professional claim.
     await adminAuth.setCustomUserClaims(authUser.uid, { role: professional.role });
 
     await firestore.collection('users').doc(authUser.uid).set({
@@ -154,6 +133,8 @@ export default async function handler(req, res) {
       updatedAt: new Date()
     });
 
+    // Do not store this link. It is returned only to the authenticated admin
+    // who initiated the provisioning operation.
     const inviteLink = await adminAuth.generatePasswordResetLink(professional.email);
 
     try {
@@ -164,8 +145,7 @@ export default async function handler(req, res) {
         action: 'create_professional',
         role: professional.role,
         previousRole: null,
-        newRole: professional.role,
-        actorIsFounder: isFounderRequester(decodedToken)
+        newRole: professional.role
       }));
     } catch (auditError) {
       console.error('[create-professional] audit write failed:', auditError?.message || auditError);
