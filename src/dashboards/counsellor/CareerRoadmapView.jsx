@@ -1,249 +1,157 @@
-import React, { useState, useEffect } from 'react';
-import { collection, doc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, auth } from '../../firebase';
+import React, { useEffect, useState } from 'react';
+import { addDoc, collection, doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../../firebase';
 import { useDashboard } from '../../context/DashboardContext';
+
+const EMPTY_ROADMAP = {
+  phase1_unlock: '',
+  phase2_explore: '',
+  phase3_expand: '',
+  phase4_inspire: '',
+  phase5_ignite: ''
+};
+
+const phases = [
+  ['phase1_unlock', 'Phase 1: Unlock', 'Self-Discovery', 'RIASEC profile, strengths, interests and motivations.'],
+  ['phase2_explore', 'Phase 2: Explore', 'Career Matches', '3–5 specific career pathways worth investigating.'],
+  ['phase3_expand', 'Phase 3: Expand', 'Skill Development', 'Courses, certifications, projects and extracurricular development.'],
+  ['phase4_inspire', 'Phase 4: Inspire', 'Mentorship & Shadowing', 'Professionals, informational interviews, shadowing or internships.'],
+  ['phase5_ignite', 'Phase 5: Ignite', 'College & Applications', 'Target institutions, tests, prerequisites and application timeline.']
+];
 
 const CareerRoadmapView = ({ studentId, currentUser }) => {
   const { navigate } = useDashboard();
-  
   const [studentData, setStudentData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Roadmap State
-  const [roadmap, setRoadmap] = useState({
-    phase1_unlock: '',
-    phase2_explore: '',
-    phase3_expand: '',
-    phase4_inspire: '',
-    phase5_ignite: ''
-  });
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
+  const [roadmap, setRoadmap] = useState(EMPTY_ROADMAP);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState(null);
 
   useEffect(() => {
-    const fetchStudentData = async () => {
+    const loadStudent = async () => {
+      if (!studentId) return;
+      setLoading(true);
       try {
-        const studentRef = doc(db, 'users', studentId);
-        const snapshot = await getDoc(studentRef);
-        if (snapshot.exists()) {
-          setStudentData(snapshot.data());
-        } else {
-          setSaveMessage({ text: "Student record not found.", type: "error" });
-        }
-      } catch (err) {
-        console.error("Error fetching student profile:", err);
+        // Read the protected student master record. Firestore rules verify
+        // that the current professional is actually assigned to this student.
+        const snapshot = await getDoc(doc(db, 'students', studentId));
+        if (snapshot.exists()) setStudentData(snapshot.data());
+        else setMessage({ type: 'error', text: 'Student record not found.' });
+      } catch (error) {
+        console.error('Error loading assigned student:', error);
+        setMessage({ type: 'error', text: 'You are not authorised to access this student or the record could not be loaded.' });
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-    
-    if (studentId) {
-      fetchStudentData();
-    }
+    loadStudent();
   }, [studentId]);
 
-  const handleChange = (e) => {
-    setRoadmap({ ...roadmap, [e.target.name]: e.target.value });
-  };
+  const handleSave = async event => {
+    event.preventDefault();
+    const providerId = auth.currentUser?.uid || currentUser?.uid;
 
-  const handleSaveRoadmap = async (e) => {
-    e.preventDefault();
-    
-    // Quick validation check
-    const isAnyFieldFilled = Object.values(roadmap).some(val => val.trim() !== '');
-    if (!isAnyFieldFilled) {
-      setSaveMessage({ text: "Cannot save an empty roadmap.", type: "error" });
+    if (!providerId) {
+      setMessage({ type: 'error', text: 'Your professional session has expired. Please sign in again.' });
       return;
     }
 
-    setIsSaving(true);
-    setSaveMessage({ text: '', type: '' });
+    if (!Object.values(roadmap).some(value => value.trim())) {
+      setMessage({ type: 'error', text: 'Please complete at least one roadmap phase before publishing.' });
+      return;
+    }
+
+    setSaving(true);
+    setMessage(null);
 
     try {
-      const providerId = auth.currentUser?.uid || currentUser?.uid || 'unknown_provider';
-      
-      const payload = {
+      await addDoc(collection(db, 'students', studentId, 'career_roadmaps'), {
         providerId,
-        timestamp: serverTimestamp(),
         status: 'Published',
-        phases: { ...roadmap }
-      };
+        phases: { ...roadmap },
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
 
-      await addDoc(collection(db, 'users', studentId, 'career_roadmaps'), payload);
-      
-      setSaveMessage({ text: "Career Roadmap securely published.", type: "success" });
-      
-      // Clear message after 3 seconds
-      setTimeout(() => setSaveMessage({ text: '', type: '' }), 3000);
-      
-    } catch (err) {
-      console.error("Error saving roadmap:", err);
-      setSaveMessage({ text: "Failed to publish roadmap.", type: "error" });
+      setMessage({ type: 'success', text: 'Career roadmap securely published.' });
+    } catch (error) {
+      console.error('Error publishing career roadmap:', error);
+      setMessage({ type: 'error', text: 'The roadmap could not be published. Please try again.' });
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-      </div>
-    );
+  if (loading) {
+    return <div className="flex min-h-screen items-center justify-center bg-slate-50"><div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600" /></div>;
   }
 
   const riasecCode = studentData?.careerDNA?.riasec?.code || studentData?.riasecCode || 'Pending';
+  const studentName = studentData?.name || studentData?.studentName || 'Student';
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-20">
-      
-      {/* Top Nav bar */}
-      <div className="bg-white border-b border-slate-200 px-8 py-4 sticky top-0 z-50 flex items-center shadow-sm">
-        <button 
-          onClick={() => navigate('/provider/career')}
-          className="text-slate-500 hover:text-indigo-600 font-semibold flex items-center gap-2 transition-colors"
-        >
-          <span>←</span> Back to Career Caseload
-        </button>
-      </div>
+    <div className="min-h-screen bg-slate-50 pb-20 font-sans text-slate-800">
+      <header className="sticky top-0 z-50 flex items-center border-b border-slate-200 bg-white px-5 py-4 shadow-sm md:px-8">
+        <button onClick={() => navigate('/provider/career')} className="font-semibold text-slate-500 hover:text-indigo-600">← Back to My Students</button>
+      </header>
 
-      <div className="max-w-5xl mx-auto px-6 mt-8 space-y-8">
-        
-        {/* Profile Header */}
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-3xl font-bold flex-shrink-0">
-              {studentData?.name ? studentData.name.charAt(0) : 'S'}
-            </div>
+      <main className="mx-auto max-w-5xl space-y-6 px-5 py-8 md:px-8">
+        <section className="flex flex-col justify-between gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-center md:p-8">
+          <div className="flex items-center gap-5">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-3xl font-black text-indigo-600">{studentName.charAt(0).toUpperCase()}</div>
             <div>
-              <h1 className="text-3xl font-extrabold text-slate-900 mb-1">
-                {studentData?.name || 'Unknown Student'}
-              </h1>
-              <div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-500">
-                <span className="flex items-center gap-1"><span>🏫</span> {studentData?.schoolName || 'N/A'}</span>
-                <span className="flex items-center gap-1"><span>🎓</span> {studentData?.grade || 'N/A'}</span>
+              <h1 className="text-2xl font-black text-slate-900 md:text-3xl">{studentName}</h1>
+              <div className="mt-2 flex flex-wrap gap-4 text-sm font-semibold text-slate-500">
+                <span>🏫 {studentData?.schoolName || studentData?.school || 'N/A'}</span>
+                <span>🎓 {studentData?.grade || studentData?.class || 'N/A'}</span>
               </div>
             </div>
           </div>
-          
-          <div className="bg-indigo-50 p-5 rounded-xl border border-indigo-100 text-center min-w-[140px]">
-            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">Career DNA</p>
-            <p className="text-2xl font-black text-indigo-600 tracking-widest">{riasecCode}</p>
+          <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-7 py-4 text-center">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-400">Career DNA</div>
+            <div className="mt-1 text-2xl font-black tracking-widest text-indigo-700">{riasecCode}</div>
           </div>
-        </div>
+        </section>
 
-        {/* Roadmap Builder Engine */}
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-          <div className="mb-8 pb-6 border-b border-slate-100">
-            <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-3 mb-2">
-              <span className="bg-indigo-100 text-indigo-600 p-2 rounded-xl text-xl">🗺️</span> 
-              Strategic Career Roadmap
-            </h2>
-            <p className="text-slate-500">Construct an actionable, multi-phase plan based on the student's RIASEC profile and aspirations.</p>
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+          <div className="mb-8 border-b border-slate-100 pb-6">
+            <h2 className="text-2xl font-black text-slate-900">🗺️ Strategic Career Roadmap</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-500">Build an actionable five-phase plan that translates the student's profile into concrete career-development steps.</p>
           </div>
-          
-          <form onSubmit={handleSaveRoadmap} className="space-y-8">
-            
-            {/* Phase 1: Unlock */}
-            <div className="space-y-2 relative">
-              <div className="absolute -left-6 top-1.5 w-3 h-3 rounded-full bg-indigo-500 hidden md:block"></div>
-              <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                Phase 1: Unlock <span className="text-sm font-semibold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded uppercase tracking-wide">Self-Discovery</span>
-              </label>
-              <p className="text-sm text-slate-500">Notes on the student's RIASEC profile, core strengths, and intrinsic motivations.</p>
-              <textarea 
-                name="phase1_unlock" value={roadmap.phase1_unlock} onChange={handleChange}
-                rows="3"
-                className="w-full mt-2 p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none"
-                placeholder="e.g. Student exhibits strong Enterprising and Social traits, suggesting a natural aptitude for leadership and human-centric roles..."
-              />
-            </div>
 
-            {/* Phase 2: Explore */}
-            <div className="space-y-2 relative">
-              <div className="absolute -left-6 top-1.5 w-3 h-3 rounded-full bg-blue-500 hidden md:block"></div>
-              <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                Phase 2: Explore <span className="text-sm font-semibold text-blue-500 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wide">Career Matches</span>
-              </label>
-              <p className="text-sm text-slate-500">Identify 3-5 specific, actionable career paths that align with their profile.</p>
-              <textarea 
-                name="phase2_explore" value={roadmap.phase2_explore} onChange={handleChange}
-                rows="3"
-                className="w-full mt-2 p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
-                placeholder="e.g. 1. Product Marketing Manager&#10;2. Management Consultant&#10;3. Organizational Psychologist"
-              />
-            </div>
+          <form onSubmit={handleSave} className="space-y-8">
+            {phases.map(([key, title, badge, description]) => (
+              <div key={key}>
+                <label className="flex flex-wrap items-center gap-2 text-lg font-black text-slate-800">
+                  {title}
+                  <span className="rounded bg-indigo-50 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-indigo-600">{badge}</span>
+                </label>
+                <p className="mt-1 text-sm text-slate-500">{description}</p>
+                <textarea
+                  name={key}
+                  value={roadmap[key]}
+                  onChange={event => setRoadmap(current => ({ ...current, [key]: event.target.value }))}
+                  rows={4}
+                  className="mt-3 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm outline-none transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                  placeholder={`Add notes for ${badge.toLowerCase()}…`}
+                />
+              </div>
+            ))}
 
-            {/* Phase 3: Expand */}
-            <div className="space-y-2 relative">
-              <div className="absolute -left-6 top-1.5 w-3 h-3 rounded-full bg-emerald-500 hidden md:block"></div>
-              <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                Phase 3: Expand <span className="text-sm font-semibold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded uppercase tracking-wide">Skill Development</span>
-              </label>
-              <p className="text-sm text-slate-500">Recommended courses, certifications, or high-leverage extracurriculars.</p>
-              <textarea 
-                name="phase3_expand" value={roadmap.phase3_expand} onChange={handleChange}
-                rows="3"
-                className="w-full mt-2 p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all resize-none"
-                placeholder="e.g. Enroll in Introduction to Psychology (Coursera). Join the school Debate Club to refine persuasion skills."
-              />
-            </div>
-
-            {/* Phase 4: Inspire */}
-            <div className="space-y-2 relative">
-              <div className="absolute -left-6 top-1.5 w-3 h-3 rounded-full bg-amber-500 hidden md:block"></div>
-              <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                Phase 4: Inspire <span className="text-sm font-semibold text-amber-500 bg-amber-50 px-2 py-0.5 rounded uppercase tracking-wide">Mentorship & Shadowing</span>
-              </label>
-              <p className="text-sm text-slate-500">Target professionals to connect with, informational interviews, or internships to pursue.</p>
-              <textarea 
-                name="phase4_inspire" value={roadmap.phase4_inspire} onChange={handleChange}
-                rows="3"
-                className="w-full mt-2 p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none transition-all resize-none"
-                placeholder="e.g. Arrange 15-minute informational interview with a local Marketing Director."
-              />
-            </div>
-
-            {/* Phase 5: Ignite */}
-            <div className="space-y-2 relative">
-              <div className="absolute -left-6 top-1.5 w-3 h-3 rounded-full bg-rose-500 hidden md:block"></div>
-              <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                Phase 5: Ignite <span className="text-sm font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded uppercase tracking-wide">College & Application Plan</span>
-              </label>
-              <p className="text-sm text-slate-500">Target universities, required standardized tests, and application timeline strategies.</p>
-              <textarea 
-                name="phase5_ignite" value={roadmap.phase5_ignite} onChange={handleChange}
-                rows="3"
-                className="w-full mt-2 p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none transition-all resize-none"
-                placeholder="e.g. Target colleges: Delhi University (B.Com Hons), Ashoka University. Begin SAT/ACT prep by Summer."
-              />
-            </div>
-
-            {/* Save Action */}
-            <div className="pt-6 mt-8 border-t border-slate-200 flex items-center justify-between">
-              {saveMessage.text ? (
-                <div className={`p-4 rounded-xl font-semibold text-sm ${saveMessage.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
-                  {saveMessage.text}
+            <div className="flex flex-col gap-4 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
+              {message ? (
+                <div className={`rounded-xl px-4 py-3 text-sm font-semibold ${message.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                  {message.text}
                 </div>
-              ) : <div></div>}
+              ) : <div />}
 
-              <button 
-                type="submit"
-                disabled={isSaving}
-                className={`px-8 py-4 rounded-xl font-extrabold text-white shadow-lg transition-all flex items-center justify-center gap-2
-                  ${isSaving ? 'bg-indigo-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 hover:-translate-y-1'}`
-                }
-              >
-                {isSaving ? 'Publishing securely...' : (
-                  <><span>🚀</span> Publish Career Roadmap</>
-                )}
+              <button disabled={saving} type="submit" className="rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-7 py-3.5 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:from-indigo-700 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-60">
+                {saving ? 'Publishing securely…' : '🚀 Publish Career Roadmap'}
               </button>
             </div>
-            
           </form>
-        </div>
-
-      </div>
+        </section>
+      </main>
     </div>
   );
 };
