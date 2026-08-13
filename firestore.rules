@@ -10,6 +10,10 @@ service cloud.firestore {
     function isAdmin() { return isFounderAdmin() || hasClaimRole('super_admin') || (isSignedIn() && profileRole(request.auth.uid) == 'super_admin'); }
     function isParent() { return isSignedIn() && (hasClaimRole('parent') || profileRole(request.auth.uid) == 'parent'); }
     function isStaff() { return isSignedIn() && (request.auth.token.role in ['counsellor','career_counsellor','psychologist','educator'] || profileRole(request.auth.uid) in ['counsellor','career_counsellor','psychologist','educator']); }
+    function isAssignedStaffForStudent(studentId) {
+      return isStaff()
+        && get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.careerId == request.auth.uid;
+    }
 
     function hasAccountConsent(uid) {
       return isSignedIn()
@@ -47,6 +51,15 @@ service cloud.firestore {
         isAdmin()
       );
       allow write: if isAdmin();
+
+      // Career-roadmap records are stored alongside the student's protected
+      // master record rather than in the client-readable users collection.
+      match /career_roadmaps/{roadmapId} {
+        allow read: if isAdmin() || isAssignedStaffForStudent(studentId) || (isSignedIn() && request.auth.uid == studentId);
+        allow create: if isAdmin() || (isAssignedStaffForStudent(studentId) && request.resource.data.providerId == request.auth.uid);
+        allow update: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid && request.resource.data.providerId == request.auth.uid);
+        allow delete: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid);
+      }
     }
 
     match /caseFiles/{fileId} {
@@ -57,7 +70,11 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow read: if isSignedIn() && (
+        request.auth.uid == userId ||
+        isAdmin() ||
+        isAssignedStaffForStudent(userId)
+      );
       allow create: if isAdmin()
         || (isSignedIn()
           && request.auth.uid == userId
