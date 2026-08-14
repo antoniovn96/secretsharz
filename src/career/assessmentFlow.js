@@ -17,9 +17,7 @@ export const ASSESSMENT_STAGES = Object.freeze([
 
 export function getAssessmentStages(status) {
   if (!CANDIDATE_STATUSES.includes(status)) return ASSESSMENT_STAGES;
-  return status === 'student'
-    ? ASSESSMENT_STAGES
-    : ASSESSMENT_STAGES.filter((stage) => stage.id !== 'academic');
+  return status === 'student' ? ASSESSMENT_STAGES : ASSESSMENT_STAGES.filter((stage) => stage.id !== 'academic');
 }
 
 export function getStageIndex(stageId, status) {
@@ -45,33 +43,15 @@ export function buildAssessmentSession({ personId, status, age, attemptId }) {
   if (!Number.isInteger(age) || age < 10 || age > 100) throw new Error('Invalid age.');
   if (!attemptId) throw new Error('attemptId is required.');
 
-  return {
-    attemptId,
-    personId,
-    assessmentVersion: ASSESSMENT_VERSION,
-    status,
-    age,
-    currentStage: getAssessmentStages(status)[0].id,
-    completedStageIds: [],
-    startedAt: null,
-    lastSavedAt: null,
-    completedAt: null,
-  };
+  return { attemptId, personId, assessmentVersion: ASSESSMENT_VERSION, status, age, currentStage: getAssessmentStages(status)[0].id, completedStageIds: [], startedAt: null, lastSavedAt: null, completedAt: null };
 }
 
 export function advanceAssessment(session, stageId) {
   const stages = getAssessmentStages(session.status);
   const index = stages.findIndex((stage) => stage.id === stageId);
   if (index < 0) throw new Error('Unknown assessment stage.');
-
   const completed = new Set(session.completedStageIds || []);
   completed.add(stageId);
   const next = stages[index + 1];
-
-  return {
-    ...session,
-    completedStageIds: [...completed],
-    currentStage: next ? next.id : stageId,
-    completedAt: next ? session.completedAt : new Date().toISOString(),
-  };
+  return { ...session, completedStageIds: [...completed], currentStage: next ? next.id : stageId, completedAt: next ? session.completedAt : new Date().toISOString() };
 }
