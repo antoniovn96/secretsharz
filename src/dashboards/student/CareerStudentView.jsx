@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import CareerAssessmentJourney from '../../career/CareerAssessmentJourney';
-import UnifiedIntakeForm from '../../components/forms/UnifiedIntakeForm';
+import ProfileManagement from '../../components/profile/ProfileManagement';
 
 const CareerStudentView = ({ studentData, currentUser }) => {
   const [isTakingTest, setIsTakingTest] = useState(false);
-  const dynamicName = studentData?.name || currentUser?.displayName || 'Student';
-  const profileImage = currentUser?.photoURL || 'https://via.placeholder.com/150';
-  const isProfileIncomplete = !studentData?.grade || !studentData?.parentName;
-  const [showIntake, setShowIntake] = useState(isProfileIncomplete);
+  const [showProfile, setShowProfile] = useState(false);
+  const dynamicName = studentData?.name || studentData?.fullName || currentUser?.displayName || 'Student';
+  const profileImage = currentUser?.photoURL || null;
 
   if (isTakingTest) {
     return (
@@ -27,12 +26,13 @@ const CareerStudentView = ({ studentData, currentUser }) => {
         <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col border border-indigo-100/50">
           <div className="h-24 bg-gradient-to-r from-indigo-500 to-blue-500" />
           <div className="px-6 pb-6 relative flex flex-col items-center text-center">
-            <img src={profileImage} alt="Profile" className="w-24 h-24 rounded-full border-4 border-white shadow-md -mt-12 mb-4 object-cover" />
+            {profileImage ? <img src={profileImage} alt="Profile" className="w-24 h-24 rounded-full border-4 border-white shadow-md -mt-12 mb-4 object-cover" /> : <div className="w-24 h-24 rounded-full border-4 border-white shadow-md -mt-12 mb-4 bg-indigo-100 text-indigo-700 flex items-center justify-center text-3xl font-black">{dynamicName.charAt(0).toUpperCase()}</div>}
             <h2 className="text-xl font-bold text-gray-800">{dynamicName}</h2>
             <p className="text-sm text-gray-500 mb-6">Student</p>
             <nav className="w-full flex flex-col gap-2">
               <button className="flex items-center gap-3 w-full px-4 py-2.5 bg-indigo-50 text-indigo-700 font-bold rounded-lg"><span>🏠</span> Home</button>
               <button onClick={() => setIsTakingTest(true)} className="flex items-center gap-3 w-full px-4 py-2.5 text-slate-600 hover:bg-slate-100 font-semibold rounded-lg"><span>🎯</span> Career Discovery</button>
+              <button onClick={() => setShowProfile(true)} className="flex items-center gap-3 w-full px-4 py-2.5 text-slate-600 hover:bg-slate-100 font-semibold rounded-lg"><span>👤</span> My Profile</button>
               <button className="flex items-center gap-3 w-full px-4 py-2.5 text-slate-600 hover:bg-slate-100 font-semibold rounded-lg"><span>🏫</span> Colleges</button>
             </nav>
           </div>
@@ -74,7 +74,7 @@ const CareerStudentView = ({ studentData, currentUser }) => {
           </section>
         </div>
       </main>
-      {showIntake && <UnifiedIntakeForm onComplete={() => setShowIntake(false)} />}
+      {showProfile && <ProfileManagement onClose={() => setShowProfile(false)} />}
     </div>
   );
 };
