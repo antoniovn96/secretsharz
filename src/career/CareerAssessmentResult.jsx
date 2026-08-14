@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { buildResultView } from './assessmentResultView';
+import { startCareerAssessmentCheckout } from './careerAssessmentPayment';
 
 const styles = `
 .car-result{max-width:1100px;margin:0 auto;padding:32px 20px 80px;color:#1e2820;font-family:inherit}
@@ -11,13 +12,27 @@ const styles = `
 .car-result-card{background:#fff;border:1px solid rgba(74,124,89,.13);border-radius:20px;padding:22px;box-shadow:0 8px 25px rgba(30,40,32,.06)}
 .car-result-card h2{font-size:17px;margin:0 0 14px}.car-code{font-size:32px;font-weight:800;color:#4a7c59;letter-spacing:4px}.car-pill{display:inline-block;padding:7px 11px;border-radius:999px;background:#eef7f0;color:#315c40;font-size:12px;font-weight:700;margin:4px}
 .car-result-list{display:grid;gap:12px}.car-result-item{padding:16px;border:1px solid #e8eee9;border-radius:14px}.car-result-item strong{display:block;margin-bottom:4px}.car-result-item span{font-size:13px;color:#6d7c71}
-.car-locked{background:#fff8ee;border:1px dashed #d9a45c;border-radius:20px;padding:24px;margin-bottom:24px}.car-locked h2{margin-top:0}.car-locked ul{margin:12px 0 18px;padding-left:20px}.car-result-btn{border:0;background:#4a7c59;color:#fff;padding:12px 18px;border-radius:999px;font-weight:800;cursor:pointer}
+.car-locked{background:#fff8ee;border:1px dashed #d9a45c;border-radius:20px;padding:24px;margin-bottom:24px}.car-locked h2{margin-top:0}.car-locked ul{margin:12px 0 18px;padding-left:20px}.car-result-btn{border:0;background:#4a7c59;color:#fff;padding:12px 18px;border-radius:999px;font-weight:800;cursor:pointer}.car-result-btn:disabled{opacity:.55;cursor:wait}.car-error{margin:0 0 16px;padding:12px 14px;border-radius:12px;background:#fff0ef;color:#8b2f2a;font-size:13px;font-weight:600}
 .car-disclaimer{font-size:13px;line-height:1.7;color:#68756b;background:#f7f8f7;border-radius:18px;padding:20px}
 `;
 
-export default function CareerAssessmentResult({ result, onUnlock, onExploreCareer, onExploreCourse, onExploreCollege }) {
+export default function CareerAssessmentResult({ result, assessmentAttemptId, onUnlock, onExploreCareer, onExploreCourse, onExploreCollege }) {
   const view = buildResultView(result);
   const full = view.access === 'full';
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleUnlock() {
+    setError('');
+    setBusy(true);
+    try {
+      if (onUnlock) await onUnlock();
+      else await startCareerAssessmentCheckout(assessmentAttemptId);
+    } catch (err) {
+      setError(err?.message || 'Unable to start payment.');
+      setBusy(false);
+    }
+  }
 
   return <>
     <style>{styles}</style>
@@ -46,7 +61,9 @@ export default function CareerAssessmentResult({ result, onUnlock, onExploreCare
         <h2>🔓 Your comprehensive discovery report</h2>
         <p>Your snapshot is ready. The comprehensive report adds broader career possibilities, course pathways, college matches and a personalised roadmap.</p>
         <ul>{view.lockedSections.map(section => <li key={section}>{section.replaceAll('_',' ')}</li>)}</ul>
-        {onUnlock && <button className="car-result-btn" onClick={onUnlock}>Unlock Full Report</button>}
+        {error && <div className="car-error">{error}</div>}
+        <button className="car-result-btn" onClick={handleUnlock} disabled={busy || !assessmentAttemptId}>{busy ? 'Opening secure checkout…' : 'Unlock Full Report'}</button>
+        {!assessmentAttemptId && <p style={{marginTop:10,fontSize:12,color:'#7a6248'}}>Your assessment session is still being prepared. Please return to the assessment dashboard and try again.</p>}
       </section>}
 
       {full && <>
