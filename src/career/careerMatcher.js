@@ -1,18 +1,6 @@
 import { CAREER_CATALOG_VERSION, CAREER_CATALOG } from './careerCatalog';
 import { RIASEC_CODES } from './assessmentEngine';
 
-const DIMENSION_WEIGHTS = Object.freeze({
-  interests: 0.30,
-  values: 0.12,
-  work_style: 0.12,
-  motivation: 0.10,
-  goals: 0.12,
-  aptitude_confidence: 0.08,
-  decision_maturity: 0.05,
-  resilience: 0.05,
-  academic_fit: 0.06,
-});
-
 function safeScore(value) {
   const number = Number(value);
   return Number.isFinite(number) ? Math.max(0, Math.min(5, number)) / 5 : 0;
@@ -51,7 +39,6 @@ export function scoreCareerMatch({ career, dimensions = {}, riasec = {}, candida
 }
 
 export function rankCareerMatches({ dimensions = {}, riasec = {}, candidate = {} }) {
-  // Keep the catalogue extensible while ensuring malformed entries cannot crash results.
   const validCodes = new Set(RIASEC_CODES);
   const normalizedRiasec = {
     ...riasec,
