@@ -61,33 +61,35 @@ export default function CareerAssessmentJourney({ currentUser, studentData, onEx
   const unlock = async () => {
     if (!attemptId) return;
     setError('');
-    try {
-      await startCareerAssessmentCheckout(attemptId);
+    await startCareerAssessmentCheckout(attemptId);
 
-      // Razorpay's client callback confirms payment submission, while the
-      // server-side webhook is the source of truth for granting the entitlement.
-      // Poll briefly so the UI updates as soon as the webhook marks the attempt paid.
-      const token = await authToken();
-      for (let i = 0; i < 12; i += 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const response = await fetch(`/api/career/assessment/${encodeURIComponent(attemptId)}/result`, {
-          headers: { Authorization: `Bearer ${token}` },
+    // Razorpay's client callback confirms payment submission, while the
+    // server-side webhook is the source of truth for granting the entitlement.
+    // Poll briefly until the webhook marks the assessment paid, then generate
+    // the full result from the trusted server-side assessment data.
+    const token = await authToken();
+    for (let i = 0; i < 12; i += 1) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/career/assessment/current', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) continue;
+      const data = await response.json();
+      if (data.attempt?.attemptId === attemptId && data.attempt?.paymentStatus === 'paid') {
+        const unlockResponse = await fetch('/api/career/assessment/unlock-result', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ assessmentAttemptId: attemptId }),
         });
-        if (!response.ok) continue;
-        const data = await response.json();
-        if (data.result?.access === 'full' || data.result?.resultAccess === 'full') {
-          setResult(data.result);
-          setView('result');
-          return;
-        }
+        const unlockPayload = await unlockResponse.json().catch(() => ({}));
+        if (!unlockResponse.ok) throw new Error(unlockPayload.error || 'Payment was confirmed, but the report could not be unlocked.');
+        setResult(unlockPayload.result);
+        setView('result');
+        return;
       }
-
-      // If the webhook is still processing, reload the normal journey state.
-      await loadState();
-      setError('Payment was received. Your comprehensive report may take a moment to unlock. Please refresh if it does not appear shortly.');
-    } catch (err) {
-      throw err;
     }
+
+    setError('Payment was received, but confirmation is still processing. Please refresh the assessment shortly.');
   };
 
   if (loading) return <div className="p-8 text-center text-slate-500">Loading your career journey…</div>;
