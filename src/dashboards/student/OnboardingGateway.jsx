@@ -46,24 +46,29 @@ const OnboardingGateway = ({ navigate }) => {
         const completed = data.onboardingCompleted === true;
         const existingPath = data.primary_path || data.primaryPath || '';
 
+        // Completed onboarding: leave immediately. Do not render the form.
         if (completed) {
           if (existingPath) navigate(routeForPath(existingPath));
           else navigate('/');
           return;
         }
 
-        // Migration safeguard: older Secret Sharz accounts may already have a
-        // complete profile but predate onboardingCompleted. Do not make those
-        // users fill the onboarding form again. Mark the profile complete once
-        // and continue normally.
+        // Migration safeguard for legacy accounts. We save the completion flag
+        // and then stop rendering this gateway. This avoids the old profile
+        // fields being interpreted as an invitation to show onboarding again.
         if (hasLegacyProfile(data)) {
-          await setDoc(ref, {
-            onboardingCompleted: true,
-            onboardingCompletedAt: data.onboardingCompletedAt || new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }, { merge: true });
+          try {
+            await setDoc(ref, {
+              onboardingCompleted: true,
+              onboardingCompletedAt: data.onboardingCompletedAt || new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }, { merge: true });
+          } catch (migrationError) {
+            // A migrated account still should not be blocked by the onboarding UI.
+            console.warn('Could not persist legacy onboarding completion:', migrationError?.message || migrationError);
+          }
           if (existingPath) navigate(routeForPath(existingPath));
-          else navigate('/');
+          else navigate('/dashboard');
           return;
         }
 
