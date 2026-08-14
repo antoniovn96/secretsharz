@@ -1,5 +1,5 @@
-import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin';
-import { createStripeCheckoutSession, CAREER_ASSESSMENT_PRODUCT_ID } from '../../../src/career/stripeCareerAssessment';
+import { getAdminAuth, getAdminFirestore } from '../../../../src/security/firebaseAdmin';
+import { createStripeCheckoutSession, CAREER_ASSESSMENT_PRODUCT_ID } from '../../../../src/career/stripeCareerAssessment';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed.' });
