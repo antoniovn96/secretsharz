@@ -16,6 +16,7 @@ export default async function handler(req, res) {
     const { attemptId } = req.query;
     const db = getAdminFirestore();
     const attemptRef = db.collection('assessments').doc(attemptId);
+    const resultRef = db.collection('assessmentResults').doc(attemptId);
     const attemptSnap = await attemptRef.get();
 
     if (!attemptSnap.exists) return res.status(404).json({ error: 'Assessment attempt not found.' });
@@ -23,21 +24,13 @@ export default async function handler(req, res) {
     if (attempt.personId !== decoded.uid) return res.status(403).json({ error: 'Assessment does not belong to this account.' });
     if (attempt.completed !== true) return res.status(409).json({ error: 'Assessment is not complete.' });
 
-    const resultQuery = await db.collection('assessmentResults')
-      .where('personId', '==', decoded.uid)
-      .where('assessmentAttemptId', '==', attemptId)
-      .limit(1)
-      .get();
-
+    const resultSnap = await resultRef.get();
     if (req.method === 'GET') {
-      if (resultQuery.empty) return res.status(202).json({ result: null, status: 'processing' });
-      return res.status(200).json({ result: { id: resultQuery.docs[0].id, ...resultQuery.docs[0].data() } });
+      if (!resultSnap.exists) return res.status(202).json({ result: null, status: 'processing' });
+      return res.status(200).json({ result: { id: resultSnap.id, ...resultSnap.data() } });
     }
 
-    if (!resultQuery.empty) {
-      const existing = resultQuery.docs[0];
-      return res.status(200).json({ result: { id: existing.id, ...existing.data() }, reused: true });
-    }
+    if (resultSnap.exists) return res.status(200).json({ result: { id: resultSnap.id, ...resultSnap.data() }, reused: true });
 
     const candidate = {
       status: attempt.status,
@@ -49,27 +42,24 @@ export default async function handler(req, res) {
       marks: attempt.input?.marks && typeof attempt.input.marks === 'object' ? attempt.input.marks : {},
     };
 
-    const normalizedAttempt = {
-      ...attempt,
-      candidate,
-      resultAccess: attempt.paymentStatus === 'paid' ? 'full' : 'partial',
-    };
-
     const result = buildResult({
-      attempt: normalizedAttempt,
+      attempt: {
+        ...attempt,
+        candidate,
+        resultAccess: attempt.paymentStatus === 'paid' ? 'full' : 'partial',
+      },
       questionMap: canonicalAssessmentQuestionMap,
     });
 
-    const resultRef = db.collection('assessmentResults').doc();
     const storedResult = {
       ...result,
       personId: decoded.uid,
       assessmentAttemptId: attemptId,
       createdAt: new Date(),
     };
-    await resultRef.set(storedResult);
+    await resultRef.create(storedResult);
 
-    return res.status(201).json({ result: { id: resultRef.id, ...storedResult } });
+    return res.status(201).json({ result: { id: attemptId, ...storedResult } });
   } catch (error) {
     console.error('career assessment result error', error);
     return res.status(error.status || 500).json({ error: error.message || 'Unable to process assessment result.' });
