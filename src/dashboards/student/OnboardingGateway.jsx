@@ -10,6 +10,22 @@ const initialForm = {
 
 const routeForPath = (path) => path === 'career' ? '/dashboard/career' : path === 'wellbeing' ? '/dashboard/wellbeing' : path === 'sen' ? '/dashboard/sen' : '/dashboard';
 
+const hasLegacyProfile = (data) => {
+  const fullName = data.fullName || data.name;
+  const dob = data.dateOfBirth || data.dob;
+  const phone = data.phone || data.contactNumber;
+  const emergencyPhone = data.emergencyContactPhone;
+  const status = data.status || data.userType;
+  const institution = data.institution || data.school;
+  const gradeOrCourse = data.gradeOrCourse || data.grade || data.course;
+  const occupation = data.occupation;
+
+  if (!fullName || !dob || !phone || !emergencyPhone) return false;
+  if (status === 'student') return Boolean(institution && gradeOrCourse);
+  if (status === 'professional') return Boolean(occupation);
+  return false;
+};
+
 const OnboardingGateway = ({ navigate }) => {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(true);
@@ -22,15 +38,30 @@ const OnboardingGateway = ({ navigate }) => {
     const loadProfile = async () => {
       if (!user) { setLoading(false); return; }
       try {
-        const snap = await getDoc(doc(db, 'users', user.uid));
+        const ref = doc(db, 'users', user.uid);
+        const snap = await getDoc(ref);
         if (!snap.exists()) { if (!cancelled) setLoading(false); return; }
+
         const data = snap.data();
         const completed = data.onboardingCompleted === true;
         const existingPath = data.primary_path || data.primaryPath || '';
 
         if (completed) {
-          // Returning users never see onboarding again. If they already chose
-          // a service, send them straight to it.
+          if (existingPath) navigate(routeForPath(existingPath));
+          else navigate('/');
+          return;
+        }
+
+        // Migration safeguard: older Secret Sharz accounts may already have a
+        // complete profile but predate onboardingCompleted. Do not make those
+        // users fill the onboarding form again. Mark the profile complete once
+        // and continue normally.
+        if (hasLegacyProfile(data)) {
+          await setDoc(ref, {
+            onboardingCompleted: true,
+            onboardingCompletedAt: data.onboardingCompletedAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }, { merge: true });
           if (existingPath) navigate(routeForPath(existingPath));
           else navigate('/');
           return;
