@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import CareerAssessmentV2 from './CareerAssessmentV2';
 import CareerAssessmentResult from './CareerAssessmentResult';
+import { startCareerAssessmentCheckout } from './careerAssessmentPayment';
 
 const STORAGE_KEY = 'vidyavantage_career_assessment_attempt';
 
@@ -61,16 +62,32 @@ export default function CareerAssessmentJourney({ currentUser, studentData, onEx
     if (!attemptId) return;
     setError('');
     try {
+      await startCareerAssessmentCheckout(attemptId);
+
+      // Razorpay's client callback confirms payment submission, while the
+      // server-side webhook is the source of truth for granting the entitlement.
+      // Poll briefly so the UI updates as soon as the webhook marks the attempt paid.
       const token = await authToken();
-      const response = await fetch('/api/payments/career-assessment/create-checkout', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assessmentAttemptId: attemptId }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Unable to start payment.');
-      window.location.assign(data.checkoutUrl);
-    } catch (err) { setError(err.message || 'Unable to start payment.'); }
+      for (let i = 0; i < 12; i += 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const response = await fetch(`/api/career/assessment/${encodeURIComponent(attemptId)}/result`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) continue;
+        const data = await response.json();
+        if (data.result?.access === 'full' || data.result?.resultAccess === 'full') {
+          setResult(data.result);
+          setView('result');
+          return;
+        }
+      }
+
+      // If the webhook is still processing, reload the normal journey state.
+      await loadState();
+      setError('Payment was received. Your comprehensive report may take a moment to unlock. Please refresh if it does not appear shortly.');
+    } catch (err) {
+      throw err;
+    }
   };
 
   if (loading) return <div className="p-8 text-center text-slate-500">Loading your career journey…</div>;
