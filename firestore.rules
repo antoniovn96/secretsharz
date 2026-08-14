@@ -4,8 +4,6 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function hasClaimRole(role) { return isSignedIn() && request.auth.token.role == role; }
     function isFounderAdmin() { return isSignedIn() && request.auth.token.email_verified == true && request.auth.token.email == 'antonio.antonio.noronha@gmail.com'; }
-    // Custom claims are the primary runtime authority.
-    // users/{uid}.role remains a migration-only fallback for legacy accounts.
     function profileRole(uid) { return get(/databases/$(database)/documents/users/$(uid)).data.role; }
     function isAdmin() { return isFounderAdmin() || hasClaimRole('super_admin') || (isSignedIn() && profileRole(request.auth.uid) == 'super_admin'); }
     function isParent() { return isSignedIn() && (hasClaimRole('parent') || profileRole(request.auth.uid) == 'parent'); }
@@ -41,6 +39,35 @@ service cloud.firestore {
         && (request.resource.data.type == 'account_privacy') == (eventId == 'account_' + request.auth.uid);
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow update, delete: if false;
+    }
+
+    // Service selection is intentionally narrow: students may create only their own
+    // primary onboarding membership after account consent. Changes are server/admin managed.
+    match /serviceMemberships/{membershipId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.personId == request.auth.uid);
+      allow create: if isSignedIn()
+        && hasAccountConsent(request.auth.uid)
+        && request.resource.data.personId == request.auth.uid
+        && request.resource.data.domain in ['counselling','sen','career']
+        && request.resource.data.status == 'active'
+        && request.resource.data.source == 'student'
+        && request.resource.data.isPrimary == true
+        && request.resource.data.institutionId == null
+        && request.resource.data.keys().hasOnly(['personId','institutionId','domain','status','source','isPrimary','startedAt','endedAt']);
+      allow update, delete: if isAdmin();
+    }
+
+    // Guardian relationships are protected. A client may not self-verify or activate one.
+    match /relationships/{relationshipId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && (resource.data.subjectPersonId == request.auth.uid || resource.data.guardianPersonId == request.auth.uid));
+      allow create: if isSignedIn()
+        && request.resource.data.subjectPersonId == request.auth.uid
+        && request.resource.data.type in ['guardian','parent']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.verified == false
+        && request.resource.data.verifiedAt == null;
+      allow update, delete: if isAdmin();
     }
 
     match /students/{studentId} {
