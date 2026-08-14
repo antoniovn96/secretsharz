@@ -4,61 +4,78 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function hasClaimRole(role) { return isSignedIn() && request.auth.token.role == role; }
     function isFounderAdmin() { return isSignedIn() && request.auth.token.email_verified == true && request.auth.token.email == 'antonio.antonio.noronha@gmail.com'; }
-    // Custom claims are the primary runtime authority.
-    // users/{uid}.role remains a migration-only fallback for legacy accounts.
     function profileRole(uid) { return get(/databases/$(database)/documents/users/$(uid)).data.role; }
     function isAdmin() { return isFounderAdmin() || hasClaimRole('super_admin') || (isSignedIn() && profileRole(request.auth.uid) == 'super_admin'); }
     function isParent() { return isSignedIn() && (hasClaimRole('parent') || profileRole(request.auth.uid) == 'parent'); }
     function isStaff() { return isSignedIn() && (request.auth.token.role in ['counsellor','career_counsellor','psychologist','educator'] || profileRole(request.auth.uid) in ['counsellor','career_counsellor','psychologist','educator']); }
     function isAssignedStaffForStudent(studentId) {
-      return isStaff()
-        && get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.careerId == request.auth.uid;
+      return isStaff() && get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.careerId == request.auth.uid;
     }
-
     function hasAccountConsent(uid) {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/consentEvents/$('account_' + uid))
+      return isSignedIn() && exists(/databases/$(database)/documents/consentEvents/$('account_' + uid))
         && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.userId == uid
         && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.type == 'account_privacy'
         && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.action == 'granted'
         && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.policyVersion == '1.0.0'
         && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.keys().hasAll(['userId','type','action','actorType','relationshipId','serviceContext','policyVersion','createdAt']);
     }
-
     function validConsentEventCreate() {
-      return isSignedIn()
-        && request.resource.data.userId == request.auth.uid
+      return isSignedIn() && request.resource.data.userId == request.auth.uid
         && request.resource.data.type in ['account_privacy','counselling','sen','career_guidance','community','ai_feature']
         && request.resource.data.action in ['granted','withdrawn','updated']
-        && request.resource.data.actorType == 'self'
-        && request.resource.data.policyVersion == '1.0.0'
+        && request.resource.data.actorType == 'self' && request.resource.data.policyVersion == '1.0.0'
         && request.resource.data.createdAt == request.time
         && request.resource.data.keys().hasOnly(['userId','type','action','actorType','relationshipId','serviceContext','policyVersion','createdAt']);
     }
-
     match /consentEvents/{eventId} {
-      allow create: if validConsentEventCreate()
-        && (request.resource.data.type == 'account_privacy') == (eventId == 'account_' + request.auth.uid);
+      allow create: if validConsentEventCreate() && (request.resource.data.type == 'account_privacy') == (eventId == 'account_' + request.auth.uid);
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow update, delete: if false;
     }
-
+    match /serviceMemberships/{membershipId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.personId == request.auth.uid);
+      allow create: if isSignedIn() && hasAccountConsent(request.auth.uid) && request.resource.data.personId == request.auth.uid
+        && request.resource.data.domain in ['counselling','sen','career'] && request.resource.data.status == 'active'
+        && request.resource.data.source == 'student' && request.resource.data.isPrimary == true && request.resource.data.institutionId == null
+        && request.resource.data.keys().hasOnly(['personId','institutionId','domain','status','source','isPrimary','startedAt','endedAt']);
+      allow update, delete: if isAdmin();
+    }
+    match /relationships/{relationshipId} {
+      allow read: if isAdmin() || (isSignedIn() && (resource.data.subjectPersonId == request.auth.uid || resource.data.guardianPersonId == request.auth.uid));
+      allow create: if isSignedIn() && request.resource.data.subjectPersonId == request.auth.uid
+        && request.resource.data.type in ['guardian','parent'] && request.resource.data.status == 'pending'
+        && request.resource.data.verified == false && request.resource.data.verifiedAt == null;
+      allow update, delete: if isAdmin();
+    }
+    match /assessments/{attemptId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.personId == request.auth.uid);
+      allow create: if isSignedIn() && hasAccountConsent(request.auth.uid) && request.resource.data.personId == request.auth.uid
+        && request.resource.data.assessmentVersion is string && request.resource.data.status in ['student','working_professional']
+        && request.resource.data.age is int && request.resource.data.paymentStatus == 'unpaid'
+        && request.resource.data.keys().hasOnly(['attemptId','personId','assessmentVersion','status','age','input','answers','currentStage','completedStageIds','paymentStatus','completed','createdAt','startedAt','lastSavedAt','completedAt']);
+      allow update: if isAdmin() || (isSignedIn() && resource.data.personId == request.auth.uid && resource.data.paymentStatus == 'unpaid'
+        && request.resource.data.personId == resource.data.personId && request.resource.data.assessmentVersion == resource.data.assessmentVersion
+        && request.resource.data.status == resource.data.status && request.resource.data.age == resource.data.age && request.resource.data.paymentStatus == 'unpaid'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['input','answers','currentStage','completedStageIds','completed','lastSavedAt','completedAt']));
+      allow delete: if isAdmin();
+    }
+    match /assessmentResults/{resultId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.personId == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+    match /assessmentEntitlements/{entitlementId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.personId == request.auth.uid);
+      allow create, update, delete: if false;
+    }
     match /students/{studentId} {
-      allow read: if isSignedIn() && (
-        request.auth.uid == studentId ||
-        (isParent() && resource.data.parent.userId == request.auth.uid) ||
-        (isStaff() && (resource.data.assignedStaff.careerId == request.auth.uid || resource.data.assignedStaff.psychId == request.auth.uid || resource.data.assignedStaff.senId == request.auth.uid)) ||
-        isAdmin()
-      );
+      allow read: if isSignedIn() && (request.auth.uid == studentId || (isParent() && resource.data.parent.userId == request.auth.uid) || (isStaff() && (resource.data.assignedStaff.careerId == request.auth.uid || resource.data.assignedStaff.psychId == request.auth.uid || resource.data.assignedStaff.senId == request.auth.uid)) || isAdmin());
       allow write: if isAdmin();
-
       match /career_roadmaps/{roadmapId} {
         allow read: if isAdmin() || isAssignedStaffForStudent(studentId) || (isSignedIn() && request.auth.uid == studentId);
         allow create: if isAdmin() || (isAssignedStaffForStudent(studentId) && request.resource.data.providerId == request.auth.uid);
         allow update: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid && request.resource.data.providerId == request.auth.uid);
         allow delete: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid);
       }
-
       match /career_notes/{noteId} {
         allow read: if isAdmin() || isAssignedStaffForStudent(studentId);
         allow create: if isAdmin() || (isAssignedStaffForStudent(studentId) && request.resource.data.providerId == request.auth.uid);
@@ -66,27 +83,18 @@ service cloud.firestore {
         allow delete: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid);
       }
     }
-
     match /caseFiles/{fileId} {
       allow read: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid) || (isSignedIn() && request.auth.uid == resource.data.studentId && resource.data.isPrivate == false);
       allow create: if isAdmin() || (isStaff() && request.resource.data.staffId == request.auth.uid);
       allow update: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid && request.resource.data.staffId == resource.data.staffId && request.resource.data.studentId == resource.data.studentId && request.resource.data.isPrivate == resource.data.isPrivate);
       allow delete: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid);
     }
-
     match /users/{userId} {
       allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-      allow create: if isAdmin()
-        || (isSignedIn()
-          && request.auth.uid == userId
-          && hasAccountConsent(userId)
-          && request.resource.data.role == 'student'
-          && !request.resource.data.keys().hasAny(['admin','permissions']));
-      allow update: if isAdmin()
-        || (isSignedIn() && request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role','admin','permissions']));
+      allow create: if isAdmin() || (isSignedIn() && request.auth.uid == userId && hasAccountConsent(userId) && request.resource.data.role == 'student' && !request.resource.data.keys().hasAny(['admin','permissions']));
+      allow update: if isAdmin() || (isSignedIn() && request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role','admin','permissions']));
       allow delete: if isAdmin();
     }
-
     match /counselling/{document=**} { allow read, write: if false; }
     match /sen/{document=**} { allow read, write: if false; }
     match /career/{document=**} { allow read, write: if false; }
