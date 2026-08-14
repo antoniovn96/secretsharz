@@ -59,9 +59,6 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // Career assessment attempts/results are protected from other students.
-    // Students can create their own attempt only after account consent. Results
-    // are readable by the owner or admin; result generation/upgrades remain trusted-server operations.
     match /assessments/{attemptId} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.personId == request.auth.uid);
       allow create: if isSignedIn()
@@ -70,8 +67,19 @@ service cloud.firestore {
         && request.resource.data.assessmentVersion is string
         && request.resource.data.status in ['student','working_professional']
         && request.resource.data.age is int
-        && request.resource.data.keys().hasOnly(['attemptId','personId','assessmentVersion','status','age','input','answers','paymentStatus','completed','createdAt','completedAt']);
-      allow update, delete: if false;
+        && request.resource.data.paymentStatus == 'unpaid'
+        && request.resource.data.keys().hasOnly(['attemptId','personId','assessmentVersion','status','age','input','answers','currentStage','completedStageIds','paymentStatus','completed','createdAt','startedAt','lastSavedAt','completedAt']);
+      allow update: if isAdmin()
+        || (isSignedIn()
+          && resource.data.personId == request.auth.uid
+          && resource.data.paymentStatus == 'unpaid'
+          && request.resource.data.personId == resource.data.personId
+          && request.resource.data.assessmentVersion == resource.data.assessmentVersion
+          && request.resource.data.status == resource.data.status
+          && request.resource.data.age == resource.data.age
+          && request.resource.data.paymentStatus == 'unpaid'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['input','answers','currentStage','completedStageIds','completed','lastSavedAt','completedAt']));
+      allow delete: if isAdmin();
     }
     match /assessmentResults/{resultId} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.personId == request.auth.uid);
