@@ -1,5 +1,24 @@
 import { getAdminAuth, getAdminFirestore } from '../../../../src/security/firebaseAdmin';
-import { createStripeCheckoutSession, CAREER_ASSESSMENT_PRODUCT_ID } from '../../../../src/career/stripeCareerAssessment';
+import {
+  buildRazorpayOrderPayload,
+  CAREER_ASSESSMENT_PRODUCT_ID,
+  RAZORPAY_PROVIDER,
+} from '../../../../src/career/razorpayCareerAssessment';
+
+async function createRazorpayOrder({ keyId, keySecret, payload }) {
+  if (!keyId || !keySecret) throw new Error('Razorpay is not configured.');
+  const response = await fetch('https://api.razorpay.com/v1/orders', {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data?.error?.description || 'Razorpay order creation failed.');
+  return data;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed.' });
@@ -24,29 +43,46 @@ export default async function handler(req, res) {
     if (attempt.completed !== true) return res.status(409).json({ error: 'Complete the assessment before purchasing the comprehensive report.' });
     if (attempt.paymentStatus === 'paid') return res.status(409).json({ error: 'This assessment is already unlocked.' });
 
-    const priceId = process.env.STRIPE_CAREER_ASSESSMENT_PRICE_ID;
-    if (!priceId) return res.status(503).json({ error: 'Career assessment payment is not configured yet.' });
+    if (process.env.RAZORPAY_ENABLED !== 'true') {
+      return res.status(503).json({ error: 'Career assessment payment is not enabled yet.' });
+    }
 
-    const origin = process.env.NEXT_PUBLIC_APP_URL || `https://${req.headers.host}`;
-    const session = await createStripeCheckoutSession({
-      secretKey: process.env.STRIPE_SECRET_KEY,
-      priceId,
-      personId: decoded.uid,
-      assessmentAttemptId,
-      successUrl: `${origin}/?payment=career-assessment-success&session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${origin}/?payment=career-assessment-cancelled`,
+    const amount = Number(process.env.RAZORPAY_CAREER_ASSESSMENT_AMOUNT);
+    if (!Number.isInteger(amount) || amount <= 0) {
+      return res.status(503).json({ error: 'Career assessment price is not configured yet.' });
+    }
+
+    const receipt = `career_${assessmentAttemptId}`.slice(0, 40);
+    const order = await createRazorpayOrder({
+      keyId: process.env.RAZORPAY_KEY_ID,
+      keySecret: process.env.RAZORPAY_KEY_SECRET,
+      payload: buildRazorpayOrderPayload({
+        amount,
+        currency: process.env.RAZORPAY_CURRENCY || 'INR',
+        receipt,
+        personId: decoded.uid,
+        assessmentAttemptId,
+      }),
     });
 
     await attemptRef.update({
       paymentStatus: 'checkout_started',
-      checkoutSessionId: session.id,
+      paymentProvider: RAZORPAY_PROVIDER,
+      checkoutOrderId: order.id,
       checkoutProductId: CAREER_ASSESSMENT_PRODUCT_ID,
       checkoutStartedAt: new Date(),
     });
 
-    return res.status(200).json({ checkoutUrl: session.url, sessionId: session.id });
+    return res.status(200).json({
+      provider: RAZORPAY_PROVIDER,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
+      productId: CAREER_ASSESSMENT_PRODUCT_ID,
+    });
   } catch (error) {
-    console.error('career assessment checkout error', error);
+    console.error('career assessment Razorpay order error', error);
     return res.status(500).json({ error: 'Unable to start payment.' });
   }
 }
