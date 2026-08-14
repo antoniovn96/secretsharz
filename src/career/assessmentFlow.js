@@ -17,7 +17,9 @@ export const ASSESSMENT_STAGES = Object.freeze([
 
 export function getAssessmentStages(status) {
   if (!CANDIDATE_STATUSES.includes(status)) return ASSESSMENT_STAGES;
-  return ASSESSMENT_STAGES.filter((stage) => status !== 'student' || stage.id !== 'academic' || stage.id === 'academic');
+  return status === 'student'
+    ? ASSESSMENT_STAGES
+    : ASSESSMENT_STAGES.filter((stage) => stage.id !== 'academic');
 }
 
 export function getStageIndex(stageId, status) {
