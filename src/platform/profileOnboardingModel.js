@@ -14,6 +14,34 @@ export function requiresGuardian({ profileType, age }) {
   return profileType === 'student' && Number(age) < 18;
 }
 
+// Used by dashboards as well as the intake form. This deliberately accepts
+// legacy field names so an older completed profile is not treated as new.
+export function isProfileComplete(data = {}) {
+  if (data.profileComplete === true || data.onboardingCompleted === true) return true;
+
+  const type = deriveProfileType({ profileType: data.profileType, role: data.role });
+  const name = data.name || data.fullName;
+  const dob = data.dob || data.dateOfBirth;
+  const phone = data.contactNumber || data.phone;
+  const emergencyName = data.emergencyContactName || data.emergencyName;
+  const emergencyNumber = data.emergencyContactNumber || data.emergencyContactPhone;
+  const age = Number(data.age);
+
+  if (!name || !dob || !phone) return false;
+
+  if (type === 'working_professional') {
+    return Boolean(emergencyName && emergencyNumber);
+  }
+
+  if (!data.grade && !data.gradeOrCourse) return false;
+
+  if (requiresGuardian({ profileType: type, age })) {
+    return Boolean(data.parentName && data.parentContact);
+  }
+
+  return true;
+}
+
 export function validateProfile({
   profileType,
   age,
