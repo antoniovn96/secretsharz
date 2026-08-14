@@ -12,8 +12,9 @@ export default async function handler(req, res) {
     const attempt = attempts.find(item => item.completed !== true) || attempts[0] || null;
     let result = null;
     if (attempt?.completed) {
-      const resultSnap = await db.collection('assessmentResults').where('personId', '==', decoded.uid).where('assessmentAttemptId', '==', attempt.attemptId || attempt.id).limit(1).get();
-      if (!resultSnap.empty) result = { id: resultSnap.docs[0].id, ...resultSnap.docs[0].data() };
+      const resultRef = db.collection('assessmentResults').doc(attempt.attemptId || attempt.id);
+      const resultSnap = await resultRef.get();
+      if (resultSnap.exists) result = { id: resultSnap.id, ...resultSnap.data() };
     }
     return res.status(200).json({ attempt, result });
   } catch (error) {
