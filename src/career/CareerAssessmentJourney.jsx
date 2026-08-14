@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import CareerAssessmentV2 from './CareerAssessmentV2';
 import CareerAssessmentResult from './CareerAssessmentResult';
+import { startCareerAssessmentCheckout } from './careerAssessmentPayment';
 
 const STORAGE_KEY = 'vidyavantage_career_assessment_attempt';
 
@@ -60,17 +61,35 @@ export default function CareerAssessmentJourney({ currentUser, studentData, onEx
   const unlock = async () => {
     if (!attemptId) return;
     setError('');
-    try {
-      const token = await authToken();
-      const response = await fetch('/api/payments/career-assessment/create-checkout', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assessmentAttemptId: attemptId }),
+    await startCareerAssessmentCheckout(attemptId);
+
+    // Razorpay's client callback confirms payment submission, while the
+    // server-side webhook is the source of truth for granting the entitlement.
+    // Poll briefly until the webhook marks the assessment paid, then generate
+    // the full result from the trusted server-side assessment data.
+    const token = await authToken();
+    for (let i = 0; i < 12; i += 1) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/career/assessment/current', {
+        headers: { Authorization: `Bearer ${token}` },
       });
+      if (!response.ok) continue;
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Unable to start payment.');
-      window.location.assign(data.checkoutUrl);
-    } catch (err) { setError(err.message || 'Unable to start payment.'); }
+      if (data.attempt?.attemptId === attemptId && data.attempt?.paymentStatus === 'paid') {
+        const unlockResponse = await fetch('/api/career/assessment/unlock-result', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ assessmentAttemptId: attemptId }),
+        });
+        const unlockPayload = await unlockResponse.json().catch(() => ({}));
+        if (!unlockResponse.ok) throw new Error(unlockPayload.error || 'Payment was confirmed, but the report could not be unlocked.');
+        setResult(unlockPayload.result);
+        setView('result');
+        return;
+      }
+    }
+
+    setError('Payment was received, but confirmation is still processing. Please refresh the assessment shortly.');
   };
 
   if (loading) return <div className="p-8 text-center text-slate-500">Loading your career journey…</div>;
