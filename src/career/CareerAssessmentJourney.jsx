@@ -11,8 +11,7 @@ export default function CareerAssessmentJourney({ currentUser, studentData, onEx
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const firebaseUser = currentUser?.firebaseUser || currentUser;
-  const userId = firebaseUser?.uid || currentUser?.uid || null;
+  const userId = currentUser?.firebaseUser?.uid || currentUser?.uid || null;
 
   const authToken = useCallback(async () => {
     const user = currentUser?.firebaseUser || currentUser;
@@ -48,18 +47,13 @@ export default function CareerAssessmentJourney({ currentUser, studentData, onEx
     setAttemptId(completedAttemptId);
     try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ attemptId: completedAttemptId })); } catch (_) {}
     const token = await authToken();
-
     const finalizeResponse = await fetch(`/api/career/assessment/${encodeURIComponent(completedAttemptId)}/result`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     });
-    if (!finalizeResponse.ok) {
-      const payload = await finalizeResponse.json().catch(() => ({}));
-      throw new Error(payload.error || 'Your assessment was saved, but the result could not be generated yet.');
-    }
-
-    const data = await finalizeResponse.json();
-    setResult(data.result);
+    const payload = await finalizeResponse.json().catch(() => ({}));
+    if (!finalizeResponse.ok) throw new Error(payload.error || 'Your assessment was saved, but the result could not be generated yet.');
+    setResult(payload.result);
     setView('result');
   };
 
@@ -84,7 +78,7 @@ export default function CareerAssessmentJourney({ currentUser, studentData, onEx
   if (view === 'result' && result) {
     return <>
       {error && <div className="mx-auto max-w-5xl px-5 pt-5 text-sm text-red-600">{error}</div>}
-      <CareerAssessmentResult result={result} onUnlock={unlock} onExit={onExit} />
+      <CareerAssessmentResult result={result} assessmentAttemptId={attemptId} onUnlock={unlock} onExit={onExit} />
     </>;
   }
 
