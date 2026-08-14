@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import CareerAssessment from '../../CareerAssessment';
 import UnifiedIntakeForm from '../../components/forms/UnifiedIntakeForm';
+import { isProfileComplete } from '../../platform/profileOnboardingModel';
 
 const CareerStudentView = ({ studentData, currentUser }) => {
   const [isTakingTest, setIsTakingTest] = useState(false);
   const dynamicName = studentData?.name || currentUser?.displayName || 'Student';
   const profileImage = studentData?.photoURL || currentUser?.photoURL || 'https://via.placeholder.com/150';
-  // profileComplete is the canonical gate. Do not infer completeness from
-  // student-only fields such as grade/parentName because professionals and
-  // adult students legitimately do not have those fields.
-  const isProfileIncomplete = studentData?.profileComplete !== true;
-  const [showIntake, setShowIntake] = useState(isProfileIncomplete);
+
+  // The dashboard can mount before Firestore finishes loading studentData.
+  // Do not permanently capture the initial incomplete/undefined state.
+  const profileComplete = isProfileComplete(studentData || {});
+  const [showIntake, setShowIntake] = useState(false);
+
+  useEffect(() => {
+    if (!studentData) return;
+    setShowIntake(!profileComplete);
+  }, [studentData, profileComplete]);
+
   const hasAssessment = !!(studentData?.riasecScores || studentData?.careerDNA?.riasec || studentData?.riasecCode);
 
   if (isTakingTest) {
