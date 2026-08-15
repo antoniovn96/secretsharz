@@ -35,7 +35,11 @@ export default async function handler(req, res) {
     return jsonError(res, 401, 'Invalid or expired authentication token.');
   }
 
-  const configuredAmount = Number(process.env.CAREER_REPORT_PRICE_PAISE || DEFAULT_PRICE_PAISE);
+  const configuredAmount = Number(
+    process.env.RAZORPAY_CAREER_ASSESSMENT_AMOUNT_PAISE ||
+    process.env.CAREER_REPORT_PRICE_PAISE ||
+    DEFAULT_PRICE_PAISE
+  );
   if (!Number.isInteger(configuredAmount) || configuredAmount < 100) {
     return jsonError(res, 500, 'Invalid career report price configuration.');
   }
