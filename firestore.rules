@@ -4,8 +4,6 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function hasClaimRole(role) { return isSignedIn() && request.auth.token.role == role; }
     function isFounderAdmin() { return isSignedIn() && request.auth.token.email_verified == true && request.auth.token.email == 'antonio.antonio.noronha@gmail.com'; }
-    // Custom claims are the primary runtime authority.
-    // users/{uid}.role remains a migration-only fallback for legacy accounts.
     function profileRole(uid) { return get(/databases/$(database)/documents/users/$(uid)).data.role; }
     function isAdmin() { return isFounderAdmin() || hasClaimRole('super_admin') || (isSignedIn() && profileRole(request.auth.uid) == 'super_admin'); }
     function isParent() { return isSignedIn() && (hasClaimRole('parent') || profileRole(request.auth.uid) == 'parent'); }
@@ -81,9 +79,11 @@ service cloud.firestore {
           && request.auth.uid == userId
           && hasAccountConsent(userId)
           && request.resource.data.role == 'student'
-          && !request.resource.data.keys().hasAny(['admin','permissions']));
+          && !request.resource.data.keys().hasAny(['admin','permissions','careerReportAccess']));
       allow update: if isAdmin()
-        || (isSignedIn() && request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role','admin','permissions']));
+        || (isSignedIn()
+          && request.auth.uid == userId
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role','admin','permissions','careerReportAccess']));
       allow delete: if isAdmin();
     }
 
