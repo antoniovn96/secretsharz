@@ -79,6 +79,11 @@ export default async function handler(req, res) {
   const institutionName = requestedName || clean(existing?.name, 180) || clean(caller.institutionName, 180);
   if (!institutionName) return res.status(400).json({ error: 'Institution name is required.' });
 
+  if (!isFounder && existing) {
+    if (existing.status !== 'active') return res.status(409).json({ error: 'This institution is not active yet.' });
+    if (existing.licenses?.paymentStatus !== 'paid') return res.status(409).json({ error: 'Student assessment licenses cannot be provisioned until the institution payment is confirmed.' });
+  }
+
   const requestedLicenseCount = Number(req.body?.licenseCount || existing?.licenses?.purchased || 0);
   if (isFounder && (!Number.isInteger(requestedLicenseCount) || requestedLicenseCount < rows.length)) {
     return res.status(400).json({ error: `License allocation must cover all uploaded students. You supplied ${rows.length} students.` });
@@ -99,8 +104,6 @@ export default async function handler(req, res) {
   for (const row of rows) {
     let code = makeCode(tenantCode);
     let codeRef = db.collection('institutionCodes').doc(code);
-    // Cryptographic random generation makes collision extremely unlikely; this
-    // second check keeps the uniqueness guarantee explicit at the database layer.
     let exists = (await codeRef.get()).exists;
     while (exists) {
       code = makeCode(tenantCode);
