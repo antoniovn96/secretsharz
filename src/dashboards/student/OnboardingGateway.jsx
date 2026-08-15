@@ -53,7 +53,11 @@ const OnboardingGateway = ({ navigate }) => {
 
     restoreSavedPath();
     return () => { cancelled = true; };
-  }, [navigate]);
+    // This check intentionally runs once when the gateway mounts. The parent
+    // router recreates navigate() on state changes; including it here would
+    // repeatedly re-query Firestore for clients without a saved path.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDivisionSelect = async (divisionName) => {
     if (isRouting) return;
