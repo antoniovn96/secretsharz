@@ -23,6 +23,7 @@ const clientAuth = getAuth(clientApp);
 connectAuthEmulator(clientAuth, AUTH_URL, { disableWarnings: true });
 
 let sequence = 0;
+let founderToken = null;
 function uid(prefix) {
   sequence += 1;
   return `${prefix}-${sequence}`;
@@ -66,10 +67,11 @@ async function call(handler, { token, body = {}, method = 'POST', query = {} } =
   return { status: res.statusCode, body: res.body };
 }
 
-before(() => {
+before(async () => {
   assert.equal(isEmulatorMode(), true, 'Institution integration tests require Firebase emulators.');
   assert.ok(process.env.FIREBASE_AUTH_EMULATOR_HOST, 'FIREBASE_AUTH_EMULATOR_HOST must be set.');
   assert.ok(process.env.FIRESTORE_EMULATOR_HOST, 'FIRESTORE_EMULATOR_HOST must be set.');
+  founderToken = await mintToken({ email: FOUNDER_EMAIL, emailVerified: true });
 });
 
 after(async () => {
@@ -77,8 +79,6 @@ after(async () => {
 });
 
 test('150-license institutional journey: provision → redeem → assess → report', async () => {
-  const founder = await mintToken({ email: FOUNDER_EMAIL, emailVerified: true });
-
   const rows = Array.from({ length: 150 }, (_, index) => ({
     fullName: `Institution Test Student ${String(index + 1).padStart(3, '0')}`,
     className: index < 50 ? '10' : index < 100 ? '11' : '12',
@@ -87,7 +87,7 @@ test('150-license institutional journey: provision → redeem → assess → rep
   }));
 
   const provision = await call(provisionRoster, {
-    token: founder.idToken,
+    token: founderToken.idToken,
     body: {
       institutionName: '150 License Integration School',
       licenseCount: 150,
@@ -116,7 +116,7 @@ test('150-license institutional journey: provision → redeem → assess → rep
   }, { merge: true });
 
   const dashboard = await call(institutionDashboard, {
-    token: founder.idToken,
+    token: founderToken.idToken,
     method: 'GET',
     query: { institutionId }
   });
@@ -174,7 +174,7 @@ test('150-license institutional journey: provision → redeem → assess → rep
   }, { merge: true });
 
   const report = await call(studentReport, {
-    token: founder.idToken,
+    token: founderToken.idToken,
     method: 'GET',
     query: { institutionId, rosterId }
   });
@@ -185,7 +185,7 @@ test('150-license institutional journey: provision → redeem → assess → rep
   assert.equal(report.body.report.scores.readinessPercent, 82);
 
   const finalDashboard = await call(institutionDashboard, {
-    token: founder.idToken,
+    token: founderToken.idToken,
     method: 'GET',
     query: { institutionId }
   });
@@ -198,9 +198,8 @@ test('150-license institutional journey: provision → redeem → assess → rep
 });
 
 test('institutional code cannot be redeemed while entitlement is unpaid', async () => {
-  const founder = await mintToken({ email: FOUNDER_EMAIL, emailVerified: true });
   const provision = await call(provisionRoster, {
-    token: founder.idToken,
+    token: founderToken.idToken,
     body: {
       institutionName: 'Unpaid Integration School',
       licenseCount: 1,
