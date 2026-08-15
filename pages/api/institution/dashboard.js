@@ -19,17 +19,21 @@ export default async function handler(req, res) {
   catch (_) { return res.status(401).json({ error: 'Invalid or expired authentication token.' }); }
 
   const db = getAdminFirestore();
-  let userData = {};
-  try {
-    const snap = await db.collection('users').doc(decoded.uid).get();
-    userData = snap.exists ? snap.data() : {};
-  } catch (_) {}
-
   const isFounder = decoded.email_verified === true && decoded.email?.toLowerCase() === FOUNDER_EMAIL;
-  const institutionId = String(req.query?.institutionId || userData.institutionId || '').trim();
+  const institutionId = String(req.query?.institutionId || decoded.institutionId || '').trim();
   if (!institutionId) return res.status(400).json({ error: 'Institution ID is required.' });
-  if (!isFounder && !(userData.role === 'institution_member' && userData.institutionId === institutionId)) {
-    return res.status(403).json({ error: 'Institution access required.' });
+
+  // Institutional access is relationship/claim based. Do not use the legacy
+  // users.role field as an authorization fallback: custom claims are the
+  // trusted privileged authority after coordinator activation.
+  const hasInstitutionAccess = (
+    decoded.role === 'institution_member' &&
+    decoded.institutionRole === 'coordinator' &&
+    decoded.institutionId === institutionId
+  );
+
+  if (!isFounder && !hasInstitutionAccess) {
+    return res.status(403).json({ error: 'Institution coordinator access required.' });
   }
 
   const institutionSnap = await db.collection('institutions').doc(institutionId).get();
