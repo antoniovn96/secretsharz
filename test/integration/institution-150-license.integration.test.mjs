@@ -2,7 +2,8 @@
 //
 // Runs the real institution provisioning, redemption, dashboard and report
 // endpoints against Firebase Auth + Firestore emulators. No production data
-// or credentials are used.
+// or founder account is created by this suite; this avoids cross-file email
+// collisions with the existing role-management integration suite.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { initializeApp } from 'firebase/app';
@@ -15,7 +16,6 @@ import studentReport from '../../pages/api/institution/student-report.js';
 import { getAdminAuth, getAdminFirestore, isEmulatorMode } from '../../src/security/firebaseAdmin.js';
 
 const PROJECT_ID = 'secretsharz-emulator-test';
-const FOUNDER_EMAIL = 'antonio.antonio.noronha@gmail.com';
 const AUTH_URL = `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST || '127.0.0.1:9099'}`;
 
 const clientApp = initializeApp({ apiKey: 'institution-test', projectId: PROJECT_ID }, 'institution-150-license-client');
@@ -23,7 +23,6 @@ const clientAuth = getAuth(clientApp);
 connectAuthEmulator(clientAuth, AUTH_URL, { disableWarnings: true });
 
 let sequence = 0;
-let founderToken = null;
 function uid(prefix) {
   sequence += 1;
   return `${prefix}-${sequence}`;
@@ -41,37 +40,60 @@ function makeRes() {
   };
 }
 
-async function mintToken({ email, emailVerified = false, forcedUid } = {}) {
-  const theUid = forcedUid || uid('institution-user');
+async function mintToken({ email, emailVerified = true } = {}) {
+  const theUid = uid('institution-user');
   const admin = getAdminAuth();
-  await admin.createUser({
-    uid: theUid,
-    email: email || `${theUid}@emulator.test`,
-    emailVerified,
-    password: 'password123'
-  });
+  const requestedEmail = email || `${theUid}@emulator.test`;
+  await admin.createUser({ uid: theUid, email: requestedEmail, emailVerified, password: 'password123' });
   const customToken = await admin.createCustomToken(theUid);
   const credential = await signInWithCustomToken(clientAuth, customToken);
-  return { uid: theUid, idToken: await credential.user.getIdToken() };
+  return { uid: theUid, idToken: await credential.user.getIdToken(), email: requestedEmail };
 }
 
 async function call(handler, { token, body = {}, method = 'POST', query = {} } = {}) {
-  const req = {
-    method,
-    headers: token ? { authorization: `Bearer ${token}` } : {},
-    body,
-    query
-  };
+  const req = { method, headers: token ? { authorization: `Bearer ${token}` } : {}, body, query };
   const res = makeRes();
   await handler(req, res);
   return { status: res.statusCode, body: res.body };
 }
 
-before(async () => {
+async function createCoordinatorInstitution({ name, licenseCount = 150, paymentStatus = 'paid' } = {}) {
+  const coordinator = await mintToken({});
+  const institutionId = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${uid('tenant')}`;
+  const db = getAdminFirestore();
+  await db.collection('institutions').doc(institutionId).set({
+    id: institutionId,
+    name,
+    tenantCode: name.replace(/[^A-Za-z0-9]/g, '').slice(0, 12).toUpperCase(),
+    institutionCode: `SSZ-TEST-${uid('code').toUpperCase()}`,
+    status: 'active',
+    contactEmail: coordinator.email,
+    coordinator: { uid: coordinator.uid, email: coordinator.email, role: 'coordinator' },
+    licenses: {
+      purchased: licenseCount,
+      used: 0,
+      available: licenseCount,
+      paymentStatus,
+      pricePerLicense: 0,
+      totalAmount: 0
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
+  await db.collection('users').doc(coordinator.uid).set({
+    role: 'institution_member',
+    institutionId,
+    institutionName: name,
+    institutionRole: 'coordinator',
+    status: 'active'
+  }, { merge: true });
+  return { coordinator, institutionId, db };
+}
+
+before(() => {
   assert.equal(isEmulatorMode(), true, 'Institution integration tests require Firebase emulators.');
   assert.ok(process.env.FIREBASE_AUTH_EMULATOR_HOST, 'FIREBASE_AUTH_EMULATOR_HOST must be set.');
   assert.ok(process.env.FIRESTORE_EMULATOR_HOST, 'FIRESTORE_EMULATOR_HOST must be set.');
-  founderToken = await mintToken({ email: FOUNDER_EMAIL, emailVerified: true });
 });
 
 after(async () => {
@@ -79,6 +101,12 @@ after(async () => {
 });
 
 test('150-license institutional journey: provision → redeem → assess → report', async () => {
+  const { coordinator, institutionId, db } = await createCoordinatorInstitution({
+    name: '150 License Integration School',
+    licenseCount: 150,
+    paymentStatus: 'paid'
+  });
+
   const rows = Array.from({ length: 150 }, (_, index) => ({
     fullName: `Institution Test Student ${String(index + 1).padStart(3, '0')}`,
     className: index < 50 ? '10' : index < 100 ? '11' : '12',
@@ -87,12 +115,8 @@ test('150-license institutional journey: provision → redeem → assess → rep
   }));
 
   const provision = await call(provisionRoster, {
-    token: founderToken.idToken,
-    body: {
-      institutionName: '150 License Integration School',
-      licenseCount: 150,
-      rows
-    }
+    token: coordinator.idToken,
+    body: { institutionId, rows }
   });
 
   assert.equal(provision.status, 200, JSON.stringify(provision.body));
@@ -106,21 +130,11 @@ test('150-license institutional journey: provision → redeem → assess → rep
   assert.equal(new Set(codes).size, 150, 'all 150 access codes must be unique');
   assert.ok(codes.every(code => /^SSZ-[A-Z0-9]+-\d{2}-[A-F0-9]{12}$/.test(code)), 'all codes must use the expected institutional format');
 
-  const institutionId = provision.body.institution.id;
-  const db = getAdminFirestore();
-  const institutionRef = db.collection('institutions').doc(institutionId);
-  await institutionRef.set({
-    status: 'active',
-    licenses: { paymentStatus: 'paid' },
-    updatedAt: new Date().toISOString()
-  }, { merge: true });
-
   const dashboard = await call(institutionDashboard, {
-    token: founderToken.idToken,
+    token: coordinator.idToken,
     method: 'GET',
     query: { institutionId }
   });
-
   assert.equal(dashboard.status, 200, JSON.stringify(dashboard.body));
   assert.equal(dashboard.body.students.length, 150);
   assert.equal(dashboard.body.summary.total, 150);
@@ -134,32 +148,24 @@ test('150-license institutional journey: provision → redeem → assess → rep
   const code = codes[0];
   const rosterId = students[0].id;
 
-  const firstRedemption = await call(redeemCode, {
-    token: studentA.idToken,
-    body: { code }
-  });
+  const firstRedemption = await call(redeemCode, { token: studentA.idToken, body: { code } });
   assert.equal(firstRedemption.status, 200, JSON.stringify(firstRedemption.body));
   assert.equal(firstRedemption.body.student.fullName, rows[0].fullName);
 
-  const replayBySameStudent = await call(redeemCode, {
-    token: studentA.idToken,
-    body: { code }
-  });
+  const replayBySameStudent = await call(redeemCode, { token: studentA.idToken, body: { code } });
   assert.equal(replayBySameStudent.status, 200, 'same student replay should be idempotent');
 
-  const replayByAnotherStudent = await call(redeemCode, {
-    token: studentB.idToken,
-    body: { code }
-  });
+  const replayByAnotherStudent = await call(redeemCode, { token: studentB.idToken, body: { code } });
   assert.equal(replayByAnotherStudent.status, 409);
 
+  const institutionRef = db.collection('institutions').doc(institutionId);
   const rosterSnap = await institutionRef.collection('roster').doc(rosterId).get();
   assert.equal(rosterSnap.data().status, 'claimed');
   assert.equal(rosterSnap.data().claimedBy, studentA.uid);
 
   // Simulate the assessment engine completing its canonical report write.
-  // This keeps the test focused on institutional entitlement/report access
-  // while avoiding coupling it to the UI's question-generation implementation.
+  // The institutional boundary is what this test verifies; question scoring
+  // remains covered by the dedicated career-assessment tests.
   await db.collection('users').doc(studentA.uid).set({
     careerAssessmentV2: {
       version: 'integration-test',
@@ -174,18 +180,17 @@ test('150-license institutional journey: provision → redeem → assess → rep
   }, { merge: true });
 
   const report = await call(studentReport, {
-    token: founderToken.idToken,
+    token: coordinator.idToken,
     method: 'GET',
     query: { institutionId, rosterId }
   });
-
   assert.equal(report.status, 200, JSON.stringify(report.body));
   assert.equal(report.body.student.fullName, rows[0].fullName);
   assert.equal(report.body.report.scores.riasecCode, 'RIA');
   assert.equal(report.body.report.scores.readinessPercent, 82);
 
   const finalDashboard = await call(institutionDashboard, {
-    token: founderToken.idToken,
+    token: coordinator.idToken,
     method: 'GET',
     query: { institutionId }
   });
@@ -198,15 +203,22 @@ test('150-license institutional journey: provision → redeem → assess → rep
 });
 
 test('institutional code cannot be redeemed while entitlement is unpaid', async () => {
+  const { coordinator, institutionId, db } = await createCoordinatorInstitution({
+    name: 'Unpaid Integration School',
+    licenseCount: 1,
+    paymentStatus: 'paid'
+  });
+
   const provision = await call(provisionRoster, {
-    token: founderToken.idToken,
-    body: {
-      institutionName: 'Unpaid Integration School',
-      licenseCount: 1,
-      rows: [{ fullName: 'Locked Student', className: '10', section: 'A', rollNumber: '1' }]
-    }
+    token: coordinator.idToken,
+    body: { institutionId, rows: [{ fullName: 'Locked Student', className: '10', section: 'A', rollNumber: '1' }] }
   });
   assert.equal(provision.status, 200, JSON.stringify(provision.body));
+
+  await db.collection('institutions').doc(institutionId).set({
+    licenses: { paymentStatus: 'pending' },
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
 
   const student = await mintToken({});
   const redemption = await call(redeemCode, {
