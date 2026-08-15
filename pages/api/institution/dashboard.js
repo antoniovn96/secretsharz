@@ -35,6 +35,7 @@ export default async function handler(req, res) {
   const institutionSnap = await db.collection('institutions').doc(institutionId).get();
   if (!institutionSnap.exists) return res.status(404).json({ error: 'Institution not found.' });
   const institution = institutionSnap.data();
+  const paidEntitlement = institution.licenses?.paymentStatus === 'paid';
   const rosterSnap = await db.collection('institutions').doc(institutionId).collection('roster').orderBy('createdAt', 'desc').limit(2000).get();
 
   const students = rosterSnap.docs.map((doc) => {
@@ -45,7 +46,8 @@ export default async function handler(req, res) {
       className: data.className || '',
       section: data.section || '',
       rollNumber: data.rollNumber || '',
-      accessCode: data.accessCode || '',
+      accessCode: paidEntitlement || isFounder ? (data.accessCode || '') : '',
+      accessCodeAvailable: paidEntitlement || isFounder,
       status: data.status || 'unclaimed',
       assessmentStatus: data.assessmentStatus || 'not_started',
       reportStatus: data.reportStatus || 'locked_until_completion',
@@ -63,5 +65,17 @@ export default async function handler(req, res) {
     reportsReady: students.filter(s => s.reportStatus === 'ready').length,
   };
 
-  return res.status(200).json({ institution: { id: institutionId, name: institution.name, tenantCode: institution.tenantCode, licenses: institution.licenses || {} }, students, summary });
+  return res.status(200).json({
+    institution: {
+      id: institutionId,
+      name: institution.name,
+      tenantCode: institution.tenantCode,
+      status: institution.status || 'pending',
+      paymentStatus: institution.licenses?.paymentStatus || 'pending',
+      licenses: institution.licenses || {},
+      coordinator: institution.coordinator || null,
+    },
+    students,
+    summary,
+  });
 }
