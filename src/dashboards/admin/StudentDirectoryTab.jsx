@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CheckCircle, GraduationCap, Plus, Users, ClipboardCheck, UserCheck } from 'lucide-react';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { auth } from '../../firebase';
 
 import UserDirectoryTable from './UserDirectoryTable';
 import SlideOutDetailPanel from './SlideOutDetailPanel';
@@ -18,47 +17,65 @@ const StudentDirectoryTab = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [notification, setNotification] = useState(null);
 
-  useEffect(() => {
+  const loadStudents = useCallback(async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      setLoadError('Authentication required to load the student directory.');
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setLoadError('');
 
-    // Keep the query simple and sort client-side. This avoids requiring a
-    // composite Firestore index for role + createdAt while retaining live updates.
-    const studentsQuery = query(collection(db, 'users'), where('role', '==', 'student'));
+    try {
+      const idToken = await currentUser.getIdToken(true);
+      const response = await fetch('/api/admin/students', {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${idToken}` },
+        cache: 'no-store',
+      });
 
-    const unsubscribe = onSnapshot(
-      studentsQuery,
-      { includeMetadataChanges: true },
-      snapshot => {
-        const studentList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        studentList.sort((a, b) => {
-          const aTime = a.createdAt?.toMillis?.() || 0;
-          const bTime = b.createdAt?.toMillis?.() || 0;
-          return bTime - aTime;
+      if (response.status === 401) {
+        const refreshedToken = await currentUser.getIdToken(true);
+        const retry = await fetch('/api/admin/students', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${refreshedToken}` },
+          cache: 'no-store',
         });
-        setStudents(studentList);
-        setIsLoading(false);
-      },
-      error => {
-        console.error('Error fetching students:', error);
-        setLoadError(error?.message || 'Unable to load the student directory.');
-        setIsLoading(false);
+        if (!retry.ok) {
+          const payload = await retry.json().catch(() => ({}));
+          throw new Error(payload?.error || 'Unable to load the student directory.');
+        }
+        const payload = await retry.json();
+        setStudents(Array.isArray(payload.students) ? payload.students : []);
+        return;
       }
-    );
 
-    return () => unsubscribe();
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to load the student directory.');
+      setStudents(Array.isArray(payload.students) ? payload.students : []);
+    } catch (error) {
+      console.error('[StudentDirectoryTab] failed to load students:', error);
+      setLoadError(error?.message || 'Unable to load the student directory.');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadStudents();
+  }, [loadStudents]);
 
   const metrics = useMemo(() => {
     const assessmentComplete = students.filter(student => {
-      const code = student?.careerDNA?.riasec?.code || student?.riasecCode;
+      const code = student?.careerAssessment?.hollandCode?.length
+        ? student.careerAssessment.hollandCode.join('')
+        : student?.careerDNA?.riasec?.code || student?.riasecCode;
       return typeof code === 'string' && code.trim();
     }).length;
-    const profileComplete = students.filter(student => student?.profileComplete === true).length;
-    const assigned = students.filter(student => {
-      const path = student?.primary_path || student?.studentTrack;
-      return path && path !== 'unassigned';
-    }).length;
+    const profileComplete = students.filter(student => student?.profileComplete === true || student?.onboardingCompleted === true).length;
+    const assigned = students.filter(student => student?.path && student.path !== 'Unassigned').length;
     return {
       total: students.length,
       assessmentComplete,
@@ -75,13 +92,15 @@ const StudentDirectoryTab = () => {
 
   const handleDelete = student => setDeleteTarget(student);
 
-  const handleDeleteSuccess = deletedUser => {
+  const handleDeleteSuccess = async deletedUser => {
     showNotification(`${deletedUser.name || 'Student'} has been deleted successfully.`);
     setDeleteTarget(null);
+    await loadStudents();
   };
 
-  const handleCreateSuccess = newUser => {
+  const handleCreateSuccess = async newUser => {
     showNotification(`${newUser.name} has been added successfully.`);
+    await loadStudents();
   };
 
   const showNotification = message => {
@@ -113,7 +132,7 @@ const StudentDirectoryTab = () => {
 
       <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100 w-fit">
         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-        <span className="text-sm font-medium text-emerald-700">Real-time student records active</span>
+        <span className="text-sm font-medium text-emerald-700">Live student records active</span>
       </div>
 
       {loadError && (
