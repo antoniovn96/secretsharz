@@ -10,6 +10,11 @@ export default async function handler(req,res){
   const institutionId=String(req.query?.institutionId||caller.institutionId||'').trim();const rosterId=String(req.query?.rosterId||'').trim();
   if(!institutionId||!rosterId)return res.status(400).json({error:'Institution and student record are required.'});
   if(!isFounder&&!(caller.role==='institution_member'&&caller.institutionId===institutionId))return res.status(403).json({error:'Institution access required.'});
+  const institution=await db.collection('institutions').doc(institutionId).get();
+  if(!institution.exists)return res.status(404).json({error:'Institution not found.'});
+  const institutionData=institution.data();
+  if(institutionData.status!=='active')return res.status(409).json({error:'This institution is not active.'});
+  if(institutionData.licenses?.paymentStatus!=='paid'&&!isFounder)return res.status(409).json({error:'Institutional reports are locked until the entitlement is activated.'});
   const roster=await db.collection('institutions').doc(institutionId).collection('roster').doc(rosterId).get();
   if(!roster.exists)return res.status(404).json({error:'Student record not found.'});
   const data=roster.data();if(!data.claimedBy)return res.status(409).json({error:'This student has not yet claimed the assessment code.'});
