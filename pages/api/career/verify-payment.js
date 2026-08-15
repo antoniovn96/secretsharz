@@ -21,8 +21,9 @@ export default async function handler(req, res) {
   const idToken = bearerToken(req);
   if (!idToken) return jsonError(res, 401, 'Authentication required.');
 
+  const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
-  if (!keySecret) return jsonError(res, 503, 'Payment gateway is not configured yet.');
+  if (!keyId || !keySecret) return jsonError(res, 503, 'Payment gateway is not configured yet.');
 
   let decodedToken;
   try {
@@ -53,7 +54,28 @@ export default async function handler(req, res) {
   }
 
   try {
-    const authHeader = Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${keySecret}`).toString('base64');
+    const authHeader = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+    const orderResponse = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(orderId)}`, {
+      headers: { Authorization: `Basic ${authHeader}` }
+    });
+    const order = await orderResponse.json();
+
+    if (!orderResponse.ok) {
+      console.error('[career/verify-payment] order lookup failed:', order);
+      return jsonError(res, 502, 'Unable to verify the payment order with Razorpay.');
+    }
+
+    const configuredAmount = Number(process.env.CAREER_REPORT_PRICE_PAISE || 99900);
+    if (order.id !== orderId || order.currency !== 'INR' || Number(order.amount) !== configuredAmount) {
+      return jsonError(res, 400, 'Payment order does not match the career report configuration.');
+    }
+
+    // The order was created server-side with the authenticated student's UID.
+    // Do not allow a valid payment from another student to unlock this account.
+    if (order.notes?.uid !== decodedToken.uid || order.notes?.product !== 'career_full_report') {
+      return jsonError(res, 403, 'Payment order is not associated with this account.');
+    }
+
     const paymentResponse = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(paymentId)}`, {
       headers: { Authorization: `Basic ${authHeader}` }
     });
@@ -64,12 +86,11 @@ export default async function handler(req, res) {
       return jsonError(res, 502, 'Unable to verify the payment with Razorpay.');
     }
 
-    const configuredAmount = Number(process.env.CAREER_REPORT_PRICE_PAISE || 99900);
     if (payment.order_id !== orderId || payment.currency !== 'INR' || Number(payment.amount) !== configuredAmount) {
       return jsonError(res, 400, 'Payment details do not match the career report order.');
     }
 
-    if (!['captured', 'authorized'].includes(String(payment.status))) {
+    if (String(payment.status) !== 'captured') {
       return jsonError(res, 400, 'Payment has not been successfully captured.');
     }
 
