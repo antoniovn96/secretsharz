@@ -42,6 +42,7 @@ async function requireAdmin(req) {
 function normaliseInstitution(doc) {
   const data = doc.data();
   const licenses = data.licenses || {};
+  const coordinator = data.coordinator || {};
   return {
     id: doc.id,
     name: data.name || '',
@@ -52,6 +53,14 @@ function normaliseInstitution(doc) {
     contactPerson: data.contactPerson || '',
     contactEmail: data.contactEmail || '',
     contactPhone: data.contactPhone || '',
+    coordinator: {
+      uid: coordinator.uid || null,
+      name: coordinator.name || data.contactPerson || '',
+      email: coordinator.email || data.contactEmail || '',
+      activatedAt: coordinator.activatedAt || null,
+      role: coordinator.role || null,
+      activated: Boolean(coordinator.uid),
+    },
     createdAt: data.createdAt || null,
     updatedAt: data.updatedAt || null,
     licenses: {
@@ -87,8 +96,9 @@ export default async function handler(req, res) {
         acc.availableLicenses += institution.licenses.available;
         if (institution.status === 'active') acc.activeInstitutions += 1;
         if (institution.licenses.paymentStatus === 'pending') acc.pendingPayments += 1;
+        if (institution.coordinator.activated) acc.activeCoordinators += 1;
         return acc;
-      }, { totalInstitutions: 0, activeInstitutions: 0, totalLicenses: 0, usedLicenses: 0, availableLicenses: 0, pendingPayments: 0 });
+      }, { totalInstitutions: 0, activeInstitutions: 0, totalLicenses: 0, usedLicenses: 0, availableLicenses: 0, pendingPayments: 0, activeCoordinators: 0 });
 
       return res.status(200).json({ institutions, totals, generatedAt: new Date().toISOString() });
     }
@@ -124,6 +134,7 @@ export default async function handler(req, res) {
       contactPerson: clean(body.contactPerson, 160),
       contactEmail: clean(body.contactEmail, 180).toLowerCase(),
       contactPhone: clean(body.contactPhone, 30),
+      coordinator: null,
       licenses: {
         purchased,
         used: 0,
@@ -142,7 +153,7 @@ export default async function handler(req, res) {
     };
 
     await ref.set(record);
-    return res.status(201).json({ institution: record });
+    return res.status(201).json({ institution: normaliseInstitution(await ref.get()) });
   } catch (error) {
     return res.status(error.statusCode || 500).json({ error: error.message || 'Unable to manage institutions.' });
   }
