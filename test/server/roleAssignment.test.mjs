@@ -208,7 +208,6 @@ test('a client-supplied role field on the token is NOT enough without an admin r
 // =========================================================================
 // Safe response + audit shaping (Step 7 / Step 9)
 // =========================================================================
-
 test('safe response does not leak claims or secrets', () => {
   const resp = buildSafeResponse({ targetUid: 't', action: 'set', role: 'counsellor', tokenRefreshRequired: true });
   const keys = Object.keys(resp).sort();
@@ -250,9 +249,8 @@ test('roleFromClaims reads the role claim and tolerates absence', () => {
 // =========================================================================
 // Claim model sanity
 // =========================================================================
-
 test('the assignable claim roles are exactly the privileged + parent roles', () => {
-  assert.deepEqual([...ASSIGNABLE_CLAIM_ROLES].sort(), ['counsellor', 'educator', 'parent', 'psychologist', 'super_admin']);
+  assert.deepEqual([...ASSIGNABLE_CLAIM_ROLES].sort(), ['career_counsellor', 'counsellor', 'educator', 'parent', 'psychologist', 'super_admin']);
   // student is intentionally NOT assignable (default = absence of privileged claim).
   assert.equal(ASSIGNABLE_CLAIM_ROLES.includes('student'), false);
 });
