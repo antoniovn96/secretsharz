@@ -6,7 +6,8 @@ import { isProfileComplete } from '../../platform/profileOnboardingModel';
 const CareerStudentView = ({ studentData, currentUser }) => {
   const [isTakingTest, setIsTakingTest] = useState(false);
   const dynamicName = studentData?.name || currentUser?.displayName || 'Student';
-  const profileImage = studentData?.photoURL || currentUser?.photoURL || 'https://via.placeholder.com/150';
+  const profileImage = studentData?.photoURL || currentUser?.photoURL || '';
+  const profileInitial = dynamicName.trim().charAt(0).toUpperCase() || 'S';
 
   // The dashboard can mount before Firestore finishes loading studentData.
   // Do not permanently capture the initial incomplete/undefined state.
@@ -30,7 +31,13 @@ const CareerStudentView = ({ studentData, currentUser }) => {
         <div className="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col border border-indigo-100/50">
           <div className="h-24 bg-gradient-to-r from-indigo-500 to-blue-500" />
           <div className="px-6 pb-6 relative flex flex-col items-center text-center">
-            <img src={profileImage} alt="Profile" className="w-24 h-24 rounded-full border-4 border-white shadow-md -mt-12 mb-4 object-cover" />
+            {profileImage ? (
+              <img src={profileImage} alt="Profile" className="w-24 h-24 rounded-full border-4 border-white shadow-md -mt-12 mb-4 object-cover" />
+            ) : (
+              <div aria-label="Profile" className="w-24 h-24 rounded-full border-4 border-white shadow-md -mt-12 mb-4 bg-indigo-100 text-indigo-700 flex items-center justify-center text-3xl font-extrabold">
+                {profileInitial}
+              </div>
+            )}
             <h2 className="text-xl font-bold text-gray-800">{dynamicName}</h2>
             <p className="text-sm text-gray-500 mb-6">{studentData?.profileType === 'working_professional' ? 'Working Professional' : 'Student'}</p>
             <nav className="w-full flex flex-col gap-2">
