@@ -13,7 +13,7 @@ export default async function handler(req,res){
     if(institution.licenses?.paymentStatus==='paid')return res.status(409).json({error:'This institution entitlement is already marked paid.'});
     const totalAmountRupees=Math.max(0,Number(institution.licenses?.totalAmount||0));if(!Number.isFinite(totalAmountRupees))return res.status(400).json({error:'Institution has an invalid payable amount.'});
     const amountPaise=Math.round(totalAmountRupees*100);
-    if(amountPaise===0){const now=new Date().toISOString();await institutionRef.set({status:'active',licenses:{paymentStatus:'paid',paidAt:now,paidBy:decoded.uid,paidAmount:0,paidAmountPaise:0,currency:'INR'},updatedAt:now},{merge:true});return res.status(200).json({sponsored:true,verified:true,institutionId,amount:0});}
+    if(amountPaise===0){const now=new Date().toISOString();await institutionRef.set({status:'active',licenses:{...(institution.licenses||{}),paymentStatus:'paid',paidAt:now,paidBy:decoded.uid,paidAmount:0,paidAmountPaise:0,currency:'INR'},updatedAt:now},{merge:true});return res.status(200).json({sponsored:true,verified:true,institutionId,amount:0});}
     const keyId=process.env.RAZORPAY_KEY_ID,keySecret=process.env.RAZORPAY_KEY_SECRET;if(!keyId||!keySecret)return res.status(503).json({error:'Payment gateway is not configured yet.'});
     const receipt=`institution_${institutionId.slice(0,12)}_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
     const payload={amount:amountPaise,currency:'INR',receipt,notes:{institutionId,product:'institution_assessment_license',licenseCount:String(institution.licenses?.purchased||0),createdBy:decoded.uid}};
