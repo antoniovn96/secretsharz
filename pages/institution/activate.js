@@ -43,13 +43,13 @@ export default function InstitutionActivatePage() {
         body: JSON.stringify({ code: normalized }),
       });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || 'Unable to activate coordinator access.');
+      if (!response.ok) throw new Error(payload?.error || 'Unable to activate institution access.');
 
       await auth.currentUser.getIdToken(true);
-      setMessage(payload.message || 'Coordinator access activated.');
+      setMessage(payload.message || 'Institution access activated.');
       window.setTimeout(() => { window.location.href = '/dashboard/institution/career'; }, 700);
     } catch (err) {
-      setError(err.message || 'Unable to activate coordinator access.');
+      setError(err.message || 'Unable to activate institution access.');
     } finally {
       setLoading(false);
     }
@@ -68,7 +68,7 @@ export default function InstitutionActivatePage() {
       <div style={styles.shell}>
         <div style={{ ...styles.card, marginBottom: 14 }}>
           <div style={{ color: '#4f46e5', fontSize: 11, fontWeight: 900, letterSpacing: 1.5 }}>VIDYAVANTAGE · INSTITUTIONAL ACCESS</div>
-          <h1 style={{ margin: '8px 0 8px', color: '#0f172a', fontSize: 32 }}>Activate Coordinator Access</h1>
+          <h1 style={{ margin: '8px 0 8px', color: '#0f172a', fontSize: 32 }}>Activate Institution Dashboard</h1>
           <p style={{ margin: 0, color: '#64748b', lineHeight: 1.7 }}>
             You are signed in as <strong>{user.email}</strong>. Enter the unique institution code supplied by Secret Sharz to connect this account to your institution.
           </p>
@@ -81,7 +81,7 @@ export default function InstitutionActivatePage() {
           <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="SSZ-INSTITUTION-26-XXXXXX" style={styles.input} autoComplete="off" />
           <button disabled={loading} type="submit" style={{ ...styles.button, opacity: loading ? .6 : 1 }}>{loading ? 'Activating access…' : 'Activate Institution Dashboard'}</button>
           <p style={{ margin: '14px 0 0', color: '#94a3b8', fontSize: 12, lineHeight: 1.6 }}>
-            For security, the coordinator email registered by the administrator must match the signed-in account. Institutional access is separate from student assessment access.
+            The coordinator is the institution's authorised dashboard user. The Coordinator Dashboard and Institution Dashboard are the same workspace; they are not separate dashboards. Institutional access is separate from student assessment access.
           </p>
         </form>
       </div>
