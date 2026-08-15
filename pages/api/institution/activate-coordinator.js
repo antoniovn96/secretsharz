@@ -61,8 +61,12 @@ export default async function handler(req, res) {
   const now = new Date().toISOString();
   const userRef = db.collection('users').doc(decoded.uid);
 
+  // Preserve every existing custom claim. The previous implementation rebuilt
+  // the claim object from decoded.role, which could silently discard unrelated
+  // trusted claims when coordinator access was activated.
+  const existingUser = await getAdminAuth().getUser(decoded.uid);
   await getAdminAuth().setCustomUserClaims(decoded.uid, {
-    ...(decoded.role ? { role: decoded.role } : {}),
+    ...(existingUser.customClaims || {}),
     role: 'institution_member',
     institutionId: institutionRef.id,
     institutionRole: 'coordinator',
