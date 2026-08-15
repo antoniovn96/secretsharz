@@ -87,6 +87,19 @@ async function createCoordinatorInstitution({ name, licenseCount = 150, paymentS
     institutionRole: 'coordinator',
     status: 'active'
   }, { merge: true });
+
+  // Institutional dashboard authorization now uses trusted Firebase custom
+  // claims rather than the legacy users.role field. Refresh the emulator
+  // token after setting the claims so this test exercises the production path.
+  await getAdminAuth().setCustomUserClaims(coordinator.uid, {
+    role: 'institution_member',
+    institutionId,
+    institutionRole: 'coordinator'
+  });
+  const refreshedCustomToken = await getAdminAuth().createCustomToken(coordinator.uid);
+  const refreshedCredential = await signInWithCustomToken(clientAuth, refreshedCustomToken);
+  coordinator.idToken = await refreshedCredential.user.getIdToken(true);
+
   return { coordinator, institutionId, db };
 }
 
