@@ -1,4 +1,5 @@
 import { getAdminAuth, getAdminFirestore, getAdminApp } from '../../../src/security/firebaseAdmin.js';
+import { isStudentProfile, getStudentPath } from '../../../src/platform/studentRecordModel.js';
 
 function bearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization;
@@ -84,8 +85,6 @@ export default async function handler(req, res) {
   try {
     decodedToken = await getAdminAuth().verifyIdToken(idToken);
   } catch (error) {
-    // Diagnostic information is intentionally server-side only. Never log the
-    // bearer token, service-account JSON, private key, or any other secret.
     console.error('[admin overview auth] Firebase ID token verification failed:', safeAuthErrorDetails(error));
     return res.status(401).json({ error: 'Invalid or expired authentication token.' });
   }
@@ -112,9 +111,12 @@ export default async function handler(req, res) {
     const moodLogs = moodSnapshot.docs.map(doc => doc.data());
     const roadmaps = roadmapSnapshot.docs.map(doc => doc.data());
 
-    const studentUsers = users.filter(user => user.role === 'student');
-    const professionals = users.filter(user => ['counsellor', 'psychologist', 'educator'].includes(user.role));
-    const parents = users.filter(user => user.role === 'parent');
+    // Use the canonical student resolver rather than relying on the legacy
+    // role field. This includes newer career profiles such as users who have
+    // a careerAssessment/profileType but were never assigned role=student.
+    const studentUsers = users.filter(isStudentProfile);
+    const professionals = users.filter(user => ['counsellor', 'psychologist', 'educator'].includes(String(user.role || '').toLowerCase()));
+    const parents = users.filter(user => String(user.role || '').toLowerCase() === 'parent');
 
     const registrationTimestamps = users.map(user => toMillis(user.createdAt)).filter(Boolean);
     const sessionTimestamps = sessions.map(session => toMillis(session.timestamp)).filter(Boolean);
@@ -123,7 +125,9 @@ export default async function handler(req, res) {
     const roadmapTimestamps = roadmaps.map(roadmap => toMillis(roadmap.timestamp)).filter(Boolean);
 
     const completedAssessmentUsers = studentUsers.filter(user => {
-      const code = user?.careerDNA?.riasec?.code || user?.riasecCode;
+      const code = user?.careerAssessment?.hollandCode?.length
+        ? user.careerAssessment.hollandCode.join('')
+        : user?.careerDNA?.riasec?.code || user?.riasecCode;
       return typeof code === 'string' && code.trim().length > 0;
     });
 
@@ -137,13 +141,12 @@ export default async function handler(req, res) {
     const iepWindow = getWindowCounts(iepRecords.map(record => record.timestampMs), now, 30 * 24 * 60 * 60 * 1000);
 
     const studentPathCounts = studentUsers.reduce((acc, user) => {
-      const path = String(user.primary_path || user.studentTrack || 'unassigned').toLowerCase();
-      const normalized = path === 'wellbeing' || path === 'sen' || path === 'career' ? path : 'unassigned';
+      const normalized = getStudentPath(user).toLowerCase();
       acc[normalized] = (acc[normalized] || 0) + 1;
       return acc;
     }, { wellbeing: 0, sen: 0, career: 0, unassigned: 0 });
 
-    const studentProfileComplete = studentUsers.filter(user => user.profileComplete === true).length;
+    const studentProfileComplete = studentUsers.filter(user => user.profileComplete === true || user.onboardingCompleted === true).length;
 
     const engagementData = buildMonthSeries(now, [
       { name: 'registrations', timestamps: registrationTimestamps },
