@@ -5,6 +5,7 @@ import { auth } from '../../firebase';
 import AdminSidebar from './AdminSidebar';
 import OverviewTab from './OverviewTab';
 import StudentDirectoryTab from './StudentDirectoryTab';
+import InstitutionDirectoryTab from './InstitutionDirectoryTab';
 import ProfessionalDirectoryTab from './ProfessionalDirectoryTab';
 import ParentDirectoryTab from './ParentDirectoryTab';
 import SystemSettingsTab from './SystemSettingsTab';
@@ -24,35 +25,18 @@ const SuperAdminView = ({ user, userData, onBackToApp }) => {
 
   useEffect(() => {
     let isMounted = true;
-
     const fetchOverview = async () => {
       try {
         setIsLoading(true);
         setOverviewError('');
         const currentUser = auth.currentUser || user;
         if (!currentUser) throw new Error('Authentication required.');
-
-        // Always refresh the Firebase ID token before calling a protected API.
-        // This prevents a stale token surviving a Firebase/Vercel configuration
-        // change from being sent to Firebase Admin and rejected as invalid.
         let idToken = await currentUser.getIdToken(true);
-        let response = await fetch('/api/admin/overview-stats', {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${idToken}` },
-          cache: 'no-store'
-        });
-
-        // A single forced refresh/retry handles tokens that were invalidated
-        // between the initial auth-state callback and this request.
+        let response = await fetch('/api/admin/overview-stats', { method: 'GET', headers: { Authorization: `Bearer ${idToken}` }, cache: 'no-store' });
         if (response.status === 401) {
           idToken = await currentUser.getIdToken(true);
-          response = await fetch('/api/admin/overview-stats', {
-            method: 'GET',
-            headers: { Authorization: `Bearer ${idToken}` },
-            cache: 'no-store'
-          });
+          response = await fetch('/api/admin/overview-stats', { method: 'GET', headers: { Authorization: `Bearer ${idToken}` }, cache: 'no-store' });
         }
-
         const payload = await response.json();
         if (!response.ok) throw new Error(payload?.error || 'Unable to load overview statistics.');
         if (isMounted) setOverviewData(payload);
@@ -66,29 +50,23 @@ const SuperAdminView = ({ user, userData, onBackToApp }) => {
         if (isMounted) setIsLoading(false);
       }
     };
-
     fetchOverview();
     return () => { isMounted = false; };
   }, [user]);
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      if (onBackToApp) onBackToApp();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
+    try { await signOut(auth); if (onBackToApp) onBackToApp(); }
+    catch (error) { console.error('Logout failed:', error); }
   };
 
   const renderTabContent = () => {
     if (isLoading && activeTab === 'overview') {
       return <div className="flex flex-col items-center justify-center h-96"><div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mb-4"></div><p className="text-slate-500 font-medium">Loading live platform data...</p></div>;
     }
-
     switch (activeTab) {
-      case 'overview':
-        return <>{overviewError && <div className="mb-4 px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm font-medium">{overviewError}</div>}<OverviewTab data={overviewData} /></>;
+      case 'overview': return <>{overviewError && <div className="mb-4 px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm font-medium">{overviewError}</div>}<OverviewTab data={overviewData} /></>;
       case 'students': return <StudentDirectoryTab />;
+      case 'institutions': return <InstitutionDirectoryTab />;
       case 'professionals': return <ProfessionalDirectoryTab />;
       case 'parents': return <ParentDirectoryTab />;
       case 'settings': return <SystemSettingsTab />;
