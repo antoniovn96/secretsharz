@@ -32,25 +32,25 @@ export default async function handler(req, res) {
     return jsonError(res, 401, 'Invalid or expired authentication token.');
   }
 
-  const {
-    razorpay_order_id: orderId,
-    razorpay_payment_id: paymentId,
-    razorpay_signature: signature
-  } = req.body || {};
+  const { razorpay_order_id: orderId, razorpay_payment_id: paymentId, razorpay_signature: signature } = req.body || {};
+  if (!orderId || !paymentId || !signature) return jsonError(res, 400, 'Incomplete payment verification data.');
 
-  if (!orderId || !paymentId || !signature) {
-    return jsonError(res, 400, 'Incomplete payment verification data.');
-  }
-
-  const expectedSignature = crypto
-    .createHmac('sha256', keySecret)
-    .update(`${orderId}|${paymentId}`)
-    .digest('hex');
-
+  const expectedSignature = crypto.createHmac('sha256', keySecret).update(`${orderId}|${paymentId}`).digest('hex');
   const provided = Buffer.from(String(signature));
   const expected = Buffer.from(expectedSignature);
   if (provided.length !== expected.length || !crypto.timingSafeEqual(provided, expected)) {
     return jsonError(res, 400, 'Payment signature verification failed.');
+  }
+
+  const db = getAdminFirestore();
+  const orderSnap = await db.collection('paymentOrders').doc(String(orderId)).get();
+  if (!orderSnap.exists) return jsonError(res, 404, 'Payment order was not created by VidyaVantage.');
+  const orderRecord = orderSnap.data();
+
+  if (orderRecord.userId !== decodedToken.uid) return jsonError(res, 403, 'Payment order is not associated with this account.');
+  if (orderRecord.razorpayOrderId !== orderId) return jsonError(res, 400, 'Payment order reference is invalid.');
+  if (orderRecord.status === 'captured') {
+    return res.status(200).json({ verified: true, access: 'paid', paymentId: orderRecord.paymentId || paymentId, orderId });
   }
 
   try {
@@ -58,23 +58,18 @@ export default async function handler(req, res) {
     const orderResponse = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(orderId)}`, {
       headers: { Authorization: `Basic ${authHeader}` }
     });
-    const order = await orderResponse.json();
-
+    const razorpayOrder = await orderResponse.json();
     if (!orderResponse.ok) {
-      console.error('[career/verify-payment] order lookup failed:', order);
+      console.error('[career/verify-payment] order lookup failed:', razorpayOrder);
       return jsonError(res, 502, 'Unable to verify the payment order with Razorpay.');
     }
 
-    const configuredAmount = Number(
-      process.env.RAZORPAY_CAREER_ASSESSMENT_AMOUNT_PAISE ||
-      process.env.CAREER_REPORT_PRICE_PAISE ||
-      99900
-    );
-    if (order.id !== orderId || order.currency !== 'INR' || Number(order.amount) !== configuredAmount) {
-      return jsonError(res, 400, 'Payment order does not match the career report configuration.');
+    const expectedAmount = Number(orderRecord.amountPaise || 0);
+    if (razorpayOrder.id !== orderId || razorpayOrder.currency !== 'INR' || Number(razorpayOrder.amount) !== expectedAmount) {
+      return jsonError(res, 400, 'Payment order does not match the recorded product price.');
     }
 
-    if (order.notes?.uid !== decodedToken.uid || order.notes?.product !== 'career_full_report') {
+    if (razorpayOrder.notes?.uid !== decodedToken.uid || razorpayOrder.notes?.product !== orderRecord.productSku) {
       return jsonError(res, 403, 'Payment order is not associated with this account.');
     }
 
@@ -82,41 +77,64 @@ export default async function handler(req, res) {
       headers: { Authorization: `Basic ${authHeader}` }
     });
     const payment = await paymentResponse.json();
-
     if (!paymentResponse.ok) {
       console.error('[career/verify-payment] payment lookup failed:', payment);
       return jsonError(res, 502, 'Unable to verify the payment with Razorpay.');
     }
 
-    if (payment.order_id !== orderId || payment.currency !== 'INR' || Number(payment.amount) !== configuredAmount) {
-      return jsonError(res, 400, 'Payment details do not match the career report order.');
+    if (payment.order_id !== orderId || payment.currency !== 'INR' || Number(payment.amount) !== expectedAmount) {
+      return jsonError(res, 400, 'Payment details do not match the recorded order.');
     }
+    if (String(payment.status) !== 'captured') return jsonError(res, 400, 'Payment has not been successfully captured.');
 
-    if (String(payment.status) !== 'captured') {
-      return jsonError(res, 400, 'Payment has not been successfully captured.');
-    }
+    const now = new Date().toISOString();
+    await db.runTransaction(async (transaction) => {
+      const freshOrder = await transaction.get(db.collection('paymentOrders').doc(orderId));
+      if (!freshOrder.exists) throw Object.assign(new Error('Payment order record disappeared.'), { status: 404 });
+      const freshOrderData = freshOrder.data();
+      if (freshOrderData.userId !== decodedToken.uid) throw Object.assign(new Error('Payment order ownership check failed.'), { status: 403 });
+      if (freshOrderData.status === 'captured') return;
 
-    const db = getAdminFirestore();
-    await db.collection('users').doc(decodedToken.uid).set({
-      careerReportAccess: {
-        status: 'paid',
-        product: 'career_full_report',
-        orderId,
-        paymentId,
-        amount: Number(payment.amount),
-        currency: payment.currency,
-        paidAt: new Date().toISOString()
+      if (freshOrderData.couponCode) {
+        const couponRef = db.collection('careerCoupons').doc(freshOrderData.couponCode);
+        const couponSnap = await transaction.get(couponRef);
+        if (couponSnap.exists) {
+          const coupon = couponSnap.data();
+          const max = Number(coupon.maxRedemptions || 0);
+          const redemptions = Number(coupon.redemptions || 0);
+          if (max > 0 && redemptions >= max) {
+            throw Object.assign(new Error('This coupon reached its redemption limit while the payment was being completed.'), { status: 409 });
+          }
+          transaction.update(couponRef, { redemptions: redemptions + 1, updatedAt: now });
+        }
       }
-    }, { merge: true });
 
-    return res.status(200).json({
-      verified: true,
-      access: 'paid',
-      paymentId,
-      orderId
+      transaction.update(db.collection('paymentOrders').doc(orderId), {
+        status: 'captured',
+        paymentId,
+        capturedAt: now,
+        updatedAt: now,
+      });
+
+      transaction.set(db.collection('users').doc(decodedToken.uid), {
+        careerReportAccess: {
+          status: 'paid',
+          product: freshOrderData.productSku,
+          productKey: freshOrderData.productKey,
+          orderId,
+          paymentId,
+          amount: Number(payment.amount),
+          currency: payment.currency,
+          couponCode: freshOrderData.couponCode || null,
+          sponsored: false,
+          paidAt: now,
+        }
+      }, { merge: true });
     });
+
+    return res.status(200).json({ verified: true, access: 'paid', paymentId, orderId, product: orderRecord.productSku });
   } catch (err) {
     console.error('[career/verify-payment] failed:', err?.message || err);
-    return jsonError(res, 500, 'Payment verification failed.');
+    return jsonError(res, err.status || 500, err.message || 'Payment verification failed.');
   }
 }
