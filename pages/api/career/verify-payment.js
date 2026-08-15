@@ -65,13 +65,15 @@ export default async function handler(req, res) {
       return jsonError(res, 502, 'Unable to verify the payment order with Razorpay.');
     }
 
-    const configuredAmount = Number(process.env.CAREER_REPORT_PRICE_PAISE || 99900);
+    const configuredAmount = Number(
+      process.env.RAZORPAY_CAREER_ASSESSMENT_AMOUNT_PAISE ||
+      process.env.CAREER_REPORT_PRICE_PAISE ||
+      99900
+    );
     if (order.id !== orderId || order.currency !== 'INR' || Number(order.amount) !== configuredAmount) {
       return jsonError(res, 400, 'Payment order does not match the career report configuration.');
     }
 
-    // The order was created server-side with the authenticated student's UID.
-    // Do not allow a valid payment from another student to unlock this account.
     if (order.notes?.uid !== decodedToken.uid || order.notes?.product !== 'career_full_report') {
       return jsonError(res, 403, 'Payment order is not associated with this account.');
     }
