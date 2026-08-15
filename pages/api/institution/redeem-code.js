@@ -27,7 +27,19 @@ export default async function handler(req, res) {
   const record = codeSnap.data();
   if (record.status !== 'available') return res.status(409).json({ error: 'This access code has already been used or is no longer active.' });
 
-  const rosterRef = db.collection('institutions').doc(record.institutionId).collection('roster').doc(record.rosterId);
+  const institutionRef = db.collection('institutions').doc(record.institutionId);
+  const institutionSnap = await institutionRef.get();
+  if (!institutionSnap.exists) return res.status(404).json({ error: 'The institution linked to this code no longer exists.' });
+  const institution = institutionSnap.data();
+  if (institution.status !== 'active') return res.status(409).json({ error: 'This institutional assessment programme is not active yet.' });
+  if (institution.licenses?.paymentStatus !== 'paid') return res.status(409).json({ error: 'This institutional assessment code is temporarily locked until the institution entitlement is activated.' });
+
+  const rosterRef = institutionRef.collection('roster').doc(record.rosterId);
+  const rosterSnapBefore = await rosterRef.get();
+  if (!rosterSnapBefore.exists) return res.status(404).json({ error: 'Student roster record not found.' });
+  const rosterBefore = rosterSnapBefore.data();
+  if (rosterBefore.claimedBy && rosterBefore.claimedBy !== decoded.uid) return res.status(409).json({ error: 'This student record is already linked to another account.' });
+
   const now = new Date().toISOString();
   const batch = db.batch();
   batch.update(codeRef, { status: 'redeemed', redeemedBy: decoded.uid, redeemedAt: now });
