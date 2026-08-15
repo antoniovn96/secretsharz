@@ -18,13 +18,15 @@
     "firebase": "^10.8.1",
     "firebase-admin": "^12.7.0",
     "lucide-react": "^1.18.0",
+    "mammoth": "^1.10.0",
     "mongoose": "^9.4.1",
     "next": "14.2.5",
     "pptxgenjs": "^3.12.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-helmet": "^6.1.0",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^3.0.4",
