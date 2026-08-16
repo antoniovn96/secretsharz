@@ -1,5 +1,5 @@
-import { ASSESSMENT_VERSION, scoreLikert, cosineSimilarity } from './careerAssessmentBlueprint';
-import { getItemsForBundle, getItemsForFamilies, resolveBundle } from './assessmentSelection';
+import { ASSESSMENT_VERSION, scoreLikert, cosineSimilarity } from './careerAssessmentBlueprint.js';
+import { getItemsForBundle, getItemsForFamilies, resolveBundle } from './assessmentSelection.js';
 
 const emptyResult = () => ({
   version: ASSESSMENT_VERSION,

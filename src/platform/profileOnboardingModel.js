@@ -2,6 +2,8 @@
 // This model keeps school/guardian fields out of professional profiles and
 // requires reliable contact/emergency information for adult self-service users.
 
+import { EMPTY_LOCATION, normalizeLocation } from './locationModel.js';
+
 export const PROFILE_TYPES = Object.freeze(['student', 'working_professional']);
 
 export function deriveProfileType({ profileType, role } = {}) {
@@ -14,8 +16,17 @@ export function requiresGuardian({ profileType, age }) {
   return profileType === 'student' && Number(age) < 18;
 }
 
-// Used by dashboards as well as the intake form. This deliberately accepts
-// legacy field names so an older completed profile is not treated as new.
+export function normalizeProfileLocation(value) {
+  return normalizeLocation(value || EMPTY_LOCATION);
+}
+
+export function formatCountryPhone(countryCode, countryName, phone) {
+  const code = String(countryCode || '').trim();
+  const country = String(countryName || '').trim();
+  const number = String(phone || '').trim();
+  return [code, country ? `(${country})` : '', number].filter(Boolean).join(' ');
+}
+
 export function isProfileComplete(data = {}) {
   if (data.profileComplete === true || data.onboardingCompleted === true) return true;
 
@@ -28,17 +39,9 @@ export function isProfileComplete(data = {}) {
   const age = Number(data.age);
 
   if (!name || !dob || !phone) return false;
-
-  if (type === 'working_professional') {
-    return Boolean(emergencyName && emergencyNumber);
-  }
-
+  if (type === 'working_professional') return Boolean(emergencyName && emergencyNumber);
   if (!data.grade && !data.gradeOrCourse) return false;
-
-  if (requiresGuardian({ profileType: type, age })) {
-    return Boolean(data.parentName && data.parentContact);
-  }
-
+  if (requiresGuardian({ profileType: type, age })) return Boolean(data.parentName && data.parentContact);
   return true;
 }
 
@@ -57,10 +60,8 @@ export function validateProfile({
   const type = deriveProfileType({ profileType });
   const errors = [];
   const numericAge = Number(age);
-
   if (!name?.trim()) errors.push('Full name is required.');
   if (!Number.isFinite(numericAge) || numericAge < 10 || numericAge > 120) errors.push('Please enter a valid age.');
-
   if (type === 'student') {
     if (!grade?.trim()) errors.push('Current grade / class is required for students.');
     if (requiresGuardian({ profileType: type, age: numericAge })) {
@@ -68,13 +69,11 @@ export function validateProfile({
       if (!parentContact?.trim()) errors.push('Parent / guardian contact number is required for students under 18.');
     }
   }
-
   if (type === 'working_professional') {
     if (!contactNumber?.trim()) errors.push('Your contact number is required for a professional profile.');
     if (!emergencyContactName?.trim()) errors.push('Emergency contact name is required for a professional profile.');
     if (!emergencyContactNumber?.trim()) errors.push('Emergency contact number is required for a professional profile.');
   }
-
   return { valid: errors.length === 0, errors, profileType: type };
 }
 
@@ -82,6 +81,7 @@ export function buildProfileRecord(input) {
   const validation = validateProfile(input);
   if (!validation.valid) throw new Error(validation.errors[0]);
   const type = validation.profileType;
+  const location = normalizeProfileLocation(input.location);
   return {
     profileType: type,
     name: input.name.trim(),
@@ -94,6 +94,9 @@ export function buildProfileRecord(input) {
     parentName: type === 'student' ? String(input.parentName || '').trim() : '',
     parentContact: type === 'student' ? String(input.parentContact || '').trim() : '',
     contactNumber: String(input.contactNumber || '').trim(),
+    countryCode: String(input.countryCode || location.countryCode || '').trim(),
+    countryName: String(input.countryName || location.countryName || '').trim(),
+    location,
     emergencyContactName: String(input.emergencyContactName || '').trim(),
     emergencyContactNumber: String(input.emergencyContactNumber || '').trim(),
     profileComplete: true,
