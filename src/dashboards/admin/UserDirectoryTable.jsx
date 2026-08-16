@@ -3,6 +3,7 @@ import {
   Search, ChevronDown, ChevronUp, Edit3, Trash2, Eye, X,
   Download, SlidersHorizontal
 } from 'lucide-react';
+import { getProfileIdentity } from '../../platform/profileIdentity';
 
 const PATH_COLORS = {
   wellbeing: { bg: 'bg-purple-100', text: 'text-purple-700', dot: 'bg-purple-500' },
@@ -250,9 +251,9 @@ const UserDirectoryTable = ({
                 <tr key={user.id} className="hover:bg-slate-50 transition-colors cursor-pointer group" onClick={() => onViewDetails?.(user)}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getAvatarColor(user.name)} flex items-center justify-center text-white font-bold text-sm shadow-sm`}>{getInitials(user.name)}</div>
+                      <ProfileAvatar user={user} />
                       <div className="min-w-0">
-                        <p className="font-semibold text-slate-900 truncate max-w-[220px]">{user.name || 'Unknown'}</p>
+                        <p className="font-semibold text-slate-900 truncate max-w-[220px]">{getProfileIdentity(user).name}</p>
                         <p className="text-xs text-slate-400 font-mono truncate max-w-[220px]">{user.id}</p>
                       </div>
                     </div>
@@ -284,6 +285,25 @@ const UserDirectoryTable = ({
       </div>
 
       {filteredUsers.length > 0 && <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between"><p className="text-xs text-slate-500">Showing {filteredUsers.length} of {users.length} students</p><p className="text-xs text-slate-400">Click a row to open the student master record</p></div>}
+    </div>
+  );
+};
+
+const ProfileAvatar = ({ user, className = 'w-10 h-10' }) => {
+  const identity = getProfileIdentity(user);
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = Boolean(identity.photoURL) && !imageFailed;
+
+  return showImage ? (
+    <img
+      src={identity.photoURL}
+      alt=""
+      className={`${className} rounded-xl object-cover shadow-sm bg-slate-100`}
+      onError={() => setImageFailed(true)}
+    />
+  ) : (
+    <div className={`${className} rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm shadow-sm`}>
+      {identity.initial || 'S'}
     </div>
   );
 };
