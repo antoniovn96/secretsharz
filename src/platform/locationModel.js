@@ -1,9 +1,10 @@
-// Secret Sharz / VidyaVantage — canonical profile location contract
+// Secret Sharz / VidyaVantage — canonical profile location location contract
 
 export const EMPTY_LOCATION = Object.freeze({
   countryId: '',
   countryName: '',
   countryIso2: '',
+  countryCode: '',
   stateId: '',
   stateName: '',
   stateCode: '',
@@ -18,6 +19,7 @@ export function normalizeLocation(value = {}) {
     countryId: source.countryId == null ? '' : String(source.countryId),
     countryName: String(source.countryName || '').trim(),
     countryIso2: String(source.countryIso2 || '').trim().toUpperCase(),
+    countryCode: String(source.countryCode || '').trim(),
     stateId: source.stateId == null ? '' : String(source.stateId),
     stateName: String(source.stateName || '').trim(),
     stateCode: String(source.stateCode || '').trim(),
@@ -35,4 +37,9 @@ export function hasLocation(value = {}) {
 export function formatLocation(value = {}) {
   const location = normalizeLocation(value);
   return [location.cityName, location.stateName, location.countryName, location.postalCode].filter(Boolean).join(', ');
+}
+
+export function formatPhonePrefix(value = {}) {
+  const location = normalizeLocation(value);
+  return [location.countryCode, location.countryName ? `(${location.countryName})` : ''].filter(Boolean).join(' ');
 }
