@@ -1,7 +1,7 @@
 export const MOBILE_NUMBER_REGEX = /^[6-9][0-9]{9}$/;
 
 export function normaliseMobileNumber(value) {
-  return String(value ?? '').replace(/\s+/g, '').replace(/[^0-9]/g, '');
+  return String(value ?? '').replace(/\s+/g, '');
 }
 
 export function validateMobileNumber(value) {
@@ -15,5 +15,5 @@ export function validateMobileNumber(value) {
 
 export function formatMobileNumber(value) {
   const number = normaliseMobileNumber(value);
-  return number.length === 10 ? `${number.slice(0, 5)} ${number.slice(5)}` : number;
+  return number.length === 10 && /^\d+$/.test(number) ? `${number.slice(0, 5)} ${number.slice(5)}` : number;
 }
