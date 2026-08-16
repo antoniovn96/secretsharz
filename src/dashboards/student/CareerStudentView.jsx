@@ -129,7 +129,7 @@ const CareerStudentView = ({ studentData, currentUser }) => {
         if (!cancelled && snap.exists()) {
           const data = snap.data();
           setLiveUserData(data);
-          setAccessPaid(data?.careerReportAccess?.status === 'paid');
+          setAccessPaid(data?.careerReportAccess?.status === 'paid' || data?.institutionAccess?.status === 'active');
           const stored = normaliseStoredResults(data);
           if (stored) setAssessmentResult(stored);
         }
