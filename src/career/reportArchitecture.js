@@ -10,7 +10,7 @@ export const STUDENT_FREE_REPORT = Object.freeze([
 ]);
 
 export const STUDENT_PREMIUM_REPORT = Object.freeze([
-  ...STUDENT_FREE_REPORT,
+  ...STUDENT_FREE_REPORT.slice(0, 3),
   { id: 'developmental_context', title: 'Developmental & Academic Context', purpose: 'Interpret education stage, subjects, marks and academic context together.' },
   { id: 'riasec_profile', title: 'Career Interest Profile', purpose: 'Detailed RIASEC interpretation and implications for exploration.' },
   { id: 'personality_profile', title: 'Personality Tendencies', purpose: 'Big Five tendencies and how they may interact with work environments.' },
@@ -19,6 +19,7 @@ export const STUDENT_PREMIUM_REPORT = Object.freeze([
   { id: 'decision_readiness', title: 'Career Decision Readiness', purpose: 'Identify current exploration and decision-process strengths and development areas.' },
   { id: 'adaptability', title: 'Adaptability & Career Resilience', purpose: 'Describe change-readiness and developmental opportunities.' },
   { id: 'work_environment', title: 'Preferred Work Environment', purpose: 'Translate preferences into real-world work-condition considerations.' },
+  { id: 'career_directions', title: 'Career Directions to Explore', purpose: 'Present leading career clusters and alternatives with reasons to investigate them.' },
   { id: 'top_career_directions', title: 'Top Career Directions', purpose: 'Show strongest career clusters with match, confidence and evidence.' },
   { id: 'alternative_careers', title: 'Alternative & Unexpected Careers', purpose: 'Surface viable alternatives, including exploratory recommendations outside the original shortlist.' },
   { id: 'pathway_analysis', title: 'Non-Linear Pathway Analysis', purpose: 'Map direct, bridge and alternative routes from the student’s current position.' },
