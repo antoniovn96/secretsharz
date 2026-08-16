@@ -7,7 +7,7 @@ import {
   ageBandFor,
   PATHWAYS,
 } from './careerAssessmentBlueprint';
-import { getTestBundle, TEST_BUNDLES } from './testBundleCatalogue';
+import { getBundleByFamilies as getCanonicalBundleByFamilies, getTestBundle, TEST_BUNDLES } from './testBundleCatalogue';
 
 // Context is deliberately separate from the paid assessment families. It is
 // collected for every pathway so the selected test(s) can be interpreted in
@@ -87,6 +87,13 @@ export function getItemsForFamilies(familyIds = []) {
 
 export function getItemsForBundle(bundleId) {
   return getItemsForFamilies(getSelectedFamilyIds(bundleId));
+}
+
+// Compatibility export for assessment UIs. The canonical bundle catalogue is
+// the single source of truth; this re-export keeps older consumers on the
+// selection module working without duplicating bundle-generation logic.
+export function getBundleByFamilies(familyIds = []) {
+  return getCanonicalBundleByFamilies(familyIds);
 }
 
 export function getDefaultBundle() {
