@@ -5,6 +5,7 @@ import CareerProfileSettings from './CareerProfileSettings';
 import CareerPaymentPanel from './CareerPaymentPanel';
 import { auth, db } from '../../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { getProfileIdentity } from '../../platform/profileIdentity';
 
 function pathToView(pathname) {
   const path = pathname || '';
@@ -56,13 +57,13 @@ export default function CareerStudentView({ studentData, currentUser }) {
   const [view, setView] = useState(() => pathToView(typeof window !== 'undefined' ? window.location.pathname : '/dashboard/career'));
   const [liveUserData, setLiveUserData] = useState(studentData || null);
   const [assessmentResult, setAssessmentResult] = useState(null);
+  const [identity, setIdentity] = useState(() => getProfileIdentity(currentUser || auth.currentUser, studentData || {}));
   const [loading, setLoading] = useState(true);
   const [accessPaid, setAccessPaid] = useState(false);
   const user = currentUser || auth.currentUser;
-  const fullName = liveUserData?.name || user?.displayName || 'Student';
-  const firstName = fullName.trim().split(/\s+/)[0] || 'Student';
-  const profileImage = liveUserData?.photoURL || user?.photoURL || '';
-  const profileInitial = firstName.charAt(0).toUpperCase() || 'S';
+  const firstName = identity.firstName;
+  const profileImage = identity.photoURL;
+  const profileInitial = identity.initial;
 
   const go = nextView => {
     const paths = { home: '/dashboard/career', assessment: '/dashboard/career/assessment', results: '/dashboard/career/results', payment: '/dashboard/career/payment', full: '/dashboard/career/results/full', settings: '/dashboard/career/settings' };
@@ -79,7 +80,9 @@ export default function CareerStudentView({ studentData, currentUser }) {
       try {
         const snap = await getDoc(doc(db, 'users', activeUser.uid));
         if (!cancelled && snap.exists()) {
-          const data = snap.data(); setLiveUserData(data);
+          const data = snap.data();
+          setLiveUserData(data);
+          setIdentity(getProfileIdentity(activeUser, data));
           setAccessPaid(data?.careerReportAccess?.status === 'paid' || data?.institutionAccess?.status === 'active');
           const stored = normaliseStoredResults(data); if (stored) setAssessmentResult(stored);
         }
