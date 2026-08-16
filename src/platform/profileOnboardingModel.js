@@ -20,6 +20,13 @@ export function normalizeProfileLocation(value) {
   return normalizeLocation(value || EMPTY_LOCATION);
 }
 
+export function formatCountryPhone(countryCode, countryName, phone) {
+  const code = String(countryCode || '').trim();
+  const country = String(countryName || '').trim();
+  const number = String(phone || '').trim();
+  return [code, country ? `(${country})` : '', number].filter(Boolean).join(' ');
+}
+
 // Used by dashboards as well as the intake form. This deliberately accepts
 // legacy field names so an older completed profile is not treated as new.
 export function isProfileComplete(data = {}) {
