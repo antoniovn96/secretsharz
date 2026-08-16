@@ -12,12 +12,8 @@ const CounsellorDashboard = ({ navigate }) => {
       try {
         setLoading(true);
         setError(null);
-        
         const currentUser = auth.currentUser;
-        if (!currentUser) {
-          throw new Error('No user is currently logged in.');
-        }
-
+        if (!currentUser) throw new Error('No user is currently logged in.');
         const assignedStudents = await getAssignedStudents(currentUser.uid);
         setStudents(assignedStudents);
       } catch (err) {
@@ -71,18 +67,10 @@ const CounsellorDashboard = ({ navigate }) => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                    Student Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                    Grade & School
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                    RIASEC Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                    Action
-                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Student</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Grade & School</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">RIASEC Status</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -91,11 +79,22 @@ const CounsellorDashboard = ({ navigate }) => {
                   const studentName = student.name || student.displayName || 'Unknown Student';
                   const grade = student.grade || student.currentGrade || 'N/A';
                   const school = student.school || student.schoolName || 'N/A';
+                  const profilePic = student.photoURL || student.profilePicture || null;
+                  const initial = studentName.trim().charAt(0).toUpperCase() || '?';
 
                   return (
                     <tr key={student.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                        {studentName}
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-full overflow-hidden bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold shrink-0">
+                            {profilePic ? (
+                              <img src={profilePic} alt={`${studentName} profile`} className="w-full h-full object-cover" />
+                            ) : (
+                              initial
+                            )}
+                          </div>
+                          <span>{studentName}</span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         <div>
@@ -105,22 +104,13 @@ const CounsellorDashboard = ({ navigate }) => {
                       </td>
                       <td className="px-6 py-4 text-sm">
                         {hasRiasec ? (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                            {student.careerDNA.riasec.code}
-                          </span>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">{student.careerDNA.riasec.code}</span>
                         ) : (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
-                            Pending
-                          </span>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Pending</span>
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <button
-                          onClick={() => handleViewCaseFile(student.id)}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                        >
-                          View Case File
-                        </button>
+                        <button onClick={() => handleViewCaseFile(student.id)} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">View Case File</button>
                       </td>
                     </tr>
                   );
@@ -128,12 +118,8 @@ const CounsellorDashboard = ({ navigate }) => {
               </tbody>
             </table>
           </div>
-
-          {/* Summary footer */}
           <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600">
-              Total Students: <span className="font-semibold text-gray-900">{students.length}</span>
-            </p>
+            <p className="text-sm text-gray-600">Total Students: <span className="font-semibold text-gray-900">{students.length}</span></p>
           </div>
         </div>
       )}
