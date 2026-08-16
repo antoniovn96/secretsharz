@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import CareerAssessment from '../../CareerAssessment';
-import CareerReportV3 from '../../CareerReportV3';
+import CareerFullReportPage from '../../CareerFullReportPage';
 import { auth, db } from '../../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -182,27 +182,10 @@ const CareerStudentView = ({ studentData, currentUser }) => {
   const resultForDisplay = assessmentResult || normaliseStoredResults(liveUserData);
 
   if (loading) return <div style={{ minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 800 }}>Loading your career profile…</div>;
-
-  if (view === 'assessment') {
-    return <CareerAssessment onBack={() => go(hasAssessment ? 'results' : 'home')} onExplore={() => go('results')} onSaveResults={handleAssessmentComplete} />;
-  }
-
-  if (view === 'results') {
-    if (!resultForDisplay) {
-      go('assessment');
-      return null;
-    }
-    return <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '28px 24px 60px' }}><PartialResults result={resultForDisplay} name={dynamicName} onFullReport={() => accessPaid ? go('full') : go('payment')} onRetake={() => go('assessment')} /></div>;
-  }
-
-  if (view === 'payment') {
-    return <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '28px 24px 60px' }}><PaymentPage currentUser={user} onBack={() => go('results')} onVerified={() => { setAccessPaid(true); go('full'); }} /></div>;
-  }
-
-  if (view === 'full') {
-    if (!accessPaid) return null;
-    return <CareerReportV3 />;
-  }
+  if (view === 'assessment') return <CareerAssessment onBack={() => go(hasAssessment ? 'results' : 'home')} onExplore={() => go('results')} onSaveResults={handleAssessmentComplete} />;
+  if (view === 'results') { if (!resultForDisplay) { go('assessment'); return null; } return <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '28px 24px 60px' }}><PartialResults result={resultForDisplay} name={dynamicName} onFullReport={() => accessPaid ? go('full') : go('payment')} onRetake={() => go('assessment')} /></div>; }
+  if (view === 'payment') return <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '28px 24px 60px' }}><PaymentPage currentUser={user} onBack={() => go('results')} onVerified={() => { setAccessPaid(true); go('full'); }} /></div>;
+  if (view === 'full') { if (!accessPaid) return null; return <CareerFullReportPage />; }
 
   return <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex' }}><aside style={{ width: '250px', flexShrink: 0, padding: '24px' }}><div style={{ background: 'white', borderRadius: '18px', overflow: 'hidden', border: '1px solid #e2e8f0', position: 'sticky', top: '24px' }}><div style={{ height: '90px', background: 'linear-gradient(135deg,#4f46e5,#7c3aed)' }} /><div style={{ padding: '0 20px 22px', marginTop: '-36px', textAlign: 'center' }}>{profileImage ? <img src={profileImage} alt="Profile" style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', border: '4px solid white' }} /> : <div style={{ width: '72px', height: '72px', borderRadius: '50%', border: '4px solid white', background: '#e0e7ff', color: '#4338ca', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: 900 }}>{profileInitial}</div>}<div style={{ fontWeight: 900, color: '#0f172a', fontSize: '18px', marginTop: '8px' }}>{dynamicName}</div><div style={{ color: '#64748b', fontSize: '12px', marginBottom: '18px' }}>Career Guidance</div><button onClick={() => go('home')} style={{ width: '100%', padding: '10px 12px', border: 0, borderRadius: '10px', background: '#eef2ff', color: '#4338ca', fontWeight: 800, cursor: 'pointer' }}>🏠 Career Home</button>{hasAssessment && <button onClick={() => go('results')} style={{ width: '100%', padding: '10px 12px', border: 0, borderRadius: '10px', background: 'transparent', color: '#475569', fontWeight: 700, cursor: 'pointer', marginTop: '5px' }}>📊 My Results</button>}</div></div></aside><main style={{ flex: 1, padding: '24px 28px 60px' }}><div style={{ maxWidth: '960px', margin: '0 auto' }}><div style={{ background: 'white', borderRadius: '18px', padding: '30px', border: '1px solid #e2e8f0', marginBottom: '20px' }}><div style={{ color: '#4f46e5', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>VidyaVantage Career Discovery</div><h1 style={{ margin: '8px 0', color: '#0f172a', fontSize: '34px', fontWeight: 950 }}>Your career roadmap starts here, {dynamicName}.</h1><p style={{ margin: 0, color: '#64748b', fontSize: '15px', lineHeight: 1.7 }}>Discover your interests, strengths, values and career direction through the detailed Career Discovery Assessment.</p></div>{!hasAssessment ? <div style={{ background: 'white', borderRadius: '18px', padding: '45px 30px', textAlign: 'center', border: '1px solid #e2e8f0' }}><div style={{ fontSize: '44px', marginBottom: '12px' }}>🧭</div><h2 style={{ margin: '0 0 10px', color: '#0f172a', fontSize: '24px', fontWeight: 900 }}>Discover Your Possibilities</h2><p style={{ maxWidth: '650px', margin: '0 auto', color: '#64748b', lineHeight: 1.7 }}>Take the detailed VidyaVantage Career Discovery Assessment. When you submit it, you will immediately receive a personalised preview report.</p><button onClick={() => go('assessment')} style={{ marginTop: '24px', border: 0, borderRadius: '12px', padding: '14px 26px', background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', color: 'white', fontWeight: 900, cursor: 'pointer' }}>Start Career Discovery →</button></div> : <div style={{ background: 'white', borderRadius: '18px', padding: '28px', border: '1px solid #e2e8f0' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}><div><div style={{ color: '#4f46e5', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>Career Intelligence Report</div><h2 style={{ margin: '5px 0', color: '#0f172a', fontSize: '24px', fontWeight: 900 }}>Your results are ready</h2><p style={{ margin: 0, color: '#64748b' }}>Holland Code: <strong>{(resultForDisplay?.hollandCode || []).join('') || liveUserData?.riasecCode || '—'}</strong></p></div><button onClick={() => go('results')} style={{ border: 0, borderRadius: '11px', padding: '13px 20px', background: '#4f46e5', color: 'white', fontWeight: 900, cursor: 'pointer' }}>View Career Results →</button></div></div>}</div></main></div>;
 };
