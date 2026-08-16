@@ -6,8 +6,8 @@ import {
   calculateAge,
   ageBandFor,
   PATHWAYS,
-} from './careerAssessmentBlueprint';
-import { getBundleByFamilies as getCanonicalBundleByFamilies, getTestBundle, TEST_BUNDLES } from './testBundleCatalogue';
+} from './careerAssessmentBlueprint.js';
+import { getBundleByFamilies as getCanonicalBundleByFamilies, getTestBundle, TEST_BUNDLES } from './testBundleCatalogue.js';
 
 // Context is deliberately separate from the paid assessment families. It is
 // collected for every pathway so the selected test(s) can be interpreted in
