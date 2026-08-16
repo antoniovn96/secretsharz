@@ -2,6 +2,8 @@
 // This model keeps school/guardian fields out of professional profiles and
 // requires reliable contact/emergency information for adult self-service users.
 
+import { EMPTY_LOCATION, normalizeLocation } from './locationModel.js';
+
 export const PROFILE_TYPES = Object.freeze(['student', 'working_professional']);
 
 export function deriveProfileType({ profileType, role } = {}) {
@@ -12,6 +14,10 @@ export function deriveProfileType({ profileType, role } = {}) {
 
 export function requiresGuardian({ profileType, age }) {
   return profileType === 'student' && Number(age) < 18;
+}
+
+export function normalizeProfileLocation(value) {
+  return normalizeLocation(value || EMPTY_LOCATION);
 }
 
 // Used by dashboards as well as the intake form. This deliberately accepts
@@ -94,6 +100,9 @@ export function buildProfileRecord(input) {
     parentName: type === 'student' ? String(input.parentName || '').trim() : '',
     parentContact: type === 'student' ? String(input.parentContact || '').trim() : '',
     contactNumber: String(input.contactNumber || '').trim(),
+    countryCode: String(input.countryCode || '').trim(),
+    countryName: String(input.countryName || '').trim(),
+    location: normalizeProfileLocation(input.location),
     emergencyContactName: String(input.emergencyContactName || '').trim(),
     emergencyContactNumber: String(input.emergencyContactNumber || '').trim(),
     profileComplete: true,
