@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, Mail, Phone, MapPin, Calendar, GraduationCap, Users, BookOpen, Award, Clock, AlertCircle, CheckCircle, User, Link, FileText, TrendingUp } from 'lucide-react';
 import { doc, getDoc, collection } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { getProfileIdentity } from '../../platform/profileIdentity';
 
 const PATH_INFO = {
   wellbeing: { label: 'Wellbeing', color: 'purple', icon: '🧠', bg: 'bg-purple-100', text: 'text-purple-700' },
@@ -25,6 +26,7 @@ const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
   const [assignedCounsellor, setAssignedCounsellor] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const identity = getProfileIdentity(user, additionalData || {});
   const pathInfo = PATH_INFO[user?.primary_path] || PATH_INFO.unassigned;
 
   // Fetch additional data when panel opens
@@ -36,6 +38,9 @@ const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
 
   const fetchAdditionalData = async () => {
     setLoading(true);
+    setAdditionalData(null);
+    setLinkedParent(null);
+    setAssignedCounsellor(null);
     try {
       // Fetch user document for complete data
       const userDoc = await getDoc(doc(db, 'users', user.id));
@@ -84,7 +89,7 @@ const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
   const getInitials = (name) => {
     if (!name) return 'U';
     const parts = name.split(' ');
-    return parts.length > 1 
+    return parts.length > 1
       ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
       : name.substring(0, 2).toUpperCase();
   };
@@ -94,7 +99,7 @@ const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 transition-opacity"
         onClick={onClose}
       />
@@ -104,11 +109,9 @@ const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
           <div className="flex items-center gap-4">
-            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${user?.name ? 'from-emerald-400 to-teal-500' : 'from-slate-400 to-slate-500'} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
-              {getInitials(user?.name)}
-            </div>
+            <ProfileAvatar user={user} data={additionalData || {}} />
             <div>
-              <h2 className="text-xl font-bold text-slate-900">{user?.name || 'Unknown User'}</h2>
+              <h2 className="text-xl font-bold text-slate-900">{identity.name}</h2>
               <p className="text-sm text-slate-500 font-mono">{user?.id}</p>
             </div>
           </div>
@@ -128,10 +131,10 @@ const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
               <span>{pathInfo.icon}</span>
               {pathInfo.label} Student
             </span>
-            {additionalData?.riasecCode && (
+            {(additionalData?.riasecCode || user?.riasecCode) && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg text-sm font-bold text-slate-700">
                 <TrendingUp className="w-4 h-4" />
-                RIASEC: {additionalData.riasecCode}
+                RIASEC: {additionalData?.riasecCode || user?.riasecCode}
               </span>
             )}
           </div>
@@ -139,32 +142,32 @@ const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
           {/* Contact Information */}
           <SectionCard title="Contact Information" icon={User}>
             <div className="grid grid-cols-2 gap-4">
-              <InfoItem icon={Mail} label="Email" value={user?.email || 'Not provided'} />
-              <InfoItem icon={Phone} label="Phone" value={user?.phone || 'Not provided'} />
-              <InfoItem icon={MapPin} label="Location" value={user?.location || user?.city || 'Not specified'} />
-              <InfoItem icon={Calendar} label="Onboarded" value={formatDate(user?.createdAt || user?.onboardingDate)} />
+              <InfoItem icon={Mail} label="Email" value={identity.email || user?.email || 'Not provided'} />
+              <InfoItem icon={Phone} label="Phone" value={user?.phone || additionalData?.phone || 'Not provided'} />
+              <InfoItem icon={MapPin} label="Location" value={user?.location || user?.city || additionalData?.location || 'Not specified'} />
+              <InfoItem icon={Calendar} label="Onboarded" value={formatDate(user?.createdAt || user?.onboardingDate || additionalData?.createdAt)} />
             </div>
           </SectionCard>
 
           {/* Academic Details */}
           <SectionCard title="Academic Details" icon={GraduationCap}>
             <div className="grid grid-cols-2 gap-4">
-              <InfoItem icon={BookOpen} label="Grade/Class" value={user?.grade || user?.classLevel || 'N/A'} />
-              <InfoItem icon={SchoolIcon} label="School" value={user?.schoolName || 'Not specified'} />
-              {user?.stream1112 && (
-                <InfoItem icon={BookOpen} label="Stream" value={user.stream1112} />
+              <InfoItem icon={BookOpen} label="Grade/Class" value={user?.grade || user?.classLevel || additionalData?.grade || additionalData?.classLevel || 'N/A'} />
+              <InfoItem icon={SchoolIcon} label="School" value={user?.schoolName || user?.institutionName || additionalData?.schoolName || 'Not specified'} />
+              {(user?.stream1112 || additionalData?.stream1112) && (
+                <InfoItem icon={BookOpen} label="Stream" value={user?.stream1112 || additionalData?.stream1112} />
               )}
-              {user?.marks10th && (
-                <InfoItem icon={Award} label="10th Marks" value={`${user.marks10th}%`} />
+              {(user?.marks10th || additionalData?.marks10th) && (
+                <InfoItem icon={Award} label="10th Marks" value={`${user?.marks10th || additionalData?.marks10th}%`} />
               )}
-              {user?.marks12th && (
-                <InfoItem icon={Award} label="12th Marks" value={`${user.marks12th}%`} />
+              {(user?.marks12th || additionalData?.marks12th) && (
+                <InfoItem icon={Award} label="12th Marks" value={`${user?.marks12th || additionalData?.marks12th}%`} />
               )}
             </div>
           </SectionCard>
 
           {/* RIASEC Career DNA */}
-          {(additionalData?.riasecScores || user?.riasecCode) && (
+          {(additionalData?.riasecScores || user?.riasecScores || user?.riasecCode || additionalData?.riasecCode) && (
             <SectionCard title="RIASEC Career DNA" icon={TrendingUp}>
               <div className="space-y-3">
                 {getRIASECScores().slice(0, 6).map((item) => (
@@ -178,7 +181,7 @@ const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
                         <span className="text-xs text-slate-500">{item.score}/12</span>
                       </div>
                       <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{ width: `${item.percentage}%`, backgroundColor: item.color }}
                         />
@@ -219,9 +222,7 @@ const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
           <SectionCard title="Assigned Counsellor" icon={Users}>
             {assignedCounsellor ? (
               <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold">
-                  {getInitials(assignedCounsellor.name)}
-                </div>
+                <ProfileAvatar user={assignedCounsellor} data={assignedCounsellor} className="w-12 h-12" />
                 <div className="flex-1">
                   <p className="font-semibold text-slate-900">{assignedCounsellor.name || 'Unknown'}</p>
                   <p className="text-sm text-slate-500">{assignedCounsellor.email || 'No email'}</p>
@@ -242,9 +243,7 @@ const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
           <SectionCard title="Linked Parent" icon={Link}>
             {linkedParent ? (
               <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white font-bold">
-                  {getInitials(linkedParent.name)}
-                </div>
+                <ProfileAvatar user={linkedParent} data={linkedParent} className="w-12 h-12" />
                 <div className="flex-1">
                   <p className="font-semibold text-slate-900">{linkedParent.name || 'Unknown'}</p>
                   <p className="text-sm text-slate-500">{linkedParent.email || 'No email'}</p>
@@ -309,6 +308,25 @@ const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
   );
 };
 
+const ProfileAvatar = ({ user, data = {}, className = 'w-14 h-14' }) => {
+  const identity = getProfileIdentity(user, data);
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = Boolean(identity.photoURL) && !imageFailed;
+
+  return showImage ? (
+    <img
+      src={identity.photoURL}
+      alt=""
+      className={`${className} rounded-2xl object-cover shadow-lg bg-slate-100`}
+      onError={() => setImageFailed(true)}
+    />
+  ) : (
+    <div className={`${className} rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
+      {identity.initial || 'S'}
+    </div>
+  );
+};
+
 // Helper Components
 const SchoolIcon = ({ className }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -347,7 +365,7 @@ const StatusBadge = ({ status }) => {
     none: { bg: 'bg-slate-100', text: 'text-slate-600', icon: AlertCircle, label: 'None' },
   };
   const { bg, text, icon: Icon, label } = config[status] || config.none;
-  
+
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold ${bg} ${text}`}>
       <Icon className="w-4 h-4" />
