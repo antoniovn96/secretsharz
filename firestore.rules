@@ -13,6 +13,20 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.careerId == request.auth.uid;
     }
 
+    function validMobile(number) {
+      return number == '' || number.matches('^[6-9][0-9]{9}$');
+    }
+
+    function validUserPhoneData() {
+      return (!request.resource.data.keys().hasAny(['phone'])
+        || !request.resource.data.phone.keys().hasAny(['number'])
+        || validMobile(request.resource.data.phone.number))
+        && (!request.resource.data.keys().hasAny(['careerProfile'])
+        || !request.resource.data.careerProfile.keys().hasAny(['phone'])
+        || !request.resource.data.careerProfile.phone.keys().hasAny(['number'])
+        || validMobile(request.resource.data.careerProfile.phone.number));
+    }
+
     function hasAccountConsent(uid) {
       return isSignedIn()
         && exists(/databases/$(database)/documents/consentEvents/$('account_' + uid))
@@ -79,10 +93,12 @@ service cloud.firestore {
           && request.auth.uid == userId
           && hasAccountConsent(userId)
           && request.resource.data.role == 'student'
+          && validUserPhoneData()
           && !request.resource.data.keys().hasAny(['admin','permissions','careerReportAccess']));
       allow update: if isAdmin()
         || (isSignedIn()
           && request.auth.uid == userId
+          && validUserPhoneData()
           && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role','admin','permissions','careerReportAccess']));
       allow delete: if isAdmin();
     }
