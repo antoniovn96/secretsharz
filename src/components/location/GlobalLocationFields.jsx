@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 const BASE = 'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master';
 const COUNTRIES_URL = `${BASE}/json/countries.json`;
-const STATES_URL = `${BASE}/json/states.json`;
+// The database exposes the generated states export at the repository root.
+// The previous /json/states.json URL can fail/return an unusable payload in-browser.
+const STATES_URL = `${BASE}/states.json`;
 const citiesUrl = iso2 => `${BASE}/contributions/cities/${encodeURIComponent(String(iso2 || '').toUpperCase())}.json`;
 
 const cache = { countries: null, states: null, cities: new Map() };
@@ -11,6 +13,14 @@ async function getJson(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Location data request failed (${response.status}).`);
   return response.json();
+}
+
+function toArray(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.states)) return data.states;
+  if (Array.isArray(data?.countries)) return data.countries;
+  return [];
 }
 
 function normaliseCountry(item) {
@@ -25,10 +35,11 @@ function normaliseCountry(item) {
 
 function normaliseState(item) {
   return {
-    id: String(item.id ?? item.state_code ?? item.name),
-    code: String(item.state_code || item.stateCode || '').toUpperCase(),
+    id: String(item.id ?? item.state_code ?? item.iso2 ?? item.name),
+    code: String(item.state_code || item.stateCode || item.iso2 || '').toUpperCase(),
     name: item.name || '',
     countryCode: String(item.country_code || item.countryCode || '').toUpperCase(),
+    countryId: String(item.country_id ?? item.countryId ?? ''),
   };
 }
 
@@ -57,7 +68,7 @@ export default function GlobalLocationFields({ value = {}, onChange, phone = {},
         setLoadingCountries(true);
         const data = cache.countries || await getJson(COUNTRIES_URL);
         cache.countries = data;
-        if (active) setCountries((Array.isArray(data) ? data : []).map(normaliseCountry).filter(x => x.name).sort((a,b) => a.name.localeCompare(b.name)));
+        if (active) setCountries(toArray(data).map(normaliseCountry).filter(x => x.name).sort((a,b) => a.name.localeCompare(b.name)));
       } catch (e) { if (active) setError('Unable to load country data. You can still enter your postal code manually.'); }
       finally { if (active) setLoadingCountries(false); }
     })();
@@ -70,15 +81,26 @@ export default function GlobalLocationFields({ value = {}, onChange, phone = {},
     (async () => {
       try {
         setLoadingStates(true);
+        setError('');
         const data = cache.states || await getJson(STATES_URL);
         cache.states = data;
-        const selected = (Array.isArray(data) ? data : []).map(normaliseState).filter(x => x.countryCode === String(value.countryCode).toUpperCase()).sort((a,b) => a.name.localeCompare(b.name));
+        const countryIso2 = String(value.countryCode).toUpperCase();
+        const selectedCountry = countries.find(c => c.iso2 === countryIso2);
+        const selected = toArray(data)
+          .map(normaliseState)
+          .filter(x => x.countryCode === countryIso2 || (selectedCountry && x.countryId === selectedCountry.id))
+          .sort((a,b) => a.name.localeCompare(b.name));
         if (active) setStates(selected);
-      } catch (e) { if (active) setError('Unable to load state/province data right now.'); }
+      } catch (e) {
+        if (active) {
+          setStates([]);
+          setError('Unable to load state/province data right now.');
+        }
+      }
       finally { if (active) setLoadingStates(false); }
     })();
     return () => { active = false; };
-  }, [value.countryCode]);
+  }, [value.countryCode, countries]);
 
   useEffect(() => {
     let active = true;
@@ -92,7 +114,10 @@ export default function GlobalLocationFields({ value = {}, onChange, phone = {},
           data = await getJson(citiesUrl(key));
           cache.cities.set(key, data);
         }
-        const selected = (Array.isArray(data) ? data : []).map(normaliseCity).filter(x => !value.stateCode || x.stateCode === String(value.stateCode).toUpperCase()).sort((a,b) => a.name.localeCompare(b.name));
+        const selected = toArray(data)
+          .map(normaliseCity)
+          .filter(x => !value.stateCode || x.stateCode === String(value.stateCode).toUpperCase())
+          .sort((a,b) => a.name.localeCompare(b.name));
         if (active) setCities(selected);
       } catch (e) {
         if (active) {
@@ -121,7 +146,7 @@ export default function GlobalLocationFields({ value = {}, onChange, phone = {},
       <label style={{ display: 'block', fontSize: 12, fontWeight: 900, color: '#475569' }}>
         State / Province / Region
         <select value={value.stateCode || ''} onChange={e => { const s = states.find(x => x.code === e.target.value); update({ stateCode: s?.code || '', stateName: s?.name || '', cityName: '', cityId: '' }); }} style={selectStyle} disabled={!value.countryCode || loadingStates}>
-          <option value="">{loadingStates ? 'Loading…' : value.countryCode ? 'Select state / province' : 'Select country first'}</option>
+          <option value="">{loadingStates ? 'Loading…' : value.countryCode ? (states.length ? 'Select state / province' : 'No states found') : 'Select country first'}</option>
           {states.map(s => <option key={`${s.countryCode}-${s.code}-${s.id}`} value={s.code}>{s.name}{s.code ? ` (${s.code})` : ''}</option>)}
         </select>
       </label>
