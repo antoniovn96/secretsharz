@@ -1,4 +1,4 @@
-// Secret Sharz / VidyaVantage — canonical profile location location contract
+// Secret Sharz / VidyaVantage — canonical profile location contract
 
 export const EMPTY_LOCATION = Object.freeze({
   countryId: '',
