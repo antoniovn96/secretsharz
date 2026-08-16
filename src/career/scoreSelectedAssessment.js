@@ -1,5 +1,5 @@
-import { ASSESSMENT_VERSION, scoreLikert, cosineSimilarity } from './careerAssessmentBlueprint';
-import { getItemsForBundle, getItemsForFamilies, resolveBundle } from './assessmentSelection';
+import { ASSESSMENT_VERSION, scoreLikert, cosineSimilarity } from './careerAssessmentBlueprint.js';
+import { getItemsForBundle, getItemsForFamilies, resolveBundle } from './assessmentSelection.js';
 
 const emptyResult = () => ({
   version: ASSESSMENT_VERSION,
@@ -42,79 +42,29 @@ export function scoreSelectedAssessment(answers = {}, { bundleId = null, familyI
       continue;
     }
 
-    const score = scoreLikert(value, item.reverse);
-    if (score == null) continue;
-    if (item.riasecKey && result.riasec) result.riasec[item.riasecKey] += score;
-    if (item.big5Key && result.big5) result.big5[item.big5Key] += score;
-    if (item.valueKey && result.values) result.values[item.valueKey] = score;
-    if (item.skillKey && result.skills) result.skills[item.skillKey] = score;
-    if (item.learningKey && result.learning) result.learning[item.learningKey] = score;
+    if (item.type === 'likert5') {
+      const score = scoreLikert(Number(value), item.reverse === true);
+      if (item.domain === 'interest' && result.riasec && item.riasecCode) result.riasec[item.riasecCode] += score;
+      else if (item.domain === 'personality' && result.big5 && item.trait) result.big5[item.trait] += score;
+      else if (item.domain === 'work_values' && result.values && item.valueKey) result.values[item.valueKey] = (result.values[item.valueKey] || 0) + score;
+      else if (item.domain === 'skills' && result.skills && item.skillKey) result.skills[item.skillKey] = (result.skills[item.skillKey] || 0) + score;
+      else if (item.domain === 'learning' && result.learning && item.learningKey) result.learning[item.learningKey] = (result.learning[item.learningKey] || 0) + score;
+    }
   }
 
   if (result.riasec) {
-    const completed = Object.values(result.riasec).some(v => v > 0);
-    result.riasecCode = completed
-      ? Object.entries(result.riasec).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k).join('')
-      : null;
+    result.riasecCode = Object.entries(result.riasec)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([code]) => code)
+      .join('');
   }
-  if (result.reasoning) {
-    result.reasoning.percent = result.reasoning.total
-      ? Math.round((result.reasoning.correct / result.reasoning.total) * 100)
-      : null;
+
+  if (result.reasoning && result.reasoning.total > 0) {
+    result.reasoning.accuracy = result.reasoning.correct / result.reasoning.total;
   }
-  if (result.skills) {
-    const vals = Object.values(result.skills);
-    result.skills.percent = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / (vals.length * 5)) * 100) : null;
-  }
-  if (result.learning) {
-    const vals = Object.values(result.learning);
-    result.learning.percent = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / (vals.length * 5)) * 100) : null;
-  }
+
   return result;
 }
 
-export function createSelectedUserVector(scored, context = {}) {
-  return {
-    riasec_R: scored?.riasec?.R || 0,
-    riasec_I: scored?.riasec?.I || 0,
-    riasec_A: scored?.riasec?.A || 0,
-    riasec_S: scored?.riasec?.S || 0,
-    riasec_E: scored?.riasec?.E || 0,
-    riasec_C: scored?.riasec?.C || 0,
-    big5_O: scored?.big5?.O || 0,
-    big5_C: scored?.big5?.C || 0,
-    big5_E: scored?.big5?.E || 0,
-    big5_A: scored?.big5?.A || 0,
-    big5_N: scored?.big5?.N || 0,
-    reasoning: scored?.reasoning?.percent || 0,
-    skills: scored?.skills?.percent || 0,
-    learning: scored?.learning?.percent || 0,
-    academicAverage: Number(context.academicAverage || 0),
-  };
-}
-
-export function matchCareerToSelectedProfile(career, scored, context = {}) {
-  const v = createSelectedUserVector(scored, context);
-  const p = {
-    riasec_R: (career.riasec || []).includes('R') ? 5 : 1,
-    riasec_I: (career.riasec || []).includes('I') ? 5 : 1,
-    riasec_A: (career.riasec || []).includes('A') ? 5 : 1,
-    riasec_S: (career.riasec || []).includes('S') ? 5 : 1,
-    riasec_E: (career.riasec || []).includes('E') ? 5 : 1,
-    riasec_C: (career.riasec || []).includes('C') ? 5 : 1,
-    big5_O: 3,
-    big5_C: 3,
-    big5_E: 3,
-    big5_A: 3,
-    big5_N: 3,
-    reasoning: 60,
-    skills: 60,
-    learning: 60,
-    academicAverage: Number(context.academicAverage || 60),
-  };
-  const similarity = cosineSimilarity(v, p);
-  return {
-    similarity,
-    explorationIndex: Math.round(Math.max(0, Math.min(1, (similarity + 1) / 2)) * 100),
-  };
-}
+export { cosineSimilarity };
