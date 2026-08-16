@@ -3,10 +3,13 @@ import { auth, db, storage } from '../../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { updateProfile, signOut } from 'firebase/auth';
+import GlobalLocationFields from '../../components/location/GlobalLocationFields';
 
 const empty = {
   bio: '', headline: '', hobbies: [], interests: [], favouriteSubjects: [],
   careerInterests: [], skills: [], goals: [], school: '', grade: '', stream: '', location: '',
+  locationData: { countryCode: '', countryName: '', countryIso3: '', stateCode: '', stateName: '', cityId: '', cityName: '', postalCode: '' },
+  phone: { countryCode: 'IN', countryName: 'India', callingCode: '+91', number: '', international: '' },
 };
 
 const defaultPreferences = {
@@ -22,6 +25,8 @@ const join = value => Array.isArray(value) ? value.join(', ') : '';
 
 function normalise(data) {
   const p = data?.careerProfile || {};
+  const locationData = p.locationData || {};
+  const phone = p.phone || {};
   return {
     ...empty, ...p,
     hobbies: Array.isArray(p.hobbies) ? p.hobbies : [],
@@ -30,6 +35,8 @@ function normalise(data) {
     careerInterests: Array.isArray(p.careerInterests) ? p.careerInterests : [],
     skills: Array.isArray(p.skills) ? p.skills : [],
     goals: Array.isArray(p.goals) ? p.goals : [],
+    locationData: { ...empty.locationData, ...locationData },
+    phone: { ...empty.phone, ...phone },
   };
 }
 
@@ -57,23 +64,26 @@ export default function CareerProfileSettings() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  useEffect(() => auth.onAuthStateChanged(async activeUser => {
-    setUser(activeUser);
-    if (!activeUser) { setLoading(false); return; }
-    try {
-      const snap = await getDoc(doc(db, 'users', activeUser.uid));
-      const data = snap.exists() ? snap.data() : {};
-      setProfile(normalise(data));
-      setPreferences({ ...defaultPreferences, ...(data?.careerProfilePreferences || {}) });
-    } catch (e) { setError(e?.message || 'Unable to load your profile.'); }
-    finally { setLoading(false); }
-  }), []);
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async activeUser => {
+      setUser(activeUser);
+      if (!activeUser) { setLoading(false); return; }
+      try {
+        const snap = await getDoc(doc(db, 'users', activeUser.uid));
+        const data = snap.exists() ? snap.data() : {};
+        setProfile(normalise(data));
+        setPreferences({ ...defaultPreferences, ...(data?.careerProfilePreferences || {}) });
+      } catch (e) { setError(e?.message || 'Unable to load your profile.'); }
+      finally { setLoading(false); }
+    });
+    return unsubscribe;
+  }, []);
 
   const setField = (field, value) => setProfile(p => ({ ...p, [field]: value }));
   const setPreference = (field, value) => setPreferences(p => ({ ...p, [field]: value }));
 
   const completion = useMemo(() => {
-    const fields = [profile.headline, profile.bio, profile.hobbies.length, profile.interests.length, profile.careerInterests.length, profile.skills.length, profile.favouriteSubjects.length, profile.goals.length, profile.school, profile.grade, profile.stream, profile.location];
+    const fields = [profile.headline, profile.bio, profile.hobbies.length, profile.interests.length, profile.careerInterests.length, profile.skills.length, profile.favouriteSubjects.length, profile.goals.length, profile.school, profile.grade, profile.stream, profile.locationData.countryCode, profile.phone.number];
     return Math.round(fields.filter(Boolean).length / fields.length * 100);
   }, [profile]);
 
@@ -81,9 +91,20 @@ export default function CareerProfileSettings() {
     if (!user) return;
     setSaving(true); setError(''); setMessage('');
     try {
-      const next = { ...profile, updatedAt: new Date().toISOString() };
-      await setDoc(doc(db, 'users', user.uid), { careerProfile: next, careerProfilePreferences: preferences }, { merge: true });
-      setProfile(next); setMessage('Your profile and preferences have been saved.');
+      const locationData = profile.locationData || empty.locationData;
+      const next = {
+        ...profile,
+        location: [locationData.cityName, locationData.stateName, locationData.countryName].filter(Boolean).join(', ') || profile.location || '',
+        updatedAt: new Date().toISOString(),
+      };
+      await setDoc(doc(db, 'users', user.uid), {
+        careerProfile: next,
+        careerProfilePreferences: preferences,
+        location: locationData,
+        phone: next.phone,
+      }, { merge: true });
+      setProfile(next);
+      setMessage('Your profile, location and phone details have been saved.');
     } catch (e) { setError(e?.message || 'Unable to save your profile.'); }
     finally { setSaving(false); }
   };
@@ -99,8 +120,8 @@ export default function CareerProfileSettings() {
       await uploadBytes(imageRef, file, { contentType: file.type });
       const url = await getDownloadURL(imageRef);
       await updateProfile(user, { photoURL: url });
-      await setDoc(doc(db, 'users', user.uid), { photoURL: url }, { merge: true });
-      setUser({ ...auth.currentUser }); setMessage('Profile picture updated.');
+      await setDoc(doc(db, 'users', user.uid), { photoURL: url, profilePicture: url }, { merge: true });
+      setUser({ ...auth.currentUser }); setMessage('Profile picture updated. It will be used across your authorised VidyaVantage views.');
     } catch (e) { setError(e?.message || 'Unable to update profile picture.'); }
     finally { setUploading(false); }
   };
@@ -115,6 +136,7 @@ export default function CareerProfileSettings() {
 
   const firstName = (user.displayName || 'Student').trim().split(/\s+/)[0];
   const initial = firstName.charAt(0).toUpperCase() || 'S';
+  const photoURL = user.photoURL || profile.photoURL || '';
 
   return <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '24px 28px 60px', color: '#0f172a' }}>
     <div style={{ maxWidth: 1050, margin: '0 auto' }}>
@@ -125,7 +147,7 @@ export default function CareerProfileSettings() {
 
       <section style={{ ...cardStyle, background: 'linear-gradient(135deg,#0f172a,#1e293b)', color: '#fff', display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flexShrink: 0 }}>
-          {user.photoURL ? <img src={user.photoURL} alt="Profile" style={{ width: 92, height: 92, objectFit: 'cover', borderRadius: '50%', border: '4px solid #fff' }} /> : <div style={{ width: 92, height: 92, borderRadius: '50%', border: '4px solid #fff', background: '#e0e7ff', color: '#4338ca', display: 'grid', placeItems: 'center', fontSize: 38, fontWeight: 900 }}>{initial}</div>}
+          {photoURL ? <img src={photoURL} alt="Profile" style={{ width: 92, height: 92, objectFit: 'cover', borderRadius: '50%', border: '4px solid #fff' }} /> : <div style={{ width: 92, height: 92, borderRadius: '50%', border: '4px solid #fff', background: '#e0e7ff', color: '#4338ca', display: 'grid', placeItems: 'center', fontSize: 38, fontWeight: 900 }}>{initial}</div>}
           <label style={{ position: 'absolute', bottom: -7, left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', background: '#fff', color: '#4338ca', borderRadius: 999, padding: '6px 10px', fontSize: 11, fontWeight: 900, cursor: 'pointer' }}>
             {uploading ? 'Uploading…' : 'Change photo'}<input type="file" accept="image/*" onChange={changePhoto} disabled={uploading} style={{ display: 'none' }} />
           </label>
@@ -136,7 +158,7 @@ export default function CareerProfileSettings() {
 
       {(message || error) && <div style={{ marginTop: 14, padding: 13, borderRadius: 11, background: error ? '#fef2f2' : '#ecfdf5', color: error ? '#991b1b' : '#166534', border: `1px solid ${error ? '#fecaca' : '#bbf7d0'}`, fontWeight: 800 }}>{error || message}</div>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr .8fr', gap: 18, marginTop: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 18, marginTop: 18 }}>
         <section style={cardStyle}>
           <h2 style={{ margin: '0 0 5px' }}>About me</h2><p style={{ color: '#64748b', fontSize: 13, lineHeight: 1.6, marginTop: 0 }}>Think of this as the personal side of a social profile—but built around your growth, interests and career journey.</p>
           <label style={labelStyle}>Headline<input style={inputStyle} value={profile.headline} onChange={e => setField('headline', e.target.value)} placeholder="e.g. Curious student exploring psychology, design and technology" /></label>
@@ -152,7 +174,12 @@ export default function CareerProfileSettings() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}><label style={labelStyle}>Grade<input style={inputStyle} value={profile.grade} onChange={e => setField('grade', e.target.value)} /></label><label style={labelStyle}>Stream<input style={inputStyle} value={profile.stream} onChange={e => setField('stream', e.target.value)} /></label></div>
           <label style={labelStyle}>Favourite subjects<input style={inputStyle} value={join(profile.favouriteSubjects)} onChange={e => setField('favouriteSubjects', split(e.target.value))} placeholder="Psychology, Biology, Mathematics" /></label>
           <label style={labelStyle}>Skills I am building<input style={inputStyle} value={join(profile.skills)} onChange={e => setField('skills', split(e.target.value))} placeholder="Communication, coding, leadership" /></label>
-          <label style={labelStyle}>Where I am based<input style={inputStyle} value={profile.location} onChange={e => setField('location', e.target.value)} placeholder="City / state" /></label>
+        </section>
+
+        <section style={{ ...cardStyle, gridColumn: '1 / -1' }}>
+          <h2 style={{ margin: '0 0 5px' }}>Where I am based & how to reach me</h2>
+          <p style={{ color: '#64748b', fontSize: 13, lineHeight: 1.6, marginTop: 0 }}>Choose your location from the global database. Your phone country and calling code are stored separately so your contact details remain internationally usable.</p>
+          <GlobalLocationFields value={profile.locationData} onChange={value => setField('locationData', value)} phone={profile.phone} onPhoneChange={value => setField('phone', value)} />
         </section>
 
         <section style={{ ...cardStyle, gridColumn: '1 / -1' }}>
@@ -177,6 +204,7 @@ export default function CareerProfileSettings() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 12, marginTop: 15 }}>
             <div style={{ padding: 15, borderRadius: 12, background: '#f8fafc' }}><div style={{ fontSize: 10, color: '#64748b', fontWeight: 900 }}>NAME</div><strong>{user.displayName || firstName}</strong></div>
             <div style={{ padding: 15, borderRadius: 12, background: '#f8fafc' }}><div style={{ fontSize: 10, color: '#64748b', fontWeight: 900 }}>EMAIL</div><strong style={{ wordBreak: 'break-word' }}>{user.email || 'Not available'}</strong></div>
+            <div style={{ padding: 15, borderRadius: 12, background: '#f8fafc' }}><div style={{ fontSize: 10, color: '#64748b', fontWeight: 900 }}>PHONE</div><strong>{profile.phone.international || 'Not added'}</strong></div>
           </div>
           <button onClick={logout} style={{ marginTop: 16, border: '1px solid #fecaca', background: '#fff', color: '#991b1b', borderRadius: 10, padding: '10px 14px', fontWeight: 900, cursor: 'pointer' }}>Sign out</button>
         </section>
