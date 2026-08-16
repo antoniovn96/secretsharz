@@ -2,9 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 const BASE = 'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master';
 const COUNTRIES_URL = `${BASE}/json/countries.json`;
-// The database exposes the generated states export at the repository root.
-// The previous /json/states.json URL can fail/return an unusable payload in-browser.
-const STATES_URL = `${BASE}/states.json`;
+// Use the source contribution file for states. It is smaller and has the
+// canonical country_code/country_id fields needed to filter states reliably.
+const STATES_URL = `${BASE}/contributions/states/states.json`;
 const citiesUrl = iso2 => `${BASE}/contributions/cities/${encodeURIComponent(String(iso2 || '').toUpperCase())}.json`;
 
 const cache = { countries: null, states: null, cities: new Map() };
