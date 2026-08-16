@@ -1,9 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 const BASE = 'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master';
 const COUNTRIES_URL = `${BASE}/json/countries.json`;
-// Use the source contribution file for states. It is smaller and has the
-// canonical country_code/country_id fields needed to filter states reliably.
 const STATES_URL = `${BASE}/contributions/states/states.json`;
 const citiesUrl = iso2 => `${BASE}/contributions/cities/${encodeURIComponent(String(iso2 || '').toUpperCase())}.json`;
 
@@ -44,12 +42,75 @@ function normaliseState(item) {
 }
 
 function normaliseCity(item) {
+  const name = String(item.name || '').trim();
+  const lower = name.toLowerCase();
+  const isBengaluru = lower === 'bengaluru' || lower === 'bangalore' || lower === 'bengaluru urban';
   return {
-    id: String(item.id ?? `${item.state_code || ''}-${item.name || ''}`),
-    name: item.name || '',
-    stateCode: String(item.state_code || '').toUpperCase(),
-    countryCode: String(item.country_code || '').toUpperCase(),
+    id: String(item.id ?? `${item.state_code || item.stateCode || ''}-${name}`),
+    name,
+    displayName: isBengaluru && lower !== 'bengaluru' ? 'Bengaluru (Bangalore)' : (isBengaluru ? 'Bengaluru (Bangalore)' : name),
+    searchNames: isBengaluru ? ['bengaluru', 'bangalore'] : [lower],
+    stateCode: String(item.state_code || item.stateCode || '').toUpperCase(),
+    stateId: String(item.state_id || item.stateId || ''),
+    countryCode: String(item.country_code || item.countryCode || '').toUpperCase(),
   };
+}
+
+function CitySearch({ cities, value, onChange, disabled, loading }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(value || '');
+  const rootRef = useRef(null);
+
+  useEffect(() => setQuery(value || ''), [value]);
+
+  useEffect(() => {
+    const handleOutside = event => {
+      if (!rootRef.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, []);
+
+  const matches = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = !q
+      ? cities
+      : cities.filter(city => city.searchNames.some(name => name.includes(q)) || city.name.toLowerCase().includes(q));
+    return filtered.slice(0, 80);
+  }, [cities, query]);
+
+  const choose = city => {
+    setQuery(city.name);
+    setOpen(false);
+    onChange(city);
+  };
+
+  return (
+    <div ref={rootRef} style={{ position: 'relative' }}>
+      <input
+        value={query}
+        onChange={e => { setQuery(e.target.value); setOpen(true); onChange({ name: e.target.value, id: '' }); }}
+        onFocus={() => setOpen(true)}
+        disabled={disabled}
+        placeholder={loading ? 'Loading cities…' : disabled ? 'Select state first' : 'Search city…'}
+        style={inputStyle}
+        autoComplete="off"
+      />
+      {!disabled && <span style={{ position: 'absolute', right: 12, top: 18, color: '#64748b', pointerEvents: 'none', fontSize: 14 }}>⌄</span>}
+      {open && !disabled && (
+        <div style={{ position: 'absolute', zIndex: 50, left: 0, right: 0, top: 'calc(100% + 5px)', maxHeight: 280, overflowY: 'auto', background: '#fff', border: '1px solid #dbe3ec', borderRadius: 11, boxShadow: '0 12px 30px rgba(15,23,42,.12)' }}>
+          {loading && <div style={optionStyle}>Loading cities…</div>}
+          {!loading && !matches.length && <div style={optionStyle}>No matching city found. You can still enter the city manually.</div>}
+          {!loading && matches.map(city => (
+            <button type="button" key={city.id} onMouseDown={e => e.preventDefault()} onClick={() => choose(city)} style={{ ...optionStyle, width: '100%', border: 0, borderBottom: '1px solid #f1f5f9', textAlign: 'left', cursor: 'pointer', background: '#fff' }}>
+              <span style={{ fontWeight: 800, color: '#1e293b' }}>{city.displayName}</span>
+              {city.displayName !== city.name && <span style={{ display: 'block', marginTop: 2, fontSize: 10, color: '#94a3b8' }}>Common name: Bangalore</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function GlobalLocationFields({ value = {}, onChange, phone = {}, onPhoneChange }) {
@@ -69,7 +130,7 @@ export default function GlobalLocationFields({ value = {}, onChange, phone = {},
         const data = cache.countries || await getJson(COUNTRIES_URL);
         cache.countries = data;
         if (active) setCountries(toArray(data).map(normaliseCountry).filter(x => x.name).sort((a,b) => a.name.localeCompare(b.name)));
-      } catch (e) { if (active) setError('Unable to load country data. You can still enter your postal code manually.'); }
+      } catch (e) { if (active) setError('Unable to load country data.'); }
       finally { if (active) setLoadingCountries(false); }
     })();
     return () => { active = false; };
@@ -92,10 +153,7 @@ export default function GlobalLocationFields({ value = {}, onChange, phone = {},
           .sort((a,b) => a.name.localeCompare(b.name));
         if (active) setStates(selected);
       } catch (e) {
-        if (active) {
-          setStates([]);
-          setError('Unable to load state/province data right now.');
-        }
+        if (active) { setStates([]); setError('Unable to load state/province data right now.'); }
       }
       finally { if (active) setLoadingStates(false); }
     })();
@@ -120,10 +178,7 @@ export default function GlobalLocationFields({ value = {}, onChange, phone = {},
           .sort((a,b) => a.name.localeCompare(b.name));
         if (active) setCities(selected);
       } catch (e) {
-        if (active) {
-          setCities([]);
-          setError('City data is unavailable for this country at the moment. You can enter the city manually.');
-        }
+        if (active) { setCities([]); setError('City data is unavailable for this country at the moment. You can enter the city manually.'); }
       }
       finally { if (active) setLoadingCities(false); }
     })();
@@ -131,19 +186,19 @@ export default function GlobalLocationFields({ value = {}, onChange, phone = {},
   }, [value.countryCode, value.stateCode]);
 
   const selectedCountry = useMemo(() => countries.find(x => x.iso2 === String(value.countryCode || '').toUpperCase()), [countries, value.countryCode]);
-  const update = (patch) => onChange?.({ ...value, ...patch });
-  const updatePhone = (patch) => onPhoneChange?.({ ...phone, ...patch });
+  const update = patch => onChange?.({ ...value, ...patch });
+  const updatePhone = patch => onPhoneChange?.({ ...phone, ...patch });
 
   return <div style={{ display: 'grid', gap: 14 }}>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 900, color: '#475569' }}>
+      <label style={labelStyle}>
         Country
         <select value={value.countryCode || ''} onChange={e => { const c = countries.find(x => x.iso2 === e.target.value); update({ countryCode: c?.iso2 || '', countryName: c?.name || '', countryIso3: c?.iso3 || '', stateCode: '', stateName: '', cityName: '', cityId: '' }); }} style={selectStyle} disabled={loadingCountries}>
           <option value="">{loadingCountries ? 'Loading countries…' : 'Select country'}</option>
           {countries.map(c => <option key={c.iso2 || c.id} value={c.iso2}>{c.name}{c.iso2 ? ` (${c.iso2})` : ''}</option>)}
         </select>
       </label>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 900, color: '#475569' }}>
+      <label style={labelStyle}>
         State / Province / Region
         <select value={value.stateCode || ''} onChange={e => { const s = states.find(x => x.code === e.target.value); update({ stateCode: s?.code || '', stateName: s?.name || '', cityName: '', cityId: '' }); }} style={selectStyle} disabled={!value.countryCode || loadingStates}>
           <option value="">{loadingStates ? 'Loading…' : value.countryCode ? (states.length ? 'Select state / province' : 'No states found') : 'Select country first'}</option>
@@ -153,28 +208,27 @@ export default function GlobalLocationFields({ value = {}, onChange, phone = {},
     </div>
 
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 900, color: '#475569' }}>
+      <label style={labelStyle}>
         City
-        <input list="vidyavantage-city-list" value={value.cityName || ''} onChange={e => { const c = cities.find(x => x.name === e.target.value); update({ cityName: e.target.value, cityId: c?.id || '' }); }} placeholder={loadingCities ? 'Loading cities…' : 'Select or type city'} style={inputStyle} />
-        <datalist id="vidyavantage-city-list">{cities.map(c => <option key={c.id} value={c.name} />)}</datalist>
+        <CitySearch cities={cities} value={value.cityName || ''} disabled={!value.stateCode} loading={loadingCities} onChange={city => update({ cityName: city.name || '', cityId: city.id || '' })} />
       </label>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 900, color: '#475569' }}>
+      <label style={labelStyle}>
         PIN / Postal Code
-        <input value={value.postalCode || ''} onChange={e => update({ postalCode: e.target.value })} placeholder="Enter PIN / postal code" style={inputStyle} inputMode="numeric" autoComplete="postal-code" />
+        <input value={value.postalCode || ''} onChange={e => update({ postalCode: e.target.value })} placeholder="Enter PIN / postal code" style={inputStyle} autoComplete="postal-code" />
       </label>
     </div>
 
     <div style={{ paddingTop: 10, borderTop: '1px solid #eef2f7' }}>
       <div style={{ fontSize: 11, fontWeight: 950, letterSpacing: 1.1, color: '#4f46e5', marginBottom: 10 }}>PHONE NUMBER</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(180px,.55fr) 1fr', gap: 12 }}>
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 900, color: '#475569' }}>
+        <label style={labelStyle}>
           Country & calling code
           <select value={phone.countryCode || value.countryCode || ''} onChange={e => { const c = countries.find(x => x.iso2 === e.target.value); updatePhone({ countryCode: c?.iso2 || '', countryName: c?.name || '', callingCode: c?.phoneCode ? `+${c.phoneCode}` : '' }); }} style={selectStyle} disabled={loadingCountries}>
             <option value="">{loadingCountries ? 'Loading…' : 'Select country'}</option>
             {countries.filter(c => c.phoneCode).map(c => <option key={`phone-${c.iso2}`} value={c.iso2}>+{c.phoneCode} — {c.name}</option>)}
           </select>
         </label>
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 900, color: '#475569' }}>
+        <label style={labelStyle}>
           Phone number
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={{ ...inputStyle, width: 72, flexShrink: 0, background: '#f8fafc', color: '#334155', fontWeight: 900 }}>{phone.callingCode || (selectedCountry?.phoneCode ? `+${selectedCountry.phoneCode}` : '+')}</div>
@@ -190,5 +244,7 @@ export default function GlobalLocationFields({ value = {}, onChange, phone = {},
   </div>;
 }
 
+const labelStyle = { display: 'block', fontSize: 12, fontWeight: 900, color: '#475569' };
 const inputStyle = { width: '100%', boxSizing: 'border-box', marginTop: 7, padding: '12px 13px', border: '1px solid #dbe3ec', borderRadius: 11, fontSize: 14, outline: 'none', background: '#fff' };
 const selectStyle = { ...inputStyle, cursor: 'pointer' };
+const optionStyle = { padding: '11px 13px', fontSize: 13, color: '#475569' };
