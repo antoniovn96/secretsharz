@@ -1,4 +1,4 @@
 import React from 'react';
-import CareerReportV2 from '../../../src/CareerReportV2';
+import CareerReportV3 from '../../../src/CareerReportV3';
 
-export default function CareerReportV2Page(){ return <CareerReportV2 />; }
+export default function CareerReportV2Page(){ return <CareerReportV3 />; }
