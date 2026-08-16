@@ -4,6 +4,7 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
 import { auth, db, storage } from '../../firebase';
 import { buildProfileRecord, deriveProfileType, requiresGuardian } from '../../platform/profileOnboardingModel';
+import CountryPhoneField from './CountryPhoneField';
 
 function calculateAge(dob) {
   if (!dob) return '';
@@ -16,7 +17,22 @@ function calculateAge(dob) {
   return age;
 }
 
-const EMPTY = { profileType: 'student', name: '', dob: '', age: '', grade: '', schoolName: '', institutionName: '', professionalTitle: '', parentName: '', parentContact: '', contactNumber: '', emergencyContactName: '', emergencyContactNumber: '', photoURL: '' };
+const EMPTY = {
+  profileType: 'student', name: '', dob: '', age: '', grade: '', schoolName: '', institutionName: '', professionalTitle: '',
+  parentName: '', parentContact: '', emergencyContactName: '', emergencyContactNumber: '', contactNumber: '', photoURL: '',
+  contactCountryName: 'India', contactCountryCode: '91',
+  parentCountryName: 'India', parentCountryCode: '91',
+  emergencyCountryName: 'India', emergencyCountryCode: '91',
+};
+
+function stripCountryPrefix(value, code) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const digits = raw.replace(/\D/g, '');
+  const codeDigits = String(code || '').replace(/\D/g, '');
+  if (codeDigits && digits.startsWith(codeDigits) && digits.length > 10) return digits.slice(codeDigits.length);
+  return raw;
+}
 
 function isCompleteProfile(data) {
   const type = deriveProfileType({ profileType: data.profileType, role: data.role });
@@ -49,7 +65,21 @@ const UnifiedIntakeForm = ({ onComplete, initialProfileType = null }) => {
         if (!snapshot.exists()) return;
         const saved = snapshot.data();
         const inferredType = deriveProfileType({ profileType: saved.profileType, role: saved.role || user?.role });
-        const merged = { ...EMPTY, ...saved, profileType: inferredType, photoURL: saved.photoURL || user.photoURL || '' };
+        const merged = {
+          ...EMPTY,
+          ...saved,
+          profileType: inferredType,
+          photoURL: saved.photoURL || user.photoURL || '',
+          contactCountryName: saved.contactCountryName || 'India',
+          contactCountryCode: saved.contactCountryCode || '91',
+          parentCountryName: saved.parentCountryName || 'India',
+          parentCountryCode: saved.parentCountryCode || '91',
+          emergencyCountryName: saved.emergencyCountryName || 'India',
+          emergencyCountryCode: saved.emergencyCountryCode || '91',
+        };
+        merged.contactNumber = stripCountryPrefix(merged.contactNumber || merged.phone, merged.contactCountryCode);
+        merged.parentContact = stripCountryPrefix(merged.parentContact, merged.parentCountryCode);
+        merged.emergencyContactNumber = stripCountryPrefix(merged.emergencyContactNumber, merged.emergencyCountryCode);
         if (cancelled) return;
         setFormData(merged);
         if (saved.profileComplete === true || saved.onboardingCompleted === true || isCompleteProfile(merged)) {
@@ -80,6 +110,13 @@ const UnifiedIntakeForm = ({ onComplete, initialProfileType = null }) => {
   const guardianRequired = requiresGuardian({ profileType: formData.profileType, age });
   const update = (name, value) => { setFormData(current => ({ ...current, [name]: value, ...(name === 'dob' ? { age: calculateAge(value) } : {}) })); setError(''); };
   const handleTypeChange = (type) => { setFormData(current => ({ ...current, profileType: type })); setError(''); };
+  const updateCountry = (prefix, country) => {
+    setFormData(current => ({
+      ...current,
+      [`${prefix}CountryName`]: country.name,
+      [`${prefix}CountryCode`]: country.code,
+    }));
+  };
 
   const handlePhoto = async (event) => {
     const file = event.target.files?.[0];
@@ -112,13 +149,36 @@ const UnifiedIntakeForm = ({ onComplete, initialProfileType = null }) => {
     if (guardianRequired && (!formData.parentName || !formData.parentContact)) return setError('Please add the parent/guardian details required for your age.');
     setIsSubmitting(true); setError('');
     try {
-      const record = buildProfileRecord({ ...formData, age });
+      const contactNumber = stripCountryPrefix(formData.contactNumber, formData.contactCountryCode).trim();
+      const parentContact = stripCountryPrefix(formData.parentContact, formData.parentCountryCode).trim();
+      const emergencyContactNumber = stripCountryPrefix(formData.emergencyContactNumber, formData.emergencyCountryCode).trim();
+      const record = buildProfileRecord({ ...formData, age, contactNumber, parentContact, emergencyContactNumber });
       const profile = {
-        ...record, profileType: formData.profileType, name: formData.name.trim(), fullName: formData.name.trim(),
-        dob: formData.dob, dateOfBirth: formData.dob, age, contactNumber: formData.contactNumber.trim(),
-        emergencyContactNumber: formData.emergencyContactNumber.trim() || null, emergencyContactName: formData.emergencyContactName.trim() || null,
-        profileComplete: true, onboardingCompleted: true, onboardingCompletedAt: new Date().toISOString(),
-        photoURL: formData.photoURL || user.photoURL || '', updatedAt: new Date().toISOString(),
+        ...record,
+        profileType: formData.profileType,
+        name: formData.name.trim(),
+        fullName: formData.name.trim(),
+        dob: formData.dob,
+        dateOfBirth: formData.dob,
+        age,
+        contactNumber,
+        contactCountryName: formData.contactCountryName,
+        contactCountryCode: formData.contactCountryCode,
+        contactNumberInternational: contactNumber ? `+${formData.contactCountryCode} ${contactNumber}` : '',
+        parentContact: parentContact || null,
+        parentCountryName: formData.parentCountryName,
+        parentCountryCode: formData.parentCountryCode,
+        parentContactInternational: parentContact ? `+${formData.parentCountryCode} ${parentContact}` : '',
+        emergencyContactNumber: emergencyContactNumber || null,
+        emergencyContactName: formData.emergencyContactName.trim() || null,
+        emergencyCountryName: formData.emergencyCountryName,
+        emergencyCountryCode: formData.emergencyCountryCode,
+        emergencyContactInternational: emergencyContactNumber ? `+${formData.emergencyCountryCode} ${emergencyContactNumber}` : '',
+        profileComplete: true,
+        onboardingCompleted: true,
+        onboardingCompletedAt: new Date().toISOString(),
+        photoURL: formData.photoURL || user.photoURL || '',
+        updatedAt: new Date().toISOString(),
       };
       await setDoc(doc(db, 'users', user.uid), profile, { merge: true });
       await updateProfile(user, { displayName: profile.name, ...(profile.photoURL ? { photoURL: profile.photoURL } : {}) });
@@ -141,10 +201,25 @@ const UnifiedIntakeForm = ({ onComplete, initialProfileType = null }) => {
       </div></div>
       <div className="flex flex-col items-center mb-7"><div className="relative"><div className="h-24 w-24 rounded-full overflow-hidden bg-indigo-100 border-4 border-white shadow ring-1 ring-slate-200 flex items-center justify-center text-3xl">{formData.photoURL ? <img src={formData.photoURL} alt="Profile preview" className="h-full w-full object-cover" /> : '👤'}</div><label className="absolute -bottom-1 -right-1 cursor-pointer rounded-full bg-indigo-600 px-2.5 py-2 text-white shadow-lg">📷<input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handlePhoto} disabled={uploadingPhoto} /></label></div><div className="mt-2 text-xs text-slate-500">Optional · JPG, PNG or WebP · max 5 MB</div></div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <Field label="Full Name *" value={formData.name} onChange={v => update('name', v)} placeholder="e.g. Priya Sharma" /><Field label="Date of Birth *" type="date" value={formData.dob} onChange={v => update('dob', v)} /><Field label="Age" type="number" value={age} onChange={v => update('age', v)} /><Field label="Your Contact Number *" type="tel" value={formData.contactNumber} onChange={v => update('contactNumber', v)} placeholder="+91…" />
-        {formData.profileType === 'student' ? <><Field label="Current Grade / Class *" value={formData.grade} onChange={v => update('grade', v)} placeholder="e.g. Class 11 / B.Sc. Year 1" /><Field label="School / College / University" value={formData.schoolName} onChange={v => update('schoolName', v)} placeholder="Optional" />{guardianRequired && <><Field label="Parent / Guardian Name *" value={formData.parentName} onChange={v => update('parentName', v)} /><Field label="Parent / Guardian Contact *" type="tel" value={formData.parentContact} onChange={v => update('parentContact', v)} /></>}</> : <><Field label="Current Organisation" value={formData.institutionName} onChange={v => update('institutionName', v)} placeholder="Company / freelance / self-employed" /><Field label="Professional Role / Title" value={formData.professionalTitle} onChange={v => update('professionalTitle', v)} placeholder="e.g. Designer" /><Field label="Emergency Contact Name" value={formData.emergencyContactName} onChange={v => update('emergencyContactName', v)} /><Field label="Emergency Contact Number *" type="tel" value={formData.emergencyContactNumber} onChange={v => update('emergencyContactNumber', v)} /></>}
+        <Field label="Full Name *" value={formData.name} onChange={v => update('name', v)} placeholder="e.g. Priya Sharma" />
+        <Field label="Date of Birth *" type="date" value={formData.dob} onChange={v => update('dob', v)} />
+        <Field label="Age" type="number" value={age} onChange={v => update('age', v)} />
+        <CountryPhoneField label="Your Contact Number" required value={formData.contactNumber} onChange={v => update('contactNumber', v)} countryName={formData.contactCountryName} countryCode={formData.contactCountryCode} onCountryChange={c => updateCountry('contact', c)} placeholder="98765 43210" />
+        {formData.profileType === 'student' ? <>
+          <Field label="Current Grade / Class *" value={formData.grade} onChange={v => update('grade', v)} placeholder="e.g. Class 11 / B.Sc. Year 1" />
+          <Field label="School / College / University" value={formData.schoolName} onChange={v => update('schoolName', v)} placeholder="Optional" />
+          {guardianRequired && <>
+            <Field label="Parent / Guardian Name *" value={formData.parentName} onChange={v => update('parentName', v)} />
+            <CountryPhoneField label="Parent / Guardian Contact" required value={formData.parentContact} onChange={v => update('parentContact', v)} countryName={formData.parentCountryName} countryCode={formData.parentCountryCode} onCountryChange={c => updateCountry('parent', c)} placeholder="98765 43210" />
+          </>}
+        </> : <>
+          <Field label="Current Organisation" value={formData.institutionName} onChange={v => update('institutionName', v)} placeholder="Company / freelance / self-employed" />
+          <Field label="Professional Role / Title" value={formData.professionalTitle} onChange={v => update('professionalTitle', v)} placeholder="e.g. Designer" />
+          <Field label="Emergency Contact Name" value={formData.emergencyContactName} onChange={v => update('emergencyContactName', v)} />
+          <CountryPhoneField label="Emergency Contact Number" required value={formData.emergencyContactNumber} onChange={v => update('emergencyContactNumber', v)} countryName={formData.emergencyCountryName} countryCode={formData.emergencyCountryCode} onCountryChange={c => updateCountry('emergency', c)} placeholder="98765 43210" />
+        </>}
       </div>
-      <p className="mt-5 text-xs leading-5 text-slate-500">Your details are saved once. If something changes later, contact the Secret Sharz admin or your counsellor rather than creating a second profile.</p>
+      <p className="mt-5 text-xs leading-5 text-slate-500">Your details are saved once. Country name and calling code are stored separately from the local phone number so the platform can support clients internationally.</p>
       <button type="submit" disabled={isSubmitting || uploadingPhoto} className="w-full mt-5 bg-gradient-to-r from-indigo-600 to-blue-500 text-white font-bold py-4 rounded-xl shadow-lg disabled:opacity-60">{isSubmitting ? 'Saving Profile…' : 'Save & Continue 🚀'}</button>
     </form>
   </div></div>;
