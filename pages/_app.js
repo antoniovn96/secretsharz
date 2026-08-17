@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../src/firebase';
 import '../styles/globals.css';
@@ -28,16 +28,11 @@ export default function App({ Component, pageProps }) {
         return;
       }
 
-      // If a signed-in client has just logged out, always leave the protected
-      // dashboard route immediately. The legacy client-side router can briefly
-      // keep the old pathname while Firebase propagates the signed-out state.
       if (wasAuthenticated.current && isProtectedPath(pathname)) {
         window.location.replace('/');
         return;
       }
 
-      // Also protect direct visits to private URLs while already signed out.
-      // The auth page is the correct entry point for an unauthenticated client.
       if (!wasAuthenticated.current && isProtectedPath(pathname) && pathname !== '/auth') {
         window.location.replace('/auth');
       }
@@ -47,5 +42,26 @@ export default function App({ Component, pageProps }) {
     return unsubscribe;
   }, []);
 
-  return <Component {...pageProps} />;
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#FDFCFA',
+            color: '#33443A',
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontWeight: 700,
+          }}
+        >
+          Taking you to your space…
+        </div>
+      }
+    >
+      <Component {...pageProps} />
+    </Suspense>
+  );
 }
