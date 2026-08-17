@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { startTransition, useEffect, useRef, useState } from 'react';
 import { useDashboard } from './context/DashboardContext';
 
 /**
@@ -81,8 +81,11 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
   const go = (path) => {
     setMenuOpen(false);
     setAlertsOpen(false);
-    if (navigate) navigate(path);
-    else window.location.href = path;
+    if (navigate) {
+      startTransition(() => navigate(path));
+    } else {
+      window.location.href = path;
+    }
   };
 
   const navItems = [
