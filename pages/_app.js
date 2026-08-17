@@ -3,6 +3,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../src/firebase';
 import CareerResultsPage from '../src/dashboards/student/CareerResultsPage';
 import CareerBookingPage from '../src/dashboards/student/CareerBookingPage';
+import CareerSessionsPage from '../src/dashboards/student/CareerSessionsPage';
 import '../styles/globals.css';
 import '../src/styles/StudentDashboard.css';
 
@@ -73,16 +74,11 @@ export default function App({ Component, pageProps }) {
 
   const isCareerResultsRoute = pathname === '/dashboard/career/results';
   const isCareerBookingRoute = pathname === '/dashboard/career/book';
+  const isCareerSessionsRoute = pathname === '/dashboard/career/sessions';
 
   return (
-    <Suspense
-      fallback={
-        <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#FDFCFA',color:'#33443A',fontFamily:"'Plus Jakarta Sans', sans-serif",fontWeight:700}}>
-          Taking you to your space…
-        </div>
-      }
-    >
-      {isCareerResultsRoute ? <CareerResultsPage /> : isCareerBookingRoute ? <CareerBookingPage /> : <Component {...pageProps} />}
+    <Suspense fallback={<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#FDFCFA',color:'#33443A',fontFamily:"'Plus Jakarta Sans', sans-serif",fontWeight:700}}>Taking you to your space…</div>}>
+      {isCareerResultsRoute ? <CareerResultsPage /> : isCareerBookingRoute ? <CareerBookingPage /> : isCareerSessionsRoute ? <CareerSessionsPage /> : <Component {...pageProps} />}
     </Suspense>
   );
 }
