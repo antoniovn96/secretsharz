@@ -8,6 +8,7 @@ import VideoLibraryPage from '../src/VideoLibraryPage';
 import SupportHub from '../src/SupportHub';
 import WayfinderPage from '../src/WayfinderPage';
 import SuperAdminView from '../src/dashboards/admin/SuperAdminView';
+import CareerResultsPage from '../src/dashboards/student/CareerResultsPage';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
 import AccountConsentGate from '../src/components/consent/AccountConsentGate';
@@ -95,6 +96,9 @@ export default function IndexPage() {
       if (!currentUser) return <SecretSharzApp />;
       if (!isAdmin) { navigate('/'); return null; }
       return <SuperAdminView user={currentUser} userData={{ ...(userData || {}), role: 'super_admin' }} onBackToApp={() => navigate('/')} />;
+    }
+    if (path === '/dashboard/career/results') {
+      return <CareerResultsPage />;
     }
     if (path === '/videos') {
       const isAdmin = userData?.role === 'super_admin' || currentUser?.email?.toLowerCase() === MASTER_EMAIL;
