@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { resolveBundle } from '../../../src/career/assessmentSelection.js';
+import { provisionParentAccount } from '../../../src/security/provisionParentAccount.js';
 
 const FOUNDER_EMAIL = 'antonio.antonio.noronha@gmail.com';
 function bearerToken(req){const header=req.headers.authorization||req.headers.Authorization;if(typeof header!=='string')return null;const match=header.match(/^Bearer\s+(.+)$/i);return match?match[1]:null;}
@@ -16,7 +17,7 @@ export default async function handler(req,res){
  const db=getAdminFirestore();let caller={};try{const callerSnap=await db.collection('users').doc(decoded.uid).get();caller=callerSnap.exists?callerSnap.data():{};}catch(_){ }
  const isFounder=decoded.email_verified===true&&decoded.email?.toLowerCase()===FOUNDER_EMAIL;
  const requestedInstitutionId=clean(req.body?.institutionId,120);const requestedName=clean(req.body?.institutionName,180);
- const rows=normaliseRows(req.body?.rows);const requestedBundle=resolveBundle(clean(req.body?.bundleId,160));
+ const rows=normaliseRows(req.body?.rows);
  if(!rows.length)return res.status(400).json({error:'No valid student rows were supplied.'});
  if(rows.length>1000)return res.status(400).json({error:'A single roster upload is limited to 1,000 students.'});
  const institutionId=requestedInstitutionId||(isFounder?`${slug(requestedName)}-${crypto.randomBytes(3).toString('hex')}`:clean(caller.institutionId,120));
@@ -33,10 +34,37 @@ export default async function handler(req,res){
  const purchased=Number(existing?.licenses?.purchased||(isFounder?requestedLicenseCount:0));const used=Number(existing?.licenses?.used||0);const available=purchased-used;
  if(!purchased)return res.status(400).json({error:'This institution has no purchased assessment licenses yet.'});
  if(rows.length>available)return res.status(409).json({error:`Only ${available} licenses are available, but ${rows.length} students were uploaded.`});
- const tenantCode=clean(existing?.tenantCode||slug(institutionName),20);const batchId=`batch_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;const createdAt=new Date().toISOString();const codes=[];const batch=db.batch();
- for(const row of rows){let code=makeCode(tenantCode);let codeRef=db.collection('institutionCodes').doc(code);let exists=(await codeRef.get()).exists;while(exists){code=makeCode(tenantCode);codeRef=db.collection('institutionCodes').doc(code);exists=(await codeRef.get()).exists;}const rosterRef=institutionRef.collection('roster').doc();const rosterRecord={id:rosterRef.id,batchId,institutionId,institutionName,bundleId:bundle.id,bundleSku:bundle.sku,bundleTitle:bundle.title,selectedFamilyIds:bundle.familyIds,fullName:row.fullName,className:row.className,section:row.section,rollNumber:row.rollNumber,parentName:row.parentName,parentEmail:row.parentEmail,accessCode:code,status:'unclaimed',assessmentStatus:'not_started',reportStatus:'locked_until_completion',createdAt,claimedBy:null,claimedAt:null};batch.set(rosterRef,rosterRecord);batch.set(codeRef,{code,institutionId,institutionName,bundleId:bundle.id,bundleSku:bundle.sku,rosterId:rosterRef.id,batchId,status:'available',createdAt,redeemedBy:null,redeemedAt:null});codes.push(rosterRecord);}
+ const tenantCode=clean(existing?.tenantCode||slug(institutionName),20);const batchId=`batch_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;const createdAt=new Date().toISOString();const codes=[];const parentsByEmail=new Map();const batch=db.batch();
+ for(const row of rows){
+   let code=makeCode(tenantCode);let codeRef=db.collection('institutionCodes').doc(code);let exists=(await codeRef.get()).exists;while(exists){code=makeCode(tenantCode);codeRef=db.collection('institutionCodes').doc(code);exists=(await codeRef.get()).exists;}
+   const rosterRef=institutionRef.collection('roster').doc();
+   let parentUid=null;
+   const parentEmail=row.parentEmail.toLowerCase();
+   if(parentEmail){
+     let parent=parentsByEmail.get(parentEmail);
+     if(!parent){
+       parent=await provisionParentAccount({adminAuth:getAdminAuth(),adminDb:db,parentName:row.parentName||'Parent',parentEmail,institutionId,institutionName,rosterIds:[],studentIds:[]});
+       parentsByEmail.set(parentEmail,parent);
+     }
+     parentUid=parent.uid;
+   }
+   const rosterRecord={id:rosterRef.id,batchId,institutionId,institutionName,bundleId:bundle.id,bundleSku:bundle.sku,bundleTitle:bundle.title,selectedFamilyIds:bundle.familyIds,fullName:row.fullName,className:row.className,section:row.section,rollNumber:row.rollNumber,parentName:row.parentName,parentEmail:row.parentEmail,parentUid,accessCode:code,status:'unclaimed',assessmentStatus:'not_started',reportStatus:'locked_until_completion',createdAt,claimedBy:null,claimedAt:null};
+   batch.set(rosterRef,rosterRecord);
+   batch.set(codeRef,{code,institutionId,institutionName,bundleId:bundle.id,bundleSku:bundle.sku,rosterId:rosterRef.id,batchId,status:'available',createdAt,redeemedBy:null,redeemedAt:null});
+   codes.push(rosterRecord);
+   if(parentUid){
+     const parentRecord=parentsByEmail.get(parentEmail);
+     const currentRosterIds=Array.isArray(parentRecord.rosterIds)?parentRecord.rosterIds:[];
+     currentRosterIds.push(rosterRef.id);
+     parentRecord.rosterIds=Array.from(new Set(currentRosterIds));
+   }
+ }
+ // Persist the complete roster linkage on each parent profile after all rows are known.
+ for(const parent of parentsByEmail.values()){
+   await db.collection('users').doc(parent.uid).set({linkedRosterIds:Array.from(new Set(parent.rosterIds||[])),institutionId,institutionName,updatedAt:createdAt},{merge:true});
+ }
  const existingLicenses=existing?.licenses||{};batch.set(institutionRef,{id:institutionId,name:institutionName,tenantCode,status:existing?.status||'active',bundleId:bundle.id,bundleSku:bundle.sku,bundleTitle:bundle.title,selectedFamilyIds:bundle.familyIds,licenses:{...existingLicenses,purchased,used:used+rows.length,available:purchased-used-rows.length,lastProvisionedAt:createdAt,lastBatchId:batchId},updatedAt:createdAt,...(existing?{}:{createdAt})},{merge:true});
  await batch.commit();
- await db.collection('institutionImports').doc(batchId).set({batchId,institutionId,institutionName,bundleId:bundle.id,bundleSku:bundle.sku,selectedFamilyIds:bundle.familyIds,type:'roster',studentCount:rows.length,licenseCount:purchased,usedBefore:used,usedAfter:used+rows.length,sourceFormat:clean(req.body?.sourceFormat,20)||'unknown',createdBy:decoded.uid,createdByEmail:decoded.email||null,createdAt,status:'completed'});
- return res.status(200).json({success:true,institution:{id:institutionId,name:institutionName,tenantCode,bundleId:bundle.id,bundleSku:bundle.sku,bundleTitle:bundle.title,selectedFamilyIds:bundle.familyIds,purchased,used:used+rows.length,available:purchased-used-rows.length},batchId,students:codes});
+ await db.collection('institutionImports').doc(batchId).set({batchId,institutionId,institutionName,bundleId:bundle.id,bundleSku:bundle.sku,selectedFamilyIds:bundle.familyIds,type:'roster',studentCount:rows.length,parentCount:parentsByEmail.size,licenseCount:purchased,usedBefore:used,usedAfter:used+rows.length,sourceFormat:clean(req.body?.sourceFormat,20)||'unknown',createdBy:decoded.uid,createdByEmail:decoded.email||null,createdAt,status:'completed'});
+ return res.status(200).json({success:true,institution:{id:institutionId,name:institutionName,tenantCode,bundleId:bundle.id,bundleSku:bundle.sku,bundleTitle:bundle.title,selectedFamilyIds:bundle.familyIds,purchased,used:used+rows.length,available:purchased-used-rows.length},batchId,students:codes,parents:Array.from(parentsByEmail.values()).map(parent=>({uid:parent.uid,name:parent.name,email:parent.email,created:parent.created,activationLink:parent.activationLink}))});
 }
