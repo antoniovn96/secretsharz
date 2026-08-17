@@ -21,20 +21,17 @@ export default function ServiceParentDirectory({ service = 'career', theme = 'li
 
   useEffect(() => {
     setLoading(true);
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'users'), where('role', '==', 'parent')),
-      snapshot => { setParents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); setLoading(false); },
-      error => { console.error('[ServiceParentDirectory] parent load failed:', error); setLoading(false); }
-    );
+    const unsubscribe = onSnapshot(query(collection(db, 'users'), where('role', '==', 'parent')), snapshot => {
+      setParents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setLoading(false);
+    }, error => { console.error('[ServiceParentDirectory] parent load failed:', error); setLoading(false); });
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'users'), where('role', '==', 'student')),
-      snapshot => setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))),
-      error => console.error('[ServiceParentDirectory] student load failed:', error)
-    );
+    const unsubscribe = onSnapshot(query(collection(db, 'users'), where('role', '==', 'student')), snapshot => {
+      setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, error => console.error('[ServiceParentDirectory] student load failed:', error));
     return () => unsubscribe();
   }, []);
 
@@ -73,7 +70,7 @@ export default function ServiceParentDirectory({ service = 'career', theme = 'li
         </div>
         <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${dark ? 'border-slate-800 bg-white/[0.02] text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}><Users className="w-4 h-4" />{rows.length} parents · {rows.reduce((sum, parent) => sum + parent.children.length, 0)} linked students</div>
       </div>
-      <ParentDirectoryTable users={rows} isLoading={loading} onViewDetails={parent => { setSelected(parent); setOpen(true); }} onDelete={() => {}} />
+      <ParentDirectoryTable users={rows} isLoading={loading} onViewDetails={parent => { setSelected(parent); setOpen(true); }} />
       <ParentDetailPanel parent={selected} isOpen={open} onClose={() => { setOpen(false); window.setTimeout(() => setSelected(null), 300); }} />
     </div>
   );
