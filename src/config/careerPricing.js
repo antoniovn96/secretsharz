@@ -1,6 +1,7 @@
 export const CAREER_PRICING = {
   student_free: { sku: 'STUDENT_FREE', label: 'Student Career Snapshot', amountPaise: 0, reportTier: 'free' },
   student_individual: { sku: 'STUDENT_INDIVIDUAL', label: 'Student Full Career Intelligence', amountPaise: 99900, reportTier: 'full' },
+  student_games_pro: { sku: 'STUDENT_GAMES_PRO', label: 'VidyaVantage Games Pro Pass', amountPaise: 19900, reportTier: 'games' },
   student_group_3: { sku: 'STUDENT_GROUP_3', label: 'Student Group (3)', amountPaise: 239700, reportTier: 'full', seats: 3 },
   student_group_5: { sku: 'STUDENT_GROUP_5', label: 'Student Group (5)', amountPaise: 349500, reportTier: 'full', seats: 5 },
   student_group_10: { sku: 'STUDENT_GROUP_10', label: 'Student Group (10)', amountPaise: 649000, reportTier: 'full', seats: 10 },
