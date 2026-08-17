@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import SecretSharzApp from '../src/App';
 import FoundationHomepage from '../src/FoundationHomepage';
+import FrontDoorExperience from '../src/FrontDoorExperience';
 import LiveYouTubeSection from '../src/LiveYouTubeSection';
 import VideoLibraryPage from '../src/VideoLibraryPage';
 import SuperAdminView from '../src/dashboards/admin/SuperAdminView';
@@ -172,6 +173,7 @@ export default function IndexPage() {
   return (
     <>
       <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
+      <FrontDoorExperience navigate={navigate} currentUser={currentUser} />
       <FoundationHomepage navigate={navigate} currentUser={currentUser} />
       <LiveYouTubeSection navigate={navigate} />
       <style>{`/* The legacy FoundationHomepage video is intentionally hidden here. The live channel feed above is the production source of truth. */ .ss-foundation-page .ss-fh-video{display:none!important}`}</style>
