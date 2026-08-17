@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, startTransition } from 'react';
 import SecretSharzApp from '../src/App';
 import FoundationHomepage from '../src/FoundationHomepage';
 import FrontDoorExperienceV2 from '../src/FrontDoorExperienceV2';
@@ -49,7 +49,13 @@ export default function IndexPage() {
     return unsubscribe;
   },[]);
 
-  const navigate=nextPath=>{if(typeof window==='undefined')return;if(window.location.pathname===nextPath)return;window.history.pushState({},'',nextPath);window.dispatchEvent(new PopStateEvent('popstate'));};
+  const navigate=nextPath=>{
+    if(typeof window==='undefined'||window.location.pathname===nextPath)return;
+    startTransition(()=>{
+      window.history.pushState({},'',nextPath);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+  };
 
   if(path!=='/'){
     const isFounder=currentUser?.email?.toLowerCase()===MASTER_EMAIL;
