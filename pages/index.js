@@ -10,6 +10,7 @@ import WayfinderPage from '../src/WayfinderPage';
 import SuperAdminView from '../src/dashboards/admin/SuperAdminView';
 import OnboardingGateway from '../src/dashboards/student/OnboardingGateway';
 import ParentPortalView from '../src/dashboards/parent/ParentPortalView';
+import InstitutionCareerDashboard from '../src/institution/InstitutionCareerDashboard';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
 import AccountConsentGate from '../src/components/consent/AccountConsentGate';
@@ -60,10 +61,22 @@ export default function IndexPage() {
   if(path!=='/'){
     const isFounder=currentUser?.email?.toLowerCase()===MASTER_EMAIL;
     if(currentUser&&consentChecked&&!accountConsent&&!isFounder)return <AccountConsentGate user={currentUser} onAccepted={()=>setAccountConsent(true)} onDecline={async()=>{await signOut(auth);navigate('/');}}/>;
+
+    if(path==='/dashboard/institution/career'){
+      if(!currentUser){navigate('/auth');return null;}
+      const isInstitutionCoordinator=userData?.role==='institution_member'&&userData?.institutionRole==='coordinator';
+      if(!isInstitutionCoordinator&&!isFounder){navigate('/dashboard');return null;}
+      return <InstitutionCareerDashboard/>;
+    }
+
     if(path==='/dashboard'){
       if(!currentUser){navigate('/auth');return null;}
       const isAdmin=currentUser?.email?.toLowerCase()===MASTER_EMAIL||userData?.role==='super_admin';
       if(isAdmin){navigate('/dashboard/admin');return null;}
+      if(userData?.role==='institution_member'&&userData?.institutionRole==='coordinator'){
+        navigate('/dashboard/institution/career');
+        return null;
+      }
       if(userData?.role==='parent')return <ParentPortalView userData={userData} currentUser={currentUser}/>;
       return <OnboardingGateway navigate={navigate}/>;
     }
