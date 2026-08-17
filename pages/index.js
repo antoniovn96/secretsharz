@@ -9,6 +9,7 @@ import SupportHub from '../src/SupportHub';
 import WayfinderPage from '../src/WayfinderPage';
 import SuperAdminView from '../src/dashboards/admin/SuperAdminView';
 import OnboardingGateway from '../src/dashboards/student/OnboardingGateway';
+import ParentPortalView from '../src/dashboards/parent/ParentPortalView';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
 import AccountConsentGate from '../src/components/consent/AccountConsentGate';
@@ -57,6 +58,7 @@ export default function IndexPage() {
       if(!currentUser){navigate('/auth');return null;}
       const isAdmin=currentUser?.email?.toLowerCase()===MASTER_EMAIL||userData?.role==='super_admin';
       if(isAdmin){navigate('/dashboard/admin');return null;}
+      if(userData?.role==='parent')return <ParentPortalView userData={userData} currentUser={currentUser}/>;
       return <OnboardingGateway navigate={navigate}/>;
     }
     if(path==='/admin'||path==='/dashboard/admin'){
