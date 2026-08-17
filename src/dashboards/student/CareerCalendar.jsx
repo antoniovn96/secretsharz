@@ -95,11 +95,23 @@ export default function CareerCalendar({ user, liveUserData, onNavigate, compact
     if (!user || !reminderTitle.trim()) return;
     setSaving(true); setMessage('');
     try {
-      const next = [...reminders, { id: `rem_${Date.now()}`, title: reminderTitle.trim(), date: selected, time: reminderTime, createdAt: new Date().toISOString() }];
+      const next = [...reminders, { id: `rem_${Date.now()}`, title: reminderTitle.trim(), date: selected, time: reminderTime, createdAt: new Date().toISOString() }].slice(-100);
       await setDoc(doc(db, 'users', user.uid), { careerCalendar: { reminders: next, updatedAt: new Date().toISOString() } }, { merge: true });
       setReminderTitle(''); setReminderTime('18:00'); setShowReminder(false); setMessage('Reminder saved.');
     } catch (error) {
       setMessage(error?.message || 'Unable to save the reminder.');
+    } finally { setSaving(false); }
+  };
+
+  const deleteReminder = async (reminderId) => {
+    if (!user || !reminderId) return;
+    setSaving(true); setMessage('');
+    try {
+      const next = reminders.filter(item => item.id !== reminderId);
+      await setDoc(doc(db, 'users', user.uid), { careerCalendar: { reminders: next, updatedAt: new Date().toISOString() } }, { merge: true });
+      setMessage('Reminder removed.');
+    } catch (error) {
+      setMessage(error?.message || 'Unable to remove the reminder.');
     } finally { setSaving(false); }
   };
 
@@ -119,7 +131,7 @@ export default function CareerCalendar({ user, liveUserData, onNavigate, compact
 
     <div style={{ marginTop: 16, borderTop: '1px solid #eef2f7', paddingTop: 15 }}>
       <div style={{ fontSize: 11, fontWeight: 900, color: '#64748b', textTransform: 'uppercase' }}>{selectedLabel}</div>
-      {selectedEvents.length ? <div style={{ display: 'grid', gap: 7, marginTop: 9 }}>{selectedEvents.map((event, index) => <div key={`${event.type}-${event.id || index}`} style={{ padding: 10, borderRadius: 10, background: event.type === 'birthday' ? '#fff7ed' : '#f8fafc', border: '1px solid #eef2f7' }}><div style={{ fontSize: 12, fontWeight: 900, color: '#0f172a' }}>{event.title || event.name || 'Calendar event'}</div>{event.time && <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{event.time}</div>}</div>)}</div> : <div style={{ marginTop: 8, color: '#64748b', fontSize: 12 }}>No events scheduled.</div>}
+      {selectedEvents.length ? <div style={{ display: 'grid', gap: 7, marginTop: 9 }}>{selectedEvents.map((event, index) => <div key={`${event.type}-${event.id || index}`} style={{ padding: 10, borderRadius: 10, background: event.type === 'birthday' ? '#fff7ed' : '#f8fafc', border: '1px solid #eef2f7' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}><div><div style={{ fontSize: 12, fontWeight: 900, color: '#0f172a' }}>{event.title || event.name || 'Calendar event'}</div>{event.time && <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{event.time}</div>}</div>{event.type === 'reminder' && <button type="button" aria-label={`Remove reminder ${event.title || 'reminder'}`} disabled={saving} onClick={() => deleteReminder(event.id)} style={{ border: 0, background: 'transparent', color: '#94a3b8', cursor: saving ? 'default' : 'pointer', fontSize: 16, lineHeight: 1, padding: 2 }}>×</button>}</div></div>)}</div> : <div style={{ marginTop: 8, color: '#64748b', fontSize: 12 }}>No events scheduled.</div>}
     </div>
 
     <div style={{ display: 'grid', gridTemplateColumns: compact ? '1fr' : '1fr 1fr', gap: 8, marginTop: 13 }}>
@@ -130,7 +142,7 @@ export default function CareerCalendar({ user, liveUserData, onNavigate, compact
     {showReminder && <div style={{ marginTop: 12, padding: 13, borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
       <label style={{ display: 'block', fontSize: 11, fontWeight: 900, color: '#475569' }}>Reminder title<input value={reminderTitle} onChange={event => setReminderTitle(event.target.value)} placeholder="e.g. Complete my career journal" style={{ width: '100%', boxSizing: 'border-box', marginTop: 6, padding: 10, border: '1px solid #cbd5e1', borderRadius: 9, fontFamily: 'inherit' }} /></label>
       <label style={{ display: 'block', fontSize: 11, fontWeight: 900, color: '#475569', marginTop: 9 }}>Time<input type="time" value={reminderTime} onChange={event => setReminderTime(event.target.value)} style={{ width: '100%', boxSizing: 'border-box', marginTop: 6, padding: 10, border: '1px solid #cbd5e1', borderRadius: 9, fontFamily: 'inherit' }} /></label>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 10 }}><span style={{ fontSize: 11, color: '#64748b' }}>{message}</span><button disabled={saving || !reminderTitle.trim()} onClick={saveReminder} style={{ ...button, background: '#4f46e5', color: '#fff', opacity: saving || !reminderTitle.trim() ? .55 : 1 }}>{saving ? 'Saving…' : 'Save reminder'}</button></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginTop: 10 }}><span role="status" style={{ fontSize: 11, color: '#64748b' }}>{message}</span><button disabled={saving || !reminderTitle.trim()} onClick={saveReminder} style={{ ...button, background: '#4f46e5', color: '#fff', opacity: saving || !reminderTitle.trim() ? .55 : 1 }}>{saving ? 'Saving…' : 'Save reminder'}</button></div>
     </div>}
 
     {message && !showReminder && <div role="status" style={{ marginTop: 9, color: '#166534', fontSize: 11, fontWeight: 800 }}>{message}</div>}
