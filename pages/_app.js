@@ -1,6 +1,7 @@
-import React, { Suspense, useEffect, useRef } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../src/firebase';
+import CareerResultsPage from '../src/dashboards/student/CareerResultsPage';
 import '../styles/globals.css';
 import '../src/styles/StudentDashboard.css';
 
@@ -18,22 +19,53 @@ function isProtectedPath(pathname) {
 
 export default function App({ Component, pageProps }) {
   const wasAuthenticated = useRef(false);
+  const [pathname, setPathname] = useState(() => (typeof window !== 'undefined' ? window.location.pathname : '/'));
+
+  useEffect(() => {
+    const syncPath = () => setPathname(window.location.pathname);
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+
+    window.history.pushState = function (...args) {
+      const result = originalPushState.apply(this, args);
+      syncPath();
+      window.dispatchEvent(new Event('secretsharz:navigation'));
+      return result;
+    };
+    window.history.replaceState = function (...args) {
+      const result = originalReplaceState.apply(this, args);
+      syncPath();
+      window.dispatchEvent(new Event('secretsharz:navigation'));
+      return result;
+    };
+
+    window.addEventListener('popstate', syncPath);
+    window.addEventListener('secretsharz:navigation', syncPath);
+    syncPath();
+
+    return () => {
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+      window.removeEventListener('popstate', syncPath);
+      window.removeEventListener('secretsharz:navigation', syncPath);
+    };
+  }, []);
 
   useEffect(() => {
     const handleAuthState = (user) => {
-      const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
+      const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
 
       if (user) {
         wasAuthenticated.current = true;
         return;
       }
 
-      if (wasAuthenticated.current && isProtectedPath(pathname)) {
+      if (wasAuthenticated.current && isProtectedPath(currentPath)) {
         window.location.replace('/');
         return;
       }
 
-      if (!wasAuthenticated.current && isProtectedPath(pathname) && pathname !== '/auth') {
+      if (!wasAuthenticated.current && isProtectedPath(currentPath) && currentPath !== '/auth') {
         window.location.replace('/auth');
       }
     };
@@ -41,6 +73,8 @@ export default function App({ Component, pageProps }) {
     const unsubscribe = onAuthStateChanged(auth, handleAuthState);
     return unsubscribe;
   }, []);
+
+  const isCareerResultsRoute = pathname === '/dashboard/career/results';
 
   return (
     <Suspense
@@ -61,7 +95,7 @@ export default function App({ Component, pageProps }) {
         </div>
       }
     >
-      <Component {...pageProps} />
+      {isCareerResultsRoute ? <CareerResultsPage /> : <Component {...pageProps} />}
     </Suspense>
   );
 }
