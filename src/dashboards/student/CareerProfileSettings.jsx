@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { auth, db, storage } from '../../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { updateProfile, signOut } from 'firebase/auth';
+import { updateProfile } from 'firebase/auth';
 import GlobalLocationFields from '../../components/location/GlobalLocationFields';
 
 const empty = {
@@ -61,6 +61,7 @@ export default function CareerProfileSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [dirty, setDirty] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -73,22 +74,48 @@ export default function CareerProfileSettings() {
         const data = snap.exists() ? snap.data() : {};
         setProfile(normalise(data));
         setPreferences({ ...defaultPreferences, ...(data?.careerProfilePreferences || {}) });
+        setDirty(false);
       } catch (e) { setError(e?.message || 'Unable to load your profile.'); }
       finally { setLoading(false); }
     });
     return unsubscribe;
   }, []);
 
-  const setField = (field, value) => setProfile(p => ({ ...p, [field]: value }));
-  const setPreference = (field, value) => setPreferences(p => ({ ...p, [field]: value }));
+  const setField = (field, value) => {
+    setProfile(p => ({ ...p, [field]: value }));
+    setDirty(true);
+    setMessage('');
+  };
+
+  const setPreference = (field, value) => {
+    setPreferences(p => ({ ...p, [field]: value }));
+    setDirty(true);
+    setMessage('');
+  };
 
   const completion = useMemo(() => {
-    const fields = [profile.headline, profile.bio, profile.hobbies.length, profile.interests.length, profile.careerInterests.length, profile.skills.length, profile.favouriteSubjects.length, profile.goals.length, profile.school, profile.grade, profile.stream, profile.locationData.countryCode, profile.phone.number];
+    const hasLocation = Boolean(profile.locationData?.cityName || profile.locationData?.stateName || profile.locationData?.countryName || profile.location);
+    const hasPhone = Boolean(profile.phone?.number?.trim());
+    const fields = [
+      Boolean(profile.headline?.trim()),
+      Boolean(profile.bio?.trim()),
+      profile.hobbies.length > 0,
+      profile.interests.length > 0,
+      profile.careerInterests.length > 0,
+      profile.skills.length > 0,
+      profile.favouriteSubjects.length > 0,
+      profile.goals.length > 0,
+      Boolean(profile.school?.trim()),
+      Boolean(profile.grade?.trim()),
+      Boolean(profile.stream?.trim()),
+      hasLocation,
+      hasPhone,
+    ];
     return Math.round(fields.filter(Boolean).length / fields.length * 100);
   }, [profile]);
 
   const save = async () => {
-    if (!user) return;
+    if (!user || !dirty) return;
     setSaving(true); setError(''); setMessage('');
     try {
       const locationData = profile.locationData || empty.locationData;
@@ -104,6 +131,7 @@ export default function CareerProfileSettings() {
         phone: next.phone,
       }, { merge: true });
       setProfile(next);
+      setDirty(false);
       setMessage('Your profile, location and phone details have been saved.');
     } catch (e) { setError(e?.message || 'Unable to save your profile.'); }
     finally { setSaving(false); }
@@ -121,14 +149,10 @@ export default function CareerProfileSettings() {
       const url = await getDownloadURL(imageRef);
       await updateProfile(user, { photoURL: url });
       await setDoc(doc(db, 'users', user.uid), { photoURL: url, profilePicture: url }, { merge: true });
-      setUser({ ...auth.currentUser }); setMessage('Profile picture updated. It will be used across your authorised VidyaVantage views.');
+      setUser({ ...auth.currentUser });
+      setMessage('Profile picture updated. It will be used across your authorised VidyaVantage views.');
     } catch (e) { setError(e?.message || 'Unable to update profile picture.'); }
     finally { setUploading(false); }
-  };
-
-  const logout = async () => {
-    await signOut(auth);
-    window.location.href = '/';
   };
 
   if (loading) return <div style={{ minHeight: '70vh', display: 'grid', placeItems: 'center', color: '#64748b', fontWeight: 800 }}>Loading your profile…</div>;
@@ -140,9 +164,9 @@ export default function CareerProfileSettings() {
 
   return <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '24px 28px 60px', color: '#0f172a' }}>
     <div style={{ maxWidth: 1050, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 15, marginBottom: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 15, marginBottom: 18, flexWrap: 'wrap' }}>
         <button onClick={() => window.location.href = '/dashboard/career'} style={{ border: '1px solid #dbe3ec', background: '#fff', borderRadius: 10, padding: '10px 14px', fontWeight: 800, cursor: 'pointer' }}>← Career Home</button>
-        <button onClick={save} disabled={saving} style={{ border: 0, background: '#4f46e5', color: '#fff', borderRadius: 10, padding: '11px 17px', fontWeight: 900, cursor: 'pointer' }}>{saving ? 'Saving…' : 'Save Changes'}</button>
+        <button onClick={save} disabled={saving || !dirty} style={{ border: 0, background: dirty ? '#4f46e5' : '#cbd5e1', color: '#fff', borderRadius: 10, padding: '11px 17px', fontWeight: 900, cursor: dirty && !saving ? 'pointer' : 'default', opacity: saving ? 0.75 : 1 }}>{saving ? 'Saving…' : dirty ? 'Save Changes' : 'All Changes Saved'}</button>
       </div>
 
       <section style={{ ...cardStyle, background: 'linear-gradient(135deg,#0f172a,#1e293b)', color: '#fff', display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
@@ -190,12 +214,12 @@ export default function CareerProfileSettings() {
         <section style={{ ...cardStyle, gridColumn: '1 / -1' }}>
           <div style={{ color: '#4f46e5', fontSize: 10, fontWeight: 900, letterSpacing: 1.3 }}>YOUR PREFERENCES</div>
           <h2 style={{ margin: '5px 0 4px' }}>How VidyaVantage works with you</h2>
-          <p style={{ color: '#64748b', fontSize: 13, lineHeight: 1.6 }}>You control the non-essential ways your profile is used. Core safety, account and assessment records remain governed by the platform's privacy rules.</p>
-          <Toggle checked={preferences.emailUpdates} onChange={e => setPreference('emailUpdates', e.target.checked)} title="Career updates" description="Receive useful career guidance updates and important account messages." />
+          <p style={{ color: '#64748b', fontSize: 13, lineHeight: 1.6 }}>You control optional ways your profile is used. Essential safety, account and assessment records continue to follow the platform's privacy rules.</p>
+          <Toggle checked={preferences.emailUpdates} onChange={e => setPreference('emailUpdates', e.target.checked)} title="Career updates" description="Receive career guidance updates. Essential account and safety messages are always delivered." />
           <Toggle checked={preferences.careerReminders} onChange={e => setPreference('careerReminders', e.target.checked)} title="Journey reminders" description="Get reminders when you have an unfinished assessment, roadmap action or reflection." />
-          <Toggle checked={preferences.counsellorContext} onChange={e => setPreference('counsellorContext', e.target.checked)} title="Allow career counsellor context" description="Allow an assigned career counsellor to use your career profile as context during career guidance." />
-          <Toggle checked={preferences.institutionSharing} onChange={e => setPreference('institutionSharing', e.target.checked)} title="Allow institution sharing" description="Allow selected career-profile information to be shared with your institution when an institutional programme explicitly requires it." />
-          <div style={{ marginTop: 18 }}><label style={labelStyle}>Profile visibility<select style={inputStyle} value={preferences.profileVisibility} onChange={e => setPreference('profileVisibility', e.target.value)}><option value="private">Private — only me and authorised professionals</option><option value="guided">Guided — available to authorised career guidance staff</option><option value="portfolio">Portfolio — may be used when I explicitly share my portfolio</option></select></label></div>
+          <Toggle checked={preferences.counsellorContext} onChange={e => setPreference('counsellorContext', e.target.checked)} title="Career counsellor context" description="Let an assigned career counsellor use your career profile as context during career guidance." />
+          <Toggle checked={preferences.institutionSharing} onChange={e => setPreference('institutionSharing', e.target.checked)} title="Institution sharing" description="Allow selected career-profile information to be shared with your institution when an institutional programme explicitly requires it." />
+          <div style={{ marginTop: 18 }}><label style={labelStyle}>Profile visibility<select style={inputStyle} value={preferences.profileVisibility} onChange={e => setPreference('profileVisibility', e.target.value)}><option value="private">Private — only me and authorised professionals</option><option value="guided">Guided — available to authorised career guidance staff</option><option value="portfolio">Portfolio — used only when I explicitly share my portfolio</option></select></label></div>
         </section>
 
         <section style={{ ...cardStyle, gridColumn: '1 / -1' }}>
@@ -206,7 +230,6 @@ export default function CareerProfileSettings() {
             <div style={{ padding: 15, borderRadius: 12, background: '#f8fafc' }}><div style={{ fontSize: 10, color: '#64748b', fontWeight: 900 }}>EMAIL</div><strong style={{ wordBreak: 'break-word' }}>{user.email || 'Not available'}</strong></div>
             <div style={{ padding: 15, borderRadius: 12, background: '#f8fafc' }}><div style={{ fontSize: 10, color: '#64748b', fontWeight: 900 }}>PHONE</div><strong>{profile.phone.international || 'Not added'}</strong></div>
           </div>
-          <button onClick={logout} style={{ marginTop: 16, border: '1px solid #fecaca', background: '#fff', color: '#991b1b', borderRadius: 10, padding: '10px 14px', fontWeight: 900, cursor: 'pointer' }}>Sign out</button>
         </section>
       </div>
 
