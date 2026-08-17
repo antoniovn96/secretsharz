@@ -14,7 +14,7 @@ export default function FrontDoorExperience({ navigate, currentUser }) {
   const pathways = useMemo(() => [
     { id: 'not-ok', label: "I'm not feeling okay", detail: 'A gentle place to begin when something feels difficult.', route: '/mindspace', tone: 'rose', icon: '◌' },
     { id: 'talk', label: 'I want someone to talk to', detail: 'Learn about human support and connect when you are ready.', route: '/mindspace', tone: 'sage', icon: '○' },
-    { id: 'child', label: "I'm worried about my child", detail: 'Find parent, family, learning and professional support.', route: '/parent', tone: 'sand', icon: '⌂' },
+    { id: 'child', label: "I'm worried about my child", detail: 'Find parent, family, learning and professional support.', route: '/dashboard', tone: 'sand', icon: '⌂' },
     { id: 'self', label: 'I want to understand myself', detail: 'Reflect, learn and explore assessments with care.', route: '/dashboard', tone: 'lavender', icon: '✦' },
     { id: 'future', label: "I'm confused about my future", detail: 'Explore possibilities without having to choose a destiny today.', route: '/vidyavantage', tone: 'sky', icon: '↗' },
     { id: 'sen', label: 'I need learning or SEN support', detail: 'Explore inclusive learning, accommodations and support.', route: '/resources', tone: 'mint', icon: '□' },
