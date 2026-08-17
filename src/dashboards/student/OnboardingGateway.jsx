@@ -41,7 +41,17 @@ const OnboardingGateway = ({ navigate }) => {
 
         if (!cancelled && targetPath) {
           console.log('[ROUTING] Returning client detected. Restoring saved path:', savedPath);
-          navigate(targetPath);
+          // CareerStudentView, PsychStudentView and SENStudentView are lazy
+          // routes. The generic /dashboard gateway is intentionally not wrapped
+          // in a Suspense boundary in the legacy router, so a client-side push
+          // can briefly render nothing while the lazy module suspends. A hard
+          // route replacement here is deterministic and also removes the
+          // intermediate /dashboard gateway from browser history.
+          if (typeof window !== 'undefined') {
+            window.location.replace(targetPath);
+          } else {
+            navigate(targetPath);
+          }
           return;
         }
       } catch (error) {
