@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { saveJourneyContext } from './journeyContext';
 
 export default function FrontDoorExperienceV2({ navigate, currentUser }) {
   const [selected, setSelected] = useState(null);
@@ -18,7 +19,12 @@ export default function FrontDoorExperienceV2({ navigate, currentUser }) {
   const choose = (id) => setSelected(id);
   const begin = () => {
     const label = chosen?.label || "I don't know. Help me find my way.";
-    try { window.sessionStorage.setItem('secretsharz_front_door_intent', JSON.stringify({ id: chosen?.id || 'unknown', label, createdAt: new Date().toISOString() })); } catch (_) {}
+    saveJourneyContext({
+      source: 'front-door',
+      intentId: chosen?.id || 'unknown',
+      intentLabel: label,
+      destination: chosen?.route || '/start',
+    });
     const destination = chosen?.route || '/start';
     navigate?.(currentUser ? destination : (chosen?.route === '/support' || chosen?.route === '/resources' || chosen?.route === '/about' ? destination : '/auth'));
   };
