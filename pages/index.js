@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import SecretSharzApp from '../src/App';
 import FoundationHomepage from '../src/FoundationHomepage';
 import FrontDoorExperienceV2 from '../src/FrontDoorExperienceV2';
+import JourneyBridge from '../src/JourneyBridge';
 import LiveYouTubeSection from '../src/LiveYouTubeSection';
 import VideoLibraryPage from '../src/VideoLibraryPage';
 import SupportHub from '../src/SupportHub';
@@ -118,6 +119,7 @@ export default function IndexPage() {
   return <>
     <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
     <FrontDoorExperienceV2 navigate={navigate} currentUser={currentUser} />
+    <JourneyBridge navigate={navigate} currentUser={currentUser} />
     <FoundationHomepage navigate={navigate} currentUser={currentUser} />
     <LiveYouTubeSection navigate={navigate} />
     <style>{`.ss-foundation-page .ss-fh-video{display:none!important}`}</style>
