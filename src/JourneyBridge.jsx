@@ -81,10 +81,10 @@ export default function JourneyBridge({ navigate, currentUser }) {
         <div className="ss-journey-footer">
           <div>
             <strong>Still not sure?</strong>
-            <span>You do not need to choose the right service. Start with the Wayfinder.</span>
+            <span>Explore the four institutional pathways and choose the direction that feels closest today.</span>
           </div>
-          <button type="button" onClick={() => go('/start')}>
-            {currentUser ? 'Find my next step' : 'Help me find my way'} <span aria-hidden="true">→</span>
+          <button type="button" onClick={() => go('/discover')}>
+            Explore the four paths <span aria-hidden="true">→</span>
           </button>
         </div>
       </div>
