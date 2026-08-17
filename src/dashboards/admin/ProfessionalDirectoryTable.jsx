@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Search, X, Download, SlidersHorizontal, ChevronUp, ChevronDown, Eye, Pencil, Trash2 } from 'lucide-react';
+import { getProfileIdentity } from '../../platform/profileIdentity';
 
 const ROLE_LABELS = {
   counsellor: 'Counsellor',
@@ -13,12 +14,6 @@ const ROLE_STYLES = {
   career_counsellor: 'bg-indigo-100 text-indigo-700',
   psychologist: 'bg-blue-100 text-blue-700',
   educator: 'bg-emerald-100 text-emerald-700',
-};
-
-const getInitials = (name) => {
-  if (!name) return 'P';
-  const parts = name.trim().split(/\s+/);
-  return parts.length > 1 ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase() : name.slice(0, 2).toUpperCase();
 };
 
 const getRole = user => user?.role || user?.professionalRole || 'unknown';
@@ -35,11 +30,20 @@ const ProfessionalDirectoryTable = ({ users = [], isLoading = false, onViewDetai
     const q = searchQuery.trim().toLowerCase();
 
     if (q) {
-      result = result.filter(user => [
-        user.name, user.email, user.phone, user.specialization,
-        user.qualification, user.institutionName, user.registrationNumber,
-        ROLE_LABELS[getRole(user)], user.id,
-      ].some(value => String(value || '').toLowerCase().includes(q)));
+      result = result.filter(user => {
+        const identity = getProfileIdentity(null, user);
+        return [
+          identity.name,
+          identity.email,
+          user.phone,
+          user.specialization,
+          user.qualification,
+          user.institutionName,
+          user.registrationNumber,
+          ROLE_LABELS[getRole(user)],
+          user.id,
+        ].some(value => String(value || '').toLowerCase().includes(q));
+      });
     }
 
     if (filterRole !== 'all') result = result.filter(user => getRole(user) === filterRole);
@@ -47,12 +51,14 @@ const ProfessionalDirectoryTable = ({ users = [], isLoading = false, onViewDetai
 
     result.sort((a, b) => {
       const value = user => {
+        const identity = getProfileIdentity(null, user);
+        if (sortConfig.key === 'name') return identity.name;
         if (sortConfig.key === 'role') return ROLE_LABELS[getRole(user)] || getRole(user);
         if (sortConfig.key === 'status') return user.status || 'active';
         return user[sortConfig.key] || '';
       };
-      let av = String(value(a)).toLowerCase();
-      let bv = String(value(b)).toLowerCase();
+      const av = String(value(a)).toLowerCase();
+      const bv = String(value(b)).toLowerCase();
       if (av === bv) return 0;
       const order = av < bv ? -1 : 1;
       return sortConfig.direction === 'asc' ? order : -order;
@@ -65,10 +71,13 @@ const ProfessionalDirectoryTable = ({ users = [], isLoading = false, onViewDetai
 
   const exportCsv = () => {
     const headers = ['Professional ID', 'Name', 'Email', 'Phone', 'Role', 'Specialisation', 'Qualification', 'Organisation', 'Registration No.', 'Status'];
-    const rows = filteredUsers.map(user => [
-      user.id, user.name || '', user.email || '', user.phone || '', ROLE_LABELS[getRole(user)] || getRole(user),
-      user.specialization || '', user.qualification || '', user.institutionName || '', user.registrationNumber || '', user.status || 'active',
-    ]);
+    const rows = filteredUsers.map(user => {
+      const identity = getProfileIdentity(null, user);
+      return [
+        user.id, identity.name, identity.email, user.phone || '', ROLE_LABELS[getRole(user)] || getRole(user),
+        user.specialization || '', user.qualification || '', user.institutionName || '', user.registrationNumber || '', user.status || 'active',
+      ];
+    });
     const escape = value => `"${String(value).replace(/"/g, '""')}"`;
     const csv = [headers, ...rows].map(row => row.map(escape).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -144,38 +153,24 @@ const ProfessionalDirectoryTable = ({ users = [], isLoading = false, onViewDetai
           </thead>
           <tbody className="divide-y divide-slate-100">
             {filteredUsers.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-14 text-center">
-                <div className="flex flex-col items-center">
-                  <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4"><Search className="w-8 h-8 text-slate-300" /></div>
-                  <p className="text-slate-600 font-semibold mb-1">No professionals found</p>
-                  <p className="text-sm text-slate-400">Try adjusting your search or filters.</p>
-                </div>
-              </td></tr>
+              <tr><td colSpan={6} className="px-4 py-14 text-center"><div className="flex flex-col items-center"><div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4"><Search className="w-8 h-8 text-slate-300" /></div><p className="text-slate-600 font-semibold mb-1">No professionals found</p><p className="text-sm text-slate-400">Try adjusting your search or filters.</p></div></td></tr>
             ) : filteredUsers.map(user => {
+              const identity = getProfileIdentity(null, user);
               const role = getRole(user);
               const status = user.status || 'active';
               return (
                 <tr key={user.id} className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => onViewDetails?.(user)}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">{getInitials(user.name)}</div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-slate-900 truncate max-w-[220px]">{user.name || 'Unknown'}</p>
-                        <p className="text-xs text-slate-400 truncate max-w-[240px]">{user.email || 'No email'}</p>
-                      </div>
+                      {identity.photoURL ? <img src={identity.photoURL} alt="" className="w-10 h-10 rounded-xl object-cover shadow-sm" /> : <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">{identity.initial}</div>}
+                      <div className="min-w-0"><p className="font-semibold text-slate-900 truncate max-w-[220px]">{identity.name}</p><p className="text-xs text-slate-400 truncate max-w-[240px]">{identity.email || 'No email'}</p></div>
                     </div>
                   </td>
                   <td className="px-4 py-3"><span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${ROLE_STYLES[role] || 'bg-slate-100 text-slate-600'}`}>{ROLE_LABELS[role] || role}</span></td>
                   <td className="px-4 py-3"><p className="text-sm font-semibold text-slate-700">{user.specialization || 'Not specified'}</p><p className="text-xs text-slate-400 mt-0.5">{user.phone || 'No phone'}</p></td>
                   <td className="px-4 py-3"><p className="text-sm font-semibold text-slate-700">{user.qualification || 'Not specified'}</p><p className="text-xs text-slate-400 mt-0.5">{user.institutionName || 'Organisation not specified'}</p></td>
                   <td className="px-4 py-3"><span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{status === 'active' ? 'Active' : 'Inactive'}</span></td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
-                      <button title="View details" onClick={() => onViewDetails?.(user)} className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg"><Eye className="w-4 h-4" /></button>
-                      <button title="Edit professional" onClick={() => onEdit?.(user)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"><Pencil className="w-4 h-4" /></button>
-                      <button title="Delete professional" onClick={() => onDelete?.(user)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                  </td>
+                  <td className="px-4 py-3"><div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}><button title="View details" onClick={() => onViewDetails?.(user)} className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg"><Eye className="w-4 h-4" /></button><button title="Edit professional" onClick={() => onEdit?.(user)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"><Pencil className="w-4 h-4" /></button><button title="Delete professional" onClick={() => onDelete?.(user)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4" /></button></div></td>
                 </tr>
               );
             })}
@@ -187,12 +182,7 @@ const ProfessionalDirectoryTable = ({ users = [], isLoading = false, onViewDetai
 };
 
 const Header = ({ label, column, onSort, config }) => (
-  <th className="px-4 py-3 text-left">
-    <button onClick={() => onSort(column)} className="flex items-center gap-1 text-xs font-bold text-slate-500 uppercase tracking-wider">
-      {label}
-      {config.key === column ? (config.direction === 'asc' ? <ChevronUp className="w-4 h-4 text-purple-500" /> : <ChevronDown className="w-4 h-4 text-purple-500" />) : <ChevronDown className="w-4 h-4 text-slate-300" />}
-    </button>
-  </th>
+  <th className="px-4 py-3 text-left"><button onClick={() => onSort(column)} className="flex items-center gap-1 text-xs font-bold text-slate-500 uppercase tracking-wider">{label}{config.key === column ? (config.direction === 'asc' ? <ChevronUp className="w-4 h-4 text-purple-500" /> : <ChevronDown className="w-4 h-4 text-purple-500" />) : <ChevronDown className="w-4 h-4 text-slate-300" />}</button></th>
 );
 
 export default ProfessionalDirectoryTable;
