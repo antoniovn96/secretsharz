@@ -61,7 +61,23 @@ export default function IndexPage() {
 
   if(path!=='/'){
     const isFounder=currentUser?.email?.toLowerCase()===MASTER_EMAIL;
+    const isAdmin=isFounder||userData?.role==='super_admin';
     if(currentUser&&consentChecked&&!accountConsent&&!isFounder)return <AccountConsentGate user={currentUser} onAccepted={()=>setAccountConsent(true)} onDecline={async()=>{await signOut(auth);navigate('/');}}/>;
+
+    // Professional service boundary: the outer router now blocks cross-service
+    // access before the legacy App router can mount another professional view.
+    if(path.startsWith('/provider/career') && currentUser && !isAdmin && userData?.role!=='counsellor'){
+      navigate('/dashboard');
+      return null;
+    }
+    if(path.startsWith('/provider/psychologist') && currentUser && !isAdmin && userData?.role!=='psychologist'){
+      navigate('/dashboard');
+      return null;
+    }
+    if(path.startsWith('/provider/educator') && currentUser && !isAdmin && userData?.role!=='educator'){
+      navigate('/dashboard');
+      return null;
+    }
 
     if(path==='/dashboard/institution/career'){
       if(!currentUser){navigate('/auth');return null;}
@@ -80,7 +96,6 @@ export default function IndexPage() {
 
     if(path==='/dashboard'){
       if(!currentUser){navigate('/auth');return null;}
-      const isAdmin=currentUser?.email?.toLowerCase()===MASTER_EMAIL||userData?.role==='super_admin';
       if(isAdmin){navigate('/dashboard/admin');return null;}
       if(userData?.role==='institution_member'&&userData?.institutionRole==='coordinator'){
         navigate('/dashboard/institution/career');
@@ -90,21 +105,20 @@ export default function IndexPage() {
       return <OnboardingGateway navigate={navigate}/>;
     }
     if(path==='/admin'||path==='/dashboard/admin'){
-      const isAdmin=currentUser?.email?.toLowerCase()===MASTER_EMAIL||userData?.role==='super_admin';
       if(!currentUser)return <SecretSharzApp/>;
       if(!isAdmin){navigate('/');return null;}
       return <SuperAdminView user={currentUser} userData={{...(userData||{}),role:'super_admin'}} onBackToApp={()=>navigate('/')}/>;
     }
     if(path==='/videos'){
-      const isAdmin=userData?.role==='super_admin'||currentUser?.email?.toLowerCase()===MASTER_EMAIL;const handleLogout=async()=>{await signOut(auth);navigate('/')};
+      const handleLogout=async()=>{await signOut(auth);navigate('/')};
       return <><Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin}/><VideoLibraryPage navigate={navigate}/><Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={()=>{}}/></>;
     }
     if(path==='/support'){
-      const handleLogout=async()=>{await signOut(auth);navigate('/')};const isAdmin=userData?.role==='super_admin'||currentUser?.email?.toLowerCase()===MASTER_EMAIL;
+      const handleLogout=async()=>{await signOut(auth);navigate('/')};
       return <><Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin}/><SupportHub navigate={navigate}/><Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={()=>{}}/></>;
     }
     if(path==='/start'){
-      const handleLogout=async()=>{await signOut(auth);navigate('/')};const isAdmin=userData?.role==='super_admin'||currentUser?.email?.toLowerCase()===MASTER_EMAIL;
+      const handleLogout=async()=>{await signOut(auth);navigate('/')};
       return <><Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin}/><WayfinderPage navigate={navigate}/><Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={()=>{}}/></>;
     }
     return <SecretSharzApp/>;
