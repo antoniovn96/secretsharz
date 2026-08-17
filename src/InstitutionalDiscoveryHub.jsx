@@ -68,6 +68,7 @@ export default function InstitutionalDiscoveryHub({ navigate, journeyContext = n
   ], []);
 
   const selected = pathways.find((item) => item.id === active);
+  const previousLabel = journeyContext?.label || journeyContext?.intentLabel || journeyContext?.selectedLabel || null;
 
   const continueTo = (path) => {
     try {
@@ -98,10 +99,10 @@ export default function InstitutionalDiscoveryHub({ navigate, journeyContext = n
           </p>
         </header>
 
-        {journeyContext?.label && (
+        {previousLabel && (
           <aside className="ss-id-context" aria-label="Your previous starting point">
             <span>Previously, you told us:</span>
-            <strong>{journeyContext.label}</strong>
+            <strong>{previousLabel}</strong>
             <button type="button" onClick={() => setActive(null)}>Choose again</button>
           </aside>
         )}
