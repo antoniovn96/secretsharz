@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import SecretSharzApp from '../src/App';
 import FoundationHomepage from '../src/FoundationHomepage';
-import FrontDoorExperience from '../src/FrontDoorExperience';
+import FrontDoorExperienceV2 from '../src/FrontDoorExperienceV2';
 import LiveYouTubeSection from '../src/LiveYouTubeSection';
 import VideoLibraryPage from '../src/VideoLibraryPage';
 import SupportHub from '../src/SupportHub';
@@ -87,72 +87,40 @@ export default function IndexPage() {
   if (path !== '/') {
     const isFounder = currentUser?.email?.toLowerCase() === MASTER_EMAIL;
     if (currentUser && consentChecked && !accountConsent && !isFounder) {
-      return (
-        <AccountConsentGate
-          user={currentUser}
-          onAccepted={() => setAccountConsent(true)}
-          onDecline={async () => { await signOut(auth); navigate('/'); }}
-        />
-      );
+      return <AccountConsentGate user={currentUser} onAccepted={() => setAccountConsent(true)} onDecline={async () => { await signOut(auth); navigate('/'); }} />;
     }
-
     if (path === '/admin' || path === '/dashboard/admin') {
       const isAdmin = currentUser?.email?.toLowerCase() === MASTER_EMAIL || userData?.role === 'super_admin';
       if (!currentUser) return <SecretSharzApp />;
       if (!isAdmin) { navigate('/'); return null; }
       return <SuperAdminView user={currentUser} userData={{ ...(userData || {}), role: 'super_admin' }} onBackToApp={() => navigate('/')} />;
     }
-
     if (path === '/videos') {
       const isAdmin = userData?.role === 'super_admin' || currentUser?.email?.toLowerCase() === MASTER_EMAIL;
       const handleLogout = async () => { await signOut(auth); navigate('/'); };
-      return (
-        <>
-          <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
-          <VideoLibraryPage navigate={navigate} />
-          <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={() => {}} />
-        </>
-      );
+      return <><Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} /><VideoLibraryPage navigate={navigate} /><Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={() => {}} /></>;
     }
-
     if (path === '/support') {
       const handleLogout = async () => { await signOut(auth); navigate('/'); };
       const isAdmin = userData?.role === 'super_admin' || currentUser?.email?.toLowerCase() === MASTER_EMAIL;
-      return (
-        <>
-          <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
-          <SupportHub navigate={navigate} />
-          <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={() => {}} />
-        </>
-      );
+      return <><Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} /><SupportHub navigate={navigate} /><Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={() => {}} /></>;
     }
-
     if (path === '/start') {
       const handleLogout = async () => { await signOut(auth); navigate('/'); };
       const isAdmin = userData?.role === 'super_admin' || currentUser?.email?.toLowerCase() === MASTER_EMAIL;
-      return (
-        <>
-          <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
-          <WayfinderPage navigate={navigate} />
-          <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={() => {}} />
-        </>
-      );
+      return <><Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} /><WayfinderPage navigate={navigate} /><Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={() => {}} /></>;
     }
-
     return <SecretSharzApp />;
   }
 
   const isAdmin = userData?.role === 'super_admin' || currentUser?.email?.toLowerCase() === MASTER_EMAIL;
   const handleLogout = async () => { await signOut(auth); navigate('/'); };
-
-  return (
-    <>
-      <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
-      <FrontDoorExperience navigate={navigate} currentUser={currentUser} />
-      <FoundationHomepage navigate={navigate} currentUser={currentUser} />
-      <LiveYouTubeSection navigate={navigate} />
-      <style>{`/* The legacy FoundationHomepage video is intentionally hidden here. The live channel feed above is the production source of truth. */ .ss-foundation-page .ss-fh-video{display:none!important}`}</style>
-      <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={() => {}} />
-    </>
-  );
+  return <>
+    <Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin} />
+    <FrontDoorExperienceV2 navigate={navigate} currentUser={currentUser} />
+    <FoundationHomepage navigate={navigate} currentUser={currentUser} />
+    <LiveYouTubeSection navigate={navigate} />
+    <style>{`.ss-foundation-page .ss-fh-video{display:none!important}`}</style>
+    <Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={() => {}} />
+  </>;
 }
