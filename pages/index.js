@@ -11,6 +11,7 @@ import SuperAdminView from '../src/dashboards/admin/SuperAdminView';
 import OnboardingGateway from '../src/dashboards/student/OnboardingGateway';
 import ParentPortalView from '../src/dashboards/parent/ParentPortalView';
 import InstitutionCareerDashboard from '../src/institution/InstitutionCareerDashboard';
+import InstitutionServiceDashboard from '../src/institution/InstitutionServiceDashboard';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
 import AccountConsentGate from '../src/components/consent/AccountConsentGate';
@@ -67,6 +68,14 @@ export default function IndexPage() {
       const isInstitutionCoordinator=userData?.role==='institution_member'&&userData?.institutionRole==='coordinator';
       if(!isInstitutionCoordinator&&!isFounder){navigate('/dashboard');return null;}
       return <InstitutionCareerDashboard/>;
+    }
+
+    if(path==='/dashboard/institution/wellbeing'||path==='/dashboard/institution/sen'){
+      if(!currentUser){navigate('/auth');return null;}
+      const isInstitutionCoordinator=userData?.role==='institution_member'&&userData?.institutionRole==='coordinator';
+      if(!isInstitutionCoordinator&&!isFounder){navigate('/dashboard');return null;}
+      const service=path.endsWith('/sen')?'sen':'wellbeing';
+      return <InstitutionServiceDashboard service={service}/>;
     }
 
     if(path==='/dashboard'){
