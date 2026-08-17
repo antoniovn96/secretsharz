@@ -5,6 +5,8 @@ import AdminSidebar from './AdminSidebar';
 import OverviewTab from './OverviewTab';
 import StudentDirectoryTab from './StudentDirectoryTab';
 import ServiceStudentDirectory from './ServiceStudentDirectory';
+import ServiceParentDirectory from './ServiceParentDirectory';
+import ServiceInstitutionDirectory from './ServiceInstitutionDirectory';
 import InstitutionDirectoryTab from './InstitutionDirectoryTab';
 import InstitutionServicesTab from './InstitutionServicesTab';
 import InstitutionPaymentsTab from './InstitutionPaymentsTab';
@@ -16,11 +18,12 @@ import CareerOffersTab from './CareerOffersTab';
 
 const FALLBACK_STATS={totalUsers:{value:0,change:null,trend:'up',changeLabel:'live total'},recentSessions:{value:0,change:null,trend:'up',changeLabel:'sessions · 7d'},pendingIEPs:{value:0,change:null,trend:'up',changeLabel:'live total'},completedAssessments:{value:0,change:null,trend:'up',changeLabel:'live total'}};
 const SERVICE_LABELS={careerStudents:'Career · Students',careerParents:'Career · Parents',careerInstitutions:'Career · Institutions',wellbeingStudents:'Wellbeing · Students',wellbeingParents:'Wellbeing · Parents',wellbeingInstitutions:'Wellbeing · Institutions',senStudents:'SEN · Students',senParents:'SEN · Parents',senInstitutions:'SEN · Institutions'};
-const SERVICE_KEYS={careerStudents:'career',wellbeingStudents:'wellbeing',senStudents:'sen'};
+const SERVICE_KEYS={careerStudents:'career',careerParents:'career',careerInstitutions:'career',wellbeingStudents:'wellbeing',wellbeingParents:'wellbeing',wellbeingInstitutions:'wellbeing',senStudents:'sen',senParents:'sen',senInstitutions:'sen'};
 
 const ServiceView=({label,kind,service,theme})=>{
  if(kind==='student') return <ServiceStudentDirectory service={service} theme={theme}/>;
- return <div className="space-y-5"><div><p className={`text-xs font-semibold uppercase tracking-[0.14em] ${theme==='dark'?'text-slate-500':'text-slate-400'}`}>Service workspace</p><h1 className={`mt-1 text-2xl font-bold tracking-tight ${theme==='dark'?'text-white':'text-slate-950'}`}>{label}</h1><p className={`mt-1 text-sm ${theme==='dark'?'text-slate-400':'text-slate-500'}`}>A service-specific administrative view. Detailed controls will use the existing canonical directory and entitlement modules rather than duplicate records.</p></div><div className={`rounded-2xl border p-6 ${theme==='dark'?'bg-[#111827] border-slate-800':'bg-white border-slate-200 shadow-sm'}`}><div className="flex items-start gap-4"><div className="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500"><span className="text-lg font-bold">{kind==='parent'?'P':'I'}</span></div><div><h2 className={`font-bold ${theme==='dark'?'text-white':'text-slate-900'}`}>{kind==='parent'?'Parent cohort':'Institution cohort'}</h2><p className={`mt-1 text-sm leading-6 ${theme==='dark'?'text-slate-400':'text-slate-500'}`}>This workspace is connected to Secret Sharz's central identity and service-entitlement model. No duplicate user records are created here.</p></div></div></div></div>;
+ if(kind==='parent') return <ServiceParentDirectory service={service} theme={theme}/>;
+ return <ServiceInstitutionDirectory service={service} theme={theme}/>;
 };
 
 const SuperAdminView=({user,userData,onBackToApp})=>{
