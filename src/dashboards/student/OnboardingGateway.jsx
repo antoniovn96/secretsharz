@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
 
@@ -17,6 +17,7 @@ const OnboardingGateway = ({ navigate }) => {
   const [isRouting, setIsRouting] = useState(false);
   const [isCheckingSavedPath, setIsCheckingSavedPath] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  const routingRef = useRef(false);
 
   // Returning clients should never be forced through the service-selection
   // gateway again. The selected service is persisted in Firestore as
@@ -39,19 +40,15 @@ const OnboardingGateway = ({ navigate }) => {
         const savedPath = data.primary_path || data.studentTrack;
         const targetPath = SAVED_PATHS[savedPath];
 
-        if (!cancelled && targetPath) {
+        if (!cancelled && targetPath && targetPath !== window.location.pathname && !routingRef.current) {
+          routingRef.current = true;
           console.log('[ROUTING] Returning client detected. Restoring saved path:', savedPath);
-          // CareerStudentView, PsychStudentView and SENStudentView are lazy
-          // routes. The generic /dashboard gateway is intentionally not wrapped
-          // in a Suspense boundary in the legacy router, so a client-side push
-          // can briefly render nothing while the lazy module suspends. A hard
-          // route replacement here is deterministic and also removes the
-          // intermediate /dashboard gateway from browser history.
-          if (typeof window !== 'undefined') {
-            window.location.replace(targetPath);
-          } else {
-            navigate(targetPath);
-          }
+          // The app now has a global Suspense boundary, so restore the saved
+          // workspace through the existing SPA router. Avoid window.location
+          // replacement here: a hard reload remounts this gateway and can cause
+          // repeated /dashboard -> saved-path cycles before the parent router
+          // settles. navigate() updates App.currentPath synchronously.
+          navigate(targetPath);
           return;
         }
       } catch (error) {
