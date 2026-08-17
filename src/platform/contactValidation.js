@@ -1,7 +1,7 @@
 export const MOBILE_NUMBER_REGEX = /^[6-9][0-9]{9}$/;
 
 export function normaliseMobileNumber(value) {
-  return String(value ?? '').replace(/\s+/g, '');
+  return String(value ?? '').replace(/\s+/g, '').replace(/^\+91/, '');
 }
 
 export function validateMobileNumber(value) {
