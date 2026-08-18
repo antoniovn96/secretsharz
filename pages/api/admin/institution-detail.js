@@ -1,5 +1,6 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { isStudentProfile, getStudentPath } from '../../../src/platform/studentRecordModel.js';
+import { normaliseInstitutionServices } from '../../../src/institution/institutionServices.js';
 
 function bearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization;
@@ -33,12 +34,24 @@ function publicUser(doc) {
     institutionId: data.institutionId || data.institutionID || '',
     institutionName: data.institutionName || '',
     parentUid: data.parentUid || data.parentId || data.parent?.uid || null,
+    parentUids: Array.isArray(data.parentUids) ? data.parentUids : [],
+    parentIds: Array.isArray(data.parentIds) ? data.parentIds : [],
+    linkedParentIds: Array.isArray(data.linkedParentIds) ? data.linkedParentIds : [],
     assignedStaff: data.assignedStaff || null,
     phone: data.phone || data.contactNumber || '',
   };
 }
 
 function unique(values) { return [...new Set(values.filter(Boolean).map(String))]; }
+
+function getStudentParentIds(student) {
+  return unique([
+    student.parentUid,
+    ...(Array.isArray(student.parentUids) ? student.parentUids : []),
+    ...(Array.isArray(student.parentIds) ? student.parentIds : []),
+    ...(Array.isArray(student.linkedParentIds) ? student.linkedParentIds : []),
+  ]);
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') { res.setHeader('Allow', 'GET'); return res.status(405).json({ error: 'Method not allowed.' }); }
@@ -53,10 +66,11 @@ export default async function handler(req, res) {
 
     const institution = institutionSnap.data() || {};
     const usersSnapshot = await db.collection('users').where('institutionId', '==', institutionId).limit(5000).get();
-    const users = usersSnapshot.docs.map(publicUser);
-    const students = users.filter(user => isStudentProfile(usersSnapshot.docs.find(doc => doc.id === user.id)?.data() || {}));
+    const rawUsers = usersSnapshot.docs.map(doc => ({ doc, data: doc.data() || {} }));
+    const users = rawUsers.map(({ doc }) => publicUser(doc));
+    const students = rawUsers.filter(({ data }) => isStudentProfile(data)).map(({ doc }) => publicUser(doc));
 
-    const parentIds = unique(students.flatMap(student => [student.parentUid]));
+    const parentIds = unique(students.flatMap(getStudentParentIds));
     const professionalIds = unique(students.flatMap(student => {
       const staff = student.assignedStaff || {};
       return [staff.careerId, staff.psychologistId, staff.psychologyId, staff.senId, staff.educatorId];
@@ -67,10 +81,8 @@ export default async function handler(req, res) {
     const parents = parentDocs.filter(doc => doc.exists).map(publicUser);
     const professionals = professionalDocs.filter(doc => doc.exists).map(publicUser);
 
-    const services = institution.licenses?.services || institution.services || {};
-    const serviceFlags = Array.isArray(services)
-      ? Object.fromEntries(services.map(service => [String(service).toLowerCase(), true]))
-      : Object.fromEntries(Object.entries(services).map(([key, value]) => [String(key).toLowerCase(), Boolean(value)]));
+    const entitledServices = normaliseInstitutionServices(institution.licenses?.services || institution.services);
+    const serviceFlags = Object.fromEntries(['career', 'wellbeing', 'sen'].map(service => [service, entitledServices.includes(service)]));
 
     const serviceBreakdown = ['career', 'wellbeing', 'sen'].map(service => {
       const serviceStudents = students.filter(student => String(student.primary_path || '').toLowerCase() === service || String(student.path || '').toLowerCase() === service);
@@ -80,8 +92,8 @@ export default async function handler(req, res) {
         if (service === 'wellbeing') return [staff.psychologistId || staff.psychologyId];
         return [staff.senId || staff.educatorId];
       }));
-      const serviceParents = unique(serviceStudents.map(student => student.parentUid));
-      return { service, students: serviceStudents.length, parents: serviceParents.length, professionals: serviceProfessionalIds.length, entitled: Boolean(serviceFlags[service]) };
+      const serviceParents = unique(serviceStudents.flatMap(getStudentParentIds));
+      return { service, students: serviceStudents.length, parents: serviceParents.length, professionals: serviceProfessionalIds.length, entitled: serviceFlags[service] };
     });
 
     return res.status(200).json({
