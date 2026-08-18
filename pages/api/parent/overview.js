@@ -1,4 +1,5 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { resolveStudentProfile } from '../../../src/platform/studentProfileResolver.js';
 
 function bearerToken(req){const header=req.headers.authorization||req.headers.Authorization;if(typeof header!=='string')return null;const match=header.match(/^Bearer\s+(.+)$/i);return match?match[1]:null;}
 function clean(value,max=180){return String(value||'').trim().slice(0,max);}
@@ -16,20 +17,25 @@ async function latestReport(db, childId, path){
   return null;
 }
 
-function sanitizeChild(data,id,report,relationship){
-  const path=data.primary_path||data.studentTrack||'wellbeing';
-  const careerDNA=data.careerDNA?.riasec||{};
+function activeService(profile){
+  if(profile?.services?.career?.status==='active') return 'career';
+  if(profile?.services?.sen?.status==='active') return 'sen';
+  return 'wellbeing';
+}
+
+function sanitizeChild(profile,id,report,relationship){
+  const careerDNA=profile.career?.profile?.riasec||profile.career?.riasec||{};
   const roadmap=report?.type==='career'?report.data:{};
   const sen=report?.type==='sen'?report.data:{};
   return {
     id,
-    name:clean(data.name||data.displayName||'Your child'),
-    classLevel:clean(data.classLevel||data.grade||''),
-    section:clean(data.section||''),
-    primary_path:path,
+    name:clean(profile.identity?.fullName||'Your child'),
+    classLevel:clean(profile.academic?.current?.grade||''),
+    section:clean(profile.academic?.current?.section||''),
+    primary_path:activeService(profile),
     guardianRelationship:relationshipLabel(relationship),
     career:{
-      hollandCode:clean(careerDNA.code||data.riasecCode||''),
+      hollandCode:clean(careerDNA.code||''),
       roadmapSummary:clean(roadmap?.phases?.phase2_explore||roadmap?.summary||'',1200),
     },
     sen:{
@@ -60,12 +66,20 @@ export default async function handler(req,res){
     const childSnap=await db.collection('users').doc(childId).get();
     if(!childSnap.exists)continue;
     const child=childSnap.data()||{};
-    const guardianRelationship=child.guardianRelationships?.[decoded.uid];
-    if(!guardianRelationship)continue;
-    const path=child.primary_path||child.studentTrack||'wellbeing';
+
+    // Authorization and field selection are delegated to the canonical
+    // Student Profile resolver. guardianRelationships remains a migration
+    // input for the resolver and is not a dashboard-facing source of truth.
+    const resolved=resolveStudentProfile(child,{role:'parent',uid:decoded.uid});
+    if(!resolved.allowed)continue;
+
+    const relationship=resolved.profile.family?.guardians?.find((guardian)=>guardian.accountId===decoded.uid)?.relationship
+      || parent.childRelationships?.[childId]
+      || 'guardian';
+    const path=activeService(resolved.profile);
     let report=null;
     try{report=await latestReport(db,childId,path);}catch(error){console.error('[parent/overview] report lookup failed:',error?.message||error);}
-    children.push(sanitizeChild(child,childId,report,guardianRelationship));
+    children.push(sanitizeChild(resolved.profile,childId,report,relationship));
   }
 
   return res.status(200).json({success:true,parent:{uid:decoded.uid,name:clean(parent.name||decoded.name||'Parent'),email:clean(parent.email||decoded.email||'',254),relationship:relationshipLabel(parent.parentRelationship),institutionId:parent.institutionId||null,institutionName:clean(parent.institutionName||'')},children});
