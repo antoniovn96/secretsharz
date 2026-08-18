@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-import { db } from '../../firebase';
 
 function relativeTime(date) {
   if (!date) return '';
@@ -39,58 +37,29 @@ const PsychCounsellorView = ({ userData, currentUser }) => {
       try {
         const uid = currentUser?.uid;
         if (!uid) return;
-
-        // Caseload is assignment-bound. The previous implementation queried
-        // every wellbeing student and therefore did not enforce a professional
-        // relationship boundary at the data-query level.
-        const usersRef = collection(db, 'users');
-        const [primaryAssignments, legacyAssignments] = await Promise.all([
-          getDocs(query(usersRef, where('assignedStaff.psychologistId', '==', uid))),
-          getDocs(query(usersRef, where('assignedStaff.psychologyId', '==', uid)))
-        ]);
-
-        const studentDocs = new Map();
-        [...primaryAssignments.docs, ...legacyAssignments.docs].forEach(docSnap => {
-          const data = docSnap.data();
-          if ((!data.role || data.role === 'student') && data.primary_path === 'wellbeing') {
-            studentDocs.set(docSnap.id, { uid: docSnap.id, ...data });
-          }
+        const token = await currentUser.getIdToken();
+        const response = await fetch('/api/professional/caseload?service=wellbeing', {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store'
         });
-
-        const fetchedStudents = [...studentDocs.values()].map(data => ({
-          uid: data.uid,
-          name: data.name || 'Unknown Student',
-          grade: data.grade || 'N/A',
-          lastSessionDate: data.lastSessionDate || null,
-          latestMood: null,
-        }));
-
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.error || 'Unable to load your assigned wellbeing caseload.');
+        const fetchedStudents = payload.students || [];
         setCaseload(fetchedStudents);
 
-        // Mood information is retrieved only for the psychologist's assigned
-        // students. No global wellbeing feed is exposed here.
         const fetchedAlerts = [];
         for (const student of fetchedStudents) {
-          const logsRef = collection(db, 'users', student.uid, 'mood_logs');
-          const logsSnapshot = await getDocs(query(logsRef, orderBy('timestamp', 'desc'), limit(1)));
-          if (!logsSnapshot.empty) {
-            const logDoc = logsSnapshot.docs[0];
-            const logData = logDoc.data();
-            if (logData.moodValue === 1 || logData.moodValue === 2) {
-              fetchedAlerts.push({
-                id: logDoc.id,
-                studentId: student.uid,
-                studentName: student.name,
-                moodValue: logData.moodValue,
-                moodLabel: logData.moodLabel,
-                timestamp: logData.timestamp ? logData.timestamp.toDate() : new Date(),
-                emoji: logData.moodValue === 1 ? '😢' : '😟'
-              });
-            }
-          }
+          try {
+            const moodResponse = await fetch(`/api/professional/student-mood?studentId=${encodeURIComponent(student.uid)}`, {
+              headers: { Authorization: `Bearer ${token}` },
+              cache: 'no-store'
+            });
+            if (!moodResponse.ok) continue;
+            const moodPayload = await moodResponse.json();
+            if (moodPayload?.alert) fetchedAlerts.push(moodPayload.alert);
+          } catch (_) {}
         }
-
-        fetchedAlerts.sort((a, b) => b.timestamp - a.timestamp);
+        fetchedAlerts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         setMoodAlerts(fetchedAlerts);
       } catch (error) {
         console.error('Error fetching assigned wellbeing caseload:', error);
@@ -183,7 +152,7 @@ const PsychCounsellorView = ({ userData, currentUser }) => {
                     <div className="space-y-4">
                       {moodAlerts.map(alert => (
                         <div key={alert.id} className={`p-4 rounded-xl border ${alert.moodValue === 1 ? 'bg-rose-50 border-rose-100' : 'bg-orange-50 border-orange-100'}`}>
-                          <div className="flex justify-between items-start mb-2"><span className="font-bold text-slate-800 text-sm">{getInitials(alert.studentName)}</span><span className="text-xs font-semibold text-slate-500">{relativeTime(alert.timestamp)}</span></div>
+                          <div className="flex justify-between items-start mb-2"><span className="font-bold text-slate-800 text-sm">{getInitials(alert.studentName)}</span><span className="text-xs font-semibold text-slate-500">{relativeTime(new Date(alert.timestamp))}</span></div>
                           <p className="text-sm text-slate-700 font-medium">Logged: <span className="px-2 py-0.5 bg-white rounded shadow-sm">{alert.moodLabel} {alert.emoji}</span></p>
                           <button className="mt-3 text-xs font-bold uppercase tracking-wide text-indigo-600 hover:text-indigo-800" onClick={() => { window.history.pushState({}, '', `/provider/psychologist/case/${alert.studentId}`); window.dispatchEvent(new PopStateEvent('popstate')); }}>Review Case File →</button>
                         </div>
