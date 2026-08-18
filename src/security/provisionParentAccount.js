@@ -22,6 +22,22 @@ export async function provisionParentAccount({adminAuth,adminDb,parentName,paren
   const childRelationships={...existingRelationships};studentIds.forEach(studentId=>{childRelationships[studentId]=relation;});
   await adminAuth.setCustomUserClaims(user.uid,{...existingClaims,role:'parent'});
   await parentRef.set({name,email,role:'parent',accountType:'parent',parentRelationship:relation,accountProvisioning:{method:provisioningMethod,status:'invited',firstProvisionedAt:existingProfile.accountProvisioning?.firstProvisionedAt||now,lastProvisionedAt:now},institutionId:institutionId||existingProfile.institutionId||null,institutionName:institutionName||existingProfile.institutionName||'',linkedRosterIds:mergedRosterIds,linkedStudentIds:mergedStudentIds,childRelationships,consentStatus:existingProfile.consentStatus||'pending',profileComplete:true,updatedAt:now,...(existingProfileSnap.exists?{}:{createdAt:now})},{merge:true});
+
+  // A student may have more than one legitimate parent/guardian account.
+  // Store the relationship on the child as a map keyed by parent UID rather
+  // than using a single parentUid field, which would incorrectly exclude a
+  // second parent such as the mother when the father is already linked.
+  for(const studentId of mergedStudentIds){
+    const studentRef=adminDb.collection('users').doc(studentId);
+    await adminDb.runTransaction(async transaction=>{
+      const studentSnap=await transaction.get(studentRef);
+      if(!studentSnap.exists)throw new Error('A linked student account no longer exists.');
+      const student=studentSnap.data()||{};
+      const existingGuardianRelationships=student.guardianRelationships&&typeof student.guardianRelationships==='object'?student.guardianRelationships:{};
+      transaction.set(studentRef,{guardianRelationships:{...existingGuardianRelationships,[user.uid]:relation}},{merge:true});
+    });
+  }
+
   const activationLink=await adminAuth.generatePasswordResetLink(email);
   return {uid:user.uid,name,email,created,activationLink};
 }
