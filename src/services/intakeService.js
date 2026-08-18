@@ -40,8 +40,8 @@ export const processIntake = async (userAuth, formData) => {
     const masterId = await generateMasterId();
     
     const batch = writeBatch(db);
-    
     const studentRef = doc(db, COLLECTIONS.STUDENTS, masterId);
+
     batch.set(studentRef, {
       userId: userAuth?.uid || '',
       profile: {
@@ -65,7 +65,17 @@ export const processIntake = async (userAuth, formData) => {
         referralSource: formData.intake?.referralSource || ''
       },
       activeDivisions: [],
-      assignedStaff: {}
+      // Canonical professional assignment fields. These are the fields used by
+      // server-side professional caseload checks and Firestore security rules.
+      assignedStaff: {
+        careerId: null,
+        psychId: null,
+        senId: null,
+        // Legacy display fields retained for existing admin UI compatibility.
+        career: null,
+        psych: null,
+        sen: null
+      }
     });
     
     const caseFileRef = doc(db, COLLECTIONS.CASE_FILES, masterId);
@@ -82,27 +92,53 @@ export const processIntake = async (userAuth, formData) => {
   }
 };
 
+/**
+ * Assign exactly one professional to a student's service pathway.
+ *
+ * Canonical fields:
+ *   career -> assignedStaff.careerId
+ *   psych  -> assignedStaff.psychId
+ *   sen    -> assignedStaff.senId
+ *
+ * Legacy fields (career/psych/sen) are written alongside the canonical fields
+ * so existing administrative screens continue to display assignments while
+ * the professional portals and security rules use the ID-specific fields.
+ */
 export const assignStaffToStudent = async (adminUser, studentId, division, staffId) => {
   try {
     if (!adminUser || adminUser.role !== 'super_admin') {
       throw new Error('Unauthorized: Only super admins can assign staff.');
     }
 
+    const canonicalFieldByDivision = {
+      career: 'careerId',
+      psych: 'psychId',
+      sen: 'senId'
+    };
+
+    if (!canonicalFieldByDivision[division]) {
+      throw new Error('Invalid professional division. Choose career, psych, or sen.');
+    }
+
     await runTransaction(db, async (transaction) => {
       const studentRef = doc(db, COLLECTIONS.STUDENTS, studentId);
       const caseFileRef = doc(db, COLLECTIONS.CASE_FILES, studentId);
-
       const studentDoc = await transaction.get(studentRef);
+
       if (!studentDoc.exists()) {
         throw new Error(`Student document with ID ${studentId} does not exist.`);
       }
 
       const caseFileDoc = await transaction.get(caseFileRef);
-
       const studentData = studentDoc.data();
-      
-      const newAssignedStaff = { ...(studentData.assignedStaff || {}) };
-      newAssignedStaff[division] = staffId;
+      const existingAssignments = studentData.assignedStaff || {};
+      const canonicalField = canonicalFieldByDivision[division];
+
+      const newAssignedStaff = {
+        ...existingAssignments,
+        [canonicalField]: staffId,
+        [division]: staffId
+      };
 
       const activeDivisions = [...(studentData.activeDivisions || [])];
       if (!activeDivisions.includes(division)) {
@@ -111,7 +147,7 @@ export const assignStaffToStudent = async (adminUser, studentId, division, staff
 
       const updates = {
         assignedStaff: newAssignedStaff,
-        activeDivisions: activeDivisions
+        activeDivisions
       };
 
       if (studentData.status === 'onboarding') {
@@ -129,8 +165,7 @@ export const assignStaffToStudent = async (adminUser, studentId, division, staff
       };
 
       if (caseFileDoc.exists()) {
-        const history = [...(caseFileDoc.data().history || [])];
-        history.push(historyEntry);
+        const history = [...(caseFileDoc.data().history || []), historyEntry];
         transaction.update(caseFileRef, { history });
       } else {
         transaction.set(caseFileRef, {
