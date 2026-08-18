@@ -2,6 +2,9 @@ import { getAdminFirestore } from '../../../../src/security/firebaseAdmin.js';
 import { authorizeProfessionalStudent } from '../../../../src/security/authorizeProfessionalStudent.js';
 import { resolveStudentProfile } from '../../../../src/platform/studentProfileResolver.js';
 
+const ALLOWED_PHASES = ['phase1_unlock', 'phase2_explore', 'phase3_expand', 'phase4_inspire', 'phase5_ignite'];
+const ALLOWED_STATUS = ['Draft', 'Published'];
+
 export default async function handler(req, res) {
   if (!['GET', 'POST'].includes(req.method)) {
     res.setHeader('Allow', 'GET, POST');
@@ -26,19 +29,26 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     const phases = req.body?.phases && typeof req.body.phases === 'object' ? req.body.phases : {};
-    const allowedKeys = ['phase1_unlock', 'phase2_explore', 'phase3_expand', 'phase4_inspire', 'phase5_ignite'];
-    const cleanPhases = Object.fromEntries(allowedKeys.map(key => [key, String(phases[key] || '').trim().slice(0, 5000)]));
-    if (!Object.values(cleanPhases).some(Boolean)) return res.status(400).json({ error: 'At least one roadmap phase is required.' });
+    const cleanPhases = Object.fromEntries(
+      ALLOWED_PHASES.map(key => [key, String(phases[key] || '').trim().slice(0, 5000)])
+    );
+    if (!Object.values(cleanPhases).some(Boolean)) {
+      return res.status(400).json({ error: 'At least one roadmap phase is required.' });
+    }
 
+    // Draft is the safe default. The caller may explicitly request Published
+    // when the existing workflow intentionally publishes on save.
+    const requestedStatus = String(req.body?.status || 'Draft').trim();
+    const status = ALLOWED_STATUS.includes(requestedStatus) ? requestedStatus : 'Draft';
     const now = new Date().toISOString();
     const docRef = await roadmapRef.add({
       providerId: authResult.viewerId,
-      status: 'Published',
+      status,
       phases: cleanPhases,
       createdAt: now,
       updatedAt: now,
     });
-    return res.status(201).json({ ok: true, id: docRef.id });
+    return res.status(201).json({ ok: true, id: docRef.id, status });
   }
 
   const snapshot = await roadmapRef.get();
