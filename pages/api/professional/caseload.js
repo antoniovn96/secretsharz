@@ -6,6 +6,8 @@ const CONFIG = Object.freeze({
   sen: { role: 'educator', collection: 'users', assignmentFields: ['assignedStaff.senId', 'assignedStaff.educatorId'], path: 'sen' },
 });
 
+const FOUNDER_EMAIL = 'antonio.antonio.noronha@gmail.com';
+
 function bearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization;
   if (typeof header !== 'string') return null;
@@ -37,6 +39,37 @@ function cleanStudent(id, data, service) {
   };
 }
 
+async function getAuthorisedInstitutionStudentIds(db, professional, service) {
+  const institutionIds = Array.isArray(professional?.institutionIds)
+    ? [...new Set(professional.institutionIds.map(String).filter(Boolean))]
+    : [];
+
+  if (!institutionIds.length) return new Set();
+
+  const allowed = new Set();
+  await Promise.all(institutionIds.map(async institutionId => {
+    const institutionSnap = await db.collection('institutions').doc(institutionId).get();
+    if (!institutionSnap.exists) return;
+
+    const institution = institutionSnap.data() || {};
+    const services = Array.isArray(institution.services)
+      ? institution.services
+      : Array.isArray(institution.licenses?.services)
+        ? institution.licenses.services
+        : [];
+    if (!services.includes(service)) return;
+
+    const rosterSnap = await db.collection('institutions').doc(institutionId).collection('roster').get();
+    rosterSnap.docs.forEach(rosterDoc => {
+      const roster = rosterDoc.data() || {};
+      const studentUid = roster.claimedBy || roster.userUid || roster.studentUid;
+      if (studentUid) allowed.add(String(studentUid));
+    });
+  }));
+
+  return allowed;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -57,7 +90,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Invalid or expired authentication token.' });
   }
 
-  const isFounder = decoded.email_verified === true && decoded.email === 'antonio.antonio.noronha@gmail.com';
+  const isFounder = decoded.email_verified === true && decoded.email?.toLowerCase() === FOUNDER_EMAIL;
   const role = decoded.role || '';
   if (!isFounder && role !== 'super_admin' && role !== config.role) {
     return res.status(403).json({ error: 'This professional account is not authorised for the requested service.' });
@@ -65,12 +98,29 @@ export default async function handler(req, res) {
 
   try {
     const firestore = getAdminFirestore();
+
+    // Super Admin keeps global visibility. Professionals are deliberately
+    // fail-closed: their institution assignment must exist before any student
+    // can enter their caseload.
+    let professionalProfile = null;
+    let authorisedInstitutionStudentIds = null;
+    if (!isFounder && role !== 'super_admin') {
+      const professionalSnap = await firestore.collection('users').doc(decoded.uid).get();
+      if (!professionalSnap.exists) return res.status(403).json({ error: 'Professional profile not found.' });
+      professionalProfile = professionalSnap.data() || {};
+      if (professionalProfile.role !== config.role && professionalProfile.professionalRole !== config.role) {
+        return res.status(403).json({ error: 'Professional role is not authorised for the requested service.' });
+      }
+      authorisedInstitutionStudentIds = await getAuthorisedInstitutionStudentIds(firestore, professionalProfile, service);
+    }
+
     const snapshot = await firestore.collection(config.collection).get();
     const rows = [];
 
     snapshot.docs.forEach(doc => {
       const data = doc.data() || {};
       if (!assigned(data, decoded.uid, config.assignmentFields)) return;
+      if (authorisedInstitutionStudentIds && !authorisedInstitutionStudentIds.has(doc.id)) return;
       if (config.collection === 'users' && data.role && data.role !== 'student') return;
       if (config.collection === 'users' && service === 'wellbeing' && data.primary_path !== 'wellbeing') return;
       if (config.collection === 'users' && service === 'sen' && data.primary_path !== 'sen') return;
