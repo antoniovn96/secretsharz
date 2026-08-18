@@ -15,7 +15,7 @@ function safeAuthError(error) {
   return { code: error?.code || null, message: error?.message || 'Unknown Firebase Auth verification error', expectedProjectId: getAdminApp()?.options?.projectId || null };
 }
 
-function publicStudentRecord(doc) {
+function studentRecord(doc) {
   const data = doc.data() || {};
   return {
     id: doc.id,
@@ -24,6 +24,7 @@ function publicStudentRecord(doc) {
     grade: data.grade || data.gradeOrCourse || '',
     institutionName: data.institutionName || data.schoolName || '',
     path: getStudentPath(data),
+    parentUid: data.parentUid || data.parentId || '',
   };
 }
 
@@ -71,17 +72,16 @@ export default async function handler(req, res) {
     const snapshot = await getAdminFirestore().collection('users').get();
     const students = snapshot.docs
       .filter(doc => isStudentProfile(doc.data() || {}))
-      .map(publicStudentRecord)
+      .map(studentRecord)
       .filter(student => String(student.path || '').toLowerCase() === PATHS[service].toLowerCase());
 
     const studentById = new Map(students.map(student => [student.id, student]));
     const childrenByParent = new Map();
     students.forEach(student => {
-      const parentId = student.parentUid || student.parentId;
-      if (!parentId) return;
-      const children = childrenByParent.get(parentId) || [];
+      if (!student.parentUid) return;
+      const children = childrenByParent.get(student.parentUid) || [];
       children.push(student);
-      childrenByParent.set(parentId, children);
+      childrenByParent.set(student.parentUid, children);
     });
 
     const parents = snapshot.docs
