@@ -7,6 +7,7 @@ import ProfessionalDetailPanel from './ProfessionalDetailPanel';
 import AddProfessionalModal from './AddProfessionalModal';
 import EditProfessionalModal from './EditProfessionalModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+import ProfessionalInstitutionAssignment from './ProfessionalInstitutionAssignment';
 
 const PROFESSIONAL_ROLES = ['counsellor', 'career_counsellor', 'psychologist', 'educator'];
 
@@ -19,6 +20,7 @@ const ProfessionalDirectoryTab = ({ theme = 'light' }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [assignmentTarget, setAssignmentTarget] = useState(null);
   const [notification, setNotification] = useState(null);
   const dark = theme === 'dark';
 
@@ -47,6 +49,11 @@ const ProfessionalDirectoryTab = ({ theme = 'light' }) => {
     setDeleteTarget(null);
   };
   const handleCreateSuccess = newUser => showNotification(`${newUser.name} has been added to the professional directory.`);
+  const handleAssignmentSaved = updated => {
+    setProfessionals(current => current.map(item => item.id === updated.id ? { ...item, ...updated } : item));
+    setSelectedProfessional(current => current?.id === updated.id ? { ...current, ...updated } : current);
+    showNotification(`${updated.name || 'Professional'} institution assignments updated.`);
+  };
 
   return (
     <div className="space-y-6">
@@ -70,12 +77,13 @@ const ProfessionalDirectoryTab = ({ theme = 'light' }) => {
         <span className={`text-xs font-medium ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Real-time updates active</span>
       </div>
 
-      <ProfessionalDirectoryTable users={professionals} isLoading={isLoading} onViewDetails={handleViewDetails} onEdit={openEdit} onDelete={handleDelete} theme={theme} />
+      <ProfessionalDirectoryTable users={professionals} isLoading={isLoading} onViewDetails={handleViewDetails} onEdit={openEdit} onDelete={handleDelete} onAssignInstitutions={setAssignmentTarget} theme={theme} />
 
       <ProfessionalDetailPanel professional={selectedProfessional} isOpen={isDetailPanelOpen} onClose={() => { setIsDetailPanelOpen(false); setSelectedProfessional(null); }} onEdit={professional => { setIsDetailPanelOpen(false); openEdit(professional); }} />
       <AddProfessionalModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={handleCreateSuccess} />
       <EditProfessionalModal professional={editingProfessional} isOpen={isEditModalOpen} onClose={() => { setIsEditModalOpen(false); setEditingProfessional(null); }} onSuccess={handleEditSuccess} />
       <DeleteConfirmationModal user={deleteTarget} isOpen={!!deleteTarget} onClose={() => setDeleteTarget(null)} onSuccess={handleDeleteSuccess} />
+      <ProfessionalInstitutionAssignment professional={assignmentTarget} theme={theme} isOpen={!!assignmentTarget} onClose={() => setAssignmentTarget(null)} onSaved={handleAssignmentSaved} />
 
       {notification && <div className="fixed bottom-6 right-6 z-[70]"><div className={`flex items-center gap-3 px-5 py-4 rounded-lg shadow-2xl ${dark ? 'bg-white text-black' : 'bg-black text-white'}`}><CheckCircle className="w-5 h-5" /><p className="font-semibold">{notification}</p></div></div>}
     </div>
