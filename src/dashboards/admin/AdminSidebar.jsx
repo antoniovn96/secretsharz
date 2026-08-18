@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { LayoutDashboard, Settings, Shield, LogOut, ChevronDown, Activity, GraduationCap, UserCheck, Building2, Tag, TicketPercent, CreditCard, ShieldCheck, HeartHandshake, BriefcaseBusiness, Brain, Sun, Moon, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Settings, Shield, LogOut, ChevronDown, GraduationCap, UserCheck, Building2, Tag, TicketPercent, CreditCard, ShieldCheck, HeartHandshake, BriefcaseBusiness, Brain, Sun, Moon, ExternalLink, Stethoscope } from 'lucide-react';
+
+const PROFESSIONAL_DASHBOARDS = [
+  { id: 'professionalCareer', label: 'Career Counsellor', icon: BriefcaseBusiness, path: '/provider/career' },
+  { id: 'professionalPsychology', label: 'Psychology Counsellor', icon: Stethoscope, path: '/provider/psychologist' },
+  { id: 'professionalSEN', label: 'SEN Teacher', icon: Brain, path: '/provider/educator' }
+];
 
 const SERVICE_GROUPS = [
   { id: 'career', label: 'Career Guidance', icon: BriefcaseBusiness, children: [{ id: 'careerStudents', label: 'Students' }, { id: 'careerParents', label: 'Parents' }, { id: 'careerInstitutions', label: 'Institutions' }] },
@@ -28,6 +34,7 @@ export default function AdminSidebar({ activeTab, onTabChange, user, onLogout, t
   useEffect(() => { if (typeof window !== 'undefined') window.localStorage.setItem('secretsharz_admin_service', openService); }, [openService]);
 
   const goToWebsite = () => { if (typeof window !== 'undefined') window.location.href = '/'; };
+  const goToProfessionalDashboard = (path) => { if (typeof window !== 'undefined') window.location.href = path; };
   const dark = theme === 'dark';
 
   return <aside className={`w-[292px] flex flex-col h-full shrink-0 border-r transition-colors duration-300 ${dark ? 'bg-[#0b1020] border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
@@ -40,9 +47,14 @@ export default function AdminSidebar({ activeTab, onTabChange, user, onLogout, t
     </div>
 
     <nav className="flex-1 py-5 px-3 overflow-y-auto">
-      <p className={`px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-slate-600' : 'text-slate-400'}`}>Workspace</p>
+      <p className={`px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-slate-600' : 'text-slate-400'}`}>My Dashboard</p>
       <div className="space-y-1">
-        {NAV_ITEMS.slice(0, 2).map(item => { const Icon = item.icon; const active = activeTab === item.id; return <button key={item.id} onClick={() => onTabChange(item.id)} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${active ? (dark ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-950') : (dark ? 'text-slate-400 hover:text-white hover:bg-white/[0.04]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50')}`}><Icon className={`w-[18px] h-[18px] ${active ? 'text-emerald-500' : ''}`} /><span className="font-semibold text-[13px] flex-1 text-left">{item.label}</span>{active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}</button>; })}
+        <button onClick={() => onTabChange('overview')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${activeTab === 'overview' ? (dark ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-950') : (dark ? 'text-slate-400 hover:text-white hover:bg-white/[0.04]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50')}`}><LayoutDashboard className={`w-[18px] h-[18px] ${activeTab === 'overview' ? 'text-emerald-500' : ''}`} /><span className="font-semibold text-[13px] flex-1 text-left">Super Admin</span>{activeTab === 'overview' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}</button>
+      </div>
+
+      <p className={`px-3 mt-7 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-slate-600' : 'text-slate-400'}`}>Professional Dashboards</p>
+      <div className="space-y-1">
+        {PROFESSIONAL_DASHBOARDS.map(item => { const Icon = item.icon; return <button key={item.id} onClick={() => goToProfessionalDashboard(item.path)} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${dark ? 'text-slate-400 hover:text-white hover:bg-white/[0.04]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50'}`}><Icon className="w-[18px] h-[18px] text-emerald-500" /><span className="font-semibold text-[13px] flex-1 text-left">{item.label}</span><ExternalLink className={`w-3.5 h-3.5 ${dark ? 'text-slate-600' : 'text-slate-300'}`} /></button>; })}
       </div>
 
       <p className={`px-3 mt-7 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-slate-600' : 'text-slate-400'}`}>Services</p>
@@ -53,8 +65,8 @@ export default function AdminSidebar({ activeTab, onTabChange, user, onLogout, t
         </div>; })}
       </div>
 
-      <p className={`px-3 mt-7 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-slate-600' : 'text-slate-400'}`}>Global Management</p>
-      <div className="space-y-1">{NAV_ITEMS.slice(2).map(item => { const Icon = item.icon; const active = activeTab === item.id; return <button key={item.id} onClick={() => onTabChange(item.id)} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${active ? (dark ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-950') : (dark ? 'text-slate-400 hover:text-white hover:bg-white/[0.04]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50')}`}><Icon className={`w-[18px] h-[18px] ${active ? 'text-emerald-500' : ''}`} /><span className="font-semibold text-[13px] flex-1 text-left">{item.label}</span>{active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}</button>; })}</div>
+      <p className={`px-3 mt-7 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-slate-600' : 'text-slate-400'}`}>Management</p>
+      <div className="space-y-1">{NAV_ITEMS.slice(1).map(item => { const Icon = item.icon; const active = activeTab === item.id; return <button key={item.id} onClick={() => onTabChange(item.id)} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${active ? (dark ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-950') : (dark ? 'text-slate-400 hover:text-white hover:bg-white/[0.04]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50')}`}><Icon className={`w-[18px] h-[18px] ${active ? 'text-emerald-500' : ''}`} /><span className="font-semibold text-[13px] flex-1 text-left">{item.label}</span>{active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}</button>; })}</div>
     </nav>
 
     <div className={`mx-3 mb-3 px-3.5 py-3 rounded-xl border ${dark ? 'bg-emerald-500/[0.04] border-slate-800' : 'bg-emerald-50/60 border-emerald-100'}`}><div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"/><span className={`text-[11px] font-semibold ${dark ? 'text-slate-400' : 'text-slate-600'}`}>All systems operational</span></div></div>
