@@ -3,6 +3,8 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { db, auth } from '../../firebase';
 import InstitutionDashboard from '../institution/InstitutionDashboard';
+import StudentOnboardingWizard from '../../components/onboarding/StudentOnboardingWizard';
+import { getOnboardingRoute } from '../../platform/onboardingGateway';
 
 const SAVED_PATHS = {
   career: '/dashboard/career',
@@ -20,35 +22,108 @@ const OnboardingGateway = ({ navigate }) => {
   const [isCheckingSavedPath, setIsCheckingSavedPath] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [institutionUserData, setInstitutionUserData] = useState(null);
+  const [studentState, setStudentState] = useState(null);
+  const [studentProfile, setStudentProfile] = useState(null);
   const routingRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
-    const restoreSavedPath = async () => {
+
+    const restoreAndResolve = async () => {
       const user = auth.currentUser;
-      if (!user) { if (!cancelled) setIsCheckingSavedPath(false); return; }
+      if (!user) {
+        if (!cancelled) setIsCheckingSavedPath(false);
+        return;
+      }
+
       try {
         const snapshot = await getDoc(doc(db, 'users', user.uid));
-        if (!snapshot.exists()) return;
+        if (!snapshot.exists()) {
+          if (!cancelled) {
+            setStudentState(getOnboardingRoute({ rawStudent: null }));
+            setStudentProfile(null);
+          }
+          return;
+        }
+
         const data = snapshot.data() || {};
+
         if (data.role === 'institution_member' && data.institutionRole === 'coordinator') {
           if (!cancelled) setInstitutionUserData(data);
           return;
         }
-        const savedPath = data.primary_path || data.studentTrack;
-        const targetPath = SAVED_PATHS[savedPath];
-        if (!cancelled && targetPath && targetPath !== window.location.pathname && !routingRef.current) {
-          routingRef.current = true;
-          console.log('[ROUTING] Returning client detected. Restoring saved path:', savedPath);
-          navigate(targetPath);
-          return;
+
+        const route = getOnboardingRoute({
+          rawStudent: { id: snapshot.id, ...data },
+          isInstitutionProvisioned: Boolean(data.institutionId || data.institutionID),
+        });
+
+        if (route.state === 'complete') {
+          const savedPath = data.primary_path || data.studentTrack;
+          const targetPath = SAVED_PATHS[savedPath];
+          if (!cancelled && targetPath && targetPath !== window.location.pathname && !routingRef.current) {
+            routingRef.current = true;
+            setRoutingState(savedPath);
+            navigate(targetPath);
+            return;
+          }
         }
-      } catch (error) { console.error('[ROUTING] Failed to restore saved client path:', error); }
-      finally { if (!cancelled) setIsCheckingSavedPath(false); }
+
+        if (!cancelled) {
+          setStudentState(route);
+          setStudentProfile(data.studentProfile || data);
+        }
+      } catch (error) {
+        console.error('[ONBOARDING] Failed to resolve student onboarding state:', error);
+        if (!cancelled) setErrorMsg('We could not restore your profile. Please try again.');
+      } finally {
+        if (!cancelled) setIsCheckingSavedPath(false);
+      }
     };
-    restoreSavedPath();
+
+    restoreAndResolve();
     return () => { cancelled = true; };
-  }, []);
+  }, [navigate]);
+
+  const handleMigration = async () => {
+    const user = auth.currentUser;
+    if (!user) throw new Error('No logged in user found.');
+    const token = await user.getIdToken();
+    const response = await fetch('/api/student/migrate-profile', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentId: user.uid }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Unable to migrate your profile.');
+    return payload.studentProfile;
+  };
+
+  const handleOnboardingReady = async () => {
+    setIsRouting(true);
+    setErrorMsg('');
+    try {
+      let profile = studentProfile || {};
+      if (studentState?.needsMigration) {
+        profile = await handleMigration();
+      }
+      setStudentProfile(profile);
+      setStudentState(previous => ({ ...(previous || {}), state: 'resume', needsMigration: false }));
+    } catch (error) {
+      console.error('[ONBOARDING] Migration failed:', error);
+      setErrorMsg(error.message || 'We could not prepare your profile. Please try again.');
+    } finally {
+      setIsRouting(false);
+    }
+  };
+
+  const handleComplete = async (profile) => {
+    const selected = Object.entries(profile?.studentProfile?.services || {})
+      .filter(([, value]) => value?.status === 'active' || value === true)
+      .map(([key]) => key);
+    const target = selected.includes('career') ? '/dashboard/career' : selected.includes('wellbeing') ? '/dashboard/wellbeing' : selected.includes('sen') ? '/dashboard/sen' : '/dashboard';
+    navigate(target);
+  };
 
   const handleDivisionSelect = async (divisionName) => {
     if (isRouting) return;
@@ -69,9 +144,19 @@ const OnboardingGateway = ({ navigate }) => {
 
   const handleLogout = async () => { await signOut(auth); navigate('/'); };
 
-  if (isCheckingSavedPath) return <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6"><div className="text-center"><div className="text-4xl mb-4">✨</div><p className="text-lg font-semibold text-slate-700">Taking you to your space…</p><p className="text-sm text-slate-500 mt-1">Checking your saved preferences.</p></div></div>;
+  if (isCheckingSavedPath) return <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6"><div className="text-center"><div className="text-4xl mb-4">✨</div><p className="text-lg font-semibold text-slate-700">Restoring your Secret Sharz profile…</p><p className="text-sm text-slate-500 mt-1">Checking what information we already have.</p></div></div>;
 
   if (institutionUserData) return <InstitutionDashboard currentUser={auth.currentUser} userData={institutionUserData} onBack={() => navigate('/')} onLogout={handleLogout} />;
+
+  if (errorMsg && !studentState) return <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6"><div className="max-w-lg rounded-2xl bg-white p-8 shadow-xl text-center"><div className="text-4xl mb-3">⚠️</div><h1 className="text-xl font-bold text-slate-900">We couldn't restore your profile</h1><p className="text-slate-600 mt-2">{errorMsg}</p><button className="mt-6 rounded-xl bg-slate-900 px-5 py-3 text-white font-bold" onClick={() => window.location.reload()}>Try again</button></div></div>;
+
+  if (studentState?.state === 'migrate') {
+    return <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6"><div className="max-w-xl w-full rounded-3xl bg-white shadow-2xl p-8"><div className="text-4xl mb-4">✨</div><h1 className="text-3xl font-extrabold text-slate-900">Let's update your Secret Sharz profile</h1><p className="text-slate-600 mt-3 leading-7">We found information from your earlier profile. We'll preserve it and only ask you for details that are missing.</p>{errorMsg && <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{errorMsg}</div>}<button disabled={isRouting} onClick={handleOnboardingReady} className="mt-6 rounded-xl bg-indigo-600 px-6 py-3 text-white font-bold">{isRouting ? 'Preparing your profile…' : 'Continue →'}</button></div></div>;
+  }
+
+  if (studentState?.state === 'new' || studentState?.state === 'resume' || (studentState && studentState.state !== 'complete')) {
+    return <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6"><StudentOnboardingWizard initialProfile={studentProfile || {}} institutionProvisioned={Boolean(studentState?.route === 'student-onboarding' && studentProfile?.institutionId)} onComplete={handleComplete} /></div>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative">
