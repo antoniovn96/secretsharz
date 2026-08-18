@@ -6,12 +6,9 @@ import {
   calculateAge,
   ageBandFor,
   PATHWAYS,
-} from './careerAssessmentBlueprint';
-import { getBundleByFamilies as getCanonicalBundleByFamilies, getTestBundle, TEST_BUNDLES } from './testBundleCatalogue';
+} from './careerAssessmentBlueprint.js';
+import { getBundleByFamilies as getCanonicalBundleByFamilies, getTestBundle, TEST_BUNDLES } from './testBundleCatalogue.js';
 
-// Context is deliberately separate from the paid assessment families. It is
-// collected for every pathway so the selected test(s) can be interpreted in
-// the student's/professional's real situation without silently adding tests.
 export const CONTEXT_FIELDS = Object.freeze([
   'dob', 'age', 'ageBand', 'educationStage', 'board', 'className', 'stream',
   'academicAverage', 'institutionName', 'likedSubjects', 'dislikedSubjects',
@@ -67,58 +64,13 @@ export const SKILL_ITEMS = Object.freeze([
   scaleMax: 5,
 })));
 
-const FAMILY_ITEMS = Object.freeze({
-  interest: RIASEC_ITEMS,
-  personality: BIG5_ITEMS,
-  aptitude_skills: [...REASONING_ITEMS, ...SKILL_ITEMS],
-  work_values: VALUE_ITEMS,
-  learning: LEARNING_ITEMS,
-});
-
-export function getSelectedFamilyIds(bundleId) {
-  const bundle = getTestBundle(bundleId);
-  return bundle ? [...bundle.familyIds] : [];
-}
-
-export function getItemsForFamilies(familyIds = []) {
-  const ids = [...new Set(familyIds)];
-  return ids.flatMap(id => FAMILY_ITEMS[id] || []);
-}
-
-export function getItemsForBundle(bundleId) {
-  return getItemsForFamilies(getSelectedFamilyIds(bundleId));
-}
-
-// Compatibility export for assessment UIs. The canonical bundle catalogue is
-// the single source of truth; this re-export keeps older consumers on the
-// selection module working without duplicating bundle-generation logic.
-export function getBundleByFamilies(familyIds = []) {
-  return getCanonicalBundleByFamilies(familyIds);
-}
-
-export function getDefaultBundle() {
-  return TEST_BUNDLES.find(bundle => bundle.familyCount === 5) || TEST_BUNDLES[TEST_BUNDLES.length - 1];
-}
-
-export function resolveBundle(bundleId) {
-  return getTestBundle(bundleId) || getDefaultBundle();
-}
-
-export function prepareContext(intake = {}) {
-  const age = intake.age || calculateAge(intake.dob);
-  return {
-    ...intake,
-    age: age == null ? null : Number(age),
-    ageBand: intake.ageBand || (age == null ? null : ageBandFor(Number(age))),
-  };
-}
-
-export function pathwayAllowsBundle(pathway, bundle) {
-  if (!bundle) return false;
-  if (pathway === PATHWAYS.HR) return bundle.familyIds.some(id => ['personality', 'aptitude_skills', 'work_values', 'learning'].includes(id));
-  return bundle.familyIds.length > 0;
-}
-
-export const TEST_FAMILY_ITEM_COUNTS = Object.freeze(
-  Object.fromEntries(Object.entries(FAMILY_ITEMS).map(([key, items]) => [key, items.length]))
-);
+const FAMILY_ITEMS = Object.freeze({ interest: RIASEC_ITEMS, personality: BIG5_ITEMS, aptitude_skills: [...REASONING_ITEMS, ...SKILL_ITEMS], work_values: VALUE_ITEMS, learning: LEARNING_ITEMS });
+export function getSelectedFamilyIds(bundleId) { const bundle = getTestBundle(bundleId); return bundle ? [...bundle.familyIds] : []; }
+export function getItemsForFamilies(familyIds = []) { const ids = [...new Set(familyIds)]; return ids.flatMap(id => FAMILY_ITEMS[id] || []); }
+export function getItemsForBundle(bundleId) { return getItemsForFamilies(getSelectedFamilyIds(bundleId)); }
+export function getBundleByFamilies(familyIds = []) { return getCanonicalBundleByFamilies(familyIds); }
+export function getDefaultBundle() { return TEST_BUNDLES.find(bundle => bundle.familyCount === 5) || TEST_BUNDLES[TEST_BUNDLES.length - 1]; }
+export function resolveBundle(bundleId) { return getTestBundle(bundleId) || getDefaultBundle(); }
+export function prepareContext(intake = {}) { const age = intake.age || calculateAge(intake.dob); return { ...intake, age: age == null ? null : Number(age), ageBand: intake.ageBand || (age == null ? null : ageBandFor(Number(age))) }; }
+export function pathwayAllowsBundle(pathway, bundle) { if (!bundle) return false; if (pathway === PATHWAYS.HR) return bundle.familyIds.some(id => ['personality','aptitude_skills','work_values','learning'].includes(id)); return bundle.familyIds.length > 0; }
+export const TEST_FAMILY_ITEM_COUNTS = Object.freeze(Object.fromEntries(Object.entries(FAMILY_ITEMS).map(([key, items]) => [key, items.length])));

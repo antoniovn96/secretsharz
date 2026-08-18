@@ -17,7 +17,8 @@ export const ASSIGNABLE_CLAIM_ROLES = Object.freeze([
   'career_counsellor',
   'psychologist',
   'educator',
-  'parent'
+  'parent',
+  'institution'
 ]);
 
 export const ADMIN_CLAIM_ROLES = Object.freeze(['super_admin']);

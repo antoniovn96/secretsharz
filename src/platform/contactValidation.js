@@ -1,11 +1,16 @@
 export const MOBILE_NUMBER_REGEX = /^[6-9][0-9]{9}$/;
 
 export function normaliseMobileNumber(value) {
-  return String(value ?? '').replace(/\s+/g, '');
+  return String(value ?? '').replace(/\s+/g, '').replace(/[^0-9]/g, '');
+}
+
+function localMobileNumber(value) {
+  const number = normaliseMobileNumber(value);
+  return number.length === 12 && number.startsWith('91') ? number.slice(2) : number;
 }
 
 export function validateMobileNumber(value) {
-  const number = normaliseMobileNumber(value);
+  const number = localMobileNumber(value);
   if (!number) return { valid: false, value: '', message: 'Enter your 10-digit mobile number.' };
   if (!/^\d+$/.test(number)) return { valid: false, value: number, message: 'Mobile numbers can contain digits only.' };
   if (number.length !== 10) return { valid: false, value: number, message: 'Mobile numbers must contain exactly 10 digits.' };
@@ -14,6 +19,6 @@ export function validateMobileNumber(value) {
 }
 
 export function formatMobileNumber(value) {
-  const number = normaliseMobileNumber(value);
+  const number = localMobileNumber(value);
   return number.length === 10 && /^\d+$/.test(number) ? `${number.slice(0, 5)} ${number.slice(5)}` : number;
 }

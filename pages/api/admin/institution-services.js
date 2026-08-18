@@ -19,12 +19,6 @@ async function requireAdmin(req) {
   return decoded;
 }
 
-function institutionRef(db, id) {
-  const cleanId = String(id || '').trim();
-  if (!cleanId) throw Object.assign(new Error('Institution ID is required.'), { statusCode: 400 });
-  return db.collection('institutions').doc(cleanId);
-}
-
 export default async function handler(req, res) {
   if (!['GET', 'PATCH'].includes(req.method)) {
     res.setHeader('Allow', 'GET, PATCH');
@@ -51,24 +45,16 @@ export default async function handler(req, res) {
     }
 
     const body = req.body || {};
-    const ref = institutionRef(db, body.institutionId);
+    const institutionId = String(body.institutionId || '').trim();
+    if (!institutionId) return res.status(400).json({ error: 'Institution ID is required.' });
+    const ref = db.collection('institutions').doc(institutionId);
     const snapshot = await ref.get();
     if (!snapshot.exists) return res.status(404).json({ error: 'Institution not found.' });
     const services = normaliseInstitutionServices(body.services);
     await ref.update({ 'licenses.services': services, updatedAt: new Date().toISOString() });
     const updated = await ref.get();
     const data = updated.data();
-    return res.status(200).json({
-      institution: {
-        id: updated.id,
-        name: data.name || '',
-        institutionCode: data.institutionCode || data.tenantCode || '',
-        status: data.status || 'pending',
-        services: normaliseInstitutionServices(data.licenses?.services || data.services),
-        licenses: data.licenses || {},
-        coordinator: data.coordinator || null,
-      }
-    });
+    return res.status(200).json({ institution: { id: updated.id, name: data.name || '', institutionCode: data.institutionCode || data.tenantCode || '', status: data.status || 'pending', services: normaliseInstitutionServices(data.licenses?.services || data.services), licenses: data.licenses || {}, coordinator: data.coordinator || null } });
   } catch (error) {
     return res.status(error.statusCode || 500).json({ error: error.message || 'Unable to manage institutional services.' });
   }

@@ -32,13 +32,31 @@ export default async function handler(req,res){
       if(record.status!=='available')throw Object.assign(new Error('This access code has already been used or is no longer active.'),{status:409});
       if(roster.claimedBy && roster.claimedBy!==decoded.uid)throw Object.assign(new Error('This student record is already linked to another account.'),{status:409});
 
+      let parentSnapshot=null;
+      if(roster.parentUid) parentSnapshot=await transaction.get(db.collection('users').doc(roster.parentUid));
+
       const now=new Date().toISOString();
       transaction.update(codeRef,{status:'redeemed',redeemedBy:decoded.uid,redeemedAt:now});
       transaction.set(rosterRef,{status:'claimed',claimedBy:decoded.uid,claimedAt:now,assessmentStatus:'not_started',reportStatus:'locked_until_completion'},{merge:true});
-      transaction.set(db.collection('users').doc(decoded.uid),{institutionId:record.institutionId,institutionName:record.institutionName,institutionRosterId:record.rosterId,institutionAccessCode:code,institutionAccess:{type:'licensed_assessment',status:'active',grantedAt:now}},{merge:true});
+      transaction.set(db.collection('users').doc(decoded.uid),{
+        institutionId:record.institutionId,
+        institutionName:record.institutionName,
+        institutionRosterId:record.rosterId,
+        institutionAccessCode:code,
+        institutionAccess:{type:'licensed_assessment',status:'active',grantedAt:now},
+        parentUid:roster.parentUid||null,
+        parentName:roster.parentName||null,
+        parentEmail:roster.parentEmail||null,
+      },{merge:true});
+
+      if(parentSnapshot?.exists){
+        const parent=parentSnapshot.data()||{};
+        const linkedStudentIds=Array.from(new Set([...(Array.isArray(parent.linkedStudentIds)?parent.linkedStudentIds:[]),decoded.uid]));
+        transaction.set(db.collection('users').doc(roster.parentUid),{linkedStudentIds,updatedAt:now},{merge:true});
+      }
       return {institutionId:record.institutionId,institutionName:record.institutionName,roster:{...roster,fullName:roster.fullName||'',className:roster.className||'',section:roster.section||''}};
     });
 
-    return res.status(200).json({success:true,institution:{id:result.institutionId,name:result.institutionName},student:{fullName:result.roster.fullName||'',className:result.roster.className||'',section:result.roster.section||''}});
+    return res.status(200).json({success:true,institution:{id:result.institutionId,name:result.institutionName},student:{fullName:result.roster.fullName||'',className:result.roster.className||'',section:result.roster.section||'',parentUid:result.roster.parentUid||null}});
   }catch(error){return res.status(error.status||500).json({error:error.message||'Unable to redeem institutional access code.'});}
 }
