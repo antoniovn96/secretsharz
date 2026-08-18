@@ -9,6 +9,9 @@ import SupportHub from '../src/SupportHub';
 import WayfinderPage from '../src/WayfinderPage';
 import SuperAdminView from '../src/dashboards/admin/SuperAdminView';
 import OnboardingGateway from '../src/dashboards/student/OnboardingGateway';
+import CareerStudentView from '../src/dashboards/student/CareerStudentView';
+import PsychStudentView from '../src/dashboards/student/PsychStudentView';
+import SENStudentView from '../src/dashboards/student/SENStudentView';
 import ParentPortalView from '../src/dashboards/parent/ParentPortalView';
 import InstitutionCareerDashboard from '../src/institution/InstitutionCareerDashboard';
 import InstitutionServiceDashboard from '../src/institution/InstitutionServiceDashboard';
@@ -37,18 +40,21 @@ export default function IndexPage() {
   const path=usePathname();
   const [currentUser,setCurrentUser]=useState(null);
   const [userData,setUserData]=useState(null);
+  const [authReady,setAuthReady]=useState(false);
   const [consentChecked,setConsentChecked]=useState(false);
   const [accountConsent,setAccountConsent]=useState(false);
 
   useEffect(()=>{
+    let cancelled=false;
     const unsubscribe=onAuthStateChanged(auth,async user=>{
-      setCurrentUser(user||null);setConsentChecked(false);
-      if(!user){setUserData(null);setAccountConsent(false);setConsentChecked(true);return;}
+      if(cancelled)return;
+      setCurrentUser(user||null);setConsentChecked(false);setAuthReady(false);
+      if(!user){setUserData(null);setAccountConsent(false);setConsentChecked(true);setAuthReady(true);return;}
       const isFounder=user.email?.toLowerCase()===MASTER_EMAIL;
-      if(isFounder){setUserData(prev=>({...prev||{},role:'super_admin'}));setAccountConsent(true);setConsentChecked(true);return;}
-      try{const [profileSnapshot,consentGranted]=await Promise.all([getDoc(doc(db,'users',user.uid)),hasAccountConsent(user.uid)]);setUserData(profileSnapshot.exists()?profileSnapshot.data():null);setAccountConsent(consentGranted);}catch(_){setUserData(null);setAccountConsent(false);}finally{setConsentChecked(true);}
+      if(isFounder){setUserData(prev=>({...prev||{},role:'super_admin'}));setAccountConsent(true);setConsentChecked(true);setAuthReady(true);return;}
+      try{const [profileSnapshot,consentGranted]=await Promise.all([getDoc(doc(db,'users',user.uid)),hasAccountConsent(user.uid)]);if(cancelled)return;setUserData(profileSnapshot.exists()?profileSnapshot.data():null);setAccountConsent(consentGranted);}catch(_){if(cancelled)return;setUserData(null);setAccountConsent(false);}finally{if(!cancelled){setConsentChecked(true);setAuthReady(true);}}
     });
-    return unsubscribe;
+    return ()=>{cancelled=true;unsubscribe();};
   },[]);
 
   const navigate=nextPath=>{
@@ -62,9 +68,19 @@ export default function IndexPage() {
   if(path!=='/'){
     const isFounder=currentUser?.email?.toLowerCase()===MASTER_EMAIL;
     const isAdmin=isFounder||userData?.role==='super_admin';
+    const isParent=userData?.role==='parent';
+    const isInstitutionCoordinator=userData?.role==='institution_member'&&userData?.institutionRole==='coordinator';
+
+    // Do not route protected pages until Firebase Auth + the Firestore profile
+    // have both resolved. This prevents the old role=undefined -> /dashboard
+    // -> saved-path loop that caused returning students to bounce repeatedly.
+    if(!authReady){
+      return <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6"><div className="text-center"><div className="w-10 h-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mx-auto mb-4"/><p className="text-sm font-semibold text-slate-600">Restoring your secure session…</p></div></div>;
+    }
+
     if(currentUser&&consentChecked&&!accountConsent&&!isFounder)return <AccountConsentGate user={currentUser} onAccepted={()=>setAccountConsent(true)} onDecline={async()=>{await signOut(auth);navigate('/');}}/>;
 
-    // Professional service boundary: the outer router now blocks cross-service
+    // Professional service boundary: the outer router blocks cross-service
     // access before the legacy App router can mount another professional view.
     if(path.startsWith('/provider/career') && currentUser && !isAdmin && userData?.role!=='counsellor'){
       navigate('/dashboard');
@@ -79,16 +95,30 @@ export default function IndexPage() {
       return null;
     }
 
+    // Student dashboard ownership lives here. Do not fall through to the
+    // legacy SecretSharzApp router for these paths; that second router was
+    // racing the Firebase profile resolution and sending returning students
+    // back through /dashboard.
+    const privilegedRole=['super_admin','parent','institution_member','counsellor','psychologist','educator','career_counsellor'];
+    const isStudentClient=currentUser&&!privilegedRole.includes(userData?.role||'');
+    if(path.startsWith('/dashboard/career') && isStudentClient){
+      return <CareerStudentView/>;
+    }
+    if(path.startsWith('/dashboard/wellbeing') && isStudentClient){
+      return <PsychStudentView/>;
+    }
+    if(path.startsWith('/dashboard/sen') && isStudentClient){
+      return <SENStudentView/>;
+    }
+
     if(path==='/dashboard/institution/career'){
       if(!currentUser){navigate('/auth');return null;}
-      const isInstitutionCoordinator=userData?.role==='institution_member'&&userData?.institutionRole==='coordinator';
       if(!isInstitutionCoordinator&&!isFounder){navigate('/dashboard');return null;}
       return <InstitutionCareerDashboard/>;
     }
 
     if(path==='/dashboard/institution/wellbeing'||path==='/dashboard/institution/sen'){
       if(!currentUser){navigate('/auth');return null;}
-      const isInstitutionCoordinator=userData?.role==='institution_member'&&userData?.institutionRole==='coordinator';
       if(!isInstitutionCoordinator&&!isFounder){navigate('/dashboard');return null;}
       const service=path.endsWith('/sen')?'sen':'wellbeing';
       return <InstitutionServiceDashboard service={service}/>;
@@ -97,11 +127,8 @@ export default function IndexPage() {
     if(path==='/dashboard'){
       if(!currentUser){navigate('/auth');return null;}
       if(isAdmin){navigate('/dashboard/admin');return null;}
-      if(userData?.role==='institution_member'&&userData?.institutionRole==='coordinator'){
-        navigate('/dashboard/institution/career');
-        return null;
-      }
-      if(userData?.role==='parent')return <ParentPortalView userData={userData} currentUser={currentUser}/>;
+      if(isInstitutionCoordinator){navigate('/dashboard/institution/career');return null;}
+      if(isParent)return <ParentPortalView userData={userData} currentUser={currentUser}/>;
       return <OnboardingGateway navigate={navigate}/>;
     }
     if(path==='/admin'||path==='/dashboard/admin'){
