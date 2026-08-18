@@ -36,8 +36,20 @@ function safeAuthError(error) {
   };
 }
 
+function getAssignedProfessionalId(data, service) {
+  const assignedStaff = data?.assignedStaff || {};
+  if (service === 'career') return assignedStaff.careerId || data.assignedCounsellorId || null;
+  if (service === 'wellbeing') return assignedStaff.psychologistId || assignedStaff.psychologyId || data.assignedCounsellorId || null;
+  if (service === 'sen') return assignedStaff.senId || assignedStaff.educatorId || data.assignedCounsellorId || null;
+  return data.assignedCounsellorId || null;
+}
+
 function publicStudentRecord(doc) {
   const data = doc.data() || {};
+  const path = getStudentPath(data);
+  const assignedProfessionalId = getAssignedProfessionalId(data, path);
+  const parentUid = data.parentUid || data.parentId || data.parent?.uid || null;
+
   return {
     id: doc.id,
     name: data.name || data.fullName || '',
@@ -50,14 +62,20 @@ function publicStudentRecord(doc) {
     grade: data.grade || data.gradeOrCourse || '',
     schoolName: data.schoolName || '',
     institutionName: data.institutionName || '',
+    institutionId: data.institutionId || data.institutionID || '',
     parentName: data.parentName || '',
     parentContact: data.parentContact || '',
+    parentUid,
+    parentId: parentUid,
     contactNumber: data.contactNumber || data.phone || '',
     primary_path: data.primary_path || '',
     studentTrack: data.studentTrack || '',
-    path: getStudentPath(data),
+    path,
     profileComplete: data.profileComplete === true,
     onboardingCompleted: data.onboardingCompleted === true,
+    assignedProfessionalId,
+    assignedCounsellorId: path === 'career' ? assignedProfessionalId : (data.assignedCounsellorId || null),
+    assignedStaff: data.assignedStaff || null,
     riasecCode: data.riasecCode || data.careerDNA?.riasec?.code || '',
     riasecScores: data.riasecScores || data.careerDNA?.riasec?.scores || {},
     careerAssessment: data.careerAssessment || null,
