@@ -1,10 +1,11 @@
 import { getAdminAuth, getAdminFirestore } from './firebaseAdmin.js';
+import normalizeStudentRecord from '../platform/studentRecordNormalizer.js';
 
 /**
  * Server-side authorization for professional access to a student.
  *
- * This is intentionally service-specific. A professional may be assigned to
- * one service while the same student has other protected service domains.
+ * Canonical assignment relationships are authoritative. Legacy assignedStaff
+ * fields remain a migration fallback for older student records.
  */
 export async function authorizeProfessionalStudent({ req, studentId, service }) {
   if (!studentId) return { authorized: false, reason: 'missing_student_id' };
@@ -37,6 +38,19 @@ export async function authorizeProfessionalStudent({ req, studentId, service }) 
 
   if (isAdmin) {
     return { authorized: true, viewerId: decoded.uid, studentId, student, isAdmin: true };
+  }
+
+  const canonical = normalizeStudentRecord(student, studentId);
+  const canonicalAssignment = canonical.relationships?.assignments?.[service];
+
+  // Canonical relationships are authoritative. For legacy records where the
+  // normalized relationship is absent, preserve compatibility with the old
+  // assignedStaff / assignedProfessionals fields until migration is complete.
+  if (canonicalAssignment) {
+    if (canonicalAssignment !== decoded.uid) {
+      return { authorized: false, reason: 'not_assigned' };
+    }
+    return { authorized: true, viewerId: decoded.uid, studentId, student, isAdmin: false };
   }
 
   const assignedStaff = student.assignedStaff || student.assignedProfessionals || {};
