@@ -1,4 +1,4 @@
-import { getAdminAuth, getAdminDb } from './firebaseAdmin';
+import { getAdminAuth, getAdminFirestore } from './firebaseAdmin.js';
 
 /**
  * Server-side authorization for professional access to a student.
@@ -12,7 +12,7 @@ export async function authorizeProfessionalStudent({ req, studentId, service }) 
     return { authorized: false, reason: 'invalid_service' };
   }
 
-  const authHeader = req?.headers?.authorization || '';
+  const authHeader = req?.headers?.authorization || req?.headers?.Authorization || '';
   if (!authHeader.startsWith('Bearer ')) {
     return { authorized: false, reason: 'missing_auth' };
   }
@@ -25,7 +25,7 @@ export async function authorizeProfessionalStudent({ req, studentId, service }) 
     return { authorized: false, reason: 'invalid_auth' };
   }
 
-  const db = getAdminDb();
+  const db = getAdminFirestore();
   const viewerSnap = await db.collection('users').doc(decoded.uid).get();
   const viewer = viewerSnap.exists ? viewerSnap.data() : {};
   const roles = Array.isArray(viewer.roles) ? viewer.roles : (viewer.role ? [viewer.role] : []);
