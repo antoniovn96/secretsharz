@@ -1,9 +1,9 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 
 const CONFIG = Object.freeze({
-  career: { role: 'career_counsellor', collection: 'students', assignmentFields: ['assignedStaff.careerId'], path: 'Career' },
-  wellbeing: { role: 'psychologist', collection: 'users', assignmentFields: ['assignedStaff.psychologistId', 'assignedStaff.psychologyId'], path: 'wellbeing' },
-  sen: { role: 'educator', collection: 'users', assignmentFields: ['assignedStaff.senId', 'assignedStaff.educatorId'], path: 'sen' },
+  career: { role: 'career_counsellor', collection: 'students', assignmentFields: ['assignedStaff.careerId'] },
+  wellbeing: { role: 'psychologist', collection: 'users', assignmentFields: ['assignedStaff.psychologistId', 'assignedStaff.psychologyId'] },
+  sen: { role: 'educator', collection: 'users', assignmentFields: ['assignedStaff.senId', 'assignedStaff.educatorId'] },
 });
 
 const FOUNDER_EMAIL = 'antonio.antonio.noronha@gmail.com';
@@ -24,18 +24,30 @@ function assigned(data, uid, fields) {
 }
 
 function cleanStudent(id, data, service) {
+  const profile = data.studentProfile || {};
+  const identity = profile.identity || {};
+  const contact = profile.contact || {};
+  const academic = profile.academic || {};
+  const currentAcademic = academic.current || academic;
+  const institution = profile.institution || {};
+  const career = profile.career || {};
+  const sen = profile.sen || {};
+  const assessments = Array.isArray(profile.assessments) ? profile.assessments : [];
+  const latestRiasec = [...assessments].reverse().find(a => a?.result?.riasecCode || a?.riasecCode);
+
   return {
     uid: id,
-    name: data.name || data.studentName || data.profile?.name || 'Unknown Student',
-    grade: data.grade || data.class || data.school?.grade || 'N/A',
-    school: data.schoolName || data.school?.name || data.school || 'N/A',
-    institutionName: data.institutionName || data.schoolName || data.school?.name || '',
+    name: identity.fullName || data.name || data.studentName || data.profile?.name || 'Unknown Student',
+    grade: currentAcademic.grade || data.grade || data.class || data.school?.grade || 'N/A',
+    school: currentAcademic.institutionName || institution.name || data.schoolName || data.school?.name || data.school || 'N/A',
+    institutionName: currentAcademic.institutionName || institution.name || data.institutionName || data.schoolName || data.school?.name || '',
+    email: contact.email || data.email || '',
     status: data.status || 'active',
-    path: data.primary_path || data.path || (service === 'career' ? 'Career' : service === 'wellbeing' ? 'Wellbeing' : 'SEN'),
-    riasecCode: data.careerDNA?.riasec?.code || data.riasecCode || data.careerAssessment?.riasecCode || null,
+    path: profile.services?.primary || data.primary_path || data.path || (service === 'career' ? 'Career' : service === 'wellbeing' ? 'Wellbeing' : 'SEN'),
+    riasecCode: career.riasecCode || latestRiasec?.result?.riasecCode || latestRiasec?.riasecCode || data.careerDNA?.riasec?.code || data.riasecCode || data.careerAssessment?.riasecCode || null,
     lastSessionDate: data.lastSessionDate || null,
-    iepStatus: data.iepStatus || data.latestIepStatus || 'Not started',
-    updatedAt: data.updatedAt || data.lastUpdatedAt || data.assessmentUpdatedAt || null,
+    iepStatus: sen.iep?.status || data.iepStatus || data.latestIepStatus || 'Not started',
+    updatedAt: profile.governance?.updatedAt || data.updatedAt || data.lastUpdatedAt || data.assessmentUpdatedAt || null,
   };
 }
 
@@ -98,10 +110,6 @@ export default async function handler(req, res) {
 
   try {
     const firestore = getAdminFirestore();
-
-    // Super Admin keeps global visibility. Professionals are deliberately
-    // fail-closed: their institution assignment must exist before any student
-    // can enter their caseload.
     let professionalProfile = null;
     let authorisedInstitutionStudentIds = null;
     if (!isFounder && role !== 'super_admin') {
