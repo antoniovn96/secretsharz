@@ -33,6 +33,29 @@ function normaliseGuardian(data = {}) {
     });
   });
 
+  // During the parent-account migration, the provisioning flow stores the
+  // relationship on the student as guardianRelationships.{parentUid}. Treat
+  // that structure as a read-only compatibility source and normalize it into
+  // the canonical family.guardians[] representation.
+  const guardianRelationships = data.guardianRelationships && typeof data.guardianRelationships === 'object'
+    ? data.guardianRelationships
+    : {};
+  Object.entries(guardianRelationships).forEach(([accountId, relationship]) => {
+    const exists = guardians.some((guardian) => guardian.accountId === accountId);
+    if (exists) return;
+    guardians.push({
+      accountId,
+      relationship: firstDefined(relationship, 'guardian'),
+      name: '',
+      email: '',
+      phone: '',
+      countryCode: null,
+      legalGuardian: false,
+      invitationStatus: null,
+      consentStatus: null,
+    });
+  });
+
   const legacyAccountId = firstDefined(data.parentUid, data.parentId, data.parent?.uid, null);
   const legacyName = firstDefined(data.parentName, data.parent?.name, '');
   const legacyPhone = firstDefined(data.parentContact, data.parent?.phone, '');
