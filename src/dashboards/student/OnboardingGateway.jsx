@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 import { db, auth } from '../../firebase';
 import InstitutionDashboard from '../institution/InstitutionDashboard';
 
@@ -23,97 +24,54 @@ const OnboardingGateway = ({ navigate }) => {
 
   useEffect(() => {
     let cancelled = false;
-
     const restoreSavedPath = async () => {
       const user = auth.currentUser;
-      if (!user) {
-        if (!cancelled) setIsCheckingSavedPath(false);
-        return;
-      }
-
+      if (!user) { if (!cancelled) setIsCheckingSavedPath(false); return; }
       try {
         const snapshot = await getDoc(doc(db, 'users', user.uid));
         if (!snapshot.exists()) return;
-
         const data = snapshot.data() || {};
-
-        // Institution coordinators are not clients and must never be sent
-        // through the student service-selection gateway.
         if (data.role === 'institution_member' && data.institutionRole === 'coordinator') {
           if (!cancelled) setInstitutionUserData(data);
           return;
         }
-
         const savedPath = data.primary_path || data.studentTrack;
         const targetPath = SAVED_PATHS[savedPath];
-
         if (!cancelled && targetPath && targetPath !== window.location.pathname && !routingRef.current) {
           routingRef.current = true;
           console.log('[ROUTING] Returning client detected. Restoring saved path:', savedPath);
           navigate(targetPath);
           return;
         }
-      } catch (error) {
-        console.error('[ROUTING] Failed to restore saved client path:', error);
-      } finally {
-        if (!cancelled) setIsCheckingSavedPath(false);
-      }
+      } catch (error) { console.error('[ROUTING] Failed to restore saved client path:', error); }
+      finally { if (!cancelled) setIsCheckingSavedPath(false); }
     };
-
     restoreSavedPath();
     return () => { cancelled = true; };
   }, []);
 
   const handleDivisionSelect = async (divisionName) => {
     if (isRouting) return;
-
-    setIsRouting(true);
-    setRoutingState(divisionName);
-    setErrorMsg('');
-
+    setIsRouting(true); setRoutingState(divisionName); setErrorMsg('');
     let pathCode = 'wellbeing';
     if (divisionName === 'Learning Support') pathCode = 'sen';
     if (divisionName === 'Career Planning') pathCode = 'career';
-
     const user = auth.currentUser;
-    if (!user) {
-      console.error('No user ID found');
-      setErrorMsg('No logged in user found.');
-      setIsRouting(false);
-      setRoutingState(null);
-      return;
-    }
-
+    if (!user) { setErrorMsg('No logged in user found.'); setIsRouting(false); setRoutingState(null); return; }
     try {
-      await setDoc(doc(db, 'users', user.uid), {
-        primary_path: pathCode,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
+      await setDoc(doc(db, 'users', user.uid), { primary_path: pathCode, updatedAt: new Date().toISOString() }, { merge: true });
       navigate(`/dashboard/${pathCode}`);
     } catch (error) {
       console.error('Firebase update failed: ', error);
-      setErrorMsg('Failed to route. Please try again.');
-      setRoutingState(null);
-      setIsRouting(false);
+      setErrorMsg('Failed to route. Please try again.'); setRoutingState(null); setIsRouting(false);
     }
   };
 
-  const handleLogout = async () => {
-    await auth.signOut();
-    navigate('/');
-  };
+  const handleLogout = async () => { await signOut(auth); navigate('/'); };
 
-  if (isCheckingSavedPath) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-        <div className="text-center"><div className="text-4xl mb-4">✨</div><p className="text-lg font-semibold text-slate-700">Taking you to your space…</p><p className="text-sm text-slate-500 mt-1">Checking your saved preferences.</p></div>
-      </div>
-    );
-  }
+  if (isCheckingSavedPath) return <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6"><div className="text-center"><div className="text-4xl mb-4">✨</div><p className="text-lg font-semibold text-slate-700">Taking you to your space…</p><p className="text-sm text-slate-500 mt-1">Checking your saved preferences.</p></div></div>;
 
-  if (institutionUserData) {
-    return <InstitutionDashboard currentUser={auth.currentUser} userData={institutionUserData} onBack={() => navigate('/')} onLogout={handleLogout} />;
-  }
+  if (institutionUserData) return <InstitutionDashboard currentUser={auth.currentUser} userData={institutionUserData} onBack={() => navigate('/')} onLogout={handleLogout} />;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative">
