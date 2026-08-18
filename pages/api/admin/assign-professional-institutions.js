@@ -1,8 +1,9 @@
 // Privileged Super Admin endpoint for assigning a professional to institutions.
 // Institution membership is distinct from professional account creation and
-// is also constrained by the institution's purchased service entitlements.
+// is constrained by the institution's purchased service entitlements.
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { isRequesterAdmin } from '../../../src/security/roleAssignment.js';
+import { hasInstitutionService } from '../../../src/institution/institutionServices.js';
 
 const ROLE_SERVICE = Object.freeze({
   career_counsellor: 'career',
@@ -64,12 +65,7 @@ export default async function handler(req, res) {
     const missing = institutionDocs.filter(snapshot => !snapshot.exists).map(snapshot => snapshot.id);
     if (missing.length) return res.status(404).json({ error: `Institution not found: ${missing.join(', ')}` });
 
-    const withoutEntitlement = institutionDocs.filter(snapshot => {
-      const data = snapshot.data() || {};
-      const services = Array.isArray(data.services) ? data.services : [];
-      return !services.includes(service);
-    }).map(snapshot => snapshot.id);
-
+    const withoutEntitlement = institutionDocs.filter(snapshot => !hasInstitutionService(snapshot.data() || {}, service)).map(snapshot => snapshot.id);
     if (withoutEntitlement.length) {
       return res.status(409).json({
         error: `Professional cannot be assigned to institutions without the ${service} service entitlement.`,
