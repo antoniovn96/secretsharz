@@ -52,26 +52,19 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
         <div>
           <div className="flex items-center gap-3">
             <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${meta.tone === 'violet' ? 'bg-violet-500/10 text-violet-500' : meta.tone === 'amber' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}><Icon className="w-5 h-5" /></div>
-            <div>
-              <p className={`text-[10px] uppercase tracking-[0.16em] font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{meta.label} · Students</p>
-              <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-950'}`}>Student Directory</h1>
-            </div>
+            <div><p className={`text-[10px] uppercase tracking-[0.16em] font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{meta.label} · Students</p><h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-950'}`}>Student Directory</h1></div>
           </div>
           <p className={`mt-3 text-sm max-w-3xl ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>These are the existing student records from the central student directory, filtered to the selected service. Clicking a student's name or row opens their current record and live profile contents.</p>
         </div>
         <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${isDark ? 'border-slate-800 bg-white/[0.02] text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}><Users className="w-4 h-4" />{serviceStudents.length} {meta.path} students</div>
       </div>
-
       {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div>}
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MiniMetric label="Students" value={serviceStudents.length} icon={GraduationCap} theme={theme} />
         <MiniMetric label="Profiles complete" value={completeProfiles} icon={Users} theme={theme} />
         <MiniMetric label="RIASEC / assessment data" value={assessmentComplete} icon={BriefcaseBusiness} theme={theme} />
       </div>
-
-      <UserDirectoryTable users={serviceStudents} isLoading={loading} onViewDetails={student => { setSelectedStudent(student); setDetailOpen(true); }} userRole="student" />
-
+      <UserDirectoryTable users={serviceStudents} isLoading={loading} onViewDetails={student => { setSelectedStudent(student); setDetailOpen(true); }} userRole="student" theme={theme} />
       <SlideOutDetailPanel user={selectedStudent} isOpen={detailOpen} onClose={() => { setDetailOpen(false); window.setTimeout(() => setSelectedStudent(null), 300); }} />
     </div>
   );
