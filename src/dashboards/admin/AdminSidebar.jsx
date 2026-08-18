@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LayoutDashboard, Settings, Shield, LogOut, ChevronDown, GraduationCap, UserCheck, Building2, Tag, TicketPercent, CreditCard, ShieldCheck, HeartHandshake, BriefcaseBusiness, Brain, Sun, Moon, ExternalLink, Stethoscope, Search, Bell, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-
-const PROFESSIONAL_DASHBOARDS = [
-  { id: 'professionalCareer', label: 'Career Counsellor', icon: BriefcaseBusiness, path: '/provider/career' },
-  { id: 'professionalPsychology', label: 'Psychology Counsellor', icon: Stethoscope, path: '/provider/psychologist' },
-  { id: 'professionalSEN', label: 'SEN Teacher', icon: Brain, path: '/provider/educator' }
-];
+import { LayoutDashboard, Settings, LogOut, ChevronDown, GraduationCap, UserCheck, Building2, Tag, TicketPercent, CreditCard, ShieldCheck, HeartHandshake, BriefcaseBusiness, Brain, Sun, Moon, Shield, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 const SERVICE_GROUPS = [
   { id: 'career', label: 'Career Guidance', icon: BriefcaseBusiness, children: [{ id: 'careerStudents', label: 'Students' }, { id: 'careerParents', label: 'Parents' }, { id: 'careerInstitutions', label: 'Institutions' }] },
@@ -14,7 +8,7 @@ const SERVICE_GROUPS = [
 ];
 
 const NAV_ITEMS = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'professionals', label: 'Professionals', icon: UserCheck },
   { id: 'institutions', label: 'Institutions', icon: Building2 },
   { id: 'institutionServices', label: 'Service Entitlements', icon: ShieldCheck },
@@ -34,7 +28,6 @@ export default function AdminSidebar({ activeTab, onTabChange, user, onLogout, t
   useEffect(() => { if (typeof window !== 'undefined') window.localStorage.setItem('secretsharz_admin_service', openService); }, [openService]);
 
   const goToWebsite = () => { if (typeof window !== 'undefined') window.location.href = '/'; };
-  const goToProfessionalDashboard = (path) => { if (typeof window !== 'undefined') window.location.href = path; };
   const dark = sidebarDark || theme === 'dark';
 
   return <aside className={`ss-admin-sidebar ${collapsed ? 'ss-admin-sidebar-collapsed' : ''} flex flex-col h-full shrink-0 border-r transition-all duration-300 ${dark ? 'bg-[#111111] border-[#252525] text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
@@ -49,15 +42,10 @@ export default function AdminSidebar({ activeTab, onTabChange, user, onLogout, t
       {collapsed && <button onClick={onToggleCollapsed} className={`mt-3 w-full flex justify-center p-2 rounded-lg ${dark ? 'text-[#777] hover:bg-white/10 hover:text-white' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-900'}`} title="Expand sidebar"><PanelLeftOpen className="w-4 h-4" /></button>}
     </div>
 
-    <nav className="flex-1 py-4 px-2 overflow-y-auto ss-admin-scrollbar">
-      <p className={`px-3 mb-2 text-[9px] font-extrabold uppercase tracking-[0.18em] ${dark ? 'text-[#666]' : 'text-slate-400'} ${collapsed ? 'text-center' : ''}`}>{collapsed ? '•' : 'Main'}</p>
+    <nav className="flex-1 py-4 px-2 overflow-y-auto overflow-x-hidden ss-admin-scrollbar">
+      {!collapsed && <p className={`px-3 mb-2 text-[9px] font-extrabold uppercase tracking-[0.18em] ${dark ? 'text-[#666]' : 'text-slate-400'}`}>Main</p>}
       <div className="space-y-0.5">
         <button onClick={() => onTabChange('overview')} title={collapsed ? 'Dashboard' : ''} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${activeTab === 'overview' ? (dark ? 'bg-white text-black' : 'bg-black text-white') : (dark ? 'text-[#aaa] hover:text-white hover:bg-white/[0.06]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50')}`}><LayoutDashboard className="w-[17px] h-[17px] shrink-0" /><span className={`${collapsed ? 'hidden' : 'block'} font-semibold text-[12px] flex-1 text-left`}>Dashboard</span>{activeTab === 'overview' && !collapsed && <span className="w-1.5 h-1.5 rounded-full bg-current" />}</button>
-      </div>
-
-      {!collapsed && <p className={`px-3 mt-6 mb-2 text-[9px] font-extrabold uppercase tracking-[0.18em] ${dark ? 'text-[#666]' : 'text-slate-400'}`}>Professional Management</p>}
-      <div className="space-y-0.5">
-        {PROFESSIONAL_DASHBOARDS.map(item => { const Icon = item.icon; return <button key={item.id} onClick={() => goToProfessionalDashboard(item.path)} title={collapsed ? item.label : ''} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${dark ? 'text-[#aaa] hover:text-white hover:bg-white/[0.06]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50'}`}><Icon className="w-[17px] h-[17px] shrink-0" /><span className={`${collapsed ? 'hidden' : 'block'} font-semibold text-[12px] flex-1 text-left`}>{item.label}</span>{!collapsed && <ExternalLink className="w-3 h-3 opacity-40" />}</button>; })}
       </div>
 
       {!collapsed && <p className={`px-3 mt-6 mb-2 text-[9px] font-extrabold uppercase tracking-[0.18em] ${dark ? 'text-[#666]' : 'text-slate-400'}`}>Services</p>}
