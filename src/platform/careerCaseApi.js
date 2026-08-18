@@ -39,3 +39,7 @@ export function saveCareerRoadmap(studentId, phases, status = 'Draft') {
     body: JSON.stringify({ phases, status }),
   });
 }
+
+export function getCareerCaseload() {
+  return request('/api/professional/caseload?service=career');
+}
