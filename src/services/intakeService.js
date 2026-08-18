@@ -1,4 +1,4 @@
-import { collection, query, where, orderBy, limit, getDocs, writeBatch, doc, runTransaction } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, getDoc, writeBatch, doc, runTransaction } from 'firebase/firestore';
 import { db } from '../firebase';
 import { COLLECTIONS } from '../utils/constants';
 
@@ -65,13 +65,10 @@ export const processIntake = async (userAuth, formData) => {
         referralSource: formData.intake?.referralSource || ''
       },
       activeDivisions: [],
-      // Canonical professional assignment fields. These are the fields used by
-      // server-side professional caseload checks and Firestore security rules.
       assignedStaff: {
         careerId: null,
         psychId: null,
         senId: null,
-        // Legacy display fields retained for existing admin UI compatibility.
         career: null,
         psych: null,
         sen: null
@@ -92,17 +89,15 @@ export const processIntake = async (userAuth, formData) => {
   }
 };
 
+const ROLE_BY_DIVISION = {
+  career: ['career_counsellor'],
+  psych: ['psychologist', 'counsellor'],
+  sen: ['educator']
+};
+
 /**
- * Assign exactly one professional to a student's service pathway.
- *
- * Canonical fields:
- *   career -> assignedStaff.careerId
- *   psych  -> assignedStaff.psychId
- *   sen    -> assignedStaff.senId
- *
- * Legacy fields (career/psych/sen) are written alongside the canonical fields
- * so existing administrative screens continue to display assignments while
- * the professional portals and security rules use the ID-specific fields.
+ * Assign exactly one appropriately-role-matched professional to a student's
+ * service pathway. Only Super Admins may perform the assignment.
  */
 export const assignStaffToStudent = async (adminUser, studentId, division, staffId) => {
   try {
@@ -110,14 +105,29 @@ export const assignStaffToStudent = async (adminUser, studentId, division, staff
       throw new Error('Unauthorized: Only super admins can assign staff.');
     }
 
-    const canonicalFieldByDivision = {
-      career: 'careerId',
-      psych: 'psychId',
-      sen: 'senId'
-    };
-
-    if (!canonicalFieldByDivision[division]) {
+    if (!ROLE_BY_DIVISION[division]) {
       throw new Error('Invalid professional division. Choose career, psych, or sen.');
+    }
+
+    if (!staffId) {
+      throw new Error('A professional must be selected.');
+    }
+
+    const staffRef = doc(db, COLLECTIONS.STAFF || 'staff', staffId);
+    const staffDoc = await getDoc(staffRef);
+    if (!staffDoc.exists()) {
+      throw new Error('Selected professional was not found.');
+    }
+
+    const staffData = staffDoc.data();
+    const role = staffData.role || staffData.professionalRole || '';
+    if (!ROLE_BY_DIVISION[division].includes(role)) {
+      const labels = {
+        career: 'Career Counsellor',
+        psych: 'Psychology Counsellor / Psychologist',
+        sen: 'SEN Teacher / Educator'
+      };
+      throw new Error(`This professional cannot be assigned to ${labels[division]}. Please select an appropriate professional.`);
     }
 
     await runTransaction(db, async (transaction) => {
@@ -132,7 +142,7 @@ export const assignStaffToStudent = async (adminUser, studentId, division, staff
       const caseFileDoc = await transaction.get(caseFileRef);
       const studentData = studentDoc.data();
       const existingAssignments = studentData.assignedStaff || {};
-      const canonicalField = canonicalFieldByDivision[division];
+      const canonicalField = { career: 'careerId', psych: 'psychId', sen: 'senId' }[division];
 
       const newAssignedStaff = {
         ...existingAssignments,
