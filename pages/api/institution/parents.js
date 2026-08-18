@@ -13,11 +13,8 @@ export default async function handler(req, res) {
   if (!token) return res.status(401).json({ error: 'Authentication required.' });
 
   let decoded;
-  try {
-    decoded = await getAdminAuth().verifyIdToken(token);
-  } catch (_) {
-    return res.status(401).json({ error: 'Invalid or expired authentication token.' });
-  }
+  try { decoded = await getAdminAuth().verifyIdToken(token); }
+  catch (_) { return res.status(401).json({ error: 'Invalid or expired authentication token.' }); }
 
   const db = getAdminFirestore();
   const institutionId = String(req.query?.institutionId || decoded.institutionId || '').trim();
@@ -29,13 +26,14 @@ export default async function handler(req, res) {
   const institutionSnap = await db.collection('institutions').doc(institutionId).get();
   if (!institutionSnap.exists) return res.status(404).json({ error: 'Institution not found.' });
 
-  const snapshot = await db.collection('users')
-    .where('role', '==', 'parent')
-    .where('institutionIds', 'array-contains', institutionId)
-    .limit(2000)
-    .get();
-
-  const parents = snapshot.docs.map((doc) => {
+  // Deliberately use a single indexed role query and filter the institutional
+  // relationship in application code. This avoids requiring a composite
+  // Firestore index just for the coordinator parent directory.
+  const snapshot = await db.collection('users').where('role', '==', 'parent').limit(5000).get();
+  const parents = snapshot.docs.filter((doc) => {
+    const data = doc.data() || {};
+    return Array.isArray(data.institutionIds) && data.institutionIds.includes(institutionId);
+  }).map((doc) => {
     const data = doc.data() || {};
     const linkedRosterIds = Array.isArray(data.linkedRosterIds) ? data.linkedRosterIds : [];
     const linkedStudentIds = Array.isArray(data.linkedStudentIds) ? data.linkedStudentIds : [];
