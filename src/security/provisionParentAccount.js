@@ -24,10 +24,10 @@ export async function provisionParentAccount({adminAuth,adminDb,parentName,paren
   await parentRef.set({name,email,role:'parent',accountType:'parent',parentRelationship:relation,accountProvisioning:{method:provisioningMethod,status:'invited',firstProvisionedAt:existingProfile.accountProvisioning?.firstProvisionedAt||now,lastProvisionedAt:now},institutionId:institutionId||existingProfile.institutionId||null,institutionName:institutionName||existingProfile.institutionName||'',linkedRosterIds:mergedRosterIds,linkedStudentIds:mergedStudentIds,childRelationships,consentStatus:existingProfile.consentStatus||'pending',profileComplete:true,updatedAt:now,...(existingProfileSnap.exists?{}:{createdAt:now})},{merge:true});
 
   // A student may have more than one legitimate parent/guardian account.
-  // Store the relationship on the child as a map keyed by parent UID rather
-  // than using a single parentUid field, which would incorrectly exclude a
-  // second parent such as the mother when the father is already linked.
-  for(const studentId of mergedStudentIds){
+  // Store the relationship on the child as a map keyed by parent UID. Only
+  // the students explicitly included in this provisioning action receive the
+  // new relationship; previously linked children retain their relationship.
+  for(const studentId of studentIds){
     const studentRef=adminDb.collection('users').doc(studentId);
     await adminDb.runTransaction(async transaction=>{
       const studentSnap=await transaction.get(studentRef);
