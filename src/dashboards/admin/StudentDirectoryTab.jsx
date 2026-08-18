@@ -14,6 +14,8 @@ const StudentDirectoryTab = ({ theme = 'light' }) => {
   const [loadError, setLoadError] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [notification, setNotification] = useState(null);
@@ -57,7 +59,39 @@ const StudentDirectoryTab = ({ theme = 'light' }) => {
     return { total: students.length, assessmentComplete, profileComplete, assigned, assessmentPending: students.length - assessmentComplete };
   }, [students]);
 
-  const handleViewDetails = student => { setSelectedStudent(student); setIsDetailPanelOpen(true); };
+  const handleViewDetails = async student => {
+    setSelectedStudent(student);
+    setIsDetailPanelOpen(true);
+    setIsDetailLoading(true);
+    setDetailError('');
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) throw new Error('Authentication required to load student details.');
+      const idToken = await currentUser.getIdToken(true);
+      let response = await fetch(`/api/admin/student-detail?studentId=${encodeURIComponent(student.id)}`, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${idToken}` },
+        cache: 'no-store',
+      });
+      if (response.status === 401) {
+        const refreshedToken = await currentUser.getIdToken(true);
+        response = await fetch(`/api/admin/student-detail?studentId=${encodeURIComponent(student.id)}`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${refreshedToken}` },
+          cache: 'no-store',
+        });
+      }
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || 'Unable to load the authorized student profile.');
+      setSelectedStudent(payload?.profile || student);
+    } catch (error) {
+      console.error('[StudentDirectoryTab] failed to load secure student detail:', error);
+      setDetailError(error?.message || 'Unable to load the authorized student profile.');
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
   const handleDelete = student => setDeleteTarget(student);
   const showNotification = message => { setNotification(message); window.setTimeout(() => setNotification(null), 4000); };
   const handleDeleteSuccess = async deletedUser => { showNotification(`${deletedUser.name || 'Student'} has been deleted successfully.`); setDeleteTarget(null); await loadStudents(); };
@@ -92,7 +126,13 @@ const StudentDirectoryTab = ({ theme = 'light' }) => {
         <UserDirectoryTable users={students} isLoading={isLoading} onViewDetails={handleViewDetails} onDelete={handleDelete} userRole="student" theme={theme} />
       </div>
 
-      <SlideOutDetailPanel user={selectedStudent} isOpen={isDetailPanelOpen} onClose={() => { setIsDetailPanelOpen(false); window.setTimeout(() => setSelectedStudent(null), 300); }} />
+      <SlideOutDetailPanel
+        user={selectedStudent}
+        isOpen={isDetailPanelOpen}
+        isLoading={isDetailLoading}
+        error={detailError}
+        onClose={() => { setIsDetailPanelOpen(false); window.setTimeout(() => { setSelectedStudent(null); setDetailError(''); }, 300); }}
+      />
       <AddNewUserModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={handleCreateSuccess} userRole="student" />
       <DeleteConfirmationModal user={deleteTarget} isOpen={!!deleteTarget} onClose={() => setDeleteTarget(null)} onSuccess={handleDeleteSuccess} />
 
