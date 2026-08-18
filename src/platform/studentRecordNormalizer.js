@@ -1,10 +1,11 @@
 import { getStudentPath } from './studentRecordModel.js';
 
 const SERVICE_KEYS = ['career', 'wellbeing', 'sen'];
+const EDUCATION_TIERS = ['tenth', 'twelfth', 'graduate', 'postGraduate'];
 
 const firstDefined = (...values) => values.find((value) => value !== undefined && value !== null && value !== '');
-
 const asArray = (value) => Array.isArray(value) ? value : value ? [value] : [];
+const asStringArray = (value) => asArray(value).map(String).filter(Boolean);
 
 function normalisePath(data = {}) {
   const raw = String(firstDefined(data.primary_path, data.studentTrack, data.path, data.service, '')).trim().toLowerCase();
@@ -26,6 +27,7 @@ function normaliseGuardian(data = {}) {
       email: firstDefined(guardian.email, ''),
       phone: firstDefined(guardian.phone, guardian.contactNumber, guardian.parentContact, ''),
       countryCode: firstDefined(guardian.countryCode, guardian.contactCountryCode, null),
+      legalGuardian: Boolean(guardian.legalGuardian),
       invitationStatus: firstDefined(guardian.invitationStatus, guardian.accountStatus, null),
       consentStatus: firstDefined(guardian.consentStatus, null),
     });
@@ -46,11 +48,36 @@ function normaliseGuardian(data = {}) {
         email: legacyEmail,
         phone: legacyPhone,
         countryCode: firstDefined(data.contactCountryCode, null),
+        legalGuardian: false,
         invitationStatus: null,
         consentStatus: null,
       });
     }
   }
+
+  // Older records may have separate father/mother fields rather than a
+  // parentName/parentContact pair. Preserve them as structured guardians.
+  const legacyParents = [
+    { relationship: 'father', name: data.fatherName, phone: data.fatherPhone, email: data.fatherEmail },
+    { relationship: 'mother', name: data.motherName, phone: data.motherPhone, email: data.motherEmail },
+  ];
+  legacyParents.forEach((parent) => {
+    if (!parent.name && !parent.phone && !parent.email) return;
+    const exists = guardians.some((guardian) => String(guardian.relationship).toLowerCase() === parent.relationship && guardian.name === parent.name);
+    if (!exists) {
+      guardians.push({
+        accountId: null,
+        relationship: parent.relationship,
+        name: firstDefined(parent.name, ''),
+        email: firstDefined(parent.email, ''),
+        phone: firstDefined(parent.phone, ''),
+        countryCode: firstDefined(data.contactCountryCode, null),
+        legalGuardian: false,
+        invitationStatus: null,
+        consentStatus: null,
+      });
+    }
+  });
 
   return guardians;
 }
@@ -58,8 +85,8 @@ function normaliseGuardian(data = {}) {
 function normaliseAssignments(data = {}) {
   const staff = data.assignedStaff || {};
   return {
-    career: firstDefined(staff.careerId, data.assignedCareerCounsellorId, data.assignedCounsellorId, data.assignedProfessionalId, null),
-    wellbeing: firstDefined(staff.psychologistId, staff.psychologyId, data.assignedPsychologistId, null),
+    career: firstDefined(staff.careerId, data.assignedCareerCounsellorId, data.assignedCareerCoachId, null),
+    wellbeing: firstDefined(staff.psychologistId, staff.psychologyId, data.assignedPsychologistId, data.assignedCounsellorId, null),
     sen: firstDefined(staff.senId, staff.educatorId, data.assignedSENEducatorId, null),
   };
 }
@@ -84,20 +111,114 @@ function normaliseServices(data = {}) {
   return services;
 }
 
+function normaliseEducationTier(tier = {}, legacy = {}) {
+  const source = { ...legacy, ...tier };
+  return {
+    schoolName: firstDefined(source.schoolName, source.institutionName, ''),
+    marksType: firstDefined(source.marksType, 'percentage'),
+    marksValue: firstDefined(source.marksValue, source.percentage, source.cgpa, ''),
+    marksMax: firstDefined(source.marksMax, ''),
+    marksObtained: firstDefined(source.marksObtained, ''),
+    subjects: asStringArray(source.subjects),
+  };
+}
+
+function normaliseAcademic(data = {}) {
+  const existing = data.academic || {};
+  const current = existing.current || {};
+  const history = existing.history || {};
+
+  const legacyEducation = data.education || {};
+  const legacyTiers = {
+    tenth: legacyEducation.tenth || {},
+    twelfth: legacyEducation.twelfth || {},
+    graduate: legacyEducation.graduate || {},
+    postGraduate: legacyEducation.postGraduate || {},
+  };
+
+  const currentSubjects = firstDefined(current.subjects, existing.subjects, data.subjects, []);
+  const currentInstitutionId = firstDefined(
+    current.institutionId,
+    existing.institutionId,
+    data.institution?.id,
+    data.institutionId,
+    data.institutionID,
+    ''
+  );
+  const currentInstitutionName = firstDefined(
+    current.institutionName,
+    existing.institutionName,
+    data.institution?.name,
+    data.institutionName,
+    data.schoolName,
+    legacyEducation.schoolName,
+    ''
+  );
+  const currentAcademicYear = firstDefined(
+    current.academicYear,
+    existing.academicYear,
+    data.institution?.academicYear,
+    data.academicYear,
+    ''
+  );
+
+  const academic = {
+    current: {
+      institutionId: currentInstitutionId,
+      institutionName: currentInstitutionName,
+      academicYear: currentAcademicYear,
+      grade: firstDefined(current.grade, existing.grade, data.grade, data.gradeOrCourse, ''),
+      section: firstDefined(current.section, existing.section, data.section, ''),
+      curriculum: firstDefined(current.curriculum, existing.curriculum, data.curriculum, data.board, ''),
+      stream: firstDefined(current.stream, existing.stream, data.stream1112, data.stream, ''),
+      subjects: asStringArray(currentSubjects),
+    },
+    history: {},
+    highestLevel: firstDefined(existing.highestLevel, legacyEducation.highestLevel, data.highestEducationLevel, ''),
+    address: firstDefined(existing.address, legacyEducation.address, data.address, ''),
+    yearOfPassing: firstDefined(existing.yearOfPassing, legacyEducation.yearOfPassing, data.yearOfPassing, ''),
+    isPursuing: typeof existing.isPursuing === 'boolean' ? existing.isPursuing : typeof legacyEducation.isPursuing === 'boolean' ? legacyEducation.isPursuing : true,
+    electives: asStringArray(firstDefined(existing.electives, legacyEducation.electives, data.electives, [])),
+  };
+
+  EDUCATION_TIERS.forEach((tier) => {
+    academic.history[tier] = normaliseEducationTier(history[tier], legacyTiers[tier]);
+  });
+
+  return academic;
+}
+
+function normalisePersonal(data = {}) {
+  const personal = data.personal || {};
+  const preferences = personal.preferences || {};
+  return {
+    interests: asStringArray(firstDefined(personal.interests, data.interests, [])),
+    hobbies: asStringArray(firstDefined(personal.hobbies, data.hobbies, [])),
+    preferences: {
+      tvShows: asStringArray(firstDefined(preferences.tvShows, data.tvShows, [])),
+      movies: asStringArray(firstDefined(preferences.movies, data.movies, [])),
+      games: asStringArray(firstDefined(preferences.games, data.games, [])),
+      sports: asStringArray(firstDefined(preferences.sports, data.sports, [])),
+    },
+  };
+}
+
 export function normalizeStudentRecord(data = {}, id = null) {
   const guardians = normaliseGuardian(data);
   const assignments = normaliseAssignments(data);
   const path = normalisePath(data);
   const services = normaliseServices(data);
+  const academic = normaliseAcademic(data);
+  const personal = normalisePersonal(data);
   const dob = firstDefined(data.identity?.dateOfBirth, data.dob, data.dateOfBirth, null);
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     id,
     identity: {
       fullName: firstDefined(data.identity?.fullName, data.name, data.fullName, ''),
       preferredName: firstDefined(data.identity?.preferredName, data.preferredName, ''),
-      photoURL: firstDefined(data.identity?.photoURL, data.photoURL, ''),
+      photoURL: firstDefined(data.identity?.photoURL, data.photoURL, data.profilePicture, ''),
       dateOfBirth: dob,
       gender: firstDefined(data.identity?.gender, data.gender, ''),
       pronouns: firstDefined(data.identity?.pronouns, data.pronouns, ''),
@@ -110,6 +231,7 @@ export function normalizeStudentRecord(data = {}, id = null) {
         countryCode: firstDefined(data.contact?.mobile?.countryCode, data.contactCountryCode, null),
         number: firstDefined(data.contact?.mobile?.number, data.contactNumber, data.phone, ''),
       },
+      city: firstDefined(data.contact?.city, data.city, ''),
     },
     family: { guardians },
     institution: {
@@ -118,18 +240,13 @@ export function normalizeStudentRecord(data = {}, id = null) {
       academicYear: firstDefined(data.institution?.academicYear, data.academicYear, ''),
       enrollmentStatus: firstDefined(data.institution?.enrollmentStatus, data.enrollmentStatus, null),
     },
-    academic: {
-      grade: firstDefined(data.academic?.grade, data.grade, data.gradeOrCourse, ''),
-      section: firstDefined(data.academic?.section, data.section, ''),
-      curriculum: firstDefined(data.academic?.curriculum, data.curriculum, data.board, ''),
-      stream: firstDefined(data.academic?.stream, data.stream1112, data.stream, ''),
-      subjects: asArray(firstDefined(data.academic?.subjects, data.subjects, [])),
-    },
+    academic,
+    personal,
     services,
     career: data.career || {
       status: services.career.status,
-      interests: asArray(data.careerInterests || data.interests),
-      aspirations: asArray(data.careerAspirations || data.careerGoals),
+      interests: asStringArray(data.careerInterests || data.interests),
+      aspirations: asStringArray(data.careerAspirations || data.careerGoals),
       profile: data.careerDNA || null,
       riasec: {
         code: firstDefined(data.riasecCode, data.careerDNA?.riasec?.code, ''),
@@ -143,7 +260,7 @@ export function normalizeStudentRecord(data = {}, id = null) {
     goals: asArray(data.goals),
     relationships: {
       parents: guardians.map((guardian) => guardian.accountId).filter(Boolean),
-      institutionId: firstDefined(data.institution?.id, data.institutionId, data.institutionID, null),
+      institutionId: currentInstitutionId(data),
       assignments,
     },
     onboarding: {
@@ -162,6 +279,17 @@ export function normalizeStudentRecord(data = {}, id = null) {
       parentUid: firstDefined(data.parentUid, null),
     },
   };
+}
+
+function currentInstitutionId(data = {}) {
+  return firstDefined(
+    data.academic?.current?.institutionId,
+    data.academic?.institutionId,
+    data.institution?.id,
+    data.institutionId,
+    data.institutionID,
+    null
+  );
 }
 
 export default normalizeStudentRecord;
