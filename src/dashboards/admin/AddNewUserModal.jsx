@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, UserPlus, Mail, User, GraduationCap, Loader2, Copy, Check, Users } from 'lucide-react';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
-import { auth, db } from '../../firebase';
+import { auth } from '../../firebase';
 
 const PATH_OPTIONS = [
   { value: 'wellbeing', label: 'Wellbeing', description: 'Mental health & counselling support' },
@@ -10,31 +9,39 @@ const PATH_OPTIONS = [
   { value: 'unassigned', label: 'Unassigned', description: 'No specific path yet' },
 ];
 const GRADE_OPTIONS = ['Class 6','Class 7','Class 8','Class 9','Class 10','Class 11','Class 12','College 1st Year','College 2nd Year','College 3rd Year','College Final Year','Graduate'];
-const RELATIONSHIP_OPTIONS = [
-  { value:'father', label:'Father' },
-  { value:'mother', label:'Mother' },
-  { value:'guardian', label:'Guardian' },
-];
 
 const AddNewUserModal = ({ isOpen, onClose, onSuccess, userRole = 'student', institutionId = '', institutionName = '' }) => {
   const [formData, setFormData] = useState({ name:'', email:'', grade:'', primary_path:'unassigned', relationship:'guardian', studentIds:[] });
   const [students,setStudents]=useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingStudents,setIsLoadingStudents]=useState(false);
   const [error, setError] = useState('');
   const [activationLink, setActivationLink] = useState('');
   const [copied, setCopied] = useState(false);
 
   useEffect(()=>{
     if(!isOpen||userRole!=='parent')return;
-    const usersRef=collection(db,'users');
-    const studentQuery=institutionId?query(usersRef,where('role','==','student'),where('institutionId','==',institutionId)):query(usersRef,where('role','==','student'),orderBy('name'));
-    const unsubscribe=onSnapshot(studentQuery,snapshot=>setStudents(snapshot.docs.map(doc=>({id:doc.id,...doc.data()}))),()=>setStudents([]));
-    return()=>unsubscribe();
+    let cancelled=false;
+    const loadStudents=async()=>{
+      setIsLoadingStudents(true);
+      try{
+        const currentUser=auth.currentUser;if(!currentUser)throw new Error('Authentication required.');
+        const token=await currentUser.getIdToken(true);
+        const params=institutionId?`?institutionId=${encodeURIComponent(institutionId)}`:'';
+        const response=await fetch(`/api/provisioning/available-students${params}`,{headers:{Authorization:`Bearer ${token}`},cache:'no-store'});
+        const payload=await response.json();
+        if(!response.ok)throw new Error(payload?.error||'Unable to load students available for parent linking.');
+        if(!cancelled)setStudents(Array.isArray(payload.students)?payload.students:[]);
+      }catch(loadError){if(!cancelled){setStudents([]);setError(loadError?.message||'Unable to load students available for parent linking.');}}
+      finally{if(!cancelled)setIsLoadingStudents(false);}
+    };
+    loadStudents();
+    return()=>{cancelled=true;};
   },[isOpen,userRole,institutionId]);
 
   const handleChange = e => { const {name,value}=e.target; setFormData(prev=>({...prev,[name]:value})); setError(''); };
   const toggleStudent=id=>setFormData(prev=>({...prev,studentIds:prev.studentIds.includes(id)?prev.studentIds.filter(item=>item!==id):[...prev.studentIds,id]}));
-  const reset = () => { setFormData({name:'',email:'',grade:'',primary_path:'unassigned',relationship:'guardian',studentIds:[]}); setError(''); setActivationLink(''); setCopied(false); };
+  const reset = () => { setFormData({name:'',email:'',grade:'',primary_path:'unassigned',relationship:'guardian',studentIds:[]}); setError(''); setActivationLink(''); setCopied(false); setStudents([]); };
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -78,11 +85,11 @@ const AddNewUserModal = ({ isOpen, onClose, onSuccess, userRole = 'student', ins
           <div className="space-y-2"><label className="block text-sm font-semibold text-slate-700">Email Address <span className="text-red-500">*</span></label><div className="relative"><Mail className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"/><input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Enter email address" className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl" disabled={isSubmitting}/></div></div>
           {userRole==='parent'&&<>
             <div className="space-y-2"><label className="block text-sm font-semibold text-slate-700">Relationship to student <span className="text-red-500">*</span></label><select name="relationship" value={formData.relationship} onChange={handleChange} disabled={isSubmitting} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl"><option value="father">Father</option><option value="mother">Mother</option><option value="guardian">Guardian</option></select><p className="text-xs text-slate-500">Father, Mother and Guardian accounts all use the same Parent Dashboard.</p></div>
-            <div className="space-y-2"><label className="block text-sm font-semibold text-slate-700">Link student(s) <span className="text-red-500">*</span></label><div className="border border-slate-200 rounded-xl bg-slate-50 p-3 max-h-48 overflow-y-auto space-y-2">{students.length===0?<p className="text-sm text-slate-500 p-2">No students are available in this institution yet.</p>:students.map(student=><label key={student.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-100 cursor-pointer"><input type="checkbox" checked={formData.studentIds.includes(student.id)} onChange={()=>toggleStudent(student.id)} disabled={isSubmitting} className="w-4 h-4"/><Users className="w-4 h-4 text-slate-400"/><span className="text-sm font-semibold text-slate-700">{student.name||student.email}</span>{student.grade&&<span className="ml-auto text-xs text-slate-400">{student.grade}</span>}</label>)}</div></div>
+            <div className="space-y-2"><label className="block text-sm font-semibold text-slate-700">Link student(s) <span className="text-red-500">*</span></label><div className="border border-slate-200 rounded-xl bg-slate-50 p-3 max-h-48 overflow-y-auto space-y-2">{isLoadingStudents?<p className="text-sm text-slate-500 p-2">Loading students you are authorised to link...</p>:students.length===0?<p className="text-sm text-slate-500 p-2">No students are available for this account.</p>:students.map(student=><label key={student.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-100 cursor-pointer"><input type="checkbox" checked={formData.studentIds.includes(student.id)} onChange={()=>toggleStudent(student.id)} disabled={isSubmitting} className="w-4 h-4"/><Users className="w-4 h-4 text-slate-400"/><span className="text-sm font-semibold text-slate-700">{student.name||student.email}</span>{student.grade&&<span className="ml-auto text-xs text-slate-400">{student.grade}</span>}</label>)}</div></div>
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-600">Only an Admin, authorised Professional, or Institution can create and link this parent account. The parent receives an activation link and uses the same Parent Dashboard whether they are a Father, Mother, or Guardian.</div>
           </>}
           {userRole!=='parent'&&<><div className="space-y-2"><label className="block text-sm font-semibold text-slate-700">Grade / Class Level</label><div className="relative"><GraduationCap className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"/><select name="grade" value={formData.grade} onChange={handleChange} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl" disabled={isSubmitting}><option value="">Select grade (optional)</option>{GRADE_OPTIONS.map(grade=><option key={grade}>{grade}</option>)}</select></div></div><div className="space-y-3"><label className="block text-sm font-semibold text-slate-700">Primary Service</label><div className="grid grid-cols-2 gap-3">{PATH_OPTIONS.map(option=><button key={option.value} type="button" onClick={()=>setFormData(prev=>({...prev,primary_path:option.value}))} disabled={isSubmitting} className={`p-3 rounded-xl border-2 text-left ${formData.primary_path===option.value?'border-emerald-500 bg-emerald-50':'border-slate-200 bg-white'}`}><p className="font-bold text-sm text-slate-700">{option.label}</p><p className="text-xs text-slate-500 mt-0.5">{option.description}</p></button>)}</div></div></>}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100"><button type="button" onClick={handleClose} disabled={isSubmitting} className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button><button type="submit" disabled={isSubmitting} className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold rounded-xl flex items-center gap-2">{isSubmitting?<><Loader2 className="w-4 h-4 animate-spin"/>Creating...</>:<><UserPlus className="w-4 h-4"/>Create {roleLabel}</>}</button></div>
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100"><button type="button" onClick={handleClose} disabled={isSubmitting} className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button><button type="submit" disabled={isSubmitting||isLoadingStudents} className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold rounded-xl flex items-center gap-2">{isSubmitting?<><Loader2 className="w-4 h-4 animate-spin"/>Creating...</>:<><UserPlus className="w-4 h-4"/>Create {roleLabel}</>}</button></div>
         </form>}
       </div>
     </div>
