@@ -15,13 +15,19 @@ export async function provisionParentAccount({adminAuth,adminDb,parentName,paren
   try{user=await adminAuth.getUserByEmail(email);}catch(error){if(error?.code!=='auth/user-not-found')throw error;const temporaryPassword=crypto.randomBytes(24).toString('base64url');user=await adminAuth.createUser({email,password:temporaryPassword,displayName:name,emailVerified:false,disabled:false});created=true;}
   const existingClaims=user.customClaims||{};const existingRole=typeof existingClaims.role==='string'?existingClaims.role:null;if(existingRole&&existingRole!=='parent')throw new Error(`This email is already assigned to the ${existingRole} role and cannot be provisioned as a parent.`);
   const now=new Date().toISOString();const parentRef=adminDb.collection('users').doc(user.uid);const existingProfileSnap=await parentRef.get();const existingProfile=existingProfileSnap.exists?existingProfileSnap.data()||{}:{};
-  if(institutionId&&existingProfile.institutionId&&existingProfile.institutionId!==institutionId)throw new Error('This parent account is already linked to another institution.');
+  // A parent may legitimately have children at more than one institution.
+  // Keep the legacy singular fields for compatibility, while maintaining the
+  // complete institutional relationship set in institutionIds/names.
+  const existingInstitutionIds=Array.isArray(existingProfile.institutionIds)?existingProfile.institutionIds.filter(Boolean):[];
+  const mergedInstitutionIds=Array.from(new Set([...existingInstitutionIds,...(institutionId?[institutionId]:[])]));
+  const existingInstitutionNames=existingProfile.institutionNames&&typeof existingProfile.institutionNames==='object'?existingProfile.institutionNames:{};
+  const institutionNames={...existingInstitutionNames,...(institutionId&&institutionName?{[institutionId]:institutionName}:{})};
   const mergedRosterIds=Array.from(new Set([...(Array.isArray(existingProfile.linkedRosterIds)?existingProfile.linkedRosterIds:[]),...rosterIds.filter(Boolean)]));
   const mergedStudentIds=Array.from(new Set([...(Array.isArray(existingProfile.linkedStudentIds)?existingProfile.linkedStudentIds:[]),...studentIds.filter(Boolean)]));
   const existingRelationships=existingProfile.childRelationships&&typeof existingProfile.childRelationships==='object'?existingProfile.childRelationships:{};
   const childRelationships={...existingRelationships};studentIds.forEach(studentId=>{childRelationships[studentId]=relation;});
   await adminAuth.setCustomUserClaims(user.uid,{...existingClaims,role:'parent'});
-  await parentRef.set({name,email,role:'parent',accountType:'parent',parentRelationship:relation,accountProvisioning:{method:provisioningMethod,status:'invited',firstProvisionedAt:existingProfile.accountProvisioning?.firstProvisionedAt||now,lastProvisionedAt:now},institutionId:institutionId||existingProfile.institutionId||null,institutionName:institutionName||existingProfile.institutionName||'',linkedRosterIds:mergedRosterIds,linkedStudentIds:mergedStudentIds,childRelationships,consentStatus:existingProfile.consentStatus||'pending',profileComplete:true,updatedAt:now,...(existingProfileSnap.exists?{}:{createdAt:now})},{merge:true});
+  await parentRef.set({name,email,role:'parent',accountType:'parent',parentRelationship:relation,accountProvisioning:{method:provisioningMethod,status:'invited',firstProvisionedAt:existingProfile.accountProvisioning?.firstProvisionedAt||now,lastProvisionedAt:now},institutionId:institutionId||existingProfile.institutionId||null,institutionName:institutionName||existingProfile.institutionName||'',institutionIds:mergedInstitutionIds,institutionNames,linkedRosterIds:mergedRosterIds,linkedStudentIds:mergedStudentIds,childRelationships,consentStatus:existingProfile.consentStatus||'pending',profileComplete:true,updatedAt:now,...(existingProfileSnap.exists?{}:{createdAt:now})},{merge:true});
 
   // A student may have more than one legitimate parent/guardian account.
   // Store the relationship on the child as a map keyed by parent UID. Only
