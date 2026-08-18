@@ -10,7 +10,7 @@ import crypto from 'crypto';
  *
  * The activation link is intentionally NOT stored in Firestore.
  */
-export async function provisionParentAccount({adminAuth,adminDb,parentName,parentEmail,institutionId=null,institutionName='',rosterIds=[],studentIds=[]}){
+export async function provisionParentAccount({adminAuth,adminDb,parentName,parentEmail,institutionId=null,institutionName='',rosterIds=[],studentIds=[],provisioningMethod='admin'}){
   const name=String(parentName||'').trim().slice(0,180);const email=String(parentEmail||'').trim().toLowerCase().slice(0,254);
   if(!name)throw new Error('Parent name is required.');if(!email||!email.includes('@'))throw new Error('A valid parent email is required.');
   let user;let created=false;
@@ -21,7 +21,7 @@ export async function provisionParentAccount({adminAuth,adminDb,parentName,paren
   await adminAuth.setCustomUserClaims(user.uid,{...existingClaims,role:'parent'});
   const mergedRosterIds=Array.from(new Set([...(Array.isArray(existingProfile.linkedRosterIds)?existingProfile.linkedRosterIds:[]),...rosterIds.filter(Boolean)]));
   const mergedStudentIds=Array.from(new Set([...(Array.isArray(existingProfile.linkedStudentIds)?existingProfile.linkedStudentIds:[]),...studentIds.filter(Boolean)]));
-  await parentRef.set({name,email,role:'parent',accountType:'parent',accountProvisioning:{method:institutionId?'institution':'admin',status:'invited',firstProvisionedAt:existingProfile.accountProvisioning?.firstProvisionedAt||now,lastProvisionedAt:now},institutionId:institutionId||existingProfile.institutionId||null,institutionName:institutionName||existingProfile.institutionName||'',linkedRosterIds:mergedRosterIds,linkedStudentIds:mergedStudentIds,consentStatus:existingProfile.consentStatus||'pending',profileComplete:true,updatedAt:now,...(existingProfileSnap.exists?{}:{createdAt:now})},{merge:true});
+  await parentRef.set({name,email,role:'parent',accountType:'parent',accountProvisioning:{method:provisioningMethod,status:'invited',firstProvisionedAt:existingProfile.accountProvisioning?.firstProvisionedAt||now,lastProvisionedAt:now},institutionId:institutionId||existingProfile.institutionId||null,institutionName:institutionName||existingProfile.institutionName||'',linkedRosterIds:mergedRosterIds,linkedStudentIds:mergedStudentIds,consentStatus:existingProfile.consentStatus||'pending',profileComplete:true,updatedAt:now,...(existingProfileSnap.exists?{}:{createdAt:now})},{merge:true});
   const activationLink=await adminAuth.generatePasswordResetLink(email);
   return {uid:user.uid,name,email,created,activationLink};
 }
