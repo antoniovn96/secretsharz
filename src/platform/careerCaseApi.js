@@ -25,12 +25,7 @@ export function getCareerCase(studentId) {
 export function createCareerNote(studentId, note) {
   return request(`/api/professional/career/case?studentId=${encodeURIComponent(studentId)}`, {
     method: 'POST',
-    body: JSON.stringify({
-      type: note?.type,
-      title: note?.title,
-      content: note?.content,
-      followUpDate: note?.followUpDate,
-    }),
+    body: JSON.stringify(note),
   });
 }
 
