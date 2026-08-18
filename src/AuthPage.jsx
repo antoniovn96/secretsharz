@@ -1,3 +1,3 @@
-// Security Phase 1B: the legacy authentication UI is retained in git history,
-// while the active auth entry point uses the consent-first implementation.
-export { default } from './SecureAuthPage';
+// Security Phase 1B: registration creates only the account shell.
+// Full student information is collected once, through StudentOnboardingWizard.
+export { default } from './StudentAccountAuthPage';
