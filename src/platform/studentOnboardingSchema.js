@@ -1,12 +1,9 @@
 /**
  * Canonical student onboarding schema.
  *
- * This is intentionally configuration-first: UI components should render from
- * this schema rather than inventing student fields independently.
- *
- * Sources may be: student, institution, admin, parent, professional, system.
- * Visibility is expressed as domain-level policy and must be enforced server-side
- * by the student profile resolver before data is returned to a viewer.
+ * UI components should render from this schema rather than inventing student
+ * fields independently. The canonical profile separates current academics from
+ * academic history and personal discovery data from assessment results.
  */
 
 export const STUDENT_ONBOARDING_STEPS = [
@@ -17,6 +14,15 @@ export const STUDENT_ONBOARDING_STEPS = [
   { id: 'journey', title: 'Your Journey', description: 'Choose the Secret Sharz services you want to use.' },
   { id: 'service', title: 'Your Goals', description: 'A short service-specific starting point.' },
   { id: 'consent', title: 'Privacy & Consent', description: 'Review how your information is used.' },
+];
+
+const EDUCATION_TIER_FIELDS = [
+  { key: 'schoolName', label: 'School / institution', type: 'text', required: false },
+  { key: 'marksType', label: 'Marks type', type: 'select', required: false },
+  { key: 'marksValue', label: 'Marks / percentage / CGPA', type: 'text', required: false },
+  { key: 'marksMax', label: 'Maximum marks', type: 'text', required: false },
+  { key: 'marksObtained', label: 'Marks obtained', type: 'text', required: false },
+  { key: 'subjects', label: 'Subjects', type: 'multi_select', required: false },
 ];
 
 export const STUDENT_ONBOARDING_FIELDS = {
@@ -35,13 +41,25 @@ export const STUDENT_ONBOARDING_FIELDS = {
     { key: 'contact.city', label: 'City', type: 'text', source: 'student', required: false },
   ],
   academic: [
-    { key: 'academic.institutionId', label: 'Institution', type: 'institution', source: 'institution_or_student', required: true },
-    { key: 'academic.academicYear', label: 'Academic year', type: 'text', source: 'institution_or_student', required: true },
-    { key: 'academic.grade', label: 'Grade / class / year', type: 'text', source: 'institution_or_student', required: true },
-    { key: 'academic.section', label: 'Section', type: 'text', source: 'institution_or_student', required: false },
-    { key: 'academic.curriculum', label: 'Board / curriculum', type: 'text', source: 'institution_or_student', required: false },
-    { key: 'academic.stream', label: 'Stream', type: 'text', source: 'student_or_institution', required: false },
-    { key: 'academic.subjects', label: 'Subjects', type: 'multi_select', source: 'student_or_institution', required: false },
+    { key: 'academic.current.institutionId', label: 'Institution', type: 'institution', source: 'institution_or_student', required: true },
+    { key: 'academic.current.academicYear', label: 'Academic year', type: 'text', source: 'institution_or_student', required: true },
+    { key: 'academic.current.grade', label: 'Grade / class / year', type: 'text', source: 'institution_or_student', required: true },
+    { key: 'academic.current.section', label: 'Section', type: 'text', source: 'institution_or_student', required: false },
+    { key: 'academic.current.curriculum', label: 'Board / curriculum', type: 'text', source: 'institution_or_student', required: false },
+    { key: 'academic.current.stream', label: 'Stream', type: 'text', source: 'student_or_institution', required: false },
+    { key: 'academic.current.subjects', label: 'Subjects', type: 'multi_select', source: 'student_or_institution', required: false },
+    { key: 'academic.history.tenth', label: 'Class 10 academic record', type: 'education_tier', source: 'student', required: false, fields: EDUCATION_TIER_FIELDS },
+    { key: 'academic.history.twelfth', label: 'Class 12 / PUC academic record', type: 'education_tier', source: 'student', required: false, fields: EDUCATION_TIER_FIELDS },
+    { key: 'academic.history.graduate', label: 'Graduate academic record', type: 'education_tier', source: 'student', required: false, fields: EDUCATION_TIER_FIELDS },
+    { key: 'academic.history.postGraduate', label: 'Postgraduate academic record', type: 'education_tier', source: 'student', required: false, fields: EDUCATION_TIER_FIELDS },
+  ],
+  personal: [
+    { key: 'personal.interests', label: 'Interests', type: 'multi_select', source: 'student', required: false },
+    { key: 'personal.hobbies', label: 'Hobbies', type: 'multi_select', source: 'student', required: false },
+    { key: 'personal.preferences.tvShows', label: 'TV shows', type: 'multi_select', source: 'student', required: false },
+    { key: 'personal.preferences.movies', label: 'Movies', type: 'multi_select', source: 'student', required: false },
+    { key: 'personal.preferences.games', label: 'Games', type: 'multi_select', source: 'student', required: false },
+    { key: 'personal.preferences.sports', label: 'Sports', type: 'multi_select', source: 'student', required: false },
   ],
   family: [
     { key: 'family.guardians[].relationship', label: 'Relationship', type: 'select', source: 'student_or_parent', required: true },
@@ -80,11 +98,11 @@ export const STUDENT_ONBOARDING_FIELDS = {
 
 export const STUDENT_ONBOARDING_SOURCE_RULES = {
   institutionProvisioned: {
-    prefill: ['academic.institutionId', 'academic.academicYear', 'academic.grade', 'academic.section', 'academic.curriculum'],
-    studentCompletes: ['identity', 'contact', 'family', 'journey', 'service', 'consent'],
+    prefill: ['academic.current.institutionId', 'academic.current.academicYear', 'academic.current.grade', 'academic.current.section', 'academic.current.curriculum'],
+    studentCompletes: ['identity', 'contact', 'academic.history', 'personal', 'family', 'journey', 'service', 'consent'],
   },
   directStudent: {
-    studentCompletes: ['identity', 'contact', 'academic', 'family', 'journey', 'service', 'consent'],
+    studentCompletes: ['identity', 'contact', 'academic', 'personal', 'family', 'journey', 'service', 'consent'],
   },
 };
 
