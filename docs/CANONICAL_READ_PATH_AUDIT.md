@@ -58,17 +58,45 @@ Legacy fields may be consumed only by `studentRecordNormalizer.js` and migration
 
 ## Verification checklist
 
-- [ ] Admin Student Master Control uses secure detail API for detail views.
-- [ ] Career directory uses service-authorized profile data.
-- [ ] Psychology directory uses service-authorized profile data.
-- [ ] SEN directory uses service-authorized profile data.
+- [x] Admin Student Master Control has a secure detail API path.
+- [ ] Admin directory/list readers are fully canonical.
+- [ ] Career directory uses service-authorized canonical profile data end-to-end.
+- [ ] Psychology directory uses service-authorized canonical profile data end-to-end.
+- [ ] SEN directory uses service-authorized canonical profile data end-to-end.
 - [ ] Parent dashboard reads only linked-child data.
-- [ ] Institution dashboard reads only institution-authorized data.
-- [ ] Student dashboard reads canonical profile.
+- [x] Institution dashboard obtains its student roster through an institution-authorized API.
+- [ ] Student dashboard reads canonical profile end-to-end.
+- [ ] Profile Editor writes canonical profile end-to-end.
 - [ ] Assessment views use `assessments[]` as source of truth.
 - [ ] No dashboard writes derived age or assessment scores as authoritative values.
 - [ ] No new dashboard code reads legacy fields directly.
 
+## Findings from the current implementation audit
+
+### Admin
+
+The secure student-detail architecture exists. The Admin detail path is therefore structurally ahead of the other dashboards, but the directory/list read path still requires verification before being marked complete.
+
+### Professional caseload
+
+`pages/api/professional/caseload.js` now normalizes display fields from `studentProfile` first and falls back to legacy fields for migration compatibility. The authorization boundary still depends on the existing `assignedStaff.*` relationship fields. Canonical relationship assignment is therefore **not yet verified end-to-end** and must not be marked complete until the relationship system is migrated.
+
+### Parent
+
+`src/ParentDashboard.jsx` currently subscribes directly to `users/{currentParentUid}` and derives the displayed child from that document. This is **not yet a valid linked-child read path**. The parent relationship system must supply authoritative child IDs/relationship records before the dashboard is migrated. Do not solve this by scanning arbitrary student records from the browser.
+
+### Institution
+
+`InstitutionDashboard.jsx` calls `/api/institution/dashboard`, and the API validates the institution coordinator custom-claim relationship before returning institution roster data. This is the correct architectural direction. The institution dashboard currently receives roster/assessment operational data rather than unrestricted student profile data, which is appropriate for the institution role.
+
+### Student/Profile Editor
+
+The live `ProfileEditor.jsx` still calls the legacy `updateUserProfile()` path. The canonical write API and write adapter exist, but the UI write migration is **not complete**. The Profile Editor must not be declared migrated until the actual live component uses the canonical API and waits for a successful server response before displaying a saved state.
+
+## Safety note
+
+A migration attempt against `ProfileEditor.jsx` was reverted before it could remain on `main` because a complete-file replacement would have risked dropping the component's existing render tree. The repository was restored to the pre-migration commit before continuing the audit. No claim of successful Profile Editor migration should be made until a surgical change is applied safely.
+
 ## Current status
 
-This document is the audit baseline. The remaining unchecked items require inspection and migration of the corresponding dashboard/API implementations; they must not be marked complete merely because the canonical resolver exists.
+The canonical model, normalizer, access architecture, onboarding structure and secure APIs are in place. The remaining work is **integration verification**, not another parallel data model. The next changes should be surgical and test-driven: migrate the live Profile Editor write path, then verify Student → Career → Psychology → SEN → Parent → Institution → Admin visibility with one controlled test student.
