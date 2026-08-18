@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LayoutDashboard, Settings, Shield, LogOut, ChevronDown, GraduationCap, UserCheck, Building2, Tag, TicketPercent, CreditCard, ShieldCheck, HeartHandshake, BriefcaseBusiness, Brain, Sun, Moon, ExternalLink, Stethoscope } from 'lucide-react';
+import { LayoutDashboard, Settings, Shield, LogOut, ChevronDown, GraduationCap, UserCheck, Building2, Tag, TicketPercent, CreditCard, ShieldCheck, HeartHandshake, BriefcaseBusiness, Brain, Sun, Moon, ExternalLink, Stethoscope, Search, Bell, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 const PROFESSIONAL_DASHBOARDS = [
   { id: 'professionalCareer', label: 'Career Counsellor', icon: BriefcaseBusiness, path: '/provider/career' },
@@ -26,7 +26,7 @@ const NAV_ITEMS = [
   { id: 'settings', label: 'System Settings', icon: Settings }
 ];
 
-export default function AdminSidebar({ activeTab, onTabChange, user, onLogout, theme, onToggleTheme }) {
+export default function AdminSidebar({ activeTab, onTabChange, user, onLogout, theme, onToggleTheme, collapsed = false, onToggleCollapsed, sidebarDark = false }) {
   const [openService, setOpenService] = useState(() => {
     if (typeof window === 'undefined') return 'career';
     return window.localStorage.getItem('secretsharz_admin_service') || 'career';
@@ -35,44 +35,47 @@ export default function AdminSidebar({ activeTab, onTabChange, user, onLogout, t
 
   const goToWebsite = () => { if (typeof window !== 'undefined') window.location.href = '/'; };
   const goToProfessionalDashboard = (path) => { if (typeof window !== 'undefined') window.location.href = path; };
-  const dark = theme === 'dark';
+  const dark = sidebarDark || theme === 'dark';
 
-  return <aside className={`w-[292px] flex flex-col h-full shrink-0 border-r transition-colors duration-300 ${dark ? 'bg-[#0b1020] border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
-    <div className={`px-5 py-5 border-b ${dark ? 'border-slate-800' : 'border-slate-100'}`}>
-      <button onClick={goToWebsite} className="w-full flex items-center gap-3 text-left group" title="Back to Secret Sharz">
-        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-[1.03] transition-transform"><Shield className="w-5 h-5 text-white" /></div>
-        <div className="min-w-0"><div className={`text-[15px] font-extrabold tracking-tight ${dark ? 'text-white' : 'text-slate-950'}`}>Secret Sharz</div><div className={`text-[11px] font-semibold tracking-[0.14em] uppercase ${dark ? 'text-slate-500' : 'text-slate-400'}`}>Command Center</div></div>
-        <ExternalLink className={`ml-auto w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-slate-500' : 'text-slate-400'}`} />
-      </button>
+  return <aside className={`ss-admin-sidebar ${collapsed ? 'ss-admin-sidebar-collapsed' : ''} flex flex-col h-full shrink-0 border-r transition-all duration-300 ${dark ? 'bg-[#111111] border-[#252525] text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
+    <div className={`px-4 py-4 border-b ${dark ? 'border-[#252525]' : 'border-slate-100'}`}>
+      <div className="flex items-center gap-2">
+        <button onClick={goToWebsite} className="flex items-center gap-3 text-left group min-w-0 flex-1" title="Back to Secret Sharz">
+          <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-[1.03] transition-transform ${dark ? 'bg-white text-black' : 'bg-black text-white'}`}><Shield className="w-5 h-5" /></div>
+          {!collapsed && <div className="min-w-0"><div className={`text-[14px] font-extrabold tracking-tight ${dark ? 'text-white' : 'text-slate-950'}`}>Secret Sharz</div><div className={`text-[10px] font-bold tracking-[0.14em] uppercase ${dark ? 'text-[#777]' : 'text-slate-400'}`}>Admin Center</div></div>}
+        </button>
+        {!collapsed && <button onClick={onToggleCollapsed} className={`p-2 rounded-lg transition-colors ${dark ? 'text-[#777] hover:bg-white/10 hover:text-white' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-900'}`} title="Collapse sidebar"><PanelLeftClose className="w-4 h-4" /></button>}
+      </div>
+      {collapsed && <button onClick={onToggleCollapsed} className={`mt-3 w-full flex justify-center p-2 rounded-lg ${dark ? 'text-[#777] hover:bg-white/10 hover:text-white' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-900'}`} title="Expand sidebar"><PanelLeftOpen className="w-4 h-4" /></button>}
     </div>
 
-    <nav className="flex-1 py-5 px-3 overflow-y-auto">
-      <p className={`px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-slate-600' : 'text-slate-400'}`}>My Dashboard</p>
-      <div className="space-y-1">
-        <button onClick={() => onTabChange('overview')} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${activeTab === 'overview' ? (dark ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-950') : (dark ? 'text-slate-400 hover:text-white hover:bg-white/[0.04]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50')}`}><LayoutDashboard className={`w-[18px] h-[18px] ${activeTab === 'overview' ? 'text-emerald-500' : ''}`} /><span className="font-semibold text-[13px] flex-1 text-left">Super Admin</span>{activeTab === 'overview' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}</button>
+    <nav className="flex-1 py-4 px-2 overflow-y-auto ss-admin-scrollbar">
+      <p className={`px-3 mb-2 text-[9px] font-extrabold uppercase tracking-[0.18em] ${dark ? 'text-[#666]' : 'text-slate-400'} ${collapsed ? 'text-center' : ''}`}>{collapsed ? '•' : 'Main'}</p>
+      <div className="space-y-0.5">
+        <button onClick={() => onTabChange('overview')} title={collapsed ? 'Dashboard' : ''} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${activeTab === 'overview' ? (dark ? 'bg-white text-black' : 'bg-black text-white') : (dark ? 'text-[#aaa] hover:text-white hover:bg-white/[0.06]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50')}`}><LayoutDashboard className="w-[17px] h-[17px] shrink-0" /><span className={`${collapsed ? 'hidden' : 'block'} font-semibold text-[12px] flex-1 text-left`}>Dashboard</span>{activeTab === 'overview' && !collapsed && <span className="w-1.5 h-1.5 rounded-full bg-current" />}</button>
       </div>
 
-      <p className={`px-3 mt-7 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-slate-600' : 'text-slate-400'}`}>Professional Management</p>
-      <div className="space-y-1">
-        {PROFESSIONAL_DASHBOARDS.map(item => { const Icon = item.icon; return <button key={item.id} onClick={() => goToProfessionalDashboard(item.path)} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${dark ? 'text-slate-400 hover:text-white hover:bg-white/[0.04]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50'}`}><Icon className="w-[18px] h-[18px] text-emerald-500" /><span className="font-semibold text-[13px] flex-1 text-left">{item.label}</span><ExternalLink className={`w-3.5 h-3.5 ${dark ? 'text-slate-600' : 'text-slate-300'}`} /></button>; })}
+      {!collapsed && <p className={`px-3 mt-6 mb-2 text-[9px] font-extrabold uppercase tracking-[0.18em] ${dark ? 'text-[#666]' : 'text-slate-400'}`}>Professional Management</p>}
+      <div className="space-y-0.5">
+        {PROFESSIONAL_DASHBOARDS.map(item => { const Icon = item.icon; return <button key={item.id} onClick={() => goToProfessionalDashboard(item.path)} title={collapsed ? item.label : ''} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${dark ? 'text-[#aaa] hover:text-white hover:bg-white/[0.06]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50'}`}><Icon className="w-[17px] h-[17px] shrink-0" /><span className={`${collapsed ? 'hidden' : 'block'} font-semibold text-[12px] flex-1 text-left`}>{item.label}</span>{!collapsed && <ExternalLink className="w-3 h-3 opacity-40" />}</button>; })}
       </div>
 
-      <p className={`px-3 mt-7 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-slate-600' : 'text-slate-400'}`}>Services</p>
-      <div className="space-y-1">
+      {!collapsed && <p className={`px-3 mt-6 mb-2 text-[9px] font-extrabold uppercase tracking-[0.18em] ${dark ? 'text-[#666]' : 'text-slate-400'}`}>Services</p>}
+      <div className="space-y-0.5">
         {SERVICE_GROUPS.map(group => { const Icon = group.icon; const open = openService === group.id || group.children.some(c => c.id === activeTab); return <div key={group.id}>
-          <button onClick={() => setOpenService(open ? '' : group.id)} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${open ? (dark ? 'text-white bg-white/[0.035]' : 'text-slate-950 bg-slate-50') : (dark ? 'text-slate-400 hover:text-white hover:bg-white/[0.04]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50')}`}><Icon className="w-[18px] h-[18px] text-emerald-500" /><span className="font-semibold text-[13px] flex-1 text-left">{group.label}</span><ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} /></button>
-          {open && <div className={`ml-5 pl-4 border-l space-y-0.5 py-1 ${dark ? 'border-slate-800' : 'border-slate-200'}`}>{group.children.map(child => <button key={child.id} onClick={() => onTabChange(child.id)} className={`w-full text-left px-3 py-2 rounded-lg text-[12px] font-semibold transition-colors ${activeTab === child.id ? (dark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-700') : (dark ? 'text-slate-500 hover:text-slate-200' : 'text-slate-500 hover:text-slate-900')}`}>{child.label}</button>)}</div>}
+          <button onClick={() => !collapsed && setOpenService(open ? '' : group.id)} title={collapsed ? group.label : ''} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${open ? (dark ? 'text-white bg-white/[0.05]' : 'text-slate-950 bg-slate-50') : (dark ? 'text-[#aaa] hover:text-white hover:bg-white/[0.06]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50')}`}><Icon className="w-[17px] h-[17px] shrink-0" /><span className={`${collapsed ? 'hidden' : 'block'} font-semibold text-[12px] flex-1 text-left`}>{group.label}</span>{!collapsed && <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />}</button>
+          {open && !collapsed && <div className={`ml-4 pl-3 border-l space-y-0.5 py-1 ${dark ? 'border-[#303030]' : 'border-slate-200'}`}>{group.children.map(child => <button key={child.id} onClick={() => onTabChange(child.id)} className={`w-full text-left px-3 py-2 rounded-md text-[11px] font-semibold transition-colors ${activeTab === child.id ? (dark ? 'bg-white text-black' : 'bg-slate-900 text-white') : (dark ? 'text-[#777] hover:text-white' : 'text-slate-500 hover:text-slate-900')}`}>{child.label}</button>)}</div>}
         </div>; })}
       </div>
 
-      <p className={`px-3 mt-7 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-slate-600' : 'text-slate-400'}`}>Management</p>
-      <div className="space-y-1">{NAV_ITEMS.slice(1).map(item => { const Icon = item.icon; const active = activeTab === item.id; return <button key={item.id} onClick={() => onTabChange(item.id)} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all ${active ? (dark ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-950') : (dark ? 'text-slate-400 hover:text-white hover:bg-white/[0.04]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50')}`}><Icon className={`w-[18px] h-[18px] ${active ? 'text-emerald-500' : ''}`} /><span className="font-semibold text-[13px] flex-1 text-left">{item.label}</span>{active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}</button>; })}</div>
+      {!collapsed && <p className={`px-3 mt-6 mb-2 text-[9px] font-extrabold uppercase tracking-[0.18em] ${dark ? 'text-[#666]' : 'text-slate-400'}`}>Management</p>}
+      <div className="space-y-0.5">{NAV_ITEMS.slice(1).map(item => { const Icon = item.icon; const active = activeTab === item.id; return <button key={item.id} onClick={() => onTabChange(item.id)} title={collapsed ? item.label : ''} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${active ? (dark ? 'bg-white text-black' : 'bg-black text-white') : (dark ? 'text-[#aaa] hover:text-white hover:bg-white/[0.06]' : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50')}`}><Icon className="w-[17px] h-[17px] shrink-0" /><span className={`${collapsed ? 'hidden' : 'block'} font-semibold text-[12px] flex-1 text-left`}>{item.label}</span>{active && !collapsed && <span className="w-1.5 h-1.5 rounded-full bg-current" />}</button>; })}</div>
     </nav>
 
-    <div className={`mx-3 mb-3 px-3.5 py-3 rounded-xl border ${dark ? 'bg-emerald-500/[0.04] border-slate-800' : 'bg-emerald-50/60 border-emerald-100'}`}><div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"/><span className={`text-[11px] font-semibold ${dark ? 'text-slate-400' : 'text-slate-600'}`}>All systems operational</span></div></div>
-    <div className={`p-3 border-t ${dark ? 'border-slate-800' : 'border-slate-100'}`}>
-      <div className="flex items-center gap-3 px-2 py-2"><div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-xs">{user?.displayName?.charAt(0) || 'A'}</div><div className="flex-1 min-w-0"><p className={`text-[12px] font-bold truncate ${dark ? 'text-white' : 'text-slate-900'}`}>{user?.displayName || 'Super Admin'}</p><p className={`text-[10px] truncate ${dark ? 'text-slate-500' : 'text-slate-400'}`}>{user?.email || 'admin@secretsharz.com'}</p></div></div>
-      <div className="grid grid-cols-2 gap-2 mt-2"><button onClick={onToggleTheme} className={`flex items-center justify-center gap-2 py-2 rounded-lg text-[11px] font-semibold border ${dark ? 'border-slate-800 text-slate-300 hover:bg-white/5' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>{dark ? <Sun className="w-3.5 h-3.5"/> : <Moon className="w-3.5 h-3.5"/>}{dark ? 'Light mode' : 'Dark mode'}</button><button onClick={onLogout} className={`flex items-center justify-center gap-2 py-2 rounded-lg text-[11px] font-semibold border ${dark ? 'border-slate-800 text-slate-400 hover:text-red-400 hover:bg-red-500/5' : 'border-slate-200 text-slate-500 hover:text-red-600 hover:bg-red-50'}`}><LogOut className="w-3.5 h-3.5"/>Sign out</button></div>
+    {!collapsed && <div className={`mx-2 mb-2 px-3 py-2.5 rounded-lg border ${dark ? 'bg-white/[0.03] border-[#252525]' : 'bg-slate-50 border-slate-100'}`}><div className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"/><span className={`text-[10px] font-semibold ${dark ? 'text-[#aaa]' : 'text-slate-600'}`}>All systems operational</span></div></div>}
+    <div className={`p-2 border-t ${dark ? 'border-[#252525]' : 'border-slate-100'}`}>
+      <div className={`flex items-center gap-2 px-2 py-2 ${collapsed ? 'justify-center' : ''}`}><div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[11px] shrink-0 ${dark ? 'bg-white text-black' : 'bg-black text-white'}`}>{user?.displayName?.charAt(0) || 'A'}</div>{!collapsed && <div className="flex-1 min-w-0"><p className={`text-[11px] font-bold truncate ${dark ? 'text-white' : 'text-slate-900'}`}>{user?.displayName || 'Super Admin'}</p><p className={`text-[9px] truncate ${dark ? 'text-[#666]' : 'text-slate-400'}`}>{user?.email || 'admin@secretsharz.com'}</p></div>}</div>
+      {!collapsed && <div className="grid grid-cols-2 gap-1.5 mt-1"><button onClick={onToggleTheme} className={`flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-semibold border ${dark ? 'border-[#303030] text-[#bbb] hover:bg-white/5' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>{theme === 'dark' ? <Sun className="w-3 h-3"/> : <Moon className="w-3 h-3"/>}{theme === 'dark' ? 'Light' : 'Dark'}</button><button onClick={onLogout} className={`flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-semibold border ${dark ? 'border-[#303030] text-[#888] hover:text-red-400' : 'border-slate-200 text-slate-500 hover:text-red-600'}`}><LogOut className="w-3 h-3"/>Sign out</button></div>}
     </div>
   </aside>;
 }
