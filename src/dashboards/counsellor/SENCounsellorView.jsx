@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-import { db } from '../../firebase';
 import { useDashboard } from '../../context/DashboardContext';
 
 const SENCounsellorView = ({ userData, currentUser }) => {
@@ -21,46 +19,15 @@ const SENCounsellorView = ({ userData, currentUser }) => {
     const fetchSENDashboardData = async () => {
       setIsLoading(true);
       try {
-        const uid = currentUser?.uid;
-        if (!uid) return;
-
-        // Assignment-bound queries only. The old dashboard loaded every SEN
-        // student and generated fabricated IEP statuses; this version uses the
-        // authenticated educator's actual assignment boundary.
-        const usersRef = collection(db, 'users');
-        const [primaryAssignments, legacyAssignments] = await Promise.all([
-          getDocs(query(usersRef, where('assignedStaff.senId', '==', uid))),
-          getDocs(query(usersRef, where('assignedStaff.educatorId', '==', uid)))
-        ]);
-
-        const studentDocs = new Map();
-        [...primaryAssignments.docs, ...legacyAssignments.docs].forEach(docSnap => {
-          const data = docSnap.data();
-          if ((!data.role || data.role === 'student') && data.primary_path === 'sen') {
-            studentDocs.set(docSnap.id, { uid: docSnap.id, ...data });
-          }
+        if (!currentUser?.uid) return;
+        const token = await currentUser.getIdToken();
+        const response = await fetch('/api/professional/caseload?service=sen', {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store'
         });
-
-        const fetchedStudents = [];
-        for (const data of studentDocs.values()) {
-          let iepStatus = data.iepStatus || data.latestIepStatus || 'Not started';
-          try {
-            const records = await getDocs(query(collection(db, 'users', data.uid, 'iep_records'), orderBy('timestamp', 'desc'), limit(1)));
-            if (!records.empty) iepStatus = records.docs[0].data().status || iepStatus;
-          } catch (_) {
-            // Keep the profile-level status when no IEP record is available.
-          }
-
-          fetchedStudents.push({
-            uid: data.uid,
-            name: data.name || 'Unknown Student',
-            grade: data.grade || 'N/A',
-            school: data.schoolName || 'N/A',
-            iepStatus,
-          });
-        }
-
-        setSenCaseload(fetchedStudents);
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.error || 'Unable to load your assigned SEN caseload.');
+        setSenCaseload(payload.students || []);
       } catch (error) {
         console.error('Error fetching assigned SEN caseload:', error);
       } finally {
