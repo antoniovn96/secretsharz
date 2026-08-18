@@ -38,10 +38,11 @@ function safeAuthError(error) {
 
 function getAssignedProfessionalId(data, service) {
   const assignedStaff = data?.assignedStaff || {};
-  if (service === 'career') return assignedStaff.careerId || data.assignedCounsellorId || null;
-  if (service === 'wellbeing') return assignedStaff.psychologistId || assignedStaff.psychologyId || data.assignedCounsellorId || null;
-  if (service === 'sen') return assignedStaff.senId || assignedStaff.educatorId || data.assignedCounsellorId || null;
-  return data.assignedCounsellorId || null;
+  const serviceKey = String(service || '').trim().toLowerCase();
+  if (serviceKey === 'career') return assignedStaff.careerId || data.assignedCounsellorId || data.assignedProfessionalId || null;
+  if (serviceKey === 'wellbeing') return assignedStaff.psychologistId || assignedStaff.psychologyId || data.assignedCounsellorId || data.assignedProfessionalId || null;
+  if (serviceKey === 'sen') return assignedStaff.senId || assignedStaff.educatorId || data.assignedCounsellorId || data.assignedProfessionalId || null;
+  return data.assignedProfessionalId || data.assignedCounsellorId || null;
 }
 
 function publicStudentRecord(doc) {
@@ -74,7 +75,7 @@ function publicStudentRecord(doc) {
     profileComplete: data.profileComplete === true,
     onboardingCompleted: data.onboardingCompleted === true,
     assignedProfessionalId,
-    assignedCounsellorId: path === 'career' ? assignedProfessionalId : (data.assignedCounsellorId || null),
+    assignedCounsellorId: String(path || '').toLowerCase() === 'career' ? assignedProfessionalId : (data.assignedCounsellorId || null),
     assignedStaff: data.assignedStaff || null,
     riasecCode: data.riasecCode || data.careerDNA?.riasec?.code || '',
     riasecScores: data.riasecScores || data.careerDNA?.riasec?.scores || {},
@@ -123,12 +124,7 @@ export default async function handler(req, res) {
       .map(publicStudentRecord)
       .sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
 
-    return res.status(200).json({
-      generatedAt: new Date().toISOString(),
-      service,
-      students,
-      count: students.length,
-    });
+    return res.status(200).json({ generatedAt: new Date().toISOString(), service, students, count: students.length });
   } catch (error) {
     console.error('[admin service students] failed:', error);
     return res.status(500).json({ error: 'Unable to load the service student directory.' });
