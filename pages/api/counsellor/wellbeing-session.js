@@ -1,0 +1,39 @@
+import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { getCounsellingSessions, createCounsellingSession } from '../../../src/security/counsellingSessionService.js';
+
+function bearer(req) {
+  const match = String(req.headers.authorization || '').match(/^Bearer\s+(.+)$/i);
+  return match?.[1] || null;
+}
+
+async function authenticate(req, res) {
+  const token = bearer(req);
+  if (!token) { res.status(401).json({ error: 'Authentication required.' }); return null; }
+  try { return await getAdminAuth().verifyIdToken(token); }
+  catch { res.status(401).json({ error: 'Invalid or expired authentication token.' }); return null; }
+}
+
+export default async function handler(req, res) {
+  if (!['GET', 'POST'].includes(req.method)) { res.setHeader('Allow', 'GET, POST'); return res.status(405).json({ error: 'Method not allowed.' }); }
+  const actor = await authenticate(req, res);
+  if (!actor) return;
+
+  const studentId = String(req.query.studentId || req.body?.studentId || '').trim();
+  if (!studentId) return res.status(400).json({ error: 'studentId is required.' });
+
+  try {
+    const db = getAdminFirestore();
+    if (req.method === 'GET') {
+      const result = await getCounsellingSessions({ db, studentId, professionalId: actor.uid });
+      return res.status(200).json(result);
+    }
+
+    const result = await createCounsellingSession({ db, studentId, professionalId: actor.uid, soap: req.body?.soap });
+    return res.status(201).json(result);
+  } catch (error) {
+    console.error('[wellbeing-session] failed:', error?.message || error);
+    const message = error?.message || 'Unable to process wellbeing session.';
+    const status = /consent|authorised|relationship|canonical counselling/i.test(message) ? 403 : /empty clinical/i.test(message) ? 400 : 500;
+    return res.status(status).json({ error: message, code: error?.code || undefined });
+  }
+}
