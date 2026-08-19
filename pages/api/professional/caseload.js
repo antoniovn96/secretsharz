@@ -1,4 +1,5 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
 
 const CONFIG = Object.freeze({
   career: { role: 'career_counsellor', collection: 'students', assignmentFields: ['assignedStaff.careerId'] },
@@ -19,7 +20,13 @@ function valueAt(data, path) {
   return path.split('.').reduce((value, key) => value?.[key], data);
 }
 
-function assigned(data, uid, fields) {
+function assigned(data, uid, service, fields) {
+  const canonical = normalizeStudentRecord(data, null);
+  const canonicalAssignment = canonical.relationships?.assignments?.[service];
+
+  // Canonical assignment is authoritative. Legacy fields are only a migration
+  // fallback for records that do not yet contain a canonical assignment.
+  if (canonicalAssignment) return canonicalAssignment === uid;
   return fields.some(field => valueAt(data, field) === uid);
 }
 
@@ -127,7 +134,7 @@ export default async function handler(req, res) {
 
     snapshot.docs.forEach(doc => {
       const data = doc.data() || {};
-      if (!assigned(data, decoded.uid, config.assignmentFields)) return;
+      if (!assigned(data, decoded.uid, service, config.assignmentFields)) return;
       if (authorisedInstitutionStudentIds && !authorisedInstitutionStudentIds.has(doc.id)) return;
       if (config.collection === 'users' && data.role && data.role !== 'student') return;
       if (config.collection === 'users' && service === 'wellbeing' && data.primary_path !== 'wellbeing') return;
