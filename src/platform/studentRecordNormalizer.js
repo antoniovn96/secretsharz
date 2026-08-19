@@ -107,10 +107,11 @@ function normaliseGuardian(data = {}) {
 
 function normaliseAssignments(data = {}) {
   const staff = data.assignedStaff || {};
+  const canonical = data.relationships?.assignments || {};
   return {
-    career: firstDefined(staff.careerId, data.assignedCareerCounsellorId, data.assignedCareerCoachId, null),
-    wellbeing: firstDefined(staff.psychologistId, staff.psychologyId, data.assignedPsychologistId, data.assignedCounsellorId, null),
-    sen: firstDefined(staff.senId, staff.educatorId, data.assignedSENEducatorId, null),
+    career: firstDefined(canonical.career, staff.careerId, data.assignedCareerCounsellorId, data.assignedCareerCoachId, null),
+    wellbeing: firstDefined(canonical.wellbeing, staff.psychologistId, staff.psychologyId, data.assignedPsychologistId, data.assignedCounsellorId, null),
+    sen: firstDefined(canonical.sen, staff.senId, staff.educatorId, data.assignedSENEducatorId, null),
   };
 }
 
@@ -227,6 +228,12 @@ function normalisePersonal(data = {}) {
 }
 
 export function normalizeStudentRecord(data = {}, id = null) {
+  // Canonical studentProfile is the source of truth when present. Merge it over
+  // the legacy record so existing fallback fields remain available during migration.
+  data = data.studentProfile && typeof data.studentProfile === 'object'
+    ? { ...data, ...data.studentProfile }
+    : data;
+
   const guardians = normaliseGuardian(data);
   const assignments = normaliseAssignments(data);
   const path = normalisePath(data);
