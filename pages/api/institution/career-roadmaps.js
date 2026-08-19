@@ -55,10 +55,11 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Institution programme is not active.' });
   }
 
+  // Query only by institutionId so the endpoint does not depend on a new
+  // composite Firestore index. shareType/status/audience are security filters.
   const [sharedSnap, rosterSnap] = await Promise.all([
     db.collection('sharedInformation')
       .where('institutionId', '==', institutionId)
-      .where('shareType', '==', 'CAREER_ROADMAP_SUMMARY')
       .limit(2000)
       .get(),
     institutionRef.collection('roster').limit(2000).get(),
@@ -81,6 +82,7 @@ export default async function handler(req, res) {
     .map((doc) => doc.data() || {})
     .filter((share) => (
       share.status === SHARED_INFORMATION_STATUS.ACTIVE
+      && share.shareType === 'CAREER_ROADMAP_SUMMARY'
       && Array.isArray(share.audiences)
       && share.audiences.includes(SHARED_INFORMATION_AUDIENCES.INSTITUTION)
       && share.institutionId === institutionId
