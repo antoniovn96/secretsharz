@@ -1,30 +1,14 @@
 import { getAdminAuth, getAdminFirestore } from './firebaseAdmin.js';
 import normalizeStudentRecord from '../platform/studentRecordNormalizer.js';
 
-/**
- * Server-side authorization for professional access to a student.
- *
- * Canonical assignment relationships are authoritative. Legacy assignedStaff
- * fields remain a migration fallback for older student records.
- */
+/** Server-side authorization for professional access to a student. Canonical assignments are authoritative; legacy assignments are migration fallback only. */
 export async function authorizeProfessionalStudent({ req, studentId, service }) {
   if (!studentId) return { authorized: false, reason: 'missing_student_id' };
-  if (!['career', 'psychology', 'sen'].includes(service)) {
-    return { authorized: false, reason: 'invalid_service' };
-  }
-
+  if (!['career', 'psychology', 'sen'].includes(service)) return { authorized: false, reason: 'invalid_service' };
   const authHeader = req?.headers?.authorization || req?.headers?.Authorization || '';
-  if (!authHeader.startsWith('Bearer ')) {
-    return { authorized: false, reason: 'missing_auth' };
-  }
-
-  const token = authHeader.slice(7);
+  if (!authHeader.startsWith('Bearer ')) return { authorized: false, reason: 'missing_auth' };
   let decoded;
-  try {
-    decoded = await getAdminAuth().verifyIdToken(token);
-  } catch {
-    return { authorized: false, reason: 'invalid_auth' };
-  }
+  try { decoded = await getAdminAuth().verifyIdToken(authHeader.slice(7)); } catch { return { authorized: false, reason: 'invalid_auth' }; }
 
   const db = getAdminFirestore();
   const viewerSnap = await db.collection('users').doc(decoded.uid).get();
@@ -32,38 +16,26 @@ export async function authorizeProfessionalStudent({ req, studentId, service }) 
   const roles = Array.isArray(viewer.roles) ? viewer.roles : (viewer.role ? [viewer.role] : []);
   const isAdmin = roles.some(role => ['admin', 'super_admin', 'superadmin'].includes(String(role).toLowerCase()));
 
-  const studentSnap = await db.collection('students').doc(studentId).get();
+  let studentSnap = await db.collection('students').doc(studentId).get();
+  if (!studentSnap.exists) studentSnap = await db.collection('users').doc(studentId).get();
   if (!studentSnap.exists) return { authorized: false, reason: 'student_not_found' };
   const student = studentSnap.data() || {};
-
-  if (isAdmin) {
-    return { authorized: true, viewerId: decoded.uid, studentId, student, isAdmin: true };
-  }
+  if (isAdmin) return { authorized: true, viewerId: decoded.uid, studentId, student, isAdmin: true };
 
   const canonical = normalizeStudentRecord(student, studentId);
-  const canonicalAssignment = canonical.relationships?.assignments?.[service];
+  const assignmentKey = service === 'psychology' ? 'wellbeing' : service;
+  const canonicalAssignment = canonical.relationships?.assignments?.[assignmentKey];
+  const canonicalService = canonical.services?.[assignmentKey];
 
-  // Canonical relationships are authoritative. For legacy records where the
-  // normalized relationship is absent, preserve compatibility with the old
-  // assignedStaff / assignedProfessionals fields until migration is complete.
-  if (canonicalAssignment) {
-    if (canonicalAssignment !== decoded.uid) {
-      return { authorized: false, reason: 'not_assigned' };
-    }
+  // Canonical assignment/service state is authoritative. A stale legacy assignment must never restore access.
+  if (canonicalAssignment || canonicalService?.status === 'active') {
+    if (canonicalService?.status !== 'active') return { authorized: false, reason: 'service_inactive' };
+    if (canonicalAssignment !== decoded.uid) return { authorized: false, reason: 'not_assigned' };
     return { authorized: true, viewerId: decoded.uid, studentId, student, isAdmin: false };
   }
 
   const assignedStaff = student.assignedStaff || student.assignedProfessionals || {};
-  const assignmentKeys = {
-    career: ['careerId', 'careerCounsellorId', 'careerCounselorId'],
-    psychology: ['psychologistId', 'psychologyId', 'counsellorId', 'counselorId'],
-    sen: ['senId', 'senEducatorId', 'specialEducatorId'],
-  }[service];
-
-  const assigned = assignmentKeys.some(key => assignedStaff[key] === decoded.uid);
-  if (!assigned) {
-    return { authorized: false, reason: 'not_assigned' };
-  }
-
+  const assignmentKeys = { career: ['careerId', 'careerCounsellorId', 'careerCounselorId'], psychology: ['psychologistId', 'psychologyId', 'counsellorId', 'counselorId'], sen: ['senId', 'senEducatorId', 'specialEducatorId'] }[service];
+  if (!assignmentKeys.some(key => assignedStaff[key] === decoded.uid)) return { authorized: false, reason: 'not_assigned' };
   return { authorized: true, viewerId: decoded.uid, studentId, student, isAdmin: false };
 }
