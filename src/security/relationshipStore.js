@@ -27,37 +27,29 @@ export function buildRelationshipDocument(input) {
 }
 
 export function validateRelationshipPatch(patch = {}) {
-  if (patch.type !== undefined && !isKnownValue(patch.type, RELATIONSHIP_TYPES)) {
-    throw new Error('Unknown relationship type.');
-  }
-  if (patch.domain !== undefined && patch.domain !== null && !isKnownValue(patch.domain, SERVICE_DOMAINS)) {
-    throw new Error('Unknown service domain.');
-  }
-  if (patch.status !== undefined && !isKnownValue(patch.status, RELATIONSHIP_STATUSES)) {
-    throw new Error('Unknown relationship status.');
-  }
-  if (patch.subjectPersonId !== undefined && !patch.subjectPersonId) {
-    throw new Error('subjectPersonId cannot be empty.');
-  }
-  if (patch.relatedPersonId !== undefined && !patch.relatedPersonId) {
-    throw new Error('relatedPersonId cannot be empty.');
-  }
-  if (patch.subjectPersonId && patch.relatedPersonId && patch.subjectPersonId === patch.relatedPersonId) {
-    throw new Error('A relationship cannot target the same person.');
-  }
+  if (patch.type !== undefined && !isKnownValue(patch.type, RELATIONSHIP_TYPES)) throw new Error('Unknown relationship type.');
+  if (patch.domain !== undefined && patch.domain !== null && !isKnownValue(patch.domain, SERVICE_DOMAINS)) throw new Error('Unknown service domain.');
+  if (patch.status !== undefined && !isKnownValue(patch.status, RELATIONSHIP_STATUSES)) throw new Error('Unknown relationship status.');
+  if (patch.subjectPersonId !== undefined && !patch.subjectPersonId) throw new Error('subjectPersonId cannot be empty.');
+  if (patch.relatedPersonId !== undefined && !patch.relatedPersonId) throw new Error('relatedPersonId cannot be empty.');
+  if (patch.subjectPersonId && patch.relatedPersonId && patch.subjectPersonId === patch.relatedPersonId) throw new Error('A relationship cannot target the same person.');
   return true;
+}
+
+function activeRelationshipQuery(db, { subjectPersonId, type, domain = null }) {
+  let query = db.collection(COLLECTION)
+    .where('subjectPersonId', '==', subjectPersonId)
+    .where('type', '==', type)
+    .where('status', '==', 'active')
+    .limit(50);
+  return { query, domain };
 }
 
 async function findActiveRelationships({ db, subjectPersonId, type, domain = null }) {
   if (!db) throw new Error('Firestore instance is required.');
   if (!subjectPersonId || !type) return [];
-  const snapshot = await db.collection(COLLECTION)
-    .where('subjectPersonId', '==', subjectPersonId)
-    .where('type', '==', type)
-    .where('status', '==', 'active')
-    .limit(50)
-    .get();
-
+  const { query } = activeRelationshipQuery(db, { subjectPersonId, type, domain });
+  const snapshot = await query.get();
   return snapshot.docs
     .map(doc => ({ ref: doc.ref, id: doc.id, ...doc.data() }))
     .filter(item => domain == null || item.domain == null || item.domain === domain);
@@ -74,30 +66,26 @@ export async function createRelationship({ db, ...input }) {
 /**
  * Atomically replace the active relationship for a student/domain/type.
  * The previous relationship is retained as history with status=ended.
- * This function intentionally does not mutate user/student profile fields;
- * callers should update any denormalized compatibility projection in the
- * same transaction when required by the application.
+ * Canonical relationship state is changed here; profile compatibility
+ * projections must be updated by the calling application in the same
+ * transaction when required.
  */
 export async function reassignRelationship({ db, subjectPersonId, relatedPersonId, type, domain = null, consentRequired = true, startsAt = new Date().toISOString(), metadata = {} }) {
   if (!db) throw new Error('Firestore instance is required.');
   validateRelationshipPatch({ subjectPersonId, relatedPersonId, type, domain });
-  if (domain !== null && !isKnownValue(domain, SERVICE_DOMAINS)) throw new Error('Unknown service domain.');
-
-  const now = new Date().toISOString();
-  const transaction = db.runTransaction ? db.runTransaction.bind(db) : null;
-  if (!transaction) throw new Error('Firestore transactions are required for relationship reassignment.');
 
   let result = null;
-  await transaction(async (tx) => {
-    const active = await findActiveRelationships({ db, subjectPersonId, type, domain });
+  await db.runTransaction(async (tx) => {
+    const { query } = activeRelationshipQuery(db, { subjectPersonId, type, domain });
+    const snapshot = await tx.get(query);
+    const active = snapshot.docs
+      .map(doc => ({ ref: doc.ref, id: doc.id, ...doc.data() }))
+      .filter(item => domain == null || item.domain == null || item.domain === domain);
     const conflicting = active.filter(item => item.relatedPersonId !== relatedPersonId);
+    const now = new Date().toISOString();
 
     for (const relationship of conflicting) {
-      tx.update(relationship.ref, {
-        status: 'ended',
-        endsAt: now,
-        updatedAt: now,
-      });
+      tx.update(relationship.ref, { status: 'ended', endsAt: now, updatedAt: now });
     }
 
     const existingTarget = active.find(item => item.relatedPersonId === relatedPersonId);
@@ -124,17 +112,23 @@ export async function reassignRelationship({ db, subjectPersonId, relatedPersonI
   return result;
 }
 
+/** End all active relationships for one student/domain/type atomically. */
 export async function endRelationships({ db, subjectPersonId, type, domain = null, endsAt = new Date().toISOString() }) {
   if (!db) throw new Error('Firestore instance is required.');
   validateRelationshipPatch({ subjectPersonId, type, domain });
-  const active = await findActiveRelationships({ db, subjectPersonId, type, domain });
-  if (!active.length) return 0;
+  let count = 0;
   await db.runTransaction(async (tx) => {
+    const { query } = activeRelationshipQuery(db, { subjectPersonId, type, domain });
+    const snapshot = await tx.get(query);
+    const active = snapshot.docs
+      .map(doc => ({ ref: doc.ref, ...doc.data() }))
+      .filter(item => domain == null || item.domain == null || item.domain === domain);
     for (const relationship of active) {
       tx.update(relationship.ref, { status: 'ended', endsAt, updatedAt: endsAt });
     }
+    count = active.length;
   });
-  return active.length;
+  return count;
 }
 
 export async function getActiveRelationship({ db, subjectPersonId, relatedPersonId, type, domain = null }) {
@@ -158,13 +152,7 @@ export async function getActiveRelationship({ db, subjectPersonId, relatedPerson
 export async function hasActiveRelationship({ db, subjectPersonId, relatedPersonId, types = [], domain = null }) {
   const allowedTypes = Array.isArray(types) ? types : [types];
   for (const type of allowedTypes.filter(Boolean)) {
-    const relationship = await getActiveRelationship({
-      db,
-      subjectPersonId,
-      relatedPersonId,
-      type,
-      domain,
-    });
+    const relationship = await getActiveRelationship({ db, subjectPersonId, relatedPersonId, type, domain });
     if (relationship) return true;
   }
   return false;
