@@ -16,3 +16,7 @@ export async function requireServiceConsent(args) {
   if (!result.allowed) { const error = new Error('Required service consent is not active.'); error.code = 'CONSENT_REQUIRED'; throw error; }
   return result;
 }
+
+// Compatibility export for API consumers that import the counselling consent type
+// from the resolver rather than the underlying policy module.
+export { CONSENT_TYPES };
