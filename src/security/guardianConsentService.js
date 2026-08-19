@@ -1,34 +1,23 @@
 // Secret Sharz — guardian-authorized consent service (SERVER-ONLY).
-// This layer verifies the relationship only; it does not invent age/legal rules.
-import { getActiveRelationship } from './relationshipStore.js';
+// Verifies relationship and age-band eligibility; it does not invent legal rules.
+import { getAdminFirestore } from './firebaseAdmin.js';
+import { evaluateConsentEligibility, getAgeBand } from './consentEligibility.js';
 import { recordConsentEvent } from './consentService.js';
 
 const ALLOWED_GUARDIAN_TYPES = new Set(['guardian', 'parent']);
 
 export async function recordGuardianConsent({ db, guardianId, studentId, consentType, action, relationshipId = null, serviceContext = null }) {
   if (!db || !guardianId || !studentId) throw new Error('Guardian and student are required.');
-  const relationships = await db.collection('relationships')
-    .where('subjectPersonId', '==', studentId)
-    .where('relatedPersonId', '==', guardianId)
-    .limit(20)
-    .get();
-  const relationship = relationships.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-    .find(item => ALLOWED_GUARDIAN_TYPES.has(item.type) && item.status === 'active');
-  if (!relationship) {
-    const error = new Error('Active guardian relationship is required.');
-    error.code = 'GUARDIAN_RELATIONSHIP_REQUIRED';
-    throw error;
-  }
+  const relationships = await db.collection('relationships').where('subjectPersonId', '==', studentId).where('relatedPersonId', '==', guardianId).limit(20).get();
+  const relationship = relationships.docs.map(doc => ({ id: doc.id, ...doc.data() })).find(item => ALLOWED_GUARDIAN_TYPES.has(item.type) && item.status === 'active');
+  if (!relationship) { const error = new Error('Active guardian relationship is required.'); error.code = 'GUARDIAN_RELATIONSHIP_REQUIRED'; throw error; }
 
-  // The caller must supply any applicable policy/age decision before this function
-  // is invoked. This service only establishes that the actor is an active guardian.
-  return recordConsentEvent({
-    db,
-    userId: studentId,
-    type: consentType,
-    action,
-    actorType: 'guardian',
-    relationshipId: relationshipId || relationship.id,
-    serviceContext: serviceContext || { guardianId, studentId },
-  });
+  const student = await db.collection('users').doc(studentId).get();
+  if (!student.exists) { const error = new Error('Consent subject not found.'); error.code = 'CONSENT_SUBJECT_NOT_FOUND'; throw error; }
+  const data = student.data() || {};
+  const ageBand = getAgeBand(data.dateOfBirth || data.dob || data.birthDate);
+  const eligibility = evaluateConsentEligibility({ consentType, actorType: 'guardian', ageBand });
+  if (!eligibility.allowed) { const error = new Error('Guardian consent is not eligible under the current service policy.'); error.code = 'CONSENT_NOT_ELIGIBLE'; error.reason = eligibility.reason; throw error; }
+
+  return recordConsentEvent({ db, userId: studentId, type: consentType, action, actorType: 'guardian', relationshipId: relationshipId || relationship.id, serviceContext: serviceContext || { guardianId, studentId } });
 }
