@@ -25,13 +25,19 @@ export function buildCareerRoadmapShare({ studentId, roadmapId, providerId, phas
       .map((key) => [key, String(phases?.[key] || '').trim().slice(0, 5000)])
   );
 
+  const audiences = [
+    SHARED_INFORMATION_AUDIENCES.STUDENT,
+    SHARED_INFORMATION_AUDIENCES.PARENT,
+  ];
+  if (institutionId) audiences.push(SHARED_INFORMATION_AUDIENCES.INSTITUTION);
+
   return {
     studentId,
     serviceId: 'CAREER_GUIDANCE',
     shareType: 'CAREER_ROADMAP_SUMMARY',
     sourceRecordId: roadmapId,
     createdBy: providerId,
-    audiences: [SHARED_INFORMATION_AUDIENCES.STUDENT, SHARED_INFORMATION_AUDIENCES.PARENT],
+    audiences,
     institutionId: institutionId || null,
     status: SHARED_INFORMATION_STATUS.ACTIVE,
     scope: 'CAREER_ROADMAP_SUMMARY',
