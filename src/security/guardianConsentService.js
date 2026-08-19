@@ -1,7 +1,6 @@
 // Secret Sharz — guardian-authorized consent service (SERVER-ONLY).
 // Verifies relationship and age-band eligibility; it does not invent legal rules.
-import { getAdminFirestore } from './firebaseAdmin.js';
-import { evaluateConsentEligibility, getAgeBand } from './consentEligibility.js';
+import { evaluateConsentEligibility, getStudentAgeBand } from './consentEligibility.js';
 import { recordConsentEvent } from './consentService.js';
 
 const ALLOWED_GUARDIAN_TYPES = new Set(['guardian', 'parent']);
@@ -15,7 +14,7 @@ export async function recordGuardianConsent({ db, guardianId, studentId, consent
   const student = await db.collection('users').doc(studentId).get();
   if (!student.exists) { const error = new Error('Consent subject not found.'); error.code = 'CONSENT_SUBJECT_NOT_FOUND'; throw error; }
   const data = student.data() || {};
-  const ageBand = getAgeBand(data.dateOfBirth || data.dob || data.birthDate);
+  const ageBand = getStudentAgeBand(data);
   const eligibility = evaluateConsentEligibility({ consentType, actorType: 'guardian', ageBand });
   if (!eligibility.allowed) { const error = new Error('Guardian consent is not eligible under the current service policy.'); error.code = 'CONSENT_NOT_ELIGIBLE'; error.reason = eligibility.reason; throw error; }
 
