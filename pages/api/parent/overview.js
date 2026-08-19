@@ -12,9 +12,8 @@ async function latestReport(db, childId, path){
     return snap.empty?null:{type:'sen',data:snap.docs[0].data()||{}};
   }
   if(path==='career'){
-    // Career professionals publish an intentionally limited roadmap projection
-    // to Shared Information. Parents may consume that projection only after
-    // the parent-child relationship has already been authorised above.
+    // Career roadmap visibility is projection-only. The parent dashboard never
+    // falls back to the professional roadmap collection.
     const sharedSnap=await db.collection('sharedInformation').doc(careerRoadmapShareId(childId)).get();
     if(sharedSnap.exists){
       const shared=sharedSnap.data()||{};
@@ -23,11 +22,7 @@ async function latestReport(db, childId, path){
         return {type:'career',data:shared.data||{},shared:true};
       }
     }
-
-    // Migration fallback for legacy records. This is intentionally read-only
-    // and can be removed after existing roadmap data is projected.
-    const snap=await db.collection('users').doc(childId).collection('career_roadmaps').orderBy('timestamp','desc').limit(1).get();
-    return snap.empty?null:{type:'career',data:snap.docs[0].data()||{},legacy:true};
+    return null;
   }
   return null;
 }
