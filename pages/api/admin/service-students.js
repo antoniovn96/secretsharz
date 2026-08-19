@@ -1,5 +1,6 @@
 import { getAdminAuth, getAdminFirestore, getAdminApp } from '../../../src/security/firebaseAdmin.js';
 import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
+import { normalizeCanonicalStudent } from '../../../src/platform/canonicalStudentContract.js';
 import { isStudentProfile } from '../../../src/platform/studentRecordModel.js';
 
 const SERVICE_PATHS = new Set(['career', 'wellbeing', 'sen']);
@@ -39,6 +40,7 @@ function serviceIsActive(profile, service) {
 
 function publicStudentRecord(doc, profile, service) {
   const raw = doc.data() || {};
+  const canonical = normalizeCanonicalStudent(raw, raw.authUid || raw.uid || doc.id);
   const identity = profile.identity || {};
   const contact = profile.contact || {};
   const academic = profile.academic?.current || {};
@@ -48,26 +50,31 @@ function publicStudentRecord(doc, profile, service) {
   const assignments = profile.relationships?.assignments || {};
   const assignedProfessionalId = assignments[service] || null;
   const governance = profile.governance || {};
-  const ssStudentId = String(raw.ssStudentId || raw.studentId || raw.studentID || raw.student_id || '').trim() || null;
+  const activeMembership = canonical.institutionMemberships.find((membership) => membership.status === 'active') || null;
+  const ssStudentId = canonical.ssStudentId || null;
+  const authUid = canonical.authUid || null;
+  const name = canonical.identity.preferredName || canonical.identity.legalName || identity.fullName || '';
+  const institutionId = activeMembership?.institutionId || academic.institutionId || institution.id || '';
+  const institutionName = activeMembership?.institutionName || academic.institutionName || institution.name || '';
 
   return {
     id: ssStudentId,
     ssStudentId,
     studentId: ssStudentId,
-    authUid: raw.authUid || raw.uid || doc.id,
-    uid: raw.authUid || raw.uid || doc.id,
+    authUid,
+    uid: authUid,
     studentDocumentId: doc.id,
-    name: identity.fullName || '',
-    preferredName: identity.preferredName || '',
+    name,
+    preferredName: canonical.identity.preferredName || identity.preferredName || '',
     email: contact.email || '',
     photoURL: identity.photoURL || '',
     dob: identity.dateOfBirth || '',
-    grade: academic.grade || '',
-    section: academic.section || '',
-    schoolName: academic.institutionName || institution.name || '',
-    institutionName: institution.name || academic.institutionName || '',
-    institutionId: academic.institutionId || institution.id || '',
-    academicYear: academic.academicYear || institution.academicYear || '',
+    grade: canonical.academic.current.grade || academic.grade || '',
+    section: canonical.academic.current.section || academic.section || '',
+    schoolName: institutionName,
+    institutionName,
+    institutionId,
+    academicYear: canonical.academic.current.academicYear || academic.academicYear || institution.academicYear || '',
     parentName: primaryGuardian.name || '',
     parentContact: primaryGuardian.phone || '',
     parentEmail: primaryGuardian.email || '',
@@ -90,6 +97,8 @@ function publicStudentRecord(doc, profile, service) {
     assessmentCompletedAt: toIso(raw.assessmentCompletedAt || raw.careerAssessment?.completedAt),
     careerReportAccess: raw.careerReportAccess || null,
     consentStatus: governance.consent || null,
+    identityContractVersion: canonical.contractVersion,
+    identityComplete: Boolean(canonical.authUid && canonical.ssStudentId),
     createdAt: toIso(raw.createdAt),
     createdAtMs: toMillis(raw.createdAt),
     updatedAt: toIso(raw.updatedAt),
