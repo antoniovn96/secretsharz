@@ -2,17 +2,28 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { provisionParentAccount } from '../../src/security/provisionParentAccount.js';
 
-function makeDb(existingProfile = null) {
+function makeDb(existingProfile = null, student = null) {
   const writes = [];
   const ref = {
     set: async (data, options) => writes.push({ data, options }),
-    get: async () => ({ exists: Boolean(existingProfile), data: () => existingProfile }),
+    get: async () => ({ exists: Boolean(existingProfile || student), data: () => existingProfile || student }),
   };
   return {
     writes,
     collection(name) {
       assert.equal(name, 'users');
       return { doc: () => ref };
+    },
+    async runTransaction(callback) {
+      const transaction = {
+        async get() {
+          return { exists: Boolean(student), data: () => student };
+        },
+        set(targetRef, data, options) {
+          writes.push({ data, options, transaction: true });
+        },
+      };
+      return callback(transaction);
     },
   };
 }
@@ -49,6 +60,7 @@ test('provisions a new parent Auth account and parent profile', async () => {
     parentEmail: 'PARENT@EXAMPLE.COM',
     institutionId: 'school-1',
     institutionName: 'Example School',
+    allowUnlinked: true,
   });
 
   assert.equal(result.uid, 'new-parent-uid');
@@ -69,6 +81,9 @@ test('reuses an existing parent account and preserves existing links', async () 
     institutionId: 'school-1',
     linkedRosterIds: ['roster-old'],
     linkedStudentIds: ['student-old'],
+  }, {
+    academic: { current: { institutionId: 'school-1' } },
+    family: { guardians: [] },
   });
   const result = await provisionParentAccount({
     adminAuth,
@@ -98,6 +113,7 @@ test('rejects a cross-institution parent reassignment', async () => {
       parentName: 'Parent One',
       parentEmail: 'parent@example.com',
       institutionId: 'school-other',
+      allowUnlinked: true,
     }),
     /already linked to another institution/
   );
@@ -113,6 +129,7 @@ test('rejects an email already assigned to a non-parent role', async () => {
       adminDb,
       parentName: 'Parent One',
       parentEmail: 'student@example.com',
+      allowUnlinked: true,
     }),
     /already assigned to the student role/
   );
