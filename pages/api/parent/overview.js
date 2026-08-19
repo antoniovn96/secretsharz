@@ -1,5 +1,6 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { resolveStudentProfile } from '../../../src/platform/studentProfileResolver.js';
+import { hasActiveRelationship } from '../../../src/security/relationshipStore.js';
 import { careerRoadmapShareId, SHARED_INFORMATION_AUDIENCES, SHARED_INFORMATION_STATUS } from '../../../src/platform/sharedInformation.js';
 
 function bearerToken(req) { const header = req.headers.authorization || req.headers.Authorization; if (typeof header !== 'string') return null; const match = header.match(/^Bearer\s+(.+)$/i); return match ? match[1] : null; }
@@ -39,16 +40,20 @@ function sanitizeChild(profile, id, careerReport, relationship) {
       hollandCode: clean(careerReport?.riasecCode || careerDNA.code || ''),
       roadmapSummary: clean(careerReport?.phases?.phase2_explore || careerReport?.summary || '', 1200),
     } : null,
-    sen: services.sen ? {
-      released: false,
-      goals: [],
-      accommodations: [],
-    } : null,
-    wellbeing: services.wellbeing ? {
-      released: false,
-      specialistDetailsHidden: true,
-    } : null,
+    sen: services.sen ? { released: false, goals: [], accommodations: [] } : null,
+    wellbeing: services.wellbeing ? { released: false, specialistDetailsHidden: true } : null,
   };
+}
+
+async function canonicalGuardianRelationship(db, parentUid, childId) {
+  const guardian = await hasActiveRelationship({
+    db,
+    subjectPersonId: childId,
+    relatedPersonId: parentUid,
+    types: ['guardian', 'parent'],
+    domain: null,
+  });
+  return guardian;
 }
 
 export default async function handler(req, res) {
@@ -65,14 +70,23 @@ export default async function handler(req, res) {
   const parent = parentSnap.data() || {};
   if (parent.role !== 'parent') return res.status(403).json({ error: 'Parent access required.' });
 
-  const studentIds = Array.isArray(parent.linkedStudentIds) ? [...new Set(parent.linkedStudentIds.filter(Boolean))] : [];
+  // linkedStudentIds is now a migration-only compatibility projection. It is
+  // never sufficient to authorize a child. Canonical guardian/parent
+  // relationships are the authority.
+  const legacyCandidateIds = Array.isArray(parent.linkedStudentIds) ? parent.linkedStudentIds : [];
   const children = [];
 
-  for (const childId of studentIds) {
-    const childSnap = await db.collection('users').doc(childId).get();
-    if (!childSnap.exists) continue;
-    const child = childSnap.data() || {};
-    const resolved = resolveStudentProfile(child, { role: 'parent', uid: decoded.uid });
+  for (const childId of [...new Set(legacyCandidateIds.filter(Boolean))]) {
+    const authorized = await canonicalGuardianRelationship(db, decoded.uid, childId);
+    if (!authorized) continue;
+
+    const childSnap = await db.collection('students').doc(childId).get();
+    const fallbackSnap = childSnap.exists ? null : await db.collection('users').doc(childId).get();
+    const resolvedSnap = childSnap.exists ? childSnap : fallbackSnap;
+    if (!resolvedSnap?.exists) continue;
+    const child = resolvedSnap.data() || {};
+
+    const resolved = resolveStudentProfile(child, { role: 'parent', uid: decoded.uid, relationshipAuthorized: true });
     if (!resolved.allowed) continue;
 
     const relationship = resolved.profile.family?.guardians?.find((guardian) => guardian.accountId === decoded.uid)?.relationship
