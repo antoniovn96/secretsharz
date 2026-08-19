@@ -1,6 +1,7 @@
 import { getAdminFirestore } from '../../../../src/security/firebaseAdmin.js';
 import { authorizeProfessionalStudent } from '../../../../src/security/authorizeProfessionalStudent.js';
 import { resolveStudentProfile } from '../../../../src/platform/studentProfileResolver.js';
+import { buildCareerRoadmapShare, careerRoadmapShareId } from '../../../../src/platform/sharedInformation.js';
 
 export default async function handler(req, res) {
   if (!['GET', 'POST'].includes(req.method)) {
@@ -41,6 +42,26 @@ export default async function handler(req, res) {
       createdAt: now,
       updatedAt: now,
     });
+
+    // The professional roadmap remains the source of truth. Published content
+    // is projected into Shared Information so authorised downstream audiences
+    // never need direct access to the professional collection.
+    if (status === 'Published') {
+      const institutionId = authResult.student?.institutionId
+        || resolved.profile?.institutionId
+        || resolved.profile?.institution?.id
+        || null;
+      const share = buildCareerRoadmapShare({
+        studentId,
+        roadmapId: docRef.id,
+        providerId: authResult.viewerId,
+        phases: cleanPhases,
+        institutionId,
+        now,
+      });
+      await db.collection('sharedInformation').doc(careerRoadmapShareId(studentId)).set(share, { merge: true });
+    }
+
     return res.status(201).json({ ok: true, id: docRef.id, status });
   }
 
