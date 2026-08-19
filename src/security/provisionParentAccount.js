@@ -3,14 +3,9 @@ import crypto from 'crypto';
 /**
  * Server-only parent account provisioning.
  *
- * Parents are never created through the public registration UI. An authorised
- * Secret Sharz server workflow provisions the Firebase Auth account, assigns
- * the parent claim, creates the parent profile, optionally links selected
- * students, and returns an activation link to the authorised caller.
- *
- * A roster import may provision the parent before the student's account exists.
- * In that case the roster record carries the pending parent UID and the student
- * is linked atomically when the student redeems their institutional code.
+ * The parent account and the student's canonical family.guardians entry are
+ * updated together so Parent, Student, Institution and Admin views share the
+ * same stable guardian UID and contact identity.
  */
 export async function provisionParentAccount({adminAuth,adminDb,parentName,parentEmail,institutionId=null,institutionName='',rosterIds=[],studentIds=[],provisioningMethod='admin',relationship='guardian',allowUnlinked=false}){
   const name=String(parentName||'').trim().slice(0,180);const email=String(parentEmail||'').trim().toLowerCase().slice(0,254);const relation=['father','mother','guardian'].includes(String(relationship).toLowerCase())?String(relationship).toLowerCase():'guardian';
@@ -38,7 +33,25 @@ export async function provisionParentAccount({adminAuth,adminDb,parentName,paren
       if(!studentSnap.exists)throw new Error('A linked student account no longer exists.');
       const student=studentSnap.data()||{};
       const existingGuardianRelationships=student.guardianRelationships&&typeof student.guardianRelationships==='object'?student.guardianRelationships:{};
-      transaction.set(studentRef,{guardianRelationships:{...existingGuardianRelationships,[user.uid]:relation}},{merge:true});
+      const existingGuardians=Array.isArray(student.family?.guardians)?student.family.guardians:[];
+      const guardianIndex=existingGuardians.findIndex((guardian)=>guardian?.accountId===user.uid || guardian?.uid===user.uid || guardian?.id===user.uid);
+      const existingGuardian=guardianIndex>=0?existingGuardians[guardianIndex]:{};
+      const canonicalGuardian={
+        ...existingGuardian,
+        accountId:user.uid,
+        relationship:relation,
+        name:name || existingGuardian.name || '',
+        email:email || existingGuardian.email || '',
+        phone:existingGuardian.phone || '',
+        countryCode:existingGuardian.countryCode || null,
+        legalGuardian:existingGuardian.legalGuardian === true,
+        invitationStatus:existingGuardian.invitationStatus || 'invited',
+        consentStatus:existingGuardian.consentStatus || existingProfile.consentStatus || 'pending',
+      };
+      const guardians=guardianIndex>=0
+        ? existingGuardians.map((guardian,index)=>index===guardianIndex?canonicalGuardian:guardian)
+        : [...existingGuardians,canonicalGuardian];
+      transaction.set(studentRef,{guardianRelationships:{...existingGuardianRelationships,[user.uid]:relation},family:{...(student.family||{}),guardians}},{merge:true});
     });
   }
 
