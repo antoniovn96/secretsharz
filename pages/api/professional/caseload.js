@@ -1,4 +1,5 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
 import { resolveStudentIdentity } from '../../../src/security/studentIdentityResolver.js';
 
 const CONFIG = Object.freeze({
@@ -8,9 +9,7 @@ const CONFIG = Object.freeze({
 });
 
 const FOUNDER_EMAIL = 'antonio.antonio.noronha@gmail.com';
-
 function bearerToken(req) { const header = req.headers.authorization || req.headers.Authorization; if (typeof header !== 'string') return null; const match = header.match(/^Bearer\s+(.+)$/i); return match ? match[1] : null; }
-function valueAt(data, path) { return path.split('.').reduce((value, key) => value?.[key], data); }
 
 function cleanStudent(id, data, service, identity) {
   const canonical = normalizeStudentRecord(data, id);
@@ -70,17 +69,8 @@ export default async function handler(req, res) {
       institutionIds = Array.isArray(professional.institutionIds) ? [...new Set(professional.institutionIds.map(String).filter(Boolean))] : [];
     }
 
-    let query = firestore.collection('relationships')
-      .where('relatedPersonId', '==', decoded.uid)
-      .where('status', '==', 'active')
-      .limit(200);
-    const relationshipSnapshot = await query.get();
-    const assignments = relationshipSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(assignment =>
-      assignment.domain === config.domain &&
-      assignment.type === config.type &&
-      config.slots.includes(String(assignment.metadata?.slot || 'primary').toLowerCase()) &&
-      (!institutionIds.length || institutionIds.includes(String(assignment.metadata?.institutionId || '')))
-    );
+    const relationshipSnapshot = await firestore.collection('relationships').where('relatedPersonId', '==', decoded.uid).where('status', '==', 'active').limit(200).get();
+    const assignments = relationshipSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(assignment => assignment.domain === config.domain && assignment.type === config.type && config.slots.includes(String(assignment.metadata?.slot || 'primary').toLowerCase()) && (!institutionIds.length || institutionIds.includes(String(assignment.metadata?.institutionId || ''))));
 
     const students = [];
     for (const assignment of assignments) {
@@ -99,8 +89,5 @@ export default async function handler(req, res) {
     students.forEach(student => { const key = student.ssStudentId || student.authUid || student.studentDocumentId; if (!unique.has(key)) unique.set(key, student); });
     const rows = [...unique.values()].sort((a, b) => String(a.name).localeCompare(String(b.name)));
     return res.status(200).json({ service: requestedService, canonicalService: config.canonicalService || requestedService, domain: config.domain, count: rows.length, students: rows, generatedAt: new Date().toISOString() });
-  } catch (error) {
-    console.error('[professional caseload] failed:', error);
-    return res.status(500).json({ error: 'Unable to load the assigned professional caseload.' });
-  }
+  } catch (error) { console.error('[professional caseload] failed:', error); return res.status(500).json({ error: 'Unable to load the assigned professional caseload.' }); }
 }
