@@ -11,6 +11,17 @@ function guardiansByRelationship(guardians = [], relationship) {
   return guardians.find(item => String(item?.relationship || '').toLowerCase() === relationship) || {};
 }
 
+function deriveStudentTrack(services = {}) {
+  const active = ['career', 'wellbeing', 'sen'].filter(service => services?.[service]?.status === 'active');
+  if (active.length === 0) return 'unassigned';
+  if (active.length === 1) return active[0];
+  return 'multiple';
+}
+
+function deriveCounsellingConsent(profile = {}) {
+  return Boolean(profile.governance?.consents?.wellbeing || profile.governance?.consent?.counselling || profile.governance?.serviceConsent?.wellbeing);
+}
+
 export function toLegacyDashboardProfile(profile = EMPTY_CANONICAL_STUDENT) {
   const identity = profile.identity || {};
   const contact = profile.contact || {};
@@ -20,6 +31,7 @@ export function toLegacyDashboardProfile(profile = EMPTY_CANONICAL_STUDENT) {
   const father = guardiansByRelationship(guardians, 'father');
   const mother = guardiansByRelationship(guardians, 'mother');
   const assignments = profile.relationships?.assignments || {};
+  const currentAcademic = academic.current || {};
 
   return {
     id: profile.id || null,
@@ -33,18 +45,20 @@ export function toLegacyDashboardProfile(profile = EMPTY_CANONICAL_STUDENT) {
     phone: contact.mobile?.number || '',
     fatherName: father.name || '', fatherPhone: father.phone || '', fatherEmail: father.email || '',
     motherName: mother.name || '', motherPhone: mother.phone || '', motherEmail: mother.email || '',
-    schoolName: academic.institutionName || institution.name || '',
-    gradeLevel: academic.grade || '',
-    stream1112: academic.stream || '',
-    subjects: academic.subjects || [],
-    studentTrack: profile.services?.primary || 'unassigned',
+    schoolName: currentAcademic.institutionName || academic.institutionName || institution.name || '',
+    gradeLevel: currentAcademic.grade || academic.grade || '',
+    section: currentAcademic.section || '',
+    academicYear: currentAcademic.academicYear || institution.academicYear || '',
+    stream1112: currentAcademic.stream || academic.stream || '',
+    subjects: currentAcademic.subjects || academic.subjects || [],
+    studentTrack: deriveStudentTrack(profile.services),
     assignedCounsellorId: assignments.wellbeing || assignments.psychology || null,
     assignedCareerCoachId: assignments.career || null,
     assignedSENEducatorId: assignments.sen || null,
     interests: profile.career?.interests || [],
-    hobbies: profile.career?.hobbies || [],
-    counsellingConsentAgreed: Boolean(profile.governance?.consents?.wellbeing || profile.governance?.consent?.counselling),
-    profileComplete: Boolean(profile.onboarding?.completed),
+    hobbies: profile.personal?.hobbies || profile.career?.hobbies || [],
+    counsellingConsentAgreed: deriveCounsellingConsent(profile),
+    profileComplete: Boolean(profile.onboarding?.profileComplete || profile.onboarding?.completed),
     onboardingCompleted: Boolean(profile.onboarding?.completed),
     canonicalProfile: profile,
   };
