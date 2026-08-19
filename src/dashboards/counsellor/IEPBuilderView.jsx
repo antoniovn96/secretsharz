@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, doc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, auth } from '../../firebase';
+import { auth } from '../../firebase';
 import { useDashboard } from '../../context/DashboardContext';
 
 const COMMON_ACCOMMODATIONS = ['Extra Time (25%)','Extra Time (50%)','Quiet Testing Area','Calculator Use','Visual Schedules','Sensory Breaks','Text-to-Speech Software','Scribe / Writer'];
@@ -16,22 +15,47 @@ const IEPBuilderView = ({ studentId, currentUser }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
 
+  const authorizedRequest = async (path, options = {}) => {
+    const user = auth.currentUser || currentUser;
+    if (!user) throw new Error('Professional identity is unavailable.');
+    const token = await user.getIdToken();
+    const response = await fetch(path, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    const body = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(body?.error || 'Unable to complete the SEN request.');
+    return body;
+  };
+
   useEffect(() => {
+    let cancelled = false;
     const fetchStudentData = async () => {
       try {
-        const providerId = auth.currentUser?.uid || currentUser?.uid;
-        const snapshot = await getDoc(doc(db, 'users', studentId));
-        if (!snapshot.exists()) { setSaveMessage({ text: 'Student record not found.', type: 'error' }); return; }
-        const data = snapshot.data();
-        const isAdmin = currentUser?.email?.toLowerCase() === 'antonio.antonio.noronha@gmail.com';
-        const assignedEducator = data?.assignedStaff?.educatorId || data?.assignedStaff?.senId;
-        if (!isAdmin && assignedEducator !== providerId) { setAccessDenied(true); return; }
-        if (!isAdmin && data.primary_path !== 'sen') { setAccessDenied(true); return; }
-        setStudentData(data);
-      } catch (err) { console.error('Error fetching assigned SEN student:', err); }
-      finally { setIsLoading(false); }
+        const payload = await authorizedRequest(`/api/professional/sen/iep?studentId=${encodeURIComponent(studentId)}`);
+        if (cancelled) return;
+        setStudentData(payload.student || null);
+        const latest = payload.ieps?.[0];
+        if (latest) {
+          setPlop(latest.plop || '');
+          setGoals(Array.isArray(latest.goals) && latest.goals.length ? latest.goals : ['']);
+          setSelectedAccommodations(Array.isArray(latest.accommodations) ? latest.accommodations : []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setAccessDenied(err?.message?.toLowerCase().includes('assigned') || err?.message?.toLowerCase().includes('access'));
+          setSaveMessage({ text: err?.message || 'Unable to load the SEN student record.', type: 'error' });
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
     };
     if (studentId && currentUser) fetchStudentData();
+    return () => { cancelled = true; };
   }, [studentId, currentUser]);
 
   const handleAddGoal = () => setGoals([...goals, '']);
@@ -44,13 +68,16 @@ const IEPBuilderView = ({ studentId, currentUser }) => {
     if (!plop.trim() && goals.every(g => !g.trim()) && selectedAccommodations.length === 0) { setSaveMessage({ text: 'Cannot save an empty IEP.', type: 'error' }); return; }
     setIsSaving(true); setSaveMessage({ text: '', type: '' });
     try {
-      const providerId = auth.currentUser?.uid || currentUser?.uid;
-      if (!providerId) throw new Error('Professional identity is unavailable.');
-      await addDoc(collection(db, 'users', studentId, 'iep_records'), { providerId, timestamp: serverTimestamp(), status: 'Active', plop, goals: goals.filter(g => g.trim() !== ''), accommodations: selectedAccommodations });
-      setSaveMessage({ text: 'IEP saved securely to Master Record.', type: 'success' });
+      await authorizedRequest(`/api/professional/sen/iep?studentId=${encodeURIComponent(studentId)}`, {
+        method: 'POST',
+        body: JSON.stringify({ plop, goals: goals.filter(g => g.trim() !== ''), accommodations: selectedAccommodations }),
+      });
+      setSaveMessage({ text: 'IEP saved securely to the SEN Master Record.', type: 'success' });
       setTimeout(() => setSaveMessage({ text: '', type: '' }), 3000);
-    } catch (err) { console.error('Error saving IEP:', err); setSaveMessage({ text: 'Failed to save IEP.', type: 'error' }); }
-    finally { setIsSaving(false); }
+    } catch (err) {
+      console.error('Error saving IEP:', err);
+      setSaveMessage({ text: err?.message || 'Failed to save IEP.', type: 'error' });
+    } finally { setIsSaving(false); }
   };
 
   if (isLoading) return <div className="flex min-h-screen items-center justify-center bg-slate-50"><div className="w-12 h-12 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin"></div></div>;
@@ -60,7 +87,7 @@ const IEPBuilderView = ({ studentId, currentUser }) => {
     <div className="min-h-screen bg-slate-50 font-sans pb-20">
       <div className="bg-white border-b border-slate-200 px-8 py-4 sticky top-0 z-50 flex items-center shadow-sm"><button onClick={() => navigate('/provider/educator')} className="text-slate-500 hover:text-amber-600 font-semibold flex items-center gap-2"><span>←</span> Back to SEN Caseload</button></div>
       <div className="max-w-5xl mx-auto px-6 mt-8 space-y-8">
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 flex flex-col md:flex-row items-start md:items-center gap-6"><div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-3xl font-bold flex-shrink-0">{studentData?.name ? studentData.name.charAt(0) : 'S'}</div><div className="flex-1"><div className="flex flex-wrap items-center gap-3 mb-1"><h1 className="text-3xl font-extrabold text-slate-900">{studentData?.name || 'Unknown Student'}</h1><span className="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">IEP Workspace</span></div><div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-500"><span>🏫 {studentData?.schoolName || 'N/A'}</span><span>🎓 {studentData?.grade || 'N/A'}</span></div></div></div>
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 flex flex-col md:flex-row items-start md:items-center gap-6"><div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-3xl font-bold flex-shrink-0">{studentData?.name ? studentData.name.charAt(0) : 'S'}</div><div className="flex-1"><div className="flex flex-wrap items-center gap-3 mb-1"><h1 className="text-3xl font-extrabold text-slate-900">{studentData?.name || 'Unknown Student'}</h1><span className="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">IEP Workspace</span></div><div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-500"><span>🏫 {studentData?.schoolName || 'N/A'}</span><span>🎓 {studentData?.grade || 'N/A'}</span>{studentData?.section&&<span>📚 {studentData.section}</span>}</div></div></div>
         <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200"><div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100"><h2 className="text-2xl font-bold text-slate-800 flex items-center gap-3"><span className="bg-amber-100 text-amber-600 p-2 rounded-xl text-xl">🏗️</span> Individualized Education Program</h2></div>
           <form onSubmit={handleSaveIEP} className="space-y-10">
             <div className="space-y-3"><label className="text-lg font-bold text-slate-800">Present Levels of Performance (PLOP)</label><p className="text-sm text-slate-500">Document the student's current academic and functional performance, including strengths and areas requiring support.</p><textarea value={plop} onChange={e => setPlop(e.target.value)} rows="5" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none" /></div>
