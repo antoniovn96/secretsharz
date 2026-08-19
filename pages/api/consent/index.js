@@ -1,5 +1,6 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { getConsentState, recordConsentEvent } from '../../../src/security/consentService.js';
+import { evaluateConsentEligibility, getAgeBand } from '../../../src/security/consentEligibility.js';
 
 export default async function handler(req, res) {
   const header = req.headers.authorization || '';
@@ -10,14 +11,17 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const type = String(req.query.type || '');
       if (!type) return res.status(400).json({ error: 'type is required' });
-      const state = await getConsentState({ db, userId: decoded.uid, type });
-      return res.status(200).json(state);
+      return res.status(200).json(await getConsentState({ db, userId: decoded.uid, type }));
     }
     if (req.method === 'POST') {
       const { type, action, actorType = 'self', relationshipId = null, serviceContext = null } = req.body || {};
-      // The authenticated user can record self-consent only. Guardian/professional
-      // actors will be enabled through a separate relationship-authorized flow.
       if (actorType !== 'self') return res.status(403).json({ error: 'Non-self consent requires an authorized relationship flow' });
+      const subject = await db.collection('users').doc(decoded.uid).get();
+      if (!subject.exists) return res.status(404).json({ error: 'Consent subject not found' });
+      const data = subject.data() || {};
+      const ageBand = getAgeBand(data.dateOfBirth || data.dob || data.birthDate);
+      const eligibility = evaluateConsentEligibility({ consentType: type, actorType, ageBand });
+      if (!eligibility.allowed) return res.status(403).json({ error: 'Consent actor is not eligible for this service policy', code: 'CONSENT_NOT_ELIGIBLE', ageBand, reason: eligibility.reason });
       const event = await recordConsentEvent({ db, userId: decoded.uid, type, action, actorType, relationshipId, serviceContext });
       return res.status(201).json({ id: event.id, policyVersion: event.policyVersion });
     }
