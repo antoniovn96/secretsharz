@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import LegacyCareerStudentView from './CareerStudentView.jsx';
+import StudentPublishedCareerRoadmap from './StudentPublishedCareerRoadmap.jsx';
 import CareerCalendar from './CareerCalendar.jsx';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -36,6 +37,18 @@ export default function CareerStudentViewWithCalendar(props) {
   }, [user?.uid, props.studentData]);
 
   const isHome = path === '/dashboard/career' || path === '/dashboard/career/';
+  const isRoadmap = path === '/dashboard/career/roadmap' || path === '/dashboard/career/roadmap/';
+
+  const navigate = (target) => {
+    if (typeof window === 'undefined') return;
+    window.history.pushState({}, '', target);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    window.scrollTo(0, 0);
+  };
+
+  if (isRoadmap) {
+    return <StudentPublishedCareerRoadmap currentUser={user} studentData={calendarData} onNavigate={navigate} />;
+  }
 
   return (
     <div className={isHome ? 'vv-career-with-calendar' : ''}>
@@ -72,12 +85,7 @@ export default function CareerStudentViewWithCalendar(props) {
             user={user}
             liveUserData={calendarData}
             compact
-            onNavigate={(next) => {
-              const target = next === 'sessions' ? '/dashboard/career/sessions' : '/dashboard/career';
-              window.history.pushState({}, '', target);
-              window.dispatchEvent(new PopStateEvent('popstate'));
-              window.scrollTo(0, 0);
-            }}
+            onNavigate={(next) => navigate(next === 'sessions' ? '/dashboard/career/sessions' : '/dashboard/career')}
           />
         </div>
       )}
