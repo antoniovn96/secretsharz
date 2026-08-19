@@ -12,17 +12,17 @@ const SERVICE_META = {
 
 function normalizeStudent(student) {
   const ssStudentId = String(student?.ssStudentId || student?.studentId || '').trim();
-  const authUid = String(student?.authUid || student?.uid || (ssStudentId ? '' : student?.id || '')).trim() || null;
+  const authUid = String(student?.authUid || student?.uid || '').trim() || null;
   const studentDocumentId = String(student?.studentDocumentId || student?.documentId || '').trim() || null;
   return {
     ...student,
-    id: ssStudentId || String(student?.id || '').trim(),
+    id: ssStudentId || '',
     ssStudentId: ssStudentId || null,
     studentId: ssStudentId || null,
     authUid,
     uid: authUid,
     studentDocumentId,
-    internalRecordId: student?.id || studentDocumentId || authUid || null,
+    internalRecordId: studentDocumentId || authUid || null,
   };
 }
 
@@ -61,6 +61,12 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
   const isDark = theme === 'dark';
   const Icon = meta.icon;
 
+  const openStudentDetails = (student) => {
+    const internalId = student?.studentDocumentId || student?.internalRecordId || student?.authUid || null;
+    setSelectedStudent({ ...student, id: internalId || student?.id || '' });
+    setDetailOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
@@ -79,7 +85,7 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
         <MiniMetric label="Profiles complete" value={completeProfiles} icon={Users} theme={theme} />
         <MiniMetric label="RIASEC / assessment data" value={assessmentComplete} icon={BriefcaseBusiness} theme={theme} />
       </div>
-      <UserDirectoryTable users={students} isLoading={loading} onViewDetails={student => { setSelectedStudent(student); setDetailOpen(true); }} userRole="student" theme={theme} />
+      <UserDirectoryTable users={students} isLoading={loading} onViewDetails={openStudentDetails} userRole="student" theme={theme} />
       <SlideOutDetailPanel user={selectedStudent} isOpen={detailOpen} onClose={() => { setDetailOpen(false); window.setTimeout(() => setSelectedStudent(null), 300); }} />
     </div>
   );
