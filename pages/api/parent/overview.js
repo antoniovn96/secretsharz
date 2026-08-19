@@ -1,5 +1,6 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { resolveStudentProfile } from '../../../src/platform/studentProfileResolver.js';
+import { careerRoadmapShareId, SHARED_INFORMATION_AUDIENCES, SHARED_INFORMATION_STATUS } from '../../../src/platform/sharedInformation.js';
 
 function bearerToken(req){const header=req.headers.authorization||req.headers.Authorization;if(typeof header!=='string')return null;const match=header.match(/^Bearer\s+(.+)$/i);return match?match[1]:null;}
 function clean(value,max=180){return String(value||'').trim().slice(0,max);}
@@ -11,8 +12,22 @@ async function latestReport(db, childId, path){
     return snap.empty?null:{type:'sen',data:snap.docs[0].data()||{}};
   }
   if(path==='career'){
+    // Career professionals publish an intentionally limited roadmap projection
+    // to Shared Information. Parents may consume that projection only after
+    // the parent-child relationship has already been authorised above.
+    const sharedSnap=await db.collection('sharedInformation').doc(careerRoadmapShareId(childId)).get();
+    if(sharedSnap.exists){
+      const shared=sharedSnap.data()||{};
+      const audiences=Array.isArray(shared.audiences)?shared.audiences:[];
+      if(shared.status===SHARED_INFORMATION_STATUS.ACTIVE && audiences.includes(SHARED_INFORMATION_AUDIENCES.PARENT)){
+        return {type:'career',data:shared.data||{},shared:true};
+      }
+    }
+
+    // Migration fallback for legacy records. This is intentionally read-only
+    // and can be removed after existing roadmap data is projected.
     const snap=await db.collection('users').doc(childId).collection('career_roadmaps').orderBy('timestamp','desc').limit(1).get();
-    return snap.empty?null:{type:'career',data:snap.docs[0].data()||{}};
+    return snap.empty?null:{type:'career',data:snap.docs[0].data()||{},legacy:true};
   }
   return null;
 }
