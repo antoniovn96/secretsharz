@@ -1,7 +1,7 @@
 // Secret Sharz — consent policy model
 // UX/schema source of truth only. Final legal text requires review.
 
-export const CONSENT_POLICY_VERSION = '1.0.0';
+export const CONSENT_POLICY_VERSION = '1.1.0';
 
 export const CONSENT_TYPES = Object.freeze({
   ACCOUNT: 'account_privacy',
@@ -18,6 +18,19 @@ export const CONSENT_ACTIONS = Object.freeze({
   GRANTED: 'granted',
   WITHDRAWN: 'withdrawn',
   UPDATED: 'updated',
+});
+
+// Purpose is part of the authorization decision. These are deliberately
+// capability-oriented rather than UI labels.
+export const CONSENT_PURPOSES = Object.freeze({
+  SERVICE_DELIVERY: 'service_delivery',
+  ASSESSMENT: 'assessment',
+  CLINICAL_CARE: 'clinical_care',
+  SEN_SUPPORT: 'sen_support',
+  CAREER_GUIDANCE: 'career_guidance',
+  PARENT_SHARING: 'parent_sharing',
+  INSTITUTION_SHARING: 'institution_sharing',
+  AI_ASSISTANCE: 'ai_assistance',
 });
 
 export const AGE_BANDS = Object.freeze({
@@ -52,6 +65,7 @@ export const SERVICE_COPY = Object.freeze({
 export const buildConsentEvent = ({
   userId,
   type,
+  purpose = CONSENT_PURPOSES.SERVICE_DELIVERY,
   action,
   actorType = 'self',
   relationshipId = null,
@@ -59,6 +73,7 @@ export const buildConsentEvent = ({
 }) => ({
   userId,
   type,
+  purpose,
   action,
   actorType,
   relationshipId,
@@ -69,3 +84,4 @@ export const buildConsentEvent = ({
 
 export const isKnownConsentType = (type) => Object.values(CONSENT_TYPES).includes(type);
 export const isKnownConsentAction = (action) => Object.values(CONSENT_ACTIONS).includes(action);
+export const isKnownConsentPurpose = (purpose) => Object.values(CONSENT_PURPOSES).includes(purpose);
