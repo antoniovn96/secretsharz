@@ -1,4 +1,4 @@
-import { getAdminAuth } from '../../../src/security/firebaseAdmin.js';
+import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { getCounsellingSessions, createCounsellingSession } from '../../../src/security/counsellingSessionService.js';
 
 function bearer(req) { const match = String(req.headers.authorization || '').match(/^Bearer\s+(.+)$/i); return match?.[1] || null; }
@@ -11,8 +11,9 @@ export default async function handler(req, res) {
   const institutionId = String(req.query.institutionId || req.body?.institutionId || '').trim() || null;
   if (!studentId) return res.status(400).json({ error: 'studentId is required.' });
   try {
-    if (req.method === 'GET') return res.status(200).json(await getCounsellingSessions({ db: undefined, studentId, professionalId: actor.uid, institutionId }));
-    return res.status(201).json(await createCounsellingSession({ db: undefined, studentId, professionalId: actor.uid, institutionId, soap: req.body?.soap }));
+    const db = getAdminFirestore();
+    if (req.method === 'GET') return res.status(200).json(await getCounsellingSessions({ db, studentId, professionalId: actor.uid, institutionId }));
+    return res.status(201).json(await createCounsellingSession({ db, studentId, professionalId: actor.uid, institutionId, soap: req.body?.soap }));
   } catch (error) {
     console.error('[wellbeing-session] failed:', error?.message || error);
     const message = error?.message || 'Unable to process wellbeing session.';
