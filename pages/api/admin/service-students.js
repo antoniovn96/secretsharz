@@ -1,5 +1,6 @@
 import { getAdminAuth, getAdminFirestore, getAdminApp } from '../../../src/security/firebaseAdmin.js';
-import { isStudentProfile, getStudentPath } from '../../../src/platform/studentRecordModel.js';
+import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
+import { isStudentProfile } from '../../../src/platform/studentRecordModel.js';
 
 const SERVICE_PATHS = new Set(['career', 'wellbeing', 'sen']);
 
@@ -29,62 +30,62 @@ function toIso(value) {
 }
 
 function safeAuthError(error) {
-  return {
-    code: error?.code || null,
-    message: error?.message || 'Unknown Firebase Auth verification error',
-    expectedProjectId: getAdminApp()?.options?.projectId || null,
-  };
+  return { code: error?.code || null, message: error?.message || 'Unknown Firebase Auth verification error', expectedProjectId: getAdminApp()?.options?.projectId || null };
 }
 
-function getAssignedProfessionalId(data, service) {
-  const assignedStaff = data?.assignedStaff || {};
-  const serviceKey = String(service || '').trim().toLowerCase();
-  if (serviceKey === 'career') return assignedStaff.careerId || data.assignedCounsellorId || data.assignedProfessionalId || null;
-  if (serviceKey === 'wellbeing') return assignedStaff.psychologistId || assignedStaff.psychologyId || data.assignedCounsellorId || data.assignedProfessionalId || null;
-  if (serviceKey === 'sen') return assignedStaff.senId || assignedStaff.educatorId || data.assignedCounsellorId || data.assignedProfessionalId || null;
-  return data.assignedProfessionalId || data.assignedCounsellorId || null;
+function serviceIsActive(profile, service) {
+  return profile.services?.[service]?.status === 'active';
 }
 
-function publicStudentRecord(doc) {
-  const data = doc.data() || {};
-  const path = getStudentPath(data);
-  const assignedProfessionalId = getAssignedProfessionalId(data, path);
-  const parentUid = data.parentUid || data.parentId || data.parent?.uid || null;
+function publicStudentRecord(doc, profile, service) {
+  const identity = profile.identity || {};
+  const contact = profile.contact || {};
+  const academic = profile.academic?.current || {};
+  const institution = profile.institution || {};
+  const guardians = profile.family?.guardians || [];
+  const primaryGuardian = guardians.find((guardian) => guardian?.accountId) || guardians[0] || {};
+  const assignments = profile.relationships?.assignments || {};
+  const assignedProfessionalId = assignments[service] || null;
+  const governance = profile.governance || {};
 
   return {
     id: doc.id,
-    name: data.name || data.fullName || '',
-    email: data.email || '',
-    photoURL: data.photoURL || '',
-    role: data.role || '',
-    profileType: data.profileType || '',
-    age: data.age ?? null,
-    dob: data.dob || data.dateOfBirth || '',
-    grade: data.grade || data.gradeOrCourse || '',
-    schoolName: data.schoolName || '',
-    institutionName: data.institutionName || '',
-    institutionId: data.institutionId || data.institutionID || '',
-    parentName: data.parentName || '',
-    parentContact: data.parentContact || '',
-    parentUid,
-    parentId: parentUid,
-    contactNumber: data.contactNumber || data.phone || '',
-    primary_path: data.primary_path || '',
-    studentTrack: data.studentTrack || '',
-    path,
-    profileComplete: data.profileComplete === true,
-    onboardingCompleted: data.onboardingCompleted === true,
+    name: identity.fullName || '',
+    preferredName: identity.preferredName || '',
+    email: contact.email || '',
+    photoURL: identity.photoURL || '',
+    dob: identity.dateOfBirth || '',
+    grade: academic.grade || '',
+    section: academic.section || '',
+    schoolName: academic.institutionName || institution.name || '',
+    institutionName: institution.name || academic.institutionName || '',
+    institutionId: academic.institutionId || institution.id || '',
+    academicYear: academic.academicYear || institution.academicYear || '',
+    parentName: primaryGuardian.name || '',
+    parentContact: primaryGuardian.phone || '',
+    parentEmail: primaryGuardian.email || '',
+    parentUid: primaryGuardian.accountId || null,
+    parentId: primaryGuardian.accountId || null,
+    contactNumber: contact.mobile?.number || '',
+    primary_path: profile.legacy?.primary_path || service,
+    studentTrack: service,
+    path: service,
+    profileComplete: profile.onboarding?.profileComplete === true,
+    onboardingCompleted: profile.onboarding?.completed === true,
     assignedProfessionalId,
-    assignedCounsellorId: String(path || '').toLowerCase() === 'career' ? assignedProfessionalId : (data.assignedCounsellorId || null),
-    assignedStaff: data.assignedStaff || null,
-    riasecCode: data.riasecCode || data.careerDNA?.riasec?.code || '',
-    riasecScores: data.riasecScores || data.careerDNA?.riasec?.scores || {},
-    careerAssessment: data.careerAssessment || null,
-    assessmentCompletedAt: toIso(data.assessmentCompletedAt || data.careerAssessment?.completedAt),
-    careerReportAccess: data.careerReportAccess || null,
-    createdAt: toIso(data.createdAt),
-    createdAtMs: toMillis(data.createdAt),
-    updatedAt: toIso(data.updatedAt),
+    assignedCounsellorId: service === 'career' ? assignedProfessionalId : (assignments.wellbeing || null),
+    assignedCareerCoachId: assignments.career || null,
+    assignedSENEducatorId: assignments.sen || null,
+    assignedStaff: doc.data()?.assignedStaff || null,
+    riasecCode: profile.career?.riasec?.code || '',
+    riasecScores: profile.career?.riasec?.scores || {},
+    careerAssessment: doc.data()?.careerAssessment || null,
+    assessmentCompletedAt: toIso(doc.data()?.assessmentCompletedAt || doc.data()?.careerAssessment?.completedAt),
+    careerReportAccess: doc.data()?.careerReportAccess || null,
+    consentStatus: governance.consent || null,
+    createdAt: toIso(doc.data()?.createdAt),
+    createdAtMs: toMillis(doc.data()?.createdAt),
+    updatedAt: toIso(doc.data()?.updatedAt),
   };
 }
 
@@ -95,9 +96,7 @@ export default async function handler(req, res) {
   }
 
   const service = String(req.query?.service || '').trim().toLowerCase();
-  if (!SERVICE_PATHS.has(service)) {
-    return res.status(400).json({ error: 'A valid service is required: career, wellbeing, or sen.' });
-  }
+  if (!SERVICE_PATHS.has(service)) return res.status(400).json({ error: 'A valid service is required: career, wellbeing, or sen.' });
 
   const idToken = bearerToken(req);
   if (!idToken) return res.status(401).json({ error: 'Authentication required.' });
@@ -117,11 +116,10 @@ export default async function handler(req, res) {
   try {
     const snapshot = await getAdminFirestore().collection('users').get();
     const students = snapshot.docs
-      .filter(doc => {
-        const data = doc.data() || {};
-        return isStudentProfile(data) && String(getStudentPath(data) || '').toLowerCase() === service;
-      })
-      .map(publicStudentRecord)
+      .filter(doc => isStudentProfile(doc.data() || {}))
+      .map(doc => ({ doc, profile: normalizeStudentRecord(doc.data() || {}, doc.id) }))
+      .filter(({ profile }) => serviceIsActive(profile, service))
+      .map(({ doc, profile }) => publicStudentRecord(doc, profile, service))
       .sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
 
     return res.status(200).json({ generatedAt: new Date().toISOString(), service, students, count: students.length });
