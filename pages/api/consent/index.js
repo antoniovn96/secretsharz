@@ -1,6 +1,6 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { getConsentState, recordConsentEvent } from '../../../src/security/consentService.js';
-import { evaluateConsentEligibility, getAgeBand } from '../../../src/security/consentEligibility.js';
+import { evaluateConsentEligibility, getStudentAgeBand } from '../../../src/security/consentEligibility.js';
 
 export default async function handler(req, res) {
   const header = req.headers.authorization || '';
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
       const subject = await db.collection('users').doc(decoded.uid).get();
       if (!subject.exists) return res.status(404).json({ error: 'Consent subject not found' });
       const data = subject.data() || {};
-      const ageBand = getAgeBand(data.dateOfBirth || data.dob || data.birthDate);
+      const ageBand = getStudentAgeBand(data);
       const eligibility = evaluateConsentEligibility({ consentType: type, actorType, ageBand });
       if (!eligibility.allowed) return res.status(403).json({ error: 'Consent actor is not eligible for this service policy', code: 'CONSENT_NOT_ELIGIBLE', ageBand, reason: eligibility.reason });
       const event = await recordConsentEvent({ db, userId: decoded.uid, type, action, actorType, relationshipId, serviceContext });
