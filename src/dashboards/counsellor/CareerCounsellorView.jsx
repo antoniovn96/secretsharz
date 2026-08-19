@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDashboard } from '../../context/DashboardContext';
 import { getCareerCaseload } from '../../platform/careerCaseApi';
-import CareerCaseFileView from './CareerCaseFileView';
+import CareerCaseFileView from './CareerCaseFileViewSecure';
 import CareerRoadmapView from './CareerRoadmapView';
 
 function getInitials(name) {
