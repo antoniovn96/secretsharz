@@ -1,4 +1,5 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { createRelationshipRecord } from '../../../src/platform/canonicalModel.js';
 
 function bearerToken(req){const header=req.headers.authorization||req.headers.Authorization;if(typeof header!=='string')return null;const match=header.match(/^Bearer\s+(.+)$/i);return match?match[1]:null;}
 function clean(value,max=120){return String(value||'').trim().slice(0,max);}
@@ -38,7 +39,8 @@ export default async function handler(req,res){
       const now=new Date().toISOString();
       transaction.update(codeRef,{status:'redeemed',redeemedBy:decoded.uid,redeemedAt:now});
       transaction.set(rosterRef,{status:'claimed',claimedBy:decoded.uid,claimedAt:now,assessmentStatus:'not_started',reportStatus:'locked_until_completion'},{merge:true});
-      transaction.set(db.collection('users').doc(decoded.uid),{
+
+      const studentPatch={
         institutionId:record.institutionId,
         institutionName:record.institutionName,
         institutionRosterId:record.rosterId,
@@ -47,12 +49,38 @@ export default async function handler(req,res){
         parentUid:roster.parentUid||null,
         parentName:roster.parentName||null,
         parentEmail:roster.parentEmail||null,
-      },{merge:true});
+      };
+
+      if(roster.parentUid){
+        const relationship = createRelationshipRecord({
+          subjectPersonId: decoded.uid,
+          relatedPersonId: roster.parentUid,
+          type: 'guardian',
+          domain: null,
+          status: 'active',
+          startsAt: now,
+          endsAt: null,
+          consentRequired: true,
+        });
+        const relationshipRef = db.collection('relationships').doc();
+        transaction.set(relationshipRef, {
+          ...relationship,
+          relationshipId: relationshipRef.id,
+          createdAt: now,
+          updatedAt: now,
+          source: 'institutional_roster_redemption',
+          institutionId: record.institutionId,
+        });
+        studentPatch.guardianRelationships = { [roster.parentUid]: 'guardian' };
+      }
+
+      transaction.set(db.collection('users').doc(decoded.uid),studentPatch,{merge:true});
 
       if(parentSnapshot?.exists){
         const parent=parentSnapshot.data()||{};
         const linkedStudentIds=Array.from(new Set([...(Array.isArray(parent.linkedStudentIds)?parent.linkedStudentIds:[]),decoded.uid]));
-        transaction.set(db.collection('users').doc(roster.parentUid),{linkedStudentIds,updatedAt:now},{merge:true});
+        const childRelationships={...(parent.childRelationships||{}),[decoded.uid]:'guardian'};
+        transaction.set(db.collection('users').doc(roster.parentUid),{linkedStudentIds,childRelationships,updatedAt:now},{merge:true});
       }
       return {institutionId:record.institutionId,institutionName:record.institutionName,roster:{...roster,fullName:roster.fullName||'',className:roster.className||'',section:roster.section||''}};
     });
