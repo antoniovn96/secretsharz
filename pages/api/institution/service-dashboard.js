@@ -1,4 +1,5 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
 
 const FOUNDER_EMAIL = 'antonio.antonio.noronha@gmail.com';
 const SERVICES = new Set(['wellbeing', 'sen']);
@@ -62,25 +63,24 @@ export default async function handler(req, res) {
   const rosterSnap = await db.collection('institutions').doc(institutionId).collection('roster').get();
   const roster = rosterSnap.docs.map((doc) => doc.data());
   const claimed = roster.filter((student) => student.status === 'claimed').length;
-  const active = roster.filter((student) => ['active', 'in_progress', 'completed'].includes(student.status)).length;
+
+  // Service membership is derived from the canonical student profile, never from
+  // primary_path/studentTrack legacy fields. Institutional reporting remains aggregate-only.
+  const usersSnap = await db.collection('users').where('institutionId', '==', institutionId).get();
+  const canonicalStudents = usersSnap.docs.map((doc) => ({ id: doc.id, profile: normalizeStudentRecord(doc.data(), doc.id) }));
+  const serviceUsers = canonicalStudents.filter(({ profile }) => profile.services?.[service]?.status === 'active');
+  const operationallyActive = serviceUsers.filter(({ profile }) => profile.services?.[service]?.status === 'active').length;
 
   // IMPORTANT: This endpoint deliberately returns aggregate operational data only.
   // It must never expose journal entries, mood logs, counselling notes, diagnoses,
   // SEN case files, IEP contents, risk labels, or other individual clinical data
   // to an institution coordinator.
-  const usersSnap = await db.collection('users').where('institutionId', '==', institutionId).get();
-  const serviceUsers = usersSnap.docs.filter((doc) => {
-    const data = doc.data();
-    const primaryPath = normaliseService(data.primary_path || data.primaryPath || data.service);
-    return primaryPath === service;
-  });
-
   const summary = {
     rosterStudents: roster.length,
     claimedStudents: claimed,
     activationRate: roster.length ? Math.round((claimed / roster.length) * 100) : 0,
     serviceLinkedAccounts: serviceUsers.length,
-    operationallyActive: active,
+    operationallyActive,
   };
 
   return res.status(200).json({
