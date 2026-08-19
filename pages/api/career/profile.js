@@ -29,21 +29,41 @@ export default async function handler(req, res) {
 
   try {
     const db = getAdminFirestore();
-    const [profileSnap, attemptsSnap] = await Promise.all([
+    const [profileSnap, attemptsSnap, userSnap] = await Promise.all([
       db.collection('careerProfiles').doc(decoded.uid).get(),
       db.collection('careerProfiles').doc(decoded.uid).collection('assessments').orderBy('completedAt', 'desc').limit(20).get(),
+      db.collection('users').doc(decoded.uid).get(),
     ]);
 
     if (!profileSnap.exists) {
       return res.status(404).json({ error: 'No Career assessment profile is available.' });
     }
 
+    const userData = userSnap.exists ? userSnap.data() || {} : {};
+    const hasAccess = userData.careerReportAccess?.status === 'paid'
+      || userData.institutionAccess?.status === 'active'
+      || userData.careerDataAuthority === 'careerProfiles';
+
+    if (!hasAccess) {
+      return res.status(403).json({ error: 'Career profile access is not active.' });
+    }
+
     const profile = profileSnap.data() || {};
     const attempts = attemptsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const identity = userData.identity || userData.profile || {};
+    const name = String(
+      identity.fullName || identity.name || userData.name || userData.displayName || decoded.name || 'Student'
+    ).trim() || 'Student';
 
     return res.status(200).json({
       authUid: decoded.uid,
-      ssStudentId: safeString(profile.ssStudentId),
+      ssStudentId: safeString(profile.ssStudentId || userData.ssStudentId || userData.studentId),
+      identity: {
+        name,
+        preferredName: safeString(identity.preferredName || userData.preferredName),
+        photoURL: userData.photoURL || identity.photoURL || '',
+        email: userData.email || decoded.email || '',
+      },
       latestAssessmentId: safeString(profile.latestAssessmentId),
       latestAssessmentAt: profile.latestAssessmentAt || null,
       assessment: profile.assessment || null,
