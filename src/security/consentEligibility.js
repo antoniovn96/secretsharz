@@ -16,6 +16,10 @@ export function getAgeBand(dob, now = new Date()) {
   return AGE_BANDS.ADULT;
 }
 
+export function getStudentAgeBand(data = {}, now = new Date()) {
+  return getAgeBand(data.identity?.dateOfBirth || data.dateOfBirth || data.dob || data.birthDate, now);
+}
+
 export function evaluateConsentEligibility({ consentType, actorType, ageBand }) {
   if (!isKnownConsentType(consentType)) return { allowed: false, reason: 'unknown_consent_type' };
   if (!Object.values(AGE_BANDS).includes(ageBand) || ageBand === AGE_BANDS.UNKNOWN) return { allowed: false, reason: 'age_band_unknown' };
