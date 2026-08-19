@@ -1,41 +1,26 @@
 import { getAdminAuth, getAdminFirestore } from './firebaseAdmin.js';
-import normalizeStudentRecord from '../platform/studentRecordNormalizer.js';
+import { resolveStudentIdentity } from './studentIdentityResolver.js';
+import { resolveCanonicalProfessionalAssignment, PROFESSIONAL_ASSIGNMENT_RULES } from './canonicalProfessionalAssignment.js';
 
-/** Server-side authorization for professional access to a student. Canonical assignments are authoritative; legacy assignments are migration fallback only. */
-export async function authorizeProfessionalStudent({ req, studentId, service }) {
-  if (!studentId) return { authorized: false, reason: 'missing_student_id' };
-  if (!['career', 'psychology', 'sen'].includes(service)) return { authorized: false, reason: 'invalid_service' };
-  const authHeader = req?.headers?.authorization || req?.headers?.Authorization || '';
-  if (!authHeader.startsWith('Bearer ')) return { authorized: false, reason: 'missing_auth' };
+export async function authorizeProfessionalStudent({ req, studentId, service, institutionId = null }) {
+  if (!studentId) return { authorized:false, reason:'missing_student_id' };
+  if (!PROFESSIONAL_ASSIGNMENT_RULES[service]) return { authorized:false, reason:'invalid_service' };
+  const authHeader=req?.headers?.authorization||req?.headers?.Authorization||'';
+  if(!authHeader.startsWith('Bearer ')) return { authorized:false, reason:'missing_auth' };
   let decoded;
-  try { decoded = await getAdminAuth().verifyIdToken(authHeader.slice(7)); } catch { return { authorized: false, reason: 'invalid_auth' }; }
-
-  const db = getAdminFirestore();
-  const viewerSnap = await db.collection('users').doc(decoded.uid).get();
-  const viewer = viewerSnap.exists ? viewerSnap.data() : {};
-  const roles = Array.isArray(viewer.roles) ? viewer.roles : (viewer.role ? [viewer.role] : []);
-  const isAdmin = roles.some(role => ['admin', 'super_admin', 'superadmin'].includes(String(role).toLowerCase()));
-
-  let studentSnap = await db.collection('students').doc(studentId).get();
-  if (!studentSnap.exists) studentSnap = await db.collection('users').doc(studentId).get();
-  if (!studentSnap.exists) return { authorized: false, reason: 'student_not_found' };
-  const student = studentSnap.data() || {};
-  if (isAdmin) return { authorized: true, viewerId: decoded.uid, studentId, student, isAdmin: true };
-
-  const canonical = normalizeStudentRecord(student, studentId);
-  const assignmentKey = service === 'psychology' ? 'wellbeing' : service;
-  const canonicalAssignment = canonical.relationships?.assignments?.[assignmentKey];
-  const canonicalService = canonical.services?.[assignmentKey];
-
-  // Canonical assignment/service state is authoritative. A stale legacy assignment must never restore access.
-  if (canonicalAssignment || canonicalService?.status === 'active') {
-    if (canonicalService?.status !== 'active') return { authorized: false, reason: 'service_inactive' };
-    if (canonicalAssignment !== decoded.uid) return { authorized: false, reason: 'not_assigned' };
-    return { authorized: true, viewerId: decoded.uid, studentId, student, isAdmin: false };
-  }
-
-  const assignedStaff = student.assignedStaff || student.assignedProfessionals || {};
-  const assignmentKeys = { career: ['careerId', 'careerCounsellorId', 'careerCounselorId'], psychology: ['psychologistId', 'psychologyId', 'counsellorId', 'counselorId'], sen: ['senId', 'senEducatorId', 'specialEducatorId'] }[service];
-  if (!assignmentKeys.some(key => assignedStaff[key] === decoded.uid)) return { authorized: false, reason: 'not_assigned' };
-  return { authorized: true, viewerId: decoded.uid, studentId, student, isAdmin: false };
+  try { decoded=await getAdminAuth().verifyIdToken(authHeader.slice(7)); } catch { return { authorized:false, reason:'invalid_auth' }; }
+  const db=getAdminFirestore();
+  const viewerSnap=await db.collection('users').doc(decoded.uid).get();
+  const viewer=viewerSnap.exists?viewerSnap.data():{};
+  const roles=Array.isArray(viewer.roles)?viewer.roles:(viewer.role?[viewer.role]:[]);
+  const isAdmin=roles.some(role=>['admin','super_admin','superadmin'].includes(String(role).toLowerCase()));
+  const identity=await resolveStudentIdentity({db,authUid:studentId,ssStudentId:studentId}).catch(()=>null);
+  if(!identity) return {authorized:false,reason:'student_not_found'};
+  const canonicalStudent=await db.collection('students').doc(identity.documentId).get();
+  const legacyStudent=await db.collection('users').doc(identity.documentId).get();
+  const student=canonicalStudent.exists?canonicalStudent.data():(legacyStudent.exists?legacyStudent.data():{});
+  if(isAdmin) return {authorized:true,viewerId:decoded.uid,studentId:identity.ssStudentId||studentId,authUid:identity.authUid,student,isAdmin:true,assignment:null};
+  const assignment=await resolveCanonicalProfessionalAssignment({db,studentId:identity.authUid||identity.ssStudentId,professionalId:decoded.uid,service,institutionId});
+  if(!assignment.found) return {authorized:false,reason:assignment.reason||'not_assigned'};
+  return {authorized:true,viewerId:decoded.uid,studentId:identity.ssStudentId||studentId,authUid:identity.authUid,student,isAdmin:false,assignment:assignment.assignment};
 }
