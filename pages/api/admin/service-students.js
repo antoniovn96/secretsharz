@@ -38,6 +38,7 @@ function serviceIsActive(profile, service) {
 }
 
 function publicStudentRecord(doc, profile, service) {
+  const raw = doc.data() || {};
   const identity = profile.identity || {};
   const contact = profile.contact || {};
   const academic = profile.academic?.current || {};
@@ -47,9 +48,15 @@ function publicStudentRecord(doc, profile, service) {
   const assignments = profile.relationships?.assignments || {};
   const assignedProfessionalId = assignments[service] || null;
   const governance = profile.governance || {};
+  const ssStudentId = String(raw.ssStudentId || raw.studentId || raw.studentID || raw.student_id || '').trim() || null;
 
   return {
-    id: doc.id,
+    id: ssStudentId,
+    ssStudentId,
+    studentId: ssStudentId,
+    authUid: raw.authUid || raw.uid || doc.id,
+    uid: raw.authUid || raw.uid || doc.id,
+    studentDocumentId: doc.id,
     name: identity.fullName || '',
     preferredName: identity.preferredName || '',
     email: contact.email || '',
@@ -76,16 +83,16 @@ function publicStudentRecord(doc, profile, service) {
     assignedCounsellorId: service === 'career' ? assignedProfessionalId : (assignments.wellbeing || null),
     assignedCareerCoachId: assignments.career || null,
     assignedSENEducatorId: assignments.sen || null,
-    assignedStaff: doc.data()?.assignedStaff || null,
+    assignedStaff: raw.assignedStaff || null,
     riasecCode: profile.career?.riasec?.code || '',
     riasecScores: profile.career?.riasec?.scores || {},
-    careerAssessment: doc.data()?.careerAssessment || null,
-    assessmentCompletedAt: toIso(doc.data()?.assessmentCompletedAt || doc.data()?.careerAssessment?.completedAt),
-    careerReportAccess: doc.data()?.careerReportAccess || null,
+    careerAssessment: raw.careerAssessment || null,
+    assessmentCompletedAt: toIso(raw.assessmentCompletedAt || raw.careerAssessment?.completedAt),
+    careerReportAccess: raw.careerReportAccess || null,
     consentStatus: governance.consent || null,
-    createdAt: toIso(doc.data()?.createdAt),
-    createdAtMs: toMillis(doc.data()?.createdAt),
-    updatedAt: toIso(doc.data()?.updatedAt),
+    createdAt: toIso(raw.createdAt),
+    createdAtMs: toMillis(raw.createdAt),
+    updatedAt: toIso(raw.updatedAt),
   };
 }
 
