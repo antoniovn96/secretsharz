@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { BriefcaseBusiness, GraduationCap, HeartHandshake, Brain, Users } from 'lucide-react';
 import { auth } from '../../firebase';
 import UserDirectoryTable from './UserDirectoryTable';
@@ -9,6 +9,22 @@ const SERVICE_META = {
   wellbeing: { label: 'Counselling & Wellbeing', path: 'wellbeing', icon: HeartHandshake, tone: 'violet' },
   sen: { label: 'SEN / Learning Support', path: 'sen', icon: Brain, tone: 'amber' },
 };
+
+function normalizeStudent(student) {
+  const ssStudentId = String(student?.ssStudentId || student?.studentId || '').trim();
+  const authUid = String(student?.authUid || student?.uid || (ssStudentId ? '' : student?.id || '')).trim() || null;
+  const studentDocumentId = String(student?.studentDocumentId || student?.documentId || '').trim() || null;
+  return {
+    ...student,
+    id: ssStudentId || String(student?.id || '').trim(),
+    ssStudentId: ssStudentId || null,
+    studentId: ssStudentId || null,
+    authUid,
+    uid: authUid,
+    studentDocumentId,
+    internalRecordId: student?.id || studentDocumentId || authUid || null,
+  };
+}
 
 export default function ServiceStudentDirectory({ service = 'career', theme = 'light' }) {
   const meta = SERVICE_META[service] || SERVICE_META.career;
@@ -31,7 +47,7 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
       }
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Unable to load students.');
-      setStudents(Array.isArray(payload.students) ? payload.students : []);
+      setStudents((Array.isArray(payload.students) ? payload.students : []).map(normalizeStudent));
     } catch (err) {
       console.error('[ServiceStudentDirectory] failed:', err);
       setError(err?.message || 'Unable to load students.');
