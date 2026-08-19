@@ -8,10 +8,11 @@ service cloud.firestore {
     function isAdmin() { return isFounderAdmin() || hasClaimRole('super_admin') || (isSignedIn() && profileRole(request.auth.uid) == 'super_admin'); }
     function isParent() { return isSignedIn() && (hasClaimRole('parent') || profileRole(request.auth.uid) == 'parent'); }
     function isStaff() { return isSignedIn() && (request.auth.token.role in ['counsellor','career_counsellor','psychologist','educator'] || profileRole(request.auth.uid) in ['counsellor','career_counsellor','psychologist','educator']); }
-    function isAssignedStaffForStudent(studentId) {
-      return isStaff()
-        && get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.careerId == request.auth.uid;
-    }
+
+    // Cross-user professional/guardian authorization is now server/API-only.
+    // Firestore rules must not continue treating assignedStaff.* or parent.userId
+    // as authoritative relationship data. Those fields remain compatibility data
+    // during migration and are never sufficient for direct client access.
 
     function validMobile(number) {
       return number == '' || number.matches('^[6-9][0-9]{9}$');
@@ -55,35 +56,33 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Student documents contain sensitive cross-service information. Direct
+    // client access is limited to the student themselves or an administrator.
+    // Parents, institutions and professionals must use their authorization-aware
+    // projection APIs, which evaluate canonical relationships, service, purpose,
+    // consent and release rules server-side.
     match /students/{studentId} {
-      allow read: if isSignedIn() && (
-        request.auth.uid == studentId ||
-        (isParent() && resource.data.parent.userId == request.auth.uid) ||
-        (isStaff() && (resource.data.assignedStaff.careerId == request.auth.uid || resource.data.assignedStaff.psychId == request.auth.uid || resource.data.assignedStaff.senId == request.auth.uid)) ||
-        isAdmin()
-      );
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == studentId);
       allow write: if isAdmin();
 
+      // Legacy subcollections remain readable only by the student/admin while
+      // their APIs are migrated. Professional cross-user access is API-only.
       match /career_roadmaps/{roadmapId} {
-        allow read: if isAdmin() || isAssignedStaffForStudent(studentId) || (isSignedIn() && request.auth.uid == studentId);
-        allow create: if isAdmin() || (isAssignedStaffForStudent(studentId) && request.resource.data.providerId == request.auth.uid);
-        allow update: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid && request.resource.data.providerId == request.auth.uid);
-        allow delete: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid);
+        allow read: if isAdmin() || (isSignedIn() && request.auth.uid == studentId);
+        allow create, update, delete: if isAdmin();
       }
 
       match /career_notes/{noteId} {
-        allow read: if isAdmin() || isAssignedStaffForStudent(studentId);
-        allow create: if isAdmin() || (isAssignedStaffForStudent(studentId) && request.resource.data.providerId == request.auth.uid);
-        allow update: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid && request.resource.data.providerId == request.auth.uid);
-        allow delete: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid);
+        allow read: if isAdmin();
+        allow create, update, delete: if isAdmin();
       }
     }
 
     match /caseFiles/{fileId} {
-      allow read: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid) || (isSignedIn() && request.auth.uid == resource.data.studentId && resource.data.isPrivate == false);
-      allow create: if isAdmin() || (isStaff() && request.resource.data.staffId == request.auth.uid);
-      allow update: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid && request.resource.data.staffId == resource.data.staffId && request.resource.data.studentId == resource.data.studentId && request.resource.data.isPrivate == resource.data.isPrivate);
-      allow delete: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid);
+      // Case-file access is also projection/API controlled. Do not authorize
+      // cross-user reads from the legacy staffId field.
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.studentId && resource.data.isPrivate == false);
+      allow create, update, delete: if isAdmin();
     }
 
     match /users/{userId} {
