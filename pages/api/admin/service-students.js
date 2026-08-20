@@ -37,7 +37,20 @@ function serviceIsActive(profile, service) {
   return profile.services?.[service]?.status === 'active';
 }
 
-function publicStudentRecord(doc, profile, service) {
+function existingStudentId(raw) {
+  const candidates = [
+    raw?.ssStudentId,
+    raw?.studentId,
+    raw?.studentProfile?.identity?.ssStudentId,
+    raw?.studentProfile?.ssStudentId,
+    raw?.identity?.ssStudentId,
+  ];
+  const value = candidates.find(candidate => typeof candidate === 'string' && /^SS-STD-\d{6,}$/.test(candidate.trim()));
+  return value ? value.trim() : null;
+}
+
+function publicStudentRecord(doc, profile, service, authUser = null) {
+  const raw = doc.data() || {};
   const identity = profile.identity || {};
   const contact = profile.contact || {};
   const academic = profile.academic?.current || {};
@@ -50,11 +63,13 @@ function publicStudentRecord(doc, profile, service) {
 
   return {
     id: doc.id,
-    name: identity.fullName || '',
+    ssStudentId: existingStudentId(raw),
+    name: identity.fullName || identity.legalName || authUser?.displayName || '',
     preferredName: identity.preferredName || '',
-    email: contact.email || '',
+    email: contact.email || authUser?.email || '',
     photoURL: identity.photoURL || '',
     dob: identity.dateOfBirth || '',
+    gender: identity.gender || '',
     grade: academic.grade || '',
     section: academic.section || '',
     schoolName: academic.institutionName || institution.name || '',
@@ -76,16 +91,16 @@ function publicStudentRecord(doc, profile, service) {
     assignedCounsellorId: service === 'career' ? assignedProfessionalId : (assignments.wellbeing || null),
     assignedCareerCoachId: assignments.career || null,
     assignedSENEducatorId: assignments.sen || null,
-    assignedStaff: doc.data()?.assignedStaff || null,
+    assignedStaff: raw?.assignedStaff || null,
     riasecCode: profile.career?.riasec?.code || '',
     riasecScores: profile.career?.riasec?.scores || {},
-    careerAssessment: doc.data()?.careerAssessment || null,
-    assessmentCompletedAt: toIso(doc.data()?.assessmentCompletedAt || doc.data()?.careerAssessment?.completedAt),
-    careerReportAccess: doc.data()?.careerReportAccess || null,
+    careerAssessment: raw?.careerAssessment || null,
+    assessmentCompletedAt: toIso(raw?.assessmentCompletedAt || raw?.careerAssessment?.completedAt),
+    careerReportAccess: raw?.careerReportAccess || null,
     consentStatus: governance.consent || null,
-    createdAt: toIso(doc.data()?.createdAt),
-    createdAtMs: toMillis(doc.data()?.createdAt),
-    updatedAt: toIso(doc.data()?.updatedAt),
+    createdAt: toIso(raw?.createdAt),
+    createdAtMs: toMillis(raw?.createdAt),
+    updatedAt: toIso(raw?.updatedAt),
   };
 }
 
@@ -115,12 +130,26 @@ export default async function handler(req, res) {
 
   try {
     const snapshot = await getAdminFirestore().collection('users').get();
-    const students = snapshot.docs
+    const studentRecords = snapshot.docs
       .filter(doc => isStudentProfile(doc.data() || {}))
       .map(doc => ({ doc, profile: normalizeStudentRecord(doc.data() || {}, doc.id) }))
-      .filter(({ profile }) => serviceIsActive(profile, service))
-      .map(({ doc, profile }) => publicStudentRecord(doc, profile, service))
-      .sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+      .filter(({ profile }) => serviceIsActive(profile, service));
+
+    const students = await Promise.all(studentRecords.map(async ({ doc, profile }) => {
+      const raw = doc.data() || {};
+      const needsAuthIdentity = !profile.identity?.fullName || !profile.contact?.email;
+      let authUser = null;
+      if (needsAuthIdentity) {
+        try {
+          authUser = await getAdminAuth().getUser(doc.id);
+        } catch (error) {
+          console.warn('[admin service students] auth identity lookup failed:', doc.id, error?.code || error?.message);
+        }
+      }
+      return publicStudentRecord(doc, profile, service, authUser);
+    }));
+
+    students.sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
 
     return res.status(200).json({ generatedAt: new Date().toISOString(), service, students, count: students.length });
   } catch (error) {
