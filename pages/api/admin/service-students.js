@@ -47,6 +47,12 @@ function isArchived(raw = {}) {
   return raw.status === 'archived' || raw.lifecycleStatus === 'archived' || Boolean(raw.archivedAt);
 }
 
+function getAssignmentProfessionalId(assignment) {
+  if (typeof assignment === 'string') return assignment.trim();
+  if (!assignment || typeof assignment !== 'object' || assignment.status === 'inactive') return '';
+  return String(assignment.primaryProfessionalId || assignment.professionalId || '').trim();
+}
+
 function coreProfileStatus(profile, authUser) {
   const name = String(profile.identity?.fullName || profile.identity?.preferredName || authUser?.displayName || '').trim();
   const email = String(profile.contact?.email || authUser?.email || '').trim();
@@ -70,9 +76,9 @@ function publicStudentRecord(doc, profile, service, authUser = null, professiona
   const authoritativeInstitution = institutionId ? institutionDirectory.get(institutionId) : null;
   const institutionName = authoritativeInstitution?.name || profileInstitution.name || academic.institutionName || '';
   const academicYear = authoritativeInstitution?.academicYear || profileInstitution.academicYear || academic.academicYear || '';
-  const enrollmentStatus = authoritativeInstitution?.enrollmentStatus || profileInstitution.enrollmentStatus || raw.enrollmentStatus || 'active';
+  const enrollmentStatus = profileInstitution.enrollmentStatus || raw.enrollmentStatus || 'active';
   const assignments = profile.relationships?.assignments || {};
-  const assignedProfessionalId = typeof assignments[service] === 'string' ? assignments[service] : null;
+  const assignedProfessionalId = getAssignmentProfessionalId(assignments[service]);
   const assignedProfessional = assignedProfessionalId ? professionalDirectory.get(assignedProfessionalId) : null;
   const profileState = coreProfileStatus(profile, authUser);
   const assessmentCode = getAssessmentCode({ riasecCode: profile.career?.riasec?.code, careerDNA: profile.career?.profile });
@@ -148,7 +154,7 @@ export default async function handler(req, res) {
   try {
     decodedToken = await getAdminAuth().verifyIdToken(idToken);
   } catch (error) {
-    console.error('[admin service students auth] Firebase ID token verification failed:', safeAuthError(error));
+    console.error('[admin service students] Firebase ID token verification failed:', safeAuthError(error));
     return res.status(401).json({ error: 'Invalid or expired authentication token.' });
   }
 
@@ -166,8 +172,8 @@ export default async function handler(req, res) {
       .filter(({ profile }) => serviceIsActive(profile, service));
 
     const assignmentIds = studentRecords
-      .map(({ profile }) => profile.relationships?.assignments?.[service])
-      .filter(value => typeof value === 'string');
+      .map(({ profile }) => getAssignmentProfessionalId(profile.relationships?.assignments?.[service]))
+      .filter(Boolean);
     const institutionIds = studentRecords
       .map(({ profile }) => profile.academic?.current?.institutionId || profile.institution?.id)
       .filter(Boolean);
@@ -179,7 +185,7 @@ export default async function handler(req, res) {
     ]);
 
     const professionalDirectory = new Map();
-    for (const id of new Set([...assignmentIds])) {
+    for (const id of new Set(assignmentIds)) {
       const user = professionalUsers.get(id) || {};
       const professional = professionalProfiles.get(id) || {};
       professionalDirectory.set(id, {
