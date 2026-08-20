@@ -15,6 +15,9 @@ const NON_STUDENT_ROLES = new Set([
 ]);
 
 export function isStudentProfile(data = {}) {
+  const rawRole = String(data.role || '').trim().toLowerCase();
+  if (NON_STUDENT_ROLES.has(rawRole)) return false;
+
   const profile = data.studentProfile && typeof data.studentProfile === 'object'
     ? { ...data, ...data.studentProfile }
     : data;
