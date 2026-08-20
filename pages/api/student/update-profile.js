@@ -1,6 +1,6 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
-import { mergeCanonicalStudentProfile } from '../../../src/platform/studentProfileWriteAdapter.js';
+import { mergeCanonicalStudentProfile, profileEditorToCanonicalPatch } from '../../../src/platform/studentProfileWriteAdapter.js';
 
 function bearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization;
@@ -15,6 +15,19 @@ function isAdminLike(decoded) {
 
 function looksLikeStudent(raw = {}) {
   return raw.role === 'student' || raw.profileType === 'student' || Boolean(raw.studentProfile?.identity) || Boolean(raw.grade || raw.gradeOrCourse || raw.schoolName || raw.studentId);
+}
+
+const ALLOWED_DOMAINS = new Set(['identity', 'contact', 'family', 'academic', 'personal', 'governance']);
+const BLOCKED_DOMAINS = new Set(['services', 'institution', 'relationships', 'career', 'wellbeing', 'sen', 'assessments', 'goals']);
+
+function validateStudentPatch(patch = {}) {
+  if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new Error('A valid profile update is required.');
+  const keys = Object.keys(patch);
+  const blocked = keys.filter(key => BLOCKED_DOMAINS.has(key));
+  if (blocked.length) throw new Error(`Restricted student domains cannot be changed from this workflow: ${blocked.join(', ')}.`);
+  const unsupported = keys.filter(key => !ALLOWED_DOMAINS.has(key));
+  if (unsupported.length) throw new Error(`Unsupported student profile domains: ${unsupported.join(', ')}.`);
+  return patch;
 }
 
 export default async function handler(req, res) {
@@ -50,8 +63,16 @@ export default async function handler(req, res) {
     if (!looksLikeStudent(rawStudent)) return res.status(403).json({ error: 'Target account is not a student profile.' });
 
     const existing = rawStudent.studentProfile || normalizeStudentRecord(rawStudent, studentId);
-    const patch = req.body?.profile || {};
-    const nextProfile = mergeCanonicalStudentProfile({ ...existing, id: studentId }, patch);
+    const input = req.body?.profile ?? req.body?.updates;
+    const patch = req.body?.updates ? profileEditorToCanonicalPatch(input, existing) : input;
+    let safePatch;
+    try {
+      safePatch = validateStudentPatch(patch);
+    } catch (validationError) {
+      return res.status(400).json({ error: validationError.message });
+    }
+
+    const nextProfile = mergeCanonicalStudentProfile({ ...existing, id: studentId }, safePatch);
 
     await ref.set({
       studentProfile: nextProfile,
