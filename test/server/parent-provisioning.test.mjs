@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { provisionParentAccount } from '../../src/security/provisionParentAccount.js';
 
-function makeDb(existingProfile = null) {
+function makeDb(existingProfile = null, students = {}) {
   const writes = [];
   const ref = {
     set: async (data, options) => writes.push({ data, options }),
@@ -12,7 +12,27 @@ function makeDb(existingProfile = null) {
     writes,
     collection(name) {
       assert.equal(name, 'users');
-      return { doc: () => ref };
+      return {
+        doc: (id) => {
+          if (id && Object.prototype.hasOwnProperty.call(students, id)) {
+            return {
+              get: async () => ({ exists: true, data: () => students[id] }),
+            };
+          }
+          return ref;
+        },
+      };
+    },
+    async runTransaction(callback) {
+      const transaction = {
+        async get(studentRef) {
+          return studentRef.get();
+        },
+        set(studentRef, data, options) {
+          writes.push({ studentRef, data, options, transaction: true });
+        },
+      };
+      return callback(transaction);
     },
   };
 }
@@ -39,9 +59,15 @@ function makeAuth(user = null) {
   };
 }
 
+const STUDENT = {
+  role: 'student',
+  institutionId: 'school-1',
+  family: { guardians: [] },
+};
+
 test('provisions a new parent Auth account and parent profile', async () => {
   const adminAuth = makeAuth();
-  const adminDb = makeDb();
+  const adminDb = makeDb(null, { 'student-1': STUDENT });
   const result = await provisionParentAccount({
     adminAuth,
     adminDb,
@@ -49,6 +75,7 @@ test('provisions a new parent Auth account and parent profile', async () => {
     parentEmail: 'PARENT@EXAMPLE.COM',
     institutionId: 'school-1',
     institutionName: 'Example School',
+    studentIds: ['student-1'],
   });
 
   assert.equal(result.uid, 'new-parent-uid');
@@ -60,6 +87,7 @@ test('provisions a new parent Auth account and parent profile', async () => {
   assert.equal(adminDb.writes[0].data.role, 'parent');
   assert.equal(adminDb.writes[0].data.institutionId, 'school-1');
   assert.equal(adminDb.writes[0].data.accountProvisioning.status, 'invited');
+  assert.equal(adminDb.writes.some(write => write.transaction === true), true);
 });
 
 test('reuses an existing parent account and preserves existing links', async () => {
@@ -69,7 +97,7 @@ test('reuses an existing parent account and preserves existing links', async () 
     institutionId: 'school-1',
     linkedRosterIds: ['roster-old'],
     linkedStudentIds: ['student-old'],
-  });
+  }, { 'student-new': STUDENT });
   const result = await provisionParentAccount({
     adminAuth,
     adminDb,
@@ -98,6 +126,7 @@ test('rejects a cross-institution parent reassignment', async () => {
       parentName: 'Parent One',
       parentEmail: 'parent@example.com',
       institutionId: 'school-other',
+      studentIds: ['student-1'],
     }),
     /already linked to another institution/
   );
@@ -113,6 +142,7 @@ test('rejects an email already assigned to a non-parent role', async () => {
       adminDb,
       parentName: 'Parent One',
       parentEmail: 'student@example.com',
+      studentIds: ['student-1'],
     }),
     /already assigned to the student role/
   );
