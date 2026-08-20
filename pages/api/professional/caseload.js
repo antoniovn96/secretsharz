@@ -27,6 +27,16 @@ function canonicalServiceState(data, service) {
   };
 }
 
+function assignmentBelongsToProfessional(assignment, uid) {
+  if (!assignment) return false;
+  if (typeof assignment === 'string') return assignment === uid;
+  if (assignment.status === 'inactive') return false;
+  return [assignment.professionalId, assignment.primaryProfessionalId]
+    .filter(Boolean)
+    .map(String)
+    .includes(String(uid));
+}
+
 function assignedLegacy(data, uid, fields) {
   return fields.some(field => valueAt(data, field) === uid);
 }
@@ -115,7 +125,7 @@ export default async function handler(req, res) {
       const data = doc.data() || {};
       if (data.role && data.role !== 'student') return;
       const state = canonicalServiceState(data, service);
-      if (!state.active || state.assignment !== decoded.uid) return;
+      if (!state.active || !assignmentBelongsToProfessional(state.assignment, decoded.uid)) return;
       if (authorisedInstitutionStudentIds && !authorisedInstitutionStudentIds.has(doc.id)) return;
       rowsById.set(doc.id, cleanStudent(doc.id, data, service));
     });
