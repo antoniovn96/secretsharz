@@ -20,7 +20,7 @@ export async function updateCanonicalStudentProfile(user, updates) {
     },
     body: JSON.stringify({
       studentId: user.uid,
-      updates,
+      profile: updates,
     }),
   });
 
