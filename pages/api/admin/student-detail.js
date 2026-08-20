@@ -23,10 +23,11 @@ export default async function handler(req, res) {
   let viewer;
   try {
     const decoded = await getAdminAuth().verifyIdToken(idToken);
+    const isFounder = decoded.email_verified === true && decoded.email === 'antonio.antonio.noronha@gmail.com';
     viewer = {
       id: decoded.uid,
       uid: decoded.uid,
-      role: decoded.role || decoded.userRole || decoded.profileType,
+      role: isFounder ? 'super_admin' : (decoded.role || decoded.userRole || decoded.profileType),
       profileType: decoded.profileType,
       institutionId: decoded.institutionId || decoded.institutionID,
     };
