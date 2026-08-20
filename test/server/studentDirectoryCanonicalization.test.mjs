@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { isStudentProfile, getStudentPath } from '../../src/platform/studentRecordModel.js';
 import { normalizeStudentRecord } from '../../src/platform/studentRecordNormalizer.js';
 import { getAssessmentCode, getAssessmentStatus, getProfileStatus } from '../../src/platform/adminStudentDirectory.js';
 
@@ -52,4 +53,15 @@ test('directory helper preserves legacy profile status only as a compatibility f
   assert.equal(getProfileStatus({ profileStatus: 'complete', profileComplete: false }), 'complete');
   assert.equal(getProfileStatus({ profileComplete: true }), 'complete');
   assert.equal(getProfileStatus({ profileComplete: false }), 'incomplete');
+});
+
+test('discovers a canonical nested studentProfile even without a legacy role', () => {
+  assert.equal(isStudentProfile({ studentProfile: { profileType: 'student' } }), true);
+  assert.equal(isStudentProfile({ studentProfile: { career: { riasec: { code: 'SIC' } } } }), true);
+});
+
+test('discovers canonical career RIASEC records and maps their path', () => {
+  const record = { career: { path: 'career_guidance', riasec: { code: 'SIC' } } };
+  assert.equal(isStudentProfile(record), true);
+  assert.equal(getStudentPath(record), 'Career');
 });
