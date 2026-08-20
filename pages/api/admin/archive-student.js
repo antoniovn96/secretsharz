@@ -1,5 +1,8 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { isStudentProfile } from '../../../src/platform/studentRecordModel.js';
+import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
+
+const SERVICE_PATHS = new Set(['career', 'wellbeing', 'sen']);
 
 function bearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization || '';
@@ -30,7 +33,10 @@ export default async function handler(req, res) {
 
   const studentId = String(req.body?.studentId || '').trim();
   const confirmationName = String(req.body?.confirmationName || '').trim();
-  if (!studentId || !confirmationName) return res.status(400).json({ error: 'Student ID and confirmation name are required.' });
+  const service = String(req.body?.service || '').trim().toLowerCase();
+  if (!studentId || !confirmationName || !SERVICE_PATHS.has(service)) {
+    return res.status(400).json({ error: 'Student ID, confirmation name, and a valid service are required.' });
+  }
 
   try {
     const db = getAdminFirestore();
@@ -40,6 +46,12 @@ export default async function handler(req, res) {
 
     const raw = snapshot.data() || {};
     if (!isStudentProfile(raw)) return res.status(400).json({ error: 'The target record is not a student profile.' });
+
+    const normalized = normalizeStudentRecord(raw, studentId);
+    if (normalized.services?.[service]?.status !== 'active') {
+      return res.status(409).json({ error: `Student is not actively enrolled in the ${service} service.` });
+    }
+
     const name = String(raw.name || raw.fullName || raw.studentProfile?.identity?.fullName || '').trim();
     if (!name || name.toLowerCase() !== confirmationName.toLowerCase()) return res.status(400).json({ error: 'Confirmation name does not match the student record.' });
     if (raw.status === 'archived' || raw.lifecycleStatus === 'archived' || raw.archivedAt) return res.status(409).json({ error: 'Student is already archived.' });
@@ -60,13 +72,14 @@ export default async function handler(req, res) {
       actorRole: 'super_admin',
       resourceType: 'student',
       resourceId: studentId,
+      service,
       purpose: 'administration',
       outcome: 'success',
       timestamp: now,
     });
     await batch.commit();
 
-    return res.status(200).json({ ok: true, studentId, status: 'archived' });
+    return res.status(200).json({ ok: true, studentId, service, status: 'archived' });
   } catch (error) {
     console.error('[archive-student] failed:', error);
     return res.status(500).json({ error: 'Unable to archive the student record.' });
