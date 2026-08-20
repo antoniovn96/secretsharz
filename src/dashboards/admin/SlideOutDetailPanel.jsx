@@ -38,6 +38,25 @@ const getParentIds = (data = {}) => {
   return [...new Set(candidates.filter(Boolean).map(String))];
 };
 
+const formatPhoneValue = (value) => {
+  if (!value) return 'Not provided';
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (typeof value === 'object') {
+    return value.international || [value.callingCode, value.number].filter(Boolean).join(' ') || value.number || 'Not provided';
+  }
+  return 'Not provided';
+};
+
+const formatLocationValue = (value, fallback = '') => {
+  if (!value && fallback) return String(fallback);
+  if (!value) return 'Not specified';
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (typeof value === 'object') {
+    return [value.cityName, value.stateName, value.countryName].filter(Boolean).join(', ') || fallback || 'Not specified';
+  }
+  return fallback || 'Not specified';
+};
+
 const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
   const [additionalData, setAdditionalData] = useState(null);
   const [linkedParents, setLinkedParents] = useState([]);
@@ -112,7 +131,7 @@ const SlideOutDetailPanel = ({ user, isOpen, onClose }) => {
             </div>
           </SectionCard>
 
-          <SectionCard title="Contact Information" icon={User}><div className="grid grid-cols-2 gap-4"><InfoItem icon={Mail} label="Email" value={identity.email || merged.email || 'Not provided'} /><InfoItem icon={Phone} label="Phone" value={merged.phone || merged.contactNumber || 'Not provided'} /><InfoItem icon={MapPin} label="Location" value={merged.location || merged.city || 'Not specified'} /><InfoItem icon={Calendar} label="Onboarded" value={formatDate(merged.createdAt || merged.onboardingDate)} /></div></SectionCard>
+          <SectionCard title="Contact Information" icon={User}><div className="grid grid-cols-2 gap-4"><InfoItem icon={Mail} label="Email" value={identity.email || merged.email || 'Not provided'} /><InfoItem icon={Phone} label="Phone" value={formatPhoneValue(merged.phone || merged.contactNumber)} /><InfoItem icon={MapPin} label="Location" value={formatLocationValue(merged.location || merged.locationData, merged.city || '')} /><InfoItem icon={Calendar} label="Onboarded" value={formatDate(merged.createdAt || merged.onboardingDate)} /></div></SectionCard>
 
           <SectionCard title="Academic Details" icon={GraduationCap}><div className="grid grid-cols-2 gap-4"><InfoItem icon={BookOpen} label="Grade / Class" value={merged.grade || merged.classLevel || merged.gradeOrCourse || 'N/A'} /><InfoItem icon={Building2} label="School" value={merged.schoolName || merged.institutionName || 'Not specified'} />{merged.stream1112 && <InfoItem icon={BookOpen} label="Stream" value={merged.stream1112} />}{merged.marks10th != null && <InfoItem icon={Award} label="10th Marks" value={`${merged.marks10th}%`} />}{merged.marks12th != null && <InfoItem icon={Award} label="12th Marks" value={`${merged.marks12th}%`} />}</div></SectionCard>
 
