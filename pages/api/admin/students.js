@@ -1,5 +1,6 @@
 import { getAdminAuth, getAdminFirestore, getAdminApp } from '../../../src/security/firebaseAdmin.js';
-import { isStudentProfile, getStudentPath } from '../../../src/platform/studentRecordModel.js';
+import { isStudentProfile } from '../../../src/platform/studentRecordModel.js';
+import { toAdminStudentDirectoryRecord } from '../../../src/platform/adminStudentDirectory.js';
 
 function bearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization;
@@ -8,62 +9,11 @@ function bearerToken(req) {
   return match ? match[1] : null;
 }
 
-function toMillis(value) {
-  if (!value) return null;
-  if (typeof value.toMillis === 'function') return value.toMillis();
-  if (typeof value.toDate === 'function') return value.toDate().getTime();
-  if (value instanceof Date) return value.getTime();
-  if (typeof value === 'number') return value;
-  if (typeof value === 'string') {
-    const parsed = Date.parse(value);
-    return Number.isNaN(parsed) ? null : parsed;
-  }
-  return null;
-}
-
-function toIso(value) {
-  const millis = toMillis(value);
-  return millis == null ? null : new Date(millis).toISOString();
-}
-
 function safeAuthError(error) {
   return {
     code: error?.code || null,
     message: error?.message || 'Unknown Firebase Auth verification error',
     expectedProjectId: getAdminApp()?.options?.projectId || null,
-  };
-}
-
-function publicStudentRecord(doc) {
-  const data = doc.data() || {};
-  return {
-    id: doc.id,
-    name: data.name || data.fullName || '',
-    email: data.email || '',
-    photoURL: data.photoURL || '',
-    role: data.role || '',
-    profileType: data.profileType || '',
-    age: data.age ?? null,
-    dob: data.dob || data.dateOfBirth || '',
-    grade: data.grade || data.gradeOrCourse || '',
-    schoolName: data.schoolName || '',
-    institutionName: data.institutionName || '',
-    parentName: data.parentName || '',
-    parentContact: data.parentContact || '',
-    contactNumber: data.contactNumber || data.phone || '',
-    primary_path: data.primary_path || '',
-    studentTrack: data.studentTrack || '',
-    path: getStudentPath(data),
-    profileComplete: data.profileComplete === true,
-    onboardingCompleted: data.onboardingCompleted === true,
-    riasecCode: data.riasecCode || data.careerDNA?.riasec?.code || '',
-    riasecScores: data.riasecScores || data.careerDNA?.riasec?.scores || {},
-    careerAssessment: data.careerAssessment || null,
-    assessmentCompletedAt: toIso(data.assessmentCompletedAt || data.careerAssessment?.completedAt),
-    careerReportAccess: data.careerReportAccess || null,
-    createdAt: toIso(data.createdAt),
-    createdAtMs: toMillis(data.createdAt),
-    updatedAt: toIso(data.updatedAt),
   };
 }
 
@@ -92,7 +42,7 @@ export default async function handler(req, res) {
     const snapshot = await getAdminFirestore().collection('users').get();
     const students = snapshot.docs
       .filter(doc => isStudentProfile(doc.data() || {}))
-      .map(publicStudentRecord)
+      .map(doc => toAdminStudentDirectoryRecord(doc.data() || {}, doc.id))
       .sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
 
     return res.status(200).json({
