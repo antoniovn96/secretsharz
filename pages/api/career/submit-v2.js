@@ -3,6 +3,8 @@ import { CAREER_DATA } from '../../../src/data/careers.js';
 import { ASSESSMENT_VERSION } from '../../../src/career/careerAssessmentBlueprint.js';
 import { resolveBundle } from '../../../src/career/assessmentSelection.js';
 import { matchCareerToSelectedProfile, scoreSelectedAssessment } from '../../../src/career/scoreSelectedAssessment.js';
+import { isStudentProfile } from '../../../src/platform/studentRecordModel.js';
+import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
 
 function bearerToken(req){const h=req.headers.authorization||req.headers.Authorization;if(typeof h!=='string')return null;const m=h.match(/^Bearer\s+(.+)$/i);return m?m[1]:null;}
 function safeObject(v){return v&&typeof v==='object'&&!Array.isArray(v)?v:{};}
@@ -22,7 +24,10 @@ export default async function handler(req,res){
  const intake=safeObject(body.intake);
  const answers=safeObject(body.answers);
  const db=getAdminFirestore();
- let userData={};try{const s=await db.collection('users').doc(decoded.uid).get();userData=s.exists?s.data():{};}catch(_){ }
+ let userData={};try{const s=await db.collection('users').doc(decoded.uid).get();if(!s.exists)return res.status(403).json({error:'Career assessments can only be submitted for a student account.'});userData=s.data()||{};}catch(_){return res.status(500).json({error:'Unable to load the student account.'});}
+ if(!isStudentProfile(userData))return res.status(403).json({error:'Career assessments can only be submitted for a student account.'});
+ const normalized=normalizeStudentRecord(userData,decoded.uid);
+ if(normalized.services?.career?.status!=='active')return res.status(403).json({error:'Career Guidance service access is not active for this student.'});
 
  // Resolve institutional entitlement before selecting the assessment bundle. An
  // institution code is authoritative for the test bundle purchased by that
@@ -40,6 +45,7 @@ export default async function handler(req,res){
  const matches=buildCareerMatches(scored,intake);
  const reportTier=institutionEntitled?'institution':entitlement?.status==='paid'?'premium':'free';
  const premiumAccess=reportTier!=='free';
+ const completedAt=new Date().toISOString();
  const report={
    version:ASSESSMENT_VERSION,
    pathway,
@@ -53,7 +59,7 @@ export default async function handler(req,res){
    reportPages:premiumAccess?20:5,
    reportType:premiumAccess?'full_career_intelligence':'career_snapshot',
    reportTier,
-   completedAt:new Date().toISOString(),
+   completedAt,
    intake:{dob:safeString(intake.dob,30),age:Number.isFinite(Number(intake.age))?Number(intake.age):null,ageBand:safeString(intake.ageBand,30),educationStage:safeString(intake.educationStage,80),board:safeString(intake.board,100),className:safeString(intake.className,100),stream:safeString(intake.stream,100),institutionName:safeString(intake.institutionName||userData.institutionName,160),likedSubjects:Array.isArray(intake.likedSubjects)?intake.likedSubjects.slice(0,30):[],dislikedSubjects:Array.isArray(intake.dislikedSubjects)?intake.dislikedSubjects.slice(0,30):[],hobbies:safeString(intake.hobbies,500),curiosity:safeString(intake.curiosity,500),goal:safeString(intake.goal,500),currentRole:safeString(intake.currentRole,160),professionalIntent:safeString(intake.professionalIntent,80),academicAverage:Number(intake.academicAverage||0)},
    scores:scored,
    careerExploration:matches,

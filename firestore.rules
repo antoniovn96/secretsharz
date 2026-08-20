@@ -7,10 +7,41 @@ service cloud.firestore {
     function profileRole(uid) { return get(/databases/$(database)/documents/users/$(uid)).data.role; }
     function isAdmin() { return isFounderAdmin() || hasClaimRole('super_admin') || (isSignedIn() && profileRole(request.auth.uid) == 'super_admin'); }
     function isParent() { return isSignedIn() && (hasClaimRole('parent') || profileRole(request.auth.uid) == 'parent'); }
-    function isStaff() { return isSignedIn() && (request.auth.token.role in ['counsellor','career_counsellor','psychologist','educator'] || profileRole(request.auth.uid) in ['counsellor','career_counsellor','psychologist','educator']); }
+    function isStaff() { return isSignedIn() && (request.auth.token.role in ['counsellor','career_counsellor','career_coach','psychologist','educator'] || profileRole(request.auth.uid) in ['counsellor','career_counsellor','career_coach','psychologist','educator']); }
+
+    function hasCanonicalCareerService(studentId) {
+      return exists(/databases/$(database)/documents/users/$(studentId))
+        && get(/databases/$(database)/documents/users/$(studentId)).data.keys().hasAny(['services'])
+        && get(/databases/$(database)/documents/users/$(studentId)).data.services.keys().hasAny(['career'])
+        && get(/databases/$(database)/documents/users/$(studentId)).data.services.career is map
+        && get(/databases/$(database)/documents/users/$(studentId)).data.services.career.keys().hasAny(['status'])
+        && get(/databases/$(database)/documents/users/$(studentId)).data.services.career.status == 'active';
+    }
+
+    function hasCanonicalCareerAssignment(studentId) {
+      return exists(/databases/$(database)/documents/users/$(studentId))
+        && get(/databases/$(database)/documents/users/$(studentId)).data.keys().hasAny(['relationships'])
+        && get(/databases/$(database)/documents/users/$(studentId)).data.relationships.keys().hasAny(['assignments'])
+        && get(/databases/$(database)/documents/users/$(studentId)).data.relationships.assignments.keys().hasAny(['career'])
+        && (
+          get(/databases/$(database)/documents/users/$(studentId)).data.relationships.assignments.career == request.auth.uid
+          || (
+            get(/databases/$(database)/documents/users/$(studentId)).data.relationships.assignments.career is map
+            && get(/databases/$(database)/documents/users/$(studentId)).data.relationships.assignments.career.keys().hasAny(['primaryProfessionalId','status'])
+            && get(/databases/$(database)/documents/users/$(studentId)).data.relationships.assignments.career.primaryProfessionalId == request.auth.uid
+            && (!get(/databases/$(database)/documents/users/$(studentId)).data.relationships.assignments.career.keys().hasAny(['status']) || get(/databases/$(database)/documents/users/$(studentId)).data.relationships.assignments.career.status == 'active')
+          )
+        );
+    }
+
     function isAssignedStaffForStudent(studentId) {
       return isStaff()
-        && get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.careerId == request.auth.uid;
+        && (
+          (hasCanonicalCareerService(studentId) && hasCanonicalCareerAssignment(studentId))
+          || (!exists(/databases/$(database)/documents/users/$(studentId))
+            && exists(/databases/$(database)/documents/students/$(studentId))
+            && get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.careerId == request.auth.uid)
+        );
     }
 
     function validMobile(number) {

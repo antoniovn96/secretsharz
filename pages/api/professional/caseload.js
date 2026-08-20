@@ -2,9 +2,9 @@ import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseA
 import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
 
 const CONFIG = Object.freeze({
-  career: { role: 'career_counsellor', collection: 'students', assignmentFields: ['assignedStaff.careerId'] },
-  wellbeing: { role: 'psychologist', collection: 'users', assignmentFields: ['assignedStaff.psychologistId', 'assignedStaff.psychologyId'] },
-  sen: { role: 'educator', collection: 'users', assignmentFields: ['assignedStaff.senId', 'assignedStaff.educatorId'] },
+  career: { role: 'career_counsellor', legacyCollection: 'students', assignmentFields: ['assignedStaff.careerId'] },
+  wellbeing: { role: 'psychologist', legacyCollection: null, assignmentFields: ['assignedStaff.psychologistId', 'assignedStaff.psychologyId'] },
+  sen: { role: 'educator', legacyCollection: null, assignmentFields: ['assignedStaff.senId', 'assignedStaff.educatorId'] },
 });
 
 const FOUNDER_EMAIL = 'antonio.antonio.noronha@gmail.com';
@@ -18,10 +18,26 @@ function bearerToken(req) {
 
 function valueAt(data, path) { return path.split('.').reduce((value, key) => value?.[key], data); }
 
-function assigned(data, uid, service, fields) {
+function canonicalServiceState(data, service) {
   const canonical = normalizeStudentRecord(data, null);
-  const canonicalAssignment = canonical.relationships?.assignments?.[service];
-  if (canonicalAssignment) return canonicalAssignment === uid;
+  return {
+    record: canonical,
+    active: canonical.services?.[service]?.status === 'active',
+    assignment: canonical.relationships?.assignments?.[service] || null,
+  };
+}
+
+function assignmentBelongsToProfessional(assignment, uid) {
+  if (!assignment) return false;
+  if (typeof assignment === 'string') return assignment === uid;
+  if (assignment.status === 'inactive') return false;
+  return [assignment.professionalId, assignment.primaryProfessionalId]
+    .filter(Boolean)
+    .map(String)
+    .includes(String(uid));
+}
+
+function assignedLegacy(data, uid, fields) {
   return fields.some(field => valueAt(data, field) === uid);
 }
 
@@ -98,18 +114,38 @@ export default async function handler(req, res) {
       authorisedInstitutionStudentIds = await getAuthorisedInstitutionStudentIds(firestore, professionalProfile, service);
     }
 
-    const snapshot = await firestore.collection(config.collection).get();
-    const rows = [];
-    snapshot.docs.forEach(doc => {
+    // Canonical users/{uid} is authoritative whenever the student profile exists.
+    // Legacy students/{uid} is consulted only for career records that have not yet
+    // been migrated to users/{uid}; legacy assignment fields never override an
+    // existing canonical service/assignment state.
+    const canonicalSnapshot = await firestore.collection('users').get();
+    const rowsById = new Map();
+
+    canonicalSnapshot.docs.forEach(doc => {
       const data = doc.data() || {};
-      const canonical = normalizeStudentRecord(data, doc.id);
-      if (!assigned(data, decoded.uid, service, config.assignmentFields)) return;
+      if (data.role && data.role !== 'student') return;
+      const state = canonicalServiceState(data, service);
+      if (!state.active || !assignmentBelongsToProfessional(state.assignment, decoded.uid)) return;
       if (authorisedInstitutionStudentIds && !authorisedInstitutionStudentIds.has(doc.id)) return;
-      if (config.collection === 'users' && data.role && data.role !== 'student') return;
-      if (config.collection === 'users' && canonical.services?.[service]?.status !== 'active') return;
-      rows.push(cleanStudent(doc.id, data, service));
+      rowsById.set(doc.id, cleanStudent(doc.id, data, service));
     });
-    rows.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+
+    if (config.legacyCollection) {
+      const legacySnapshot = await firestore.collection(config.legacyCollection).get();
+      legacySnapshot.docs.forEach(doc => {
+        if (rowsById.has(doc.id)) return;
+        const data = doc.data() || {};
+        // Do not let a legacy record resurrect a canonical student whose service
+        // is inactive or whose canonical assignment belongs to somebody else.
+        const canonicalSnap = canonicalSnapshot.docs.find(candidate => candidate.id === doc.id);
+        if (canonicalSnap) return;
+        if (!assignedLegacy(data, decoded.uid, config.assignmentFields)) return;
+        if (authorisedInstitutionStudentIds && !authorisedInstitutionStudentIds.has(doc.id)) return;
+        rowsById.set(doc.id, cleanStudent(doc.id, data, service));
+      });
+    }
+
+    const rows = [...rowsById.values()].sort((a, b) => String(a.name).localeCompare(String(b.name)));
     return res.status(200).json({ service, count: rows.length, students: rows, generatedAt: new Date().toISOString() });
   } catch (error) {
     console.error('[professional caseload] failed:', error);

@@ -1,8 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { BriefcaseBusiness, GraduationCap, HeartHandshake, Brain, Users, RefreshCw } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { BriefcaseBusiness, GraduationCap, HeartHandshake, Brain, Users } from 'lucide-react';
 import { auth } from '../../firebase';
 import CanonicalStudentDirectoryTable from './CanonicalStudentDirectoryTable';
 import SlideOutDetailPanel from './SlideOutDetailPanel';
+import AdminStudentEditModal from './AdminStudentEditModal';
+import AdminStudentArchiveModal from './AdminStudentArchiveModal';
+import AdminStudentAssignmentModal from './AdminStudentAssignmentModal';
 
 const SERVICE_META = {
   career: { label: 'Career Guidance', path: 'career', icon: BriefcaseBusiness, tone: 'emerald' },
@@ -13,12 +16,16 @@ const SERVICE_META = {
 export default function ServiceStudentDirectory({ service = 'career', theme = 'light' }) {
   const meta = SERVICE_META[service] || SERVICE_META.career;
   const [students, setStudents] = useState([]);
+  const [directoryFilters, setDirectoryFilters] = useState({ institutions: [], grades: [], counsellors: [], academicYears: [] });
   const [loading, setLoading] = useState(true);
-  const [repairing, setRepairing] = useState(false);
   const [error, setError] = useState('');
-  const [repairMessage, setRepairMessage] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState('');
+  const [editOpen, setEditOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [assignmentOpen, setAssignmentOpen] = useState(false);
 
   const load = useCallback(async () => {
     const currentUser = auth.currentUser;
@@ -34,6 +41,7 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || 'Unable to load students.');
       setStudents(Array.isArray(payload.students) ? payload.students : []);
+      setDirectoryFilters(payload.filters || { institutions: [], grades: [], counsellors: [], academicYears: [] });
     } catch (err) {
       console.error('[ServiceStudentDirectory] failed:', err);
       setError(err?.message || 'Unable to load students.');
@@ -42,28 +50,35 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
 
   useEffect(() => { load(); }, [load]);
 
-  const repairIdentities = async () => {
-    if (!window.confirm('Repair missing Secret Sharz Student IDs and recover missing names from Firebase Auth? Existing canonical names and IDs will be preserved.')) return;
-    const currentUser = auth.currentUser;
-    if (!currentUser) { setError('Authentication required.'); return; }
-    setRepairing(true); setRepairMessage(''); setError('');
+  const openDetails = async student => {
+    setSelectedStudent(student); setDetailOpen(true); setDetailLoading(true); setDetailError('');
     try {
-      const token = await currentUser.getIdToken(true);
-      const response = await fetch('/api/admin/backfill-student-identities', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || 'Unable to repair student identities.');
-      setRepairMessage(`Identity repair complete: ${payload.assigned || 0} IDs allocated, ${payload.namesRecovered || 0} names recovered.`);
-      await load();
+      const currentUser = auth.currentUser;
+      if (!currentUser) throw new Error('Authentication required.');
+      let token = await currentUser.getIdToken(true);
+      let response = await fetch(`/api/admin/student-detail?service=${encodeURIComponent(meta.path)}&studentId=${encodeURIComponent(student.id)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+      if (response.status === 401) {
+        token = await currentUser.getIdToken(true);
+        response = await fetch(`/api/admin/student-detail?service=${encodeURIComponent(meta.path)}&studentId=${encodeURIComponent(student.id)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+      }
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || 'Unable to load the authorized student record.');
+      setSelectedStudent(payload.profile || student);
     } catch (err) {
-      console.error('[ServiceStudentDirectory] identity repair failed:', err);
-      setError(err?.message || 'Unable to repair student identities.');
-    } finally { setRepairing(false); }
+      console.error('[ServiceStudentDirectory] detail load failed:', err);
+      setDetailError(err?.message || 'Unable to load the authorized student record.');
+    } finally { setDetailLoading(false); }
   };
 
-  const completeProfiles = students.filter(student => Boolean(student?.name && student?.email && (student?.schoolName || student?.institutionName) && student?.grade)).length;
-  const assessmentComplete = students.filter(student => Boolean(student?.riasecCode || student?.careerDNA?.riasec?.code || student?.careerAssessment?.hollandCode?.length)).length;
+  const completeProfiles = students.filter(student => student.profileStatus === 'complete').length;
+  const assessmentComplete = students.filter(student => student.assessmentStatus === 'complete').length;
+  const assessmentPending = students.length - assessmentComplete;
+  const assigned = students.filter(student => student.assignmentStatus === 'assigned').length;
+  const needsAttention = students.filter(student => student.needsAttention).length;
   const isDark = theme === 'dark';
   const Icon = meta.icon;
+
+  const stats = useMemo(() => ({ total: students.length, completeProfiles, assessmentComplete, assessmentPending, assigned, needsAttention }), [students.length, completeProfiles, assessmentComplete, assessmentPending, assigned, needsAttention]);
 
   return (
     <div className="space-y-6">
@@ -73,22 +88,40 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
             <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${meta.tone === 'violet' ? 'bg-violet-500/10 text-violet-500' : meta.tone === 'amber' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}><Icon className="w-5 h-5" /></div>
             <div><p className={`text-[10px] uppercase tracking-[0.16em] font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{meta.label} · Students</p><h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-950'}`}>Student Directory</h1></div>
           </div>
-          <p className={`mt-3 text-sm max-w-3xl ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>These are the existing student records from the central student directory, filtered on the server to the selected service. Names and Student IDs come from the canonical identity projection; Firebase UIDs remain internal.</p>
+          <p className={`mt-3 text-sm max-w-3xl ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Manage students enrolled in {meta.label}. Directory state is derived from the canonical student projection; Firebase UIDs remain internal.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={repairIdentities} disabled={repairing || loading} className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold disabled:opacity-50 ${isDark ? 'border-slate-800 bg-white/[0.02] text-slate-300' : 'border-slate-200 bg-white text-slate-600'}`}><RefreshCw className={`w-4 h-4 ${repairing ? 'animate-spin' : ''}`} />{repairing ? 'Repairing…' : 'Repair Student IDs'}</button>
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${isDark ? 'border-slate-800 bg-white/[0.02] text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}><Users className="w-4 h-4" />{students.length} students</div>
-        </div>
+        <div className="flex flex-wrap items-center gap-2"><div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${isDark ? 'border-slate-800 bg-white/[0.02] text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}><Users className="w-4 h-4" />{stats.total} students</div></div>
       </div>
-      {repairMessage && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">{repairMessage}</div>}
-      {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div>}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <MiniMetric label="Students" value={students.length} icon={GraduationCap} theme={theme} />
-        <MiniMetric label="Profiles complete" value={completeProfiles} icon={Users} theme={theme} />
-        <MiniMetric label="RIASEC / assessment data" value={assessmentComplete} icon={BriefcaseBusiness} theme={theme} />
+      {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700" role="alert">{error}</div>}
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+        <MiniMetric label="Total students" value={stats.total} icon={GraduationCap} theme={theme} />
+        <MiniMetric label="Profiles complete" value={stats.completeProfiles} icon={Users} theme={theme} />
+        <MiniMetric label="Assessment complete" value={stats.assessmentComplete} icon={BriefcaseBusiness} theme={theme} />
+        <MiniMetric label="Assigned" value={stats.assigned} icon={Users} theme={theme} />
+        <MiniMetric label="Needs attention" value={stats.needsAttention} icon={Users} theme={theme} />
       </div>
-      <CanonicalStudentDirectoryTable users={students} isLoading={loading} onViewDetails={student => { setSelectedStudent(student); setDetailOpen(true); }} userRole="student" theme={theme} />
-      <SlideOutDetailPanel user={selectedStudent} isOpen={detailOpen} onClose={() => { setDetailOpen(false); window.setTimeout(() => setSelectedStudent(null), 300); }} />
+      <CanonicalStudentDirectoryTable
+        users={students}
+        isLoading={loading}
+        filterOptions={directoryFilters}
+        onViewDetails={openDetails}
+        onEdit={student => { setSelectedStudent(student); setEditOpen(true); }}
+        onAssign={student => { setSelectedStudent(student); setAssignmentOpen(true); }}
+        onDelete={student => { setSelectedStudent(student); setArchiveOpen(true); }}
+        theme={theme}
+      />
+      <SlideOutDetailPanel
+        user={selectedStudent}
+        isOpen={detailOpen}
+        isLoading={detailLoading}
+        error={detailError}
+        onEdit={() => { setDetailOpen(false); setEditOpen(true); }}
+        onArchive={() => { setDetailOpen(false); setArchiveOpen(true); }}
+        onClose={() => { setDetailOpen(false); window.setTimeout(() => { setSelectedStudent(null); setDetailError(''); }, 300); }}
+      />
+      <AdminStudentEditModal student={selectedStudent} isOpen={editOpen} theme={theme} onClose={() => setEditOpen(false)} onSaved={() => { setEditOpen(false); load(); }} />
+      <AdminStudentAssignmentModal student={selectedStudent} isOpen={assignmentOpen} theme={theme} service={meta.path} onClose={() => setAssignmentOpen(false)} onSaved={() => { setAssignmentOpen(false); load(); }} />
+      <AdminStudentArchiveModal student={selectedStudent} isOpen={archiveOpen} theme={theme} service={meta.path} onClose={() => setArchiveOpen(false)} onArchived={() => { setArchiveOpen(false); setSelectedStudent(null); load(); }} />
     </div>
   );
 }

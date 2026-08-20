@@ -66,8 +66,6 @@ export function profileEditorToCanonicalPatch(payload = {}, currentProfile = {})
     ...(currentProfile.identity || {}),
     gender: clean(payload.gender ?? currentProfile.identity?.gender ?? ''),
   };
-  // ProfileEditor explicitly owns this field. null/empty therefore means
-  // the student intentionally removed the picture, not "preserve old value".
   if (Object.prototype.hasOwnProperty.call(payload, 'profilePicture')) {
     identity.photoURL = clean(payload.profilePicture || '');
   } else if (currentProfile.identity?.photoURL !== undefined) {
@@ -105,6 +103,7 @@ export function mergeCanonicalStudentProfile(currentProfile = {}, patch = {}) {
     identity: { ...(currentProfile.identity || {}), ...(patch.identity || {}) },
     contact: { ...(currentProfile.contact || {}), ...(patch.contact || {}) },
     family: { ...(currentProfile.family || {}), ...(patch.family || {}) },
+    institution: { ...(currentProfile.institution || {}), ...(patch.institution || {}) },
     academic: { ...(currentProfile.academic || {}), ...(patch.academic || {}), current: { ...(currentProfile.academic?.current || {}), ...(patch.academic?.current || {}) }, history: { ...(currentProfile.academic?.history || {}), ...(patch.academic?.history || {}) } },
     personal: { ...(currentProfile.personal || {}), ...(patch.personal || {}) },
     services,

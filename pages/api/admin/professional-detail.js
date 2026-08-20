@@ -1,6 +1,7 @@
 // Super Admin endpoint for relationship-aware professional detail.
-// Returns the professional's institution assignments and student/parent
-// relationships derived from canonical student assignment fields.
+// Returns institution assignments and student/parent relationships from the
+// canonical student assignment model, with a narrow legacy fallback only when
+// no canonical student records are available for the service.
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { isRequesterAdmin } from '../../../src/security/roleAssignment.js';
 
@@ -17,6 +18,12 @@ const SERVICE_LABELS = Object.freeze({
   sen: 'SEN Support'
 });
 
+const SERVICE_LEGACY_FIELDS = Object.freeze({
+  career: ['assignedStaff.careerId', 'assignedCareerCounsellorId', 'assignedCareerCoachId'],
+  wellbeing: ['assignedStaff.psychologistId', 'assignedStaff.psychologyId', 'assignedPsychologistId', 'assignedCounsellorId'],
+  sen: ['assignedStaff.senId', 'assignedStaff.educatorId', 'assignedSENEducatorId']
+});
+
 function bearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization;
   if (typeof header !== 'string') return null;
@@ -26,17 +33,20 @@ function bearerToken(req) {
 
 function publicUser(doc) {
   const data = doc.data() || {};
+  const academic = data.academic?.current || {};
+  const institution = data.institution || {};
+  const identity = data.identity || {};
   return {
     id: doc.id,
-    name: data.name || data.fullName || '',
-    email: data.email || '',
-    phone: data.phone || data.contactNumber || '',
-    photoURL: data.photoURL || '',
+    name: identity.fullName || data.name || data.fullName || '',
+    email: data.email || data.contact?.email || '',
+    phone: data.phone || data.contactNumber || data.contact?.mobile?.number || '',
+    photoURL: identity.photoURL || data.photoURL || '',
     role: data.role || '',
-    grade: data.grade || data.gradeOrCourse || '',
-    schoolName: data.schoolName || data.institutionName || '',
-    institutionId: data.institutionId || data.institutionID || '',
-    path: data.primary_path || data.studentTrack || '',
+    grade: academic.grade || data.grade || data.gradeOrCourse || '',
+    schoolName: institution.name || data.schoolName || data.institutionName || '',
+    institutionId: academic.institutionId || institution.id || data.institutionId || data.institutionID || '',
+    path: data.primary_path || data.studentTrack || data.services?.career?.status === 'active' && 'career' || '',
     status: data.status || 'active'
   };
 }
@@ -56,6 +66,41 @@ function publicInstitution(doc) {
       email: coordinator.email || data.coordinatorEmail || ''
     }
   };
+}
+
+function canonicalAssignmentMatches(data, service, professionalUid) {
+  const assignment = data?.relationships?.assignments?.[service];
+  if (!assignment) return false;
+  if (typeof assignment === 'string') return assignment === professionalUid;
+  if (assignment.status === 'inactive') return false;
+  return [assignment.professionalId, assignment.primaryProfessionalId]
+    .filter(Boolean)
+    .map(String)
+    .includes(String(professionalUid));
+}
+
+async function loadCanonicalStudents(db, service, professionalUid) {
+  // Firestore cannot query an arbitrary OR across the canonical assignment
+  // compatibility shapes without additional indexes. Fetch active service
+  // students and filter the assignment object server-side.
+  const snapshot = await db.collection('users')
+    .where(`services.${service}.status`, '==', 'active')
+    .get();
+  return snapshot.docs.filter(doc => canonicalAssignmentMatches(doc.data() || {}, service, professionalUid));
+}
+
+async function loadLegacyStudents(db, service, professionalUid) {
+  const fields = SERVICE_LEGACY_FIELDS[service] || [];
+  const byId = new Map();
+  for (const field of fields) {
+    try {
+      const snapshot = await db.collection('users').where(field, '==', professionalUid).get();
+      snapshot.docs.forEach(doc => byId.set(doc.id, doc));
+    } catch (error) {
+      console.warn(`[professional-detail] legacy query skipped for ${field}:`, error?.message || error);
+    }
+  }
+  return [...byId.values()];
 }
 
 export default async function handler(req, res) {
@@ -87,7 +132,7 @@ export default async function handler(req, res) {
     const professional = professionalSnap.data() || {};
     const role = professional.role || professional.professionalRole || '';
     const service = professional.professionalService || ROLE_SERVICE[role] || null;
-    if (!service) return res.status(400).json({ error: 'Professional service could not be determined.' });
+    if (!service || !SERVICE_LEGACY_FIELDS[service]) return res.status(400).json({ error: 'Professional service could not be determined.' });
 
     const institutionIds = Array.isArray(professional.institutionIds)
       ? [...new Set(professional.institutionIds.filter(Boolean))]
@@ -96,26 +141,27 @@ export default async function handler(req, res) {
     const institutionDocs = await Promise.all(institutionIds.map(id => db.collection('institutions').doc(id).get()));
     const institutions = institutionDocs.filter(doc => doc.exists).map(publicInstitution);
 
-    const assignedField = service === 'career'
-      ? 'assignedStaff.careerId'
-      : service === 'wellbeing'
-        ? 'assignedStaff.psychologistId'
-        : 'assignedStaff.senId';
+    let studentSnapshot = await loadCanonicalStudents(db, service, professionalUid);
+    let source = 'canonical';
 
-    let studentSnapshot;
-    try {
-      studentSnapshot = await db.collection('users').where(assignedField, '==', professionalUid).get();
-    } catch (queryError) {
-      // Legacy records may use assignedCounsellorId instead of assignedStaff.
-      console.warn('[professional-detail] canonical student query failed:', queryError?.message || queryError);
-      studentSnapshot = await db.collection('users').where('assignedCounsellorId', '==', professionalUid).get();
+    // Legacy fallback is deliberately used only when the canonical query
+    // produces no assigned students. Canonical records therefore always win.
+    if (!studentSnapshot.length) {
+      studentSnapshot = await loadLegacyStudents(db, service, professionalUid);
+      source = studentSnapshot.length ? 'legacy_fallback' : 'canonical';
     }
 
-    const students = studentSnapshot.docs.map(publicUser);
-    const parentIds = [...new Set(studentSnapshot.docs.map(doc => {
+    const students = studentSnapshot.map(publicUser);
+    const parentIds = [...new Set(studentSnapshot.map(doc => {
       const data = doc.data() || {};
-      return data.parentUid || data.parentId || data.parent?.uid || null;
-    }).filter(Boolean))];
+      const guardians = Array.isArray(data.family?.guardians) ? data.family.guardians : [];
+      return [
+        ...guardians.map(guardian => guardian?.accountId),
+        data.parentUid,
+        data.parentId,
+        data.parent?.uid
+      ].filter(Boolean);
+    }).flat())];
     const parentDocs = await Promise.all(parentIds.map(id => db.collection('users').doc(id).get()));
     const parents = parentDocs.filter(doc => doc.exists).map(publicUser);
 
@@ -143,7 +189,8 @@ export default async function handler(req, res) {
         institutions: institutions.length,
         students: students.length,
         parents: parents.length
-      }
+      },
+      assignmentSource: source
     });
   } catch (error) {
     console.error('[professional-detail] failed:', error?.message || error);
