@@ -1,9 +1,9 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 
 const SERVICE_ROLES = Object.freeze({
-  career: new Set(['career_counsellor', 'career_coach']),
-  wellbeing: new Set(['psychologist', 'counselling_psychologist', 'counsellor']),
-  sen: new Set(['educator', 'sen_educator', 'special_educator']),
+  career: new Set(['career_counsellor']),
+  wellbeing: new Set(['psychologist', 'counsellor']),
+  sen: new Set(['educator']),
 });
 const FOUNDER_EMAIL = 'antonio.antonio.noronha@gmail.com';
 
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     const snapshot = await getAdminFirestore().collection('users').get();
     const professionals = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) })).filter(user => {
       const role = String(user.role || user.professionalRole || '').trim().toLowerCase();
-      const inactive = user.status === 'inactive' || user.lifecycleStatus === 'inactive' || Boolean(user.archivedAt);
+      const inactive = ['inactive', 'archived', 'suspended'].includes(String(user.status || user.lifecycleStatus || '').toLowerCase()) || Boolean(user.archivedAt);
       return !inactive && SERVICE_ROLES[service].has(role);
     }).map(user => ({ id: user.id, name: user.name || user.fullName || user.displayName || '', role: user.role || user.professionalRole || '', email: user.email || '' })).sort((a, b) => a.name.localeCompare(b.name));
     return res.status(200).json({ service, professionals });
