@@ -68,15 +68,16 @@ function normaliseAssignments(data = {}) {
   const staff = data.assignedStaff || {};
   const canonical = data.relationships?.assignments || {};
 
-  const assignmentId = (canonicalValue, ...legacyValues) => {
-    const normalized = normalizeServiceAssignment(canonicalValue);
+  const assignmentId = (canonicalValue, service, ...legacyValues) => {
+    const normalized = normalizeServiceAssignment(canonicalValue, service);
+    if (normalized.status === 'inactive') return null;
     return firstDefined(normalized.primaryProfessionalId, ...legacyValues, null);
   };
 
   return {
-    career: assignmentId(canonical.career, staff.careerId, data.assignedCareerCounsellorId, data.assignedCareerCoachId),
-    wellbeing: assignmentId(canonical.wellbeing, staff.psychologistId, staff.psychologyId, data.assignedPsychologistId, data.assignedCounsellorId),
-    sen: assignmentId(canonical.sen, staff.senId, staff.educatorId, data.assignedSENEducatorId),
+    career: assignmentId(canonical.career, 'career', staff.careerId, data.assignedCareerCounsellorId, data.assignedCareerCoachId),
+    wellbeing: assignmentId(canonical.wellbeing, 'wellbeing', staff.psychologistId, staff.psychologyId, data.assignedPsychologistId, data.assignedCounsellorId),
+    sen: assignmentId(canonical.sen, 'sen', staff.senId, staff.educatorId, data.assignedSENEducatorId),
   };
 }
 
@@ -88,10 +89,11 @@ function normaliseServices(data = {}) {
   SERVICE_KEYS.forEach(service => {
     const current = existing[service];
     const explicit = current && typeof current === 'object' ? current : {};
-    const hasExplicitStatus = Object.prototype.hasOwnProperty.call(explicit, 'status') || Object.prototype.hasOwnProperty.call(explicit, 'active');
-    const isExplicitlyActive = explicit.status === 'active' || explicit.active === true;
+    const hasBooleanState = typeof current === 'boolean';
+    const hasExplicitStatus = hasBooleanState || Object.prototype.hasOwnProperty.call(explicit, 'status') || Object.prototype.hasOwnProperty.call(explicit, 'active');
+    const isExplicitlyActive = hasBooleanState ? current === true : explicit.status === 'active' || explicit.active === true;
     const active = hasExplicitStatus ? isExplicitlyActive : service === activePath;
-    const status = hasExplicitStatus ? (active ? 'active' : firstDefined(explicit.status, 'inactive')) : (active ? 'active' : 'inactive');
+    const status = hasExplicitStatus ? (active ? 'active' : 'inactive') : (active ? 'active' : 'inactive');
 
     services[service] = {
       status,
