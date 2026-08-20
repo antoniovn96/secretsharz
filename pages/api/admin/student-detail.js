@@ -15,6 +15,10 @@ function isCareerDirectoryRequest(req) {
   return String(req.query?.service || '').trim().toLowerCase() === 'career';
 }
 
+function isArchived(raw = {}) {
+  return raw.status === 'archived' || raw.lifecycleStatus === 'archived' || Boolean(raw.archivedAt);
+}
+
 async function getReferencedDocument(db, collectionName, id) {
   if (!id) return null;
   const snapshot = await db.collection(collectionName).doc(String(id)).get();
@@ -134,8 +138,13 @@ export default async function handler(req, res) {
 
     if (isCareerDirectoryRequest(req)) {
       if (viewer.role !== 'super_admin' && !viewer.isFounder) return res.status(403).json({ error: 'Super Admin access required for the career directory detail.' });
+      if (isArchived(rawStudent)) return res.status(404).json({ error: 'Student not found in the active career directory.' });
 
       const normalized = normalizeStudentRecord(rawStudent, studentId);
+      if (normalized.services?.career?.status !== 'active') {
+        return res.status(404).json({ error: 'Student not found in the active career directory.' });
+      }
+
       const assignedProfessionalId = typeof normalized.relationships?.assignments?.career === 'string' ? normalized.relationships.assignments.career : null;
       const institutionId = normalized.academic?.current?.institutionId || normalized.institution?.id || null;
       const [professionalUser, professionalProfile, institution] = await Promise.all([
