@@ -6,6 +6,9 @@ import {
   getNeedsAttention,
   getProfileStatus,
   getSortValue,
+  getStudentId,
+  getStudentPath,
+  toAdminStudentDirectoryRecord,
 } from '../../src/platform/adminStudentDirectory.js';
 
 test('canonical assessment status wins over legacy inference', () => {
@@ -39,4 +42,42 @@ test('last activity sorting uses canonical activity timestamps', () => {
   assert.equal(getSortValue({ lastActivityMs: 1234 }, 'lastActivity'), 1234);
   assert.equal(getSortValue({ updatedAtMs: 4567 }, 'lastActivity'), 4567);
   assert.equal(getSortValue({ createdAtMs: 7890 }, 'lastActivity'), 7890);
+});
+
+test('directory projection uses canonical identity and service state', () => {
+  const record = toAdminStudentDirectoryRecord({
+    uid: 'auth-1',
+    ssStudentId: 'SS-0001',
+    name: 'Test Student',
+    email: 'student@example.com',
+    institutionName: 'Example School',
+    grade: '11',
+    services: { career: { status: 'active' }, wellbeing: { status: 'inactive' }, sen: { status: 'inactive' } },
+    relationships: { assignments: { career: 'professional-1' } },
+    riasecCode: 'RIA',
+    profileComplete: true,
+  }, 'auth-1');
+
+  assert.equal(getStudentId(record), 'SS-0001');
+  assert.equal(getStudentPath(record), 'career');
+  assert.equal(record.assessmentStatus, 'complete');
+  assert.equal(record.assessmentCode, 'RIA');
+  assert.equal(record.profileStatus, 'complete');
+  assert.equal(record.assignmentStatus, 'assigned');
+  assert.equal(record.assignedCareerCoachId, 'professional-1');
+});
+
+test('directory projection does not treat a legacy profileComplete flag as proof of completeness', () => {
+  const record = toAdminStudentDirectoryRecord({
+    uid: 'auth-2',
+    name: 'Incomplete Student',
+    profileComplete: true,
+    email: 'student@example.com',
+    institutionName: 'Example School',
+    grade: '',
+  }, 'auth-2');
+
+  assert.equal(record.profileStatus, 'incomplete');
+  assert.deepEqual(record.profileMissing, ['grade']);
+  assert.equal(record.needsAttention, true);
 });
