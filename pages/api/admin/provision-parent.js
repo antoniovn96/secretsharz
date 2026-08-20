@@ -1,10 +1,17 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { provisionParentAccount } from '../../../src/security/provisionParentAccount.js';
 import { canProvisionRole, assertInstitutionScope, getRequesterRole } from '../../../src/security/provisioningAuthorization.js';
+import normalizeStudentRecord from '../../../src/platform/studentRecordNormalizer.js';
 
 function bearerToken(req){const header=req.headers.authorization||req.headers.Authorization;if(typeof header!=='string')return null;const match=header.match(/^Bearer\s+(.+)$/i);return match?match[1]:null;}
 function clean(value,max=180){return String(value||'').trim().slice(0,max);}
 const RELATIONSHIPS=new Set(['father','mother','guardian']);
+
+function assignmentId(assignment){
+  if(!assignment)return null;
+  if(typeof assignment==='string')return assignment.trim()||null;
+  return String(assignment.primaryProfessionalId||assignment.professionalId||assignment.id||'').trim()||null;
+}
 
 async function assertStudentLinkScope(db,role,uid,institutionId,studentIds){
   if(role==='admin'||role==='super_admin')return;
@@ -15,13 +22,15 @@ async function assertStudentLinkScope(db,role,uid,institutionId,studentIds){
     const student=snap.data()||{};
     if(role==='institution'){
       if(!institutionId||student.institutionId!==institutionId)throw new Error('An institution may only link parents to its own students.');
-    }else if(role==='career_counsellor'){
-      if(student.assignedStaff?.careerId!==uid)throw new Error('You may only link parents to students assigned to you.');
-    }else if(role==='psychologist'){
-      if(student.assignedStaff?.psychId!==uid)throw new Error('You may only link parents to students assigned to you.');
-    }else if(role==='educator'){
-      if(student.assignedStaff?.senId!==uid)throw new Error('You may only link parents to students assigned to you.');
-    }else throw new Error('You are not authorised to link this parent to students.');
+      continue;
+    }
+
+    const canonical=normalizeStudentRecord(student,studentId);
+    const serviceKey=role==='career_counsellor'?'career':role==='psychologist'?'wellbeing':role==='educator'?'sen':null;
+    if(!serviceKey)throw new Error('You are not authorised to link this parent to students.');
+    if(canonical.services?.[serviceKey]?.status!=='active')throw new Error('The student does not have an active service eligible for this parent linkage.');
+    const assignedId=assignmentId(canonical.relationships?.assignments?.[serviceKey]);
+    if(assignedId!==uid)throw new Error('You may only link parents to students assigned to you.');
   }
 }
 
