@@ -35,6 +35,12 @@ export async function updateCanonicalStudentProfile(user, updates) {
 export function buildProfileEditorPatch(updates = {}) {
   const patch = {};
 
+  if (updates.profilePicture !== undefined || updates.gender !== undefined) {
+    patch.identity = {};
+    if (updates.profilePicture !== undefined) patch.identity.profilePicture = updates.profilePicture || null;
+    if (updates.gender !== undefined) patch.identity.gender = String(updates.gender || '');
+  }
+
   if (updates.phone !== undefined || updates.email !== undefined) {
     patch.contact = {};
     if (updates.phone !== undefined) patch.contact.mobile = { number: String(updates.phone || '') };
