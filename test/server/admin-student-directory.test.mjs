@@ -1,66 +1,42 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {
+  getAssessmentCode,
+  getAssessmentStatus,
+  getNeedsAttention,
+  getProfileStatus,
+  getSortValue,
+} from '../../src/platform/adminStudentDirectory.js';
 
-function canonicalAssignmentId(assignment) {
-  if (!assignment || assignment.status === 'inactive') return '';
-  if (typeof assignment === 'string') return assignment;
-  return String(assignment.primaryProfessionalId || assignment.professionalId || '').trim();
-}
-
-function assessmentStatus(student) {
-  if (student.assessmentStatus === 'complete' || student.assessmentStatus === 'pending') return student.assessmentStatus;
-  return student.assessmentCode || student.riasecCode ? 'complete' : 'pending';
-}
-
-function profileStatus(student) {
-  if (student.profileStatus === 'complete' || student.profileStatus === 'incomplete') return student.profileStatus;
-  return student.profileComplete === true ? 'complete' : 'incomplete';
-}
-
-test('canonical assignment object resolves to the assigned professional', () => {
-  const student = {
-    relationships: {
-      assignments: {
-        career: {
-          professionalId: 'career-b',
-          primaryProfessionalId: 'career-b',
-          status: 'active'
-        }
-      }
-    }
-  };
-  assert.equal(canonicalAssignmentId(student.relationships.assignments.career), 'career-b');
+test('canonical assessment status wins over legacy inference', () => {
+  assert.equal(getAssessmentStatus({ assessmentStatus: 'pending', riasecCode: 'RIA' }), 'pending');
+  assert.equal(getAssessmentStatus({ assessmentStatus: 'complete' }), 'complete');
+  assert.equal(getAssessmentStatus({}), 'pending');
 });
 
-test('inactive canonical assignment does not resolve to an active professional', () => {
-  const assignment = {
-    professionalId: 'career-a',
-    primaryProfessionalId: 'career-a',
-    status: 'inactive'
-  };
-  assert.equal(canonicalAssignmentId(assignment), '');
-});
-
-test('legacy string assignment remains readable during migration', () => {
-  assert.equal(canonicalAssignmentId('career-a'), 'career-a');
-});
-
-test('assessment status does not become complete without an assessment code', () => {
-  assert.equal(assessmentStatus({}), 'pending');
-  assert.equal(assessmentStatus({ riasecCode: 'RIA' }), 'complete');
-  assert.equal(assessmentStatus({ assessmentCode: 'SEC' }), 'complete');
-});
-
-test('explicit canonical assessment status wins over legacy inference', () => {
-  assert.equal(assessmentStatus({ assessmentStatus: 'pending', riasecCode: 'RIA' }), 'pending');
-  assert.equal(assessmentStatus({ assessmentStatus: 'complete' }), 'complete');
+test('canonical assessment code is normalized for the directory', () => {
+  assert.equal(getAssessmentCode({ assessmentCode: 'sec' }), 'SEC');
+  assert.equal(getAssessmentCode({ riasecCode: 'ria' }), 'RIA');
+  assert.equal(getAssessmentCode({ careerDNA: { riasec: { code: 'sai' } } }), 'SAI');
+  assert.equal(getAssessmentCode({ assessmentCode: 'not-a-riasec-code' }), '');
 });
 
 test('explicit canonical profile status wins over legacy profileComplete flag', () => {
-  assert.equal(profileStatus({ profileStatus: 'incomplete', profileComplete: true }), 'incomplete');
-  assert.equal(profileStatus({ profileStatus: 'complete', profileComplete: false }), 'complete');
+  assert.equal(getProfileStatus({ profileStatus: 'incomplete', profileComplete: true }), 'incomplete');
+  assert.equal(getProfileStatus({ profileStatus: 'complete', profileComplete: false }), 'complete');
+  assert.equal(getProfileStatus({}), 'incomplete');
 });
 
-test('missing profile status is incomplete rather than silently complete', () => {
-  assert.equal(profileStatus({}), 'incomplete');
+test('needs-attention state reflects canonical operational blockers', () => {
+  assert.equal(getNeedsAttention({ profileStatus: 'complete', assessmentStatus: 'complete', assignmentStatus: 'assigned', enrollmentStatus: 'active', needsAttention: false }), false);
+  assert.equal(getNeedsAttention({ profileStatus: 'incomplete', assessmentStatus: 'complete', assignmentStatus: 'assigned', enrollmentStatus: 'active' }), true);
+  assert.equal(getNeedsAttention({ profileStatus: 'complete', assessmentStatus: 'pending', assignmentStatus: 'assigned', enrollmentStatus: 'active' }), true);
+  assert.equal(getNeedsAttention({ profileStatus: 'complete', assessmentStatus: 'complete', assignmentStatus: 'unassigned', enrollmentStatus: 'active' }), true);
+  assert.equal(getNeedsAttention({ profileStatus: 'complete', assessmentStatus: 'complete', assignmentStatus: 'assigned', enrollmentStatus: 'inactive' }), true);
+});
+
+test('last activity sorting uses canonical activity timestamps', () => {
+  assert.equal(getSortValue({ lastActivityMs: 1234 }, 'lastActivity'), 1234);
+  assert.equal(getSortValue({ updatedAtMs: 4567 }, 'lastActivity'), 4567);
+  assert.equal(getSortValue({ createdAtMs: 7890 }, 'lastActivity'), 7890);
 });
