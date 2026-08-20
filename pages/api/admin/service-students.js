@@ -1,6 +1,8 @@
 import { getAdminAuth, getAdminFirestore, getAdminApp } from '../../../src/security/firebaseAdmin.js';
 import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
 import { isStudentProfile } from '../../../src/platform/studentRecordModel.js';
+import { getExistingStudentId } from '../../../src/platform/studentIdentity.js';
+import { getAssessmentCode, getNeedsAttention } from '../../../src/platform/adminStudentDirectory.js';
 
 const SERVICE_PATHS = new Set(['career', 'wellbeing', 'sen']);
 
@@ -37,70 +39,84 @@ function serviceIsActive(profile, service) {
   return profile.services?.[service]?.status === 'active';
 }
 
-function existingStudentId(raw) {
-  const candidates = [
-    raw?.ssStudentId,
-    raw?.studentId,
-    raw?.studentProfile?.identity?.ssStudentId,
-    raw?.studentProfile?.ssStudentId,
-    raw?.identity?.ssStudentId,
-  ];
-  const value = candidates.find(candidate => typeof candidate === 'string' && /^SS-STD-\d{6,}$/.test(candidate.trim()));
-  return value ? value.trim() : null;
+function isArchived(raw = {}) {
+  return raw.status === 'archived' || raw.lifecycleStatus === 'archived' || Boolean(raw.archivedAt);
 }
 
-function publicStudentRecord(doc, profile, service, authUser = null) {
+function coreProfileStatus(profile, authUser) {
+  const name = String(profile.identity?.fullName || profile.identity?.preferredName || authUser?.displayName || '').trim();
+  const email = String(profile.contact?.email || authUser?.email || '').trim();
+  const institution = String(profile.institution?.name || profile.academic?.current?.institutionName || '').trim();
+  const grade = String(profile.academic?.current?.grade || '').trim();
+  const missing = [];
+  if (!name) missing.push('name');
+  if (!email) missing.push('email');
+  if (!institution) missing.push('institution');
+  if (!grade) missing.push('grade');
+  return { status: missing.length ? 'incomplete' : 'complete', missing };
+}
+
+function publicStudentRecord(doc, profile, service, authUser = null, directoryUsers = new Map()) {
   const raw = doc.data() || {};
   const identity = profile.identity || {};
   const contact = profile.contact || {};
   const academic = profile.academic?.current || {};
   const institution = profile.institution || {};
-  const guardians = profile.family?.guardians || [];
-  const primaryGuardian = guardians.find((guardian) => guardian?.accountId) || guardians[0] || {};
   const assignments = profile.relationships?.assignments || {};
   const assignedProfessionalId = assignments[service] || null;
+  const assignedProfessional = assignedProfessionalId ? directoryUsers.get(assignedProfessionalId) : null;
   const governance = profile.governance || {};
+  const profileState = coreProfileStatus(profile, authUser);
+  const assessmentCode = getAssessmentCode({ careerAssessment: raw.careerAssessment, riasecCode: profile.career?.riasec?.code, careerDNA: profile.career?.profile });
+  const assessmentStatus = assessmentCode ? 'complete' : 'pending';
+  const createdAtMs = toMillis(raw.createdAt);
+  const updatedAtMs = toMillis(raw.updatedAt);
+  const assignmentStatus = assignedProfessionalId ? 'assigned' : 'unassigned';
+  const enrollmentStatus = institution.enrollmentStatus || raw.enrollmentStatus || (isArchived(raw) ? 'inactive' : 'active');
+  const needsAttention = Boolean(profileState.status === 'incomplete' || assessmentStatus === 'pending' || assignmentStatus === 'unassigned' || enrollmentStatus === 'inactive');
 
   return {
     id: doc.id,
-    ssStudentId: existingStudentId(raw),
+    ssStudentId: getExistingStudentId(raw),
     name: identity.fullName || identity.legalName || authUser?.displayName || '',
     preferredName: identity.preferredName || '',
     email: contact.email || authUser?.email || '',
     photoURL: identity.photoURL || '',
-    dob: identity.dateOfBirth || '',
-    gender: identity.gender || '',
     grade: academic.grade || '',
     section: academic.section || '',
     schoolName: academic.institutionName || institution.name || '',
     institutionName: institution.name || academic.institutionName || '',
     institutionId: academic.institutionId || institution.id || '',
     academicYear: academic.academicYear || institution.academicYear || '',
-    parentName: primaryGuardian.name || '',
-    parentContact: primaryGuardian.phone || '',
-    parentEmail: primaryGuardian.email || '',
-    parentUid: primaryGuardian.accountId || null,
-    parentId: primaryGuardian.accountId || null,
-    contactNumber: contact.mobile?.number || '',
-    primary_path: profile.legacy?.primary_path || service,
+    primary_path: service,
     studentTrack: service,
     path: service,
-    profileComplete: profile.onboarding?.profileComplete === true,
+    profileStatus: profileState.status,
+    profileMissing: profileState.missing,
+    profileComplete: profileState.status === 'complete',
     onboardingCompleted: profile.onboarding?.completed === true,
+    assignmentStatus,
     assignedProfessionalId,
-    assignedCounsellorId: service === 'career' ? assignedProfessionalId : (assignments.wellbeing || null),
+    assignedProfessionalName: assignedProfessional?.name || assignedProfessional?.fullName || '',
     assignedCareerCoachId: assignments.career || null,
+    assignedCounsellorId: assignments.wellbeing || null,
     assignedSENEducatorId: assignments.sen || null,
-    assignedStaff: raw?.assignedStaff || null,
-    riasecCode: profile.career?.riasec?.code || '',
+    enrollmentStatus,
+    assessmentStatus,
+    assessmentCode,
+    riasecCode: assessmentCode,
     riasecScores: profile.career?.riasec?.scores || {},
-    careerAssessment: raw?.careerAssessment || null,
-    assessmentCompletedAt: toIso(raw?.assessmentCompletedAt || raw?.careerAssessment?.completedAt),
-    careerReportAccess: raw?.careerReportAccess || null,
+    careerAssessment: raw.careerAssessment || null,
+    assessmentCompletedAt: toIso(raw.assessmentCompletedAt || raw.careerAssessment?.completedAt),
+    careerReportAccess: raw.careerReportAccess || null,
     consentStatus: governance.consent || null,
-    createdAt: toIso(raw?.createdAt),
-    createdAtMs: toMillis(raw?.createdAt),
-    updatedAt: toIso(raw?.updatedAt),
+    createdAt: toIso(raw.createdAt),
+    createdAtMs,
+    updatedAt: toIso(raw.updatedAt),
+    updatedAtMs,
+    lastActivityAt: toIso(raw.updatedAt || raw.createdAt),
+    lastActivityMs: updatedAtMs || createdAtMs || null,
+    needsAttention,
   };
 }
 
@@ -129,14 +145,20 @@ export default async function handler(req, res) {
   if (!isFounder && !isSuperAdmin) return res.status(403).json({ error: 'Super Admin access required.' });
 
   try {
-    const snapshot = await getAdminFirestore().collection('users').get();
+    const db = getAdminFirestore();
+    const snapshot = await db.collection('users').get();
+    const directoryUsers = new Map(snapshot.docs.map(doc => {
+      const raw = doc.data() || {};
+      return [doc.id, { id: doc.id, name: raw.name || raw.fullName || raw.studentProfile?.identity?.fullName || '', fullName: raw.fullName || '' }];
+    }));
+
     const studentRecords = snapshot.docs
+      .filter(doc => !isArchived(doc.data() || {}))
       .filter(doc => isStudentProfile(doc.data() || {}))
       .map(doc => ({ doc, profile: normalizeStudentRecord(doc.data() || {}, doc.id) }))
       .filter(({ profile }) => serviceIsActive(profile, service));
 
     const students = await Promise.all(studentRecords.map(async ({ doc, profile }) => {
-      const raw = doc.data() || {};
       const needsAuthIdentity = !profile.identity?.fullName || !profile.contact?.email;
       let authUser = null;
       if (needsAuthIdentity) {
@@ -146,12 +168,23 @@ export default async function handler(req, res) {
           console.warn('[admin service students] auth identity lookup failed:', doc.id, error?.code || error?.message);
         }
       }
-      return publicStudentRecord(doc, profile, service, authUser);
+      return publicStudentRecord(doc, profile, service, authUser, directoryUsers);
     }));
 
-    students.sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+    students.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
 
-    return res.status(200).json({ generatedAt: new Date().toISOString(), service, students, count: students.length });
+    const institutions = [...new Set(students.map(student => student.institutionName).filter(Boolean))].sort();
+    const grades = [...new Set(students.map(student => student.grade).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    const counsellors = [...new Set(students.map(student => student.assignedProfessionalName).filter(Boolean))].sort();
+    const academicYears = [...new Set(students.map(student => student.academicYear).filter(Boolean))].sort().reverse();
+
+    return res.status(200).json({
+      generatedAt: new Date().toISOString(),
+      service,
+      students,
+      count: students.length,
+      filters: { institutions, grades, counsellors, academicYears },
+    });
   } catch (error) {
     console.error('[admin service students] failed:', error);
     return res.status(500).json({ error: 'Unable to load the service student directory.' });
