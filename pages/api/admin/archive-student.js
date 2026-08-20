@@ -45,15 +45,16 @@ export default async function handler(req, res) {
     if (raw.status === 'archived' || raw.lifecycleStatus === 'archived' || raw.archivedAt) return res.status(409).json({ error: 'Student is already archived.' });
 
     const now = new Date().toISOString();
-    await ref.set({
+    const auditRef = db.collection('auditEvents').doc();
+    const batch = db.batch();
+    batch.set(ref, {
       status: 'archived',
       lifecycleStatus: 'archived',
       archivedAt: now,
       archivedBy: decoded.uid,
       updatedAt: now,
     }, { merge: true });
-
-    await db.collection('auditEvents').add({
+    batch.set(auditRef, {
       eventType: 'student_archived',
       actorId: decoded.uid,
       actorRole: 'super_admin',
@@ -63,6 +64,7 @@ export default async function handler(req, res) {
       outcome: 'success',
       timestamp: now,
     });
+    await batch.commit();
 
     return res.status(200).json({ ok: true, studentId, status: 'archived' });
   } catch (error) {
