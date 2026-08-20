@@ -48,7 +48,8 @@ test('recognizes a valid SIC RIASEC code as complete', () => {
   assert.equal(getAssessmentStatus({ riasecCode: 'sic' }), 'complete');
 });
 
-test('does not mark a profile complete from the legacy boolean alone', () => {
+test('directory helper preserves legacy profile status only as a compatibility fallback', () => {
+  assert.equal(getProfileStatus({ profileStatus: 'complete', profileComplete: false }), 'complete');
   assert.equal(getProfileStatus({ profileComplete: true }), 'complete');
   assert.equal(getProfileStatus({ profileComplete: false }), 'incomplete');
 });
