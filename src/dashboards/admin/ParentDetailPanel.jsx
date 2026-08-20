@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Mail, Phone, MapPin, Calendar, User, Users, GraduationCap, Building2, Briefcase, ShieldCheck } from 'lucide-react';
 import { getProfileIdentity } from '../../platform/profileIdentity';
+import { formatPhone, formatLocation } from '../../platform/contactFormatters';
 
 const formatDate = value => {
   if (!value) return 'Not available';
@@ -34,12 +35,14 @@ const ParentDetailPanel = ({ parent, isOpen, onClose, onEdit }) => {
   const status = parent.status || 'active';
   const activeServices = [...new Set(children.map(child => getPath(child)?.label).filter(Boolean))];
   const institutions = [...new Set(children.map(child => child.institutionName || child.schoolName).filter(Boolean))];
+  const phone = formatPhone(parent.phone, 'Not provided');
+  const location = formatLocation(parent.location || parent.city, 'Not provided');
 
   return <><div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40" onClick={onClose} /><aside className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-2xl z-50 flex flex-col">
     <header className="p-6 border-b border-slate-100 flex items-start justify-between bg-gradient-to-r from-rose-50 to-white"><div className="flex items-center gap-4 min-w-0">{identity.photoURL ? <img src={identity.photoURL} alt="" className="w-14 h-14 shrink-0 rounded-2xl object-cover shadow-lg" /> : <div className="w-14 h-14 shrink-0 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">{identity.initial}</div>}<div className="min-w-0"><h2 className="text-xl font-bold text-slate-900 truncate">{identity.name}</h2><p className="text-xs text-slate-400 font-mono truncate">{parent.id}</p><div className="flex items-center gap-2 mt-2"><span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700">Parent</span><span className={`px-2.5 py-1 rounded-full text-xs font-bold ${status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{status === 'active' ? 'Active' : 'Inactive'}</span></div></div></div><button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl"><X className="w-6 h-6" /></button></header>
 
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      <section><h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2"><User className="w-4 h-4 text-rose-500" /> Contact Information</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-3"><Info icon={Mail} label="Email" value={identity.email} /><Info icon={Phone} label="Phone" value={parent.phone} /><Info icon={MapPin} label="Location" value={parent.location || parent.city} /><Info icon={Calendar} label="Added" value={formatDate(parent.createdAt)} /></div></section>
+      <section><h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2"><User className="w-4 h-4 text-rose-500" /> Contact Information</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-3"><Info icon={Mail} label="Email" value={identity.email} /><Info icon={Phone} label="Phone" value={phone} /><Info icon={MapPin} label="Location" value={location} /><Info icon={Calendar} label="Added" value={formatDate(parent.createdAt)} /></div></section>
 
       <section><h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-rose-500" /> Family Overview</h3><div className="grid grid-cols-3 gap-3"><Summary value={children.length} label="Children" /><Summary value={activeServices.length} label="Services" /><Summary value={institutions.length} label="Institutions" /></div>{(activeServices.length || institutions.length) ? <div className="mt-3 flex flex-wrap gap-2">{activeServices.map(service => <span key={service} className={`px-2.5 py-1.5 rounded-lg text-xs font-bold ${Object.values(PATHS).find(path => path.label === service)?.className || 'bg-slate-100 text-slate-700'}`}>{service}</span>)}{institutions.map(institution => <span key={institution} className="px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">{institution}</span>)}</div> : null}</section>
 
