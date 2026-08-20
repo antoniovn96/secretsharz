@@ -2,7 +2,7 @@ import { getAdminAuth, getAdminFirestore, getAdminApp } from '../../../src/secur
 import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
 import { isStudentProfile } from '../../../src/platform/studentRecordModel.js';
 import { getExistingStudentId } from '../../../src/platform/studentIdentity.js';
-import { getAssessmentCode, getNeedsAttention } from '../../../src/platform/adminStudentDirectory.js';
+import { getAssessmentCode } from '../../../src/platform/adminStudentDirectory.js';
 
 const SERVICE_PATHS = new Set(['career', 'wellbeing', 'sen']);
 
@@ -19,10 +19,7 @@ function toMillis(value) {
   if (typeof value.toDate === 'function') return value.toDate().getTime();
   if (value instanceof Date) return value.getTime();
   if (typeof value === 'number') return value;
-  if (typeof value === 'string') {
-    const parsed = Date.parse(value);
-    return Number.isNaN(parsed) ? null : parsed;
-  }
+  if (typeof value === 'string') { const parsed = Date.parse(value); return Number.isNaN(parsed) ? null : parsed; }
   return null;
 }
 
@@ -35,13 +32,8 @@ function safeAuthError(error) {
   return { code: error?.code || null, message: error?.message || 'Unknown Firebase Auth verification error', expectedProjectId: getAdminApp()?.options?.projectId || null };
 }
 
-function serviceIsActive(profile, service) {
-  return profile.services?.[service]?.status === 'active';
-}
-
-function isArchived(raw = {}) {
-  return raw.status === 'archived' || raw.lifecycleStatus === 'archived' || Boolean(raw.archivedAt);
-}
+function serviceIsActive(profile, service) { return profile.services?.[service]?.status === 'active'; }
+function isArchived(raw = {}) { return raw.status === 'archived' || raw.lifecycleStatus === 'archived' || Boolean(raw.archivedAt); }
 
 function coreProfileStatus(profile, authUser) {
   const name = String(profile.identity?.fullName || profile.identity?.preferredName || authUser?.displayName || '').trim();
@@ -67,7 +59,7 @@ function publicStudentRecord(doc, profile, service, authUser = null, directoryUs
   const assignedProfessional = assignedProfessionalId ? directoryUsers.get(assignedProfessionalId) : null;
   const governance = profile.governance || {};
   const profileState = coreProfileStatus(profile, authUser);
-  const assessmentCode = getAssessmentCode({ careerAssessment: raw.careerAssessment, riasecCode: profile.career?.riasec?.code, careerDNA: profile.career?.profile });
+  const assessmentCode = getAssessmentCode({ riasecCode: profile.career?.riasec?.code, careerDNA: profile.career?.profile });
   const assessmentStatus = assessmentCode ? 'complete' : 'pending';
   const createdAtMs = toMillis(raw.createdAt);
   const updatedAtMs = toMillis(raw.updatedAt);
@@ -105,10 +97,6 @@ function publicStudentRecord(doc, profile, service, authUser = null, directoryUs
     assessmentStatus,
     assessmentCode,
     riasecCode: assessmentCode,
-    riasecScores: profile.career?.riasec?.scores || {},
-    careerAssessment: raw.careerAssessment || null,
-    assessmentCompletedAt: toIso(raw.assessmentCompletedAt || raw.careerAssessment?.completedAt),
-    careerReportAccess: raw.careerReportAccess || null,
     consentStatus: governance.consent || null,
     createdAt: toIso(raw.createdAt),
     createdAtMs,
@@ -121,11 +109,7 @@ function publicStudentRecord(doc, profile, service, authUser = null, directoryUs
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET');
-    return res.status(405).json({ error: 'Method not allowed.' });
-  }
-
+  if (req.method !== 'GET') { res.setHeader('Allow', 'GET'); return res.status(405).json({ error: 'Method not allowed.' }); }
   const service = String(req.query?.service || '').trim().toLowerCase();
   if (!SERVICE_PATHS.has(service)) return res.status(400).json({ error: 'A valid service is required: career, wellbeing, or sen.' });
 
@@ -133,12 +117,8 @@ export default async function handler(req, res) {
   if (!idToken) return res.status(401).json({ error: 'Authentication required.' });
 
   let decodedToken;
-  try {
-    decodedToken = await getAdminAuth().verifyIdToken(idToken);
-  } catch (error) {
-    console.error('[admin service students auth] Firebase ID token verification failed:', safeAuthError(error));
-    return res.status(401).json({ error: 'Invalid or expired authentication token.' });
-  }
+  try { decodedToken = await getAdminAuth().verifyIdToken(idToken); }
+  catch (error) { console.error('[admin service students auth] Firebase ID token verification failed:', safeAuthError(error)); return res.status(401).json({ error: 'Invalid or expired authentication token.' }); }
 
   const isFounder = decodedToken.email_verified === true && decodedToken.email === 'antonio.antonio.noronha@gmail.com';
   const isSuperAdmin = decodedToken.role === 'super_admin';
@@ -147,10 +127,14 @@ export default async function handler(req, res) {
   try {
     const db = getAdminFirestore();
     const snapshot = await db.collection('users').get();
-    const directoryUsers = new Map(snapshot.docs.map(doc => {
+    const directoryUsers = new Map();
+    snapshot.docs.forEach(doc => {
       const raw = doc.data() || {};
-      return [doc.id, { id: doc.id, name: raw.name || raw.fullName || raw.studentProfile?.identity?.fullName || '', fullName: raw.fullName || '' }];
-    }));
+      const role = String(raw.role || raw.profileType || raw.userRole || '').toLowerCase();
+      if (raw.professionalProfile || role.includes('professional') || role.includes('counsellor') || role.includes('psychologist') || role.includes('educator')) {
+        directoryUsers.set(doc.id, { id: doc.id, name: raw.name || raw.fullName || raw.professionalProfile?.displayName || '' });
+      }
+    });
 
     const studentRecords = snapshot.docs
       .filter(doc => !isArchived(doc.data() || {}))
@@ -162,29 +146,19 @@ export default async function handler(req, res) {
       const needsAuthIdentity = !profile.identity?.fullName || !profile.contact?.email;
       let authUser = null;
       if (needsAuthIdentity) {
-        try {
-          authUser = await getAdminAuth().getUser(doc.id);
-        } catch (error) {
-          console.warn('[admin service students] auth identity lookup failed:', doc.id, error?.code || error?.message);
-        }
+        try { authUser = await getAdminAuth().getUser(doc.id); }
+        catch (error) { console.warn('[admin service students] auth identity lookup failed:', doc.id, error?.code || error?.message); }
       }
       return publicStudentRecord(doc, profile, service, authUser, directoryUsers);
     }));
 
     students.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
-
     const institutions = [...new Set(students.map(student => student.institutionName).filter(Boolean))].sort();
     const grades = [...new Set(students.map(student => student.grade).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
     const counsellors = [...new Set(students.map(student => student.assignedProfessionalName).filter(Boolean))].sort();
     const academicYears = [...new Set(students.map(student => student.academicYear).filter(Boolean))].sort().reverse();
 
-    return res.status(200).json({
-      generatedAt: new Date().toISOString(),
-      service,
-      students,
-      count: students.length,
-      filters: { institutions, grades, counsellors, academicYears },
-    });
+    return res.status(200).json({ generatedAt: new Date().toISOString(), service, students, count: students.length, filters: { institutions, grades, counsellors, academicYears } });
   } catch (error) {
     console.error('[admin service students] failed:', error);
     return res.status(500).json({ error: 'Unable to load the service student directory.' });
