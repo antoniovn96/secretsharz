@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { BriefcaseBusiness, GraduationCap, HeartHandshake, Brain, Users } from 'lucide-react';
+import { BriefcaseBusiness, GraduationCap, HeartHandshake, Brain, Users, RefreshCw } from 'lucide-react';
 import { auth } from '../../firebase';
 import CanonicalStudentDirectoryTable from './CanonicalStudentDirectoryTable';
 import SlideOutDetailPanel from './SlideOutDetailPanel';
@@ -14,7 +14,9 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
   const meta = SERVICE_META[service] || SERVICE_META.career;
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [repairing, setRepairing] = useState(false);
   const [error, setError] = useState('');
+  const [repairMessage, setRepairMessage] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
@@ -40,6 +42,24 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
 
   useEffect(() => { load(); }, [load]);
 
+  const repairIdentities = async () => {
+    if (!window.confirm('Repair missing Secret Sharz Student IDs and recover missing names from Firebase Auth? Existing canonical names and IDs will be preserved.')) return;
+    const currentUser = auth.currentUser;
+    if (!currentUser) { setError('Authentication required.'); return; }
+    setRepairing(true); setRepairMessage(''); setError('');
+    try {
+      const token = await currentUser.getIdToken(true);
+      const response = await fetch('/api/admin/backfill-student-identities', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Unable to repair student identities.');
+      setRepairMessage(`Identity repair complete: ${payload.assigned || 0} IDs allocated, ${payload.namesRecovered || 0} names recovered.`);
+      await load();
+    } catch (err) {
+      console.error('[ServiceStudentDirectory] identity repair failed:', err);
+      setError(err?.message || 'Unable to repair student identities.');
+    } finally { setRepairing(false); }
+  };
+
   const completeProfiles = students.filter(student => Boolean(student?.name && student?.email && (student?.schoolName || student?.institutionName) && student?.grade)).length;
   const assessmentComplete = students.filter(student => Boolean(student?.riasecCode || student?.careerDNA?.riasec?.code || student?.careerAssessment?.hollandCode?.length)).length;
   const isDark = theme === 'dark';
@@ -55,8 +75,12 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
           </div>
           <p className={`mt-3 text-sm max-w-3xl ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>These are the existing student records from the central student directory, filtered on the server to the selected service. Names and Student IDs come from the canonical identity projection; Firebase UIDs remain internal.</p>
         </div>
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${isDark ? 'border-slate-800 bg-white/[0.02] text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}><Users className="w-4 h-4" />{students.length} students</div>
+        <div className="flex items-center gap-2">
+          <button onClick={repairIdentities} disabled={repairing || loading} className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold disabled:opacity-50 ${isDark ? 'border-slate-800 bg-white/[0.02] text-slate-300' : 'border-slate-200 bg-white text-slate-600'}`}><RefreshCw className={`w-4 h-4 ${repairing ? 'animate-spin' : ''}`} />{repairing ? 'Repairing…' : 'Repair Student IDs'}</button>
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${isDark ? 'border-slate-800 bg-white/[0.02] text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}><Users className="w-4 h-4" />{students.length} students</div>
+        </div>
       </div>
+      {repairMessage && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">{repairMessage}</div>}
       {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div>}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MiniMetric label="Students" value={students.length} icon={GraduationCap} theme={theme} />
