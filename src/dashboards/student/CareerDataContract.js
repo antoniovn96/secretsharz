@@ -50,6 +50,19 @@ export const EMPTY_CAREER_JOURNEY = {
   },
 };
 
+function normaliseStream(stream) {
+  if (typeof stream === 'string') return { id: stream, label: stream };
+  if (stream && typeof stream === 'object') {
+    return { ...stream, id: stream.id || stream.value || stream.name || null };
+  }
+  return null;
+}
+
+function normaliseStreams(streams) {
+  if (!Array.isArray(streams)) return [];
+  return streams.map(normaliseStream).filter(stream => stream?.id);
+}
+
 export function normaliseCareerJourney(raw = {}) {
   const assessment = resolveLatestCareerAssessment(raw);
   const roadmap = raw.careerRoadmap || raw.roadmap || {};
@@ -76,8 +89,8 @@ export function normaliseCareerJourney(raw = {}) {
       status: assessment.status || 'not_started',
       hollandCode,
       riasecScores: assessment.riasecScores || {},
-      streams: assessment.streams || [],
-      top5Careers: assessment.top5Careers || [],
+      streams: normaliseStreams(assessment.streams),
+      top5Careers: Array.isArray(assessment.top5Careers) ? assessment.top5Careers : [],
       maturityPct: typeof assessment.maturityPct === 'number' ? assessment.maturityPct : 0,
       profile: assessment.profile || {},
       source: assessment.source || null,
