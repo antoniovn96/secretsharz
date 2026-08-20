@@ -13,7 +13,6 @@ export function getStudentPath(student = {}) {
   if (services.career?.status === 'active') return 'career';
   if (services.wellbeing?.status === 'active') return 'wellbeing';
   if (services.sen?.status === 'active') return 'sen';
-
   const value = String(student.path || student.primary_path || student.studentTrack || '').trim().toLowerCase();
   if (value === 'career' || value === 'career_guidance' || value === 'career guidance') return 'career';
   if (value === 'wellbeing' || value === 'psychology' || value === 'counselling' || value === 'counseling') return 'wellbeing';
@@ -73,12 +72,6 @@ function getCoreProfileState(student = {}) {
   return { status: missing.length ? 'incomplete' : 'complete', missing };
 }
 
-/**
- * Canonical, least-privilege presentation contract for the Admin Student
- * Master Control. The full canonical profile remains behind the appropriate
- * detail/relationship authorization boundary; the directory receives only
- * fields needed for discovery, filtering, operational triage and navigation.
- */
 export function toAdminStudentDirectoryRecord(raw = {}, id = null) {
   const student = normalizeCanonicalStudent(raw, id || raw.id || raw.uid || null);
   const assessmentCode = getAssessmentCode(student);
@@ -89,17 +82,19 @@ export function toAdminStudentDirectoryRecord(raw = {}, id = null) {
   const activeServices = Object.entries(student.services || {})
     .filter(([, value]) => value?.status === 'active')
     .map(([service]) => service);
+  const assignmentIds = Object.fromEntries(
+    Object.entries(assignments).map(([service, professionalId]) => [service, professionalId || null])
+  );
+  const assignedService = activeServices.find(service => Boolean(assignmentIds[service]));
+  const assignmentStatus = assignedService ? 'assigned' : activeServices.length ? 'unassigned' : 'unassigned';
 
-  const lastActivityMs = [
-    student.governance?.updatedAt,
-    raw.updatedAt,
-    raw.lastActivityAt,
-  ].map(value => {
-    if (typeof value?.toMillis === 'function') return value.toMillis();
-    if (typeof value === 'number') return value;
-    const parsed = Date.parse(value || '');
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }).find(Boolean) || 0;
+  const lastActivityMs = [student.governance?.updatedAt, raw.updatedAt, raw.lastActivityAt]
+    .map(value => {
+      if (typeof value?.toMillis === 'function') return value.toMillis();
+      if (typeof value === 'number') return value;
+      const parsed = Date.parse(value || '');
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }).find(Boolean) || 0;
 
   const createdAtMs = (() => {
     const value = student.governance?.createdAt || raw.createdAt;
@@ -109,10 +104,6 @@ export function toAdminStudentDirectoryRecord(raw = {}, id = null) {
     return Number.isNaN(parsed) ? 0 : parsed;
   })();
 
-  const assignmentIds = Object.fromEntries(
-    Object.entries(assignments).map(([service, professionalId]) => [service, professionalId || null])
-  );
-
   return {
     id: student.authUid || student.id || id || '',
     authUid: student.authUid || student.id || id || '',
@@ -121,7 +112,6 @@ export function toAdminStudentDirectoryRecord(raw = {}, id = null) {
     preferredName: student.identity?.preferredName || '',
     photoURL: student.identity?.photoURL || '',
     email: student.contact?.email || '',
-
     institutionId: student.institution?.id || student.academic?.current?.institutionId || '',
     institutionName: student.institution?.name || student.academic?.current?.institutionName || '',
     schoolName: student.institution?.name || student.academic?.current?.institutionName || '',
@@ -129,39 +119,34 @@ export function toAdminStudentDirectoryRecord(raw = {}, id = null) {
     grade: student.academic?.current?.grade || '',
     classLevel: student.academic?.current?.grade || '',
     section: student.academic?.current?.section || '',
-
     path: getStudentPath(student),
     primary_path: getStudentPath(student),
     studentTrack: getStudentPath(student),
     activeServices,
     services: student.services,
-
     assessmentCode,
     assessmentStatus,
     riasecCode: assessmentCode,
     riasecScores: student.career?.riasec?.scores || {},
     careerAssessment: raw.careerAssessment || null,
-
     profileStatus,
     profileMissing: coreProfile.missing,
     profileComplete: profileStatus === 'complete',
     onboardingCompleted: student.onboarding?.completed === true,
     enrollmentStatus: student.institution?.enrollmentStatus || 'active',
-
+    assignmentStatus,
     assignments: assignmentIds,
     assignedCareerCoachId: assignmentIds.career || null,
     assignedCounsellorId: assignmentIds.wellbeing || null,
     assignedSENEducatorId: assignmentIds.sen || null,
-    assignedProfessionalId: assignmentIds.career || assignmentIds.wellbeing || assignmentIds.sen || null,
+    assignedProfessionalId: assignmentIds[assignedService] || null,
     assignedProfessionalName: '',
-
     createdAt: createdAtMs ? new Date(createdAtMs).toISOString() : null,
     updatedAt: lastActivityMs ? new Date(lastActivityMs).toISOString() : null,
     lastActivityAt: lastActivityMs ? new Date(lastActivityMs).toISOString() : null,
     createdAtMs,
     updatedAtMs: lastActivityMs,
     lastActivityMs,
-
-    needsAttention: false,
+    needsAttention: getNeedsAttention({ profileStatus, assessmentStatus, assignmentStatus, enrollmentStatus: student.institution?.enrollmentStatus || 'active' }),
   };
 }
