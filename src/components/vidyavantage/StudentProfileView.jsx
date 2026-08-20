@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatPhone } from '../../platform/contactFormatters';
 
 export default function StudentProfileView({ studentDoc }) {
   const profile = studentDoc?.profile || {};
@@ -22,7 +23,7 @@ export default function StudentProfileView({ studentDoc }) {
           </div>
           <div>
             <span className="text-sm text-gray-500 block">Phone</span>
-            <span className="font-medium text-gray-900">{profile.phone || 'Not provided'}</span>
+            <span className="font-medium text-gray-900">{formatPhone(profile.phone) || 'Not provided'}</span>
           </div>
           <div>
             <span className="text-sm text-gray-500 block">Gender</span>
@@ -44,7 +45,7 @@ export default function StudentProfileView({ studentDoc }) {
           </div>
           <div>
             <span className="text-sm text-gray-500 block">Parent Phone</span>
-            <span className="font-medium text-gray-900">{parent.phone || studentDoc?.fatherPhone || studentDoc?.motherPhone || 'Not provided'}</span>
+            <span className="font-medium text-gray-900">{formatPhone(parent.phone) || formatPhone(studentDoc?.fatherPhone) || formatPhone(studentDoc?.motherPhone) || 'Not provided'}</span>
           </div>
         </div>
       </div>
