@@ -18,19 +18,31 @@ test('normalizes object-shaped canonical career assignment to a professional id'
   assert.equal(profile.relationships.assignments.career, 'professional-123');
 });
 
-test('preserves legacy RIASEC data when a newer career object exists without it', () => {
+test('does not expose an inactive canonical assignment as an active professional relationship', () => {
   const profile = normalizeStudentRecord({
     profileType: 'student',
-    riasecCode: 'SIC',
-    riasecScores: { S: 10, I: 8, C: 7 },
-    career: { status: 'active', interests: ['science'] },
-  }, 'student-2');
+    services: { career: { status: 'active' } },
+    relationships: {
+      assignments: {
+        career: { service: 'career', primaryProfessionalId: 'professional-123', status: 'inactive' },
+      },
+    },
+  }, 'student-inactive-assignment');
 
-  assert.equal(profile.career.riasec.code, 'SIC');
-  assert.deepEqual(profile.career.riasec.scores, { S: 10, I: 8, C: 7 });
+  assert.equal(profile.relationships.assignments.career, null);
 });
 
-test('canonical service status takes precedence over a legacy path when explicitly set', () => {
+test('preserves boolean legacy service state during canonical migration', () => {
+  const profile = normalizeStudentRecord({
+    profileType: 'student',
+    services: { career: true, wellbeing: false },
+  }, 'student-legacy-service');
+
+  assert.equal(profile.services.career.status, 'active');
+  assert.equal(profile.services.wellbeing.status, 'inactive');
+});
+
+test('explicit canonical service state wins over a legacy path', () => {
   const profile = normalizeStudentRecord({
     profileType: 'student',
     primary_path: 'career',
@@ -42,6 +54,18 @@ test('canonical service status takes precedence over a legacy path when explicit
 
   assert.equal(profile.services.career.status, 'inactive');
   assert.equal(profile.services.wellbeing.status, 'active');
+});
+
+test('preserves legacy RIASEC data when a newer career object exists without it', () => {
+  const profile = normalizeStudentRecord({
+    profileType: 'student',
+    riasecCode: 'SIC',
+    riasecScores: { S: 10, I: 8, C: 7 },
+    career: { status: 'active', interests: ['science'] },
+  }, 'student-2');
+
+  assert.equal(profile.career.riasec.code, 'SIC');
+  assert.deepEqual(profile.career.riasec.scores, { S: 10, I: 8, C: 7 });
 });
 
 test('recognizes a valid SIC RIASEC code as complete', () => {
