@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AlertTriangle, Archive, Loader2, X } from 'lucide-react';
 import { auth } from '../../firebase';
 
-export default function AdminStudentArchiveModal({ student, isOpen, onClose, onArchived, theme = 'light' }) {
+export default function AdminStudentArchiveModal({ student, isOpen, onClose, onArchived, theme = 'light', service = 'career' }) {
   const dark = theme === 'dark';
   const [confirmation, setConfirmation] = useState('');
   const [saving, setSaving] = useState(false);
@@ -22,7 +22,7 @@ export default function AdminStudentArchiveModal({ student, isOpen, onClose, onA
       const response = await fetch('/api/admin/archive-student', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId: student.id, confirmationName: name }),
+        body: JSON.stringify({ studentId: student.id, confirmationName: name, service }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload?.error || 'Unable to archive the student.');
