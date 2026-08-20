@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { BriefcaseBusiness, GraduationCap, HeartHandshake, Brain, Users } from 'lucide-react';
 import { auth } from '../../firebase';
-import UserDirectoryTable from './UserDirectoryTable';
+import CanonicalStudentDirectoryTable from './CanonicalStudentDirectoryTable';
 import SlideOutDetailPanel from './SlideOutDetailPanel';
 
 const SERVICE_META = {
@@ -40,7 +40,7 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
 
   useEffect(() => { load(); }, [load]);
 
-  const completeProfiles = students.filter(student => student?.profileComplete === true || student?.onboardingCompleted === true).length;
+  const completeProfiles = students.filter(student => Boolean(student?.name && student?.email && (student?.schoolName || student?.institutionName) && student?.grade)).length;
   const assessmentComplete = students.filter(student => Boolean(student?.riasecCode || student?.careerDNA?.riasec?.code || student?.careerAssessment?.hollandCode?.length)).length;
   const isDark = theme === 'dark';
   const Icon = meta.icon;
@@ -53,7 +53,7 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
             <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${meta.tone === 'violet' ? 'bg-violet-500/10 text-violet-500' : meta.tone === 'amber' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}><Icon className="w-5 h-5" /></div>
             <div><p className={`text-[10px] uppercase tracking-[0.16em] font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{meta.label} · Students</p><h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-950'}`}>Student Directory</h1></div>
           </div>
-          <p className={`mt-3 text-sm max-w-3xl ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>These are the existing student records from the central student directory, filtered on the server to the selected service. Clicking a student's name or row opens their current record and live profile contents.</p>
+          <p className={`mt-3 text-sm max-w-3xl ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>These are the existing student records from the central student directory, filtered on the server to the selected service. Names and Student IDs come from the canonical identity projection; Firebase UIDs remain internal.</p>
         </div>
         <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${isDark ? 'border-slate-800 bg-white/[0.02] text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}><Users className="w-4 h-4" />{students.length} students</div>
       </div>
@@ -63,7 +63,7 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
         <MiniMetric label="Profiles complete" value={completeProfiles} icon={Users} theme={theme} />
         <MiniMetric label="RIASEC / assessment data" value={assessmentComplete} icon={BriefcaseBusiness} theme={theme} />
       </div>
-      <UserDirectoryTable users={students} isLoading={loading} onViewDetails={student => { setSelectedStudent(student); setDetailOpen(true); }} userRole="student" theme={theme} />
+      <CanonicalStudentDirectoryTable users={students} isLoading={loading} onViewDetails={student => { setSelectedStudent(student); setDetailOpen(true); }} userRole="student" theme={theme} />
       <SlideOutDetailPanel user={selectedStudent} isOpen={detailOpen} onClose={() => { setDetailOpen(false); window.setTimeout(() => setSelectedStudent(null), 300); }} />
     </div>
   );
