@@ -7,6 +7,20 @@ const formatDate = value => {
   try { const date = value?.toDate ? value.toDate() : new Date(value); return Number.isNaN(date.getTime()) ? 'Not available' : date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); } catch { return 'Not available'; }
 };
 
+const formatPhone = value => {
+  if (!value) return 'Not provided';
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (typeof value === 'object') return value.international || [value.callingCode, value.number].filter(Boolean).join(' ') || value.number || 'Not provided';
+  return 'Not provided';
+};
+
+const formatLocation = (value, fallback = '') => {
+  if (!value) return fallback || 'Not specified';
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (typeof value === 'object') return [value.cityName, value.stateName, value.countryName].filter(Boolean).join(', ') || fallback || 'Not specified';
+  return fallback || 'Not specified';
+};
+
 const PATHS = {
   wellbeing: { label: 'Wellbeing', professional: 'Psychologist', className: 'bg-purple-100 text-purple-700' },
   psychology: { label: 'Wellbeing', professional: 'Psychologist', className: 'bg-purple-100 text-purple-700' },
@@ -39,7 +53,7 @@ const ParentDetailPanel = ({ parent, isOpen, onClose, onEdit }) => {
     <header className="p-6 border-b border-slate-100 flex items-start justify-between bg-gradient-to-r from-rose-50 to-white"><div className="flex items-center gap-4 min-w-0">{identity.photoURL ? <img src={identity.photoURL} alt="" className="w-14 h-14 shrink-0 rounded-2xl object-cover shadow-lg" /> : <div className="w-14 h-14 shrink-0 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">{identity.initial}</div>}<div className="min-w-0"><h2 className="text-xl font-bold text-slate-900 truncate">{identity.name}</h2><p className="text-xs text-slate-400 font-mono truncate">{parent.id}</p><div className="flex items-center gap-2 mt-2"><span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700">Parent</span><span className={`px-2.5 py-1 rounded-full text-xs font-bold ${status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{status === 'active' ? 'Active' : 'Inactive'}</span></div></div></div><button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl"><X className="w-6 h-6" /></button></header>
 
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      <section><h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2"><User className="w-4 h-4 text-rose-500" /> Contact Information</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-3"><Info icon={Mail} label="Email" value={identity.email} /><Info icon={Phone} label="Phone" value={parent.phone} /><Info icon={MapPin} label="Location" value={parent.location || parent.city} /><Info icon={Calendar} label="Added" value={formatDate(parent.createdAt)} /></div></section>
+      <section><h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2"><User className="w-4 h-4 text-rose-500" /> Contact Information</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-3"><Info icon={Mail} label="Email" value={identity.email} /><Info icon={Phone} label="Phone" value={formatPhone(parent.phone)} /><Info icon={MapPin} label="Location" value={formatLocation(parent.location || parent.locationData, parent.city)} /><Info icon={Calendar} label="Added" value={formatDate(parent.createdAt)} /></div></section>
 
       <section><h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-rose-500" /> Family Overview</h3><div className="grid grid-cols-3 gap-3"><Summary value={children.length} label="Children" /><Summary value={activeServices.length} label="Services" /><Summary value={institutions.length} label="Institutions" /></div>{(activeServices.length || institutions.length) ? <div className="mt-3 flex flex-wrap gap-2">{activeServices.map(service => <span key={service} className={`px-2.5 py-1.5 rounded-lg text-xs font-bold ${Object.values(PATHS).find(path => path.label === service)?.className || 'bg-slate-100 text-slate-700'}`}>{service}</span>)}{institutions.map(institution => <span key={institution} className="px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">{institution}</span>)}</div> : null}</section>
 
