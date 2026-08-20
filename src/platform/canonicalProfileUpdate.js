@@ -12,7 +12,6 @@ export async function updateCanonicalStudentProfile(user, updates) {
   }
 
   const token = await user.getIdToken();
-  const profile = buildProfileEditorPatch(updates);
   const response = await fetch('/api/student/update-profile', {
     method: 'POST',
     headers: {
@@ -21,7 +20,7 @@ export async function updateCanonicalStudentProfile(user, updates) {
     },
     body: JSON.stringify({
       studentId: user.uid,
-      profile,
+      updates,
     }),
   });
 
