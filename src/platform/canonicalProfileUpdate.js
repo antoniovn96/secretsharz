@@ -12,6 +12,7 @@ export async function updateCanonicalStudentProfile(user, updates) {
   }
 
   const token = await user.getIdToken();
+  const profile = buildProfileEditorPatch(updates);
   const response = await fetch('/api/student/update-profile', {
     method: 'POST',
     headers: {
@@ -20,7 +21,7 @@ export async function updateCanonicalStudentProfile(user, updates) {
     },
     body: JSON.stringify({
       studentId: user.uid,
-      updates,
+      profile,
     }),
   });
 
@@ -72,17 +73,12 @@ export function buildProfileEditorPatch(updates = {}) {
     };
   }
 
-  if (updates.studentTrack !== undefined) {
-    const track = updates.studentTrack;
-    patch.services = {
-      career: track === 'career_guidance' || track === 'both',
-      wellbeing: track === 'counselling' || track === 'both',
-    };
-  }
+  // Service enrolment/assignment is governed by the service-management workflow,
+  // not by the student-owned profile write API.
 
   if (updates.counsellingConsentAgreed !== undefined) {
     patch.governance = {
-      consents: { wellbeing: Boolean(updates.counsellingConsentAgreed) },
+      consent: { wellbeing: Boolean(updates.counsellingConsentAgreed) },
     };
   }
 
