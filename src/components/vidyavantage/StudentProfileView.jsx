@@ -1,5 +1,14 @@
 import React from 'react';
 
+const formatContactValue = (value) => {
+  if (!value) return 'Not provided';
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (typeof value === 'object') {
+    return value.international || [value.callingCode, value.number].filter(Boolean).join(' ') || value.number || 'Not provided';
+  }
+  return 'Not provided';
+};
+
 export default function StudentProfileView({ studentDoc }) {
   const profile = studentDoc?.profile || {};
   const parent = studentDoc?.parent || {};
@@ -22,7 +31,7 @@ export default function StudentProfileView({ studentDoc }) {
           </div>
           <div>
             <span className="text-sm text-gray-500 block">Phone</span>
-            <span className="font-medium text-gray-900">{profile.phone || 'Not provided'}</span>
+            <span className="font-medium text-gray-900">{formatContactValue(profile.phone)}</span>
           </div>
           <div>
             <span className="text-sm text-gray-500 block">Gender</span>
@@ -44,7 +53,7 @@ export default function StudentProfileView({ studentDoc }) {
           </div>
           <div>
             <span className="text-sm text-gray-500 block">Parent Phone</span>
-            <span className="font-medium text-gray-900">{parent.phone || studentDoc?.fatherPhone || studentDoc?.motherPhone || 'Not provided'}</span>
+            <span className="font-medium text-gray-900">{formatContactValue(parent.phone || studentDoc?.fatherPhone || studentDoc?.motherPhone)}</span>
           </div>
         </div>
       </div>
