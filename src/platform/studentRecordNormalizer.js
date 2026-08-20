@@ -217,7 +217,7 @@ export function normalizeStudentRecord(data = {}, id = null) {
     },
     contact: {
       email: firstDefined(data.contact?.email, data.email, ''),
-      mobile: { countryCode: firstDefined(data.contact?.mobile?.countryCode, data.contactCountryCode, null), number: firstDefined(data.contactNumber, data.contact?.mobile?.number, data.phone, '') },
+      mobile: { countryCode: firstDefined(data.contact?.mobile?.countryCode, data.contactCountryCode, null), number: firstDefined(data.contact?.mobile?.number, data.contactNumber, data.phone, '') },
       city: firstDefined(data.contact?.city, data.city, ''),
     },
     family: { guardians },
