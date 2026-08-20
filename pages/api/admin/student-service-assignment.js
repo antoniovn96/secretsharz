@@ -1,12 +1,13 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { isStudentProfile } from '../../../src/platform/studentRecordModel.js';
 import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
+import { isAssignableClaimRole } from '../../../src/security/claimRoles.js';
 
 const SERVICE_PATHS = new Set(['career', 'wellbeing', 'sen']);
 const SERVICE_ROLES = Object.freeze({
-  career: new Set(['career_counsellor', 'career_coach']),
-  wellbeing: new Set(['psychologist', 'counselling_psychologist', 'counsellor']),
-  sen: new Set(['educator', 'sen_educator', 'special_educator']),
+  career: new Set(['career_counsellor']),
+  wellbeing: new Set(['psychologist', 'counsellor']),
+  sen: new Set(['educator']),
 });
 const FOUNDER_EMAIL = 'antonio.antonio.noronha@gmail.com';
 
@@ -30,7 +31,6 @@ export default async function handler(req, res) {
 
   const token = bearerToken(req);
   if (!token) return res.status(401).json({ error: 'Authentication required.' });
-
   let decoded;
   try { decoded = await getAdminAuth().verifyIdToken(token); }
   catch (_) { return res.status(401).json({ error: 'Invalid or expired authentication token.' }); }
@@ -46,10 +46,7 @@ export default async function handler(req, res) {
     const db = getAdminFirestore();
     const studentRef = db.collection('users').doc(studentId);
     const professionalRef = professionalId ? db.collection('users').doc(professionalId) : null;
-    const [studentSnap, professionalSnap] = await Promise.all([
-      studentRef.get(),
-      professionalRef ? professionalRef.get() : Promise.resolve(null),
-    ]);
+    const [studentSnap, professionalSnap] = await Promise.all([studentRef.get(), professionalRef ? professionalRef.get() : Promise.resolve(null)]);
 
     if (!studentSnap.exists) return res.status(404).json({ error: 'Canonical student record not found.' });
     const raw = studentSnap.data() || {};
@@ -62,47 +59,27 @@ export default async function handler(req, res) {
       if (!professionalSnap?.exists) return res.status(404).json({ error: 'Professional account not found.' });
       const professional = professionalSnap.data() || {};
       const role = String(professional.role || professional.professionalRole || '').trim().toLowerCase();
-      if (!SERVICE_ROLES[service]?.has(role)) return res.status(409).json({ error: 'Selected professional is not authorised for this service.' });
+      if (!isAssignableClaimRole(role) || !SERVICE_ROLES[service]?.has(role)) return res.status(409).json({ error: 'Selected professional is not authorised for this service.' });
       if (professional.status === 'inactive' || professional.lifecycleStatus === 'inactive' || professional.archivedAt) return res.status(409).json({ error: 'Selected professional is inactive.' });
     }
 
-    const beforeAssignment = profile.relationships?.assignments?.[service] || null;
+    const before = profile.relationships?.assignments?.[service];
+    const previousProfessionalId = typeof before === 'string' ? before : before?.professionalId || before?.primaryProfessionalId || null;
     const now = nowIso();
-    const nextAssignment = professionalId ? {
-      professionalId,
-      status: 'active',
-      assignedAt: now,
-      assignedBy: decoded.uid,
-      updatedAt: now,
-    } : {
-      professionalId: null,
-      status: 'inactive',
-      unassignedAt: now,
-      unassignedBy: decoded.uid,
-      updatedAt: now,
-    };
+    const nextAssignment = professionalId
+      ? { service, professionalId, primaryProfessionalId: professionalId, status: 'active', assignedAt: now, assignedBy: decoded.uid, updatedAt: now }
+      : { service, professionalId: null, primaryProfessionalId: null, status: 'inactive', unassignedAt: now, unassignedBy: decoded.uid, updatedAt: now };
 
     const auditRef = db.collection('auditEvents').doc();
     const batch = db.batch();
-    batch.set(studentRef, {
-      relationships: { assignments: { [service]: nextAssignment } },
-      updatedAt: now,
-    }, { merge: true });
+    batch.set(studentRef, { relationships: { assignments: { [service]: nextAssignment } }, updatedAt: now }, { merge: true });
     batch.set(auditRef, {
       eventType: professionalId ? 'student_service_assigned' : 'student_service_unassigned',
-      actorId: decoded.uid,
-      actorRole: 'super_admin',
-      resourceType: 'student',
-      resourceId: studentId,
-      service,
-      professionalId: professionalId || null,
-      previousProfessionalId: typeof beforeAssignment === 'string' ? beforeAssignment : null,
-      purpose: 'administration',
-      outcome: 'success',
-      timestamp: now,
+      actorId: decoded.uid, actorRole: 'super_admin', resourceType: 'student', resourceId: studentId,
+      service, professionalId: professionalId || null, previousProfessionalId,
+      purpose: 'administration', outcome: 'success', timestamp: now,
     });
     await batch.commit();
-
     return res.status(200).json({ ok: true, studentId, service, assignment: nextAssignment });
   } catch (error) {
     console.error('[student-service-assignment] failed:', error);
