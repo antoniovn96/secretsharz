@@ -1,4 +1,5 @@
 import { getStudentPath } from './studentRecordModel.js';
+import { normalizeServiceAssignment } from './serviceAssignmentContract.js';
 
 const SERVICE_KEYS = ['career', 'wellbeing', 'sen'];
 const EDUCATION_TIERS = ['tenth', 'twelfth', 'graduate', 'postGraduate'];
@@ -66,10 +67,16 @@ function normaliseGuardian(data = {}) {
 function normaliseAssignments(data = {}) {
   const staff = data.assignedStaff || {};
   const canonical = data.relationships?.assignments || {};
+
+  const assignmentId = (canonicalValue, ...legacyValues) => {
+    const normalized = normalizeServiceAssignment(canonicalValue);
+    return firstDefined(normalized.primaryProfessionalId, ...legacyValues, null);
+  };
+
   return {
-    career: firstDefined(canonical.career, staff.careerId, data.assignedCareerCounsellorId, data.assignedCareerCoachId, null),
-    wellbeing: firstDefined(canonical.wellbeing, staff.psychologistId, staff.psychologyId, data.assignedPsychologistId, data.assignedCounsellorId, null),
-    sen: firstDefined(canonical.sen, staff.senId, staff.educatorId, data.assignedSENEducatorId, null),
+    career: assignmentId(canonical.career, staff.careerId, data.assignedCareerCounsellorId, data.assignedCareerCoachId),
+    wellbeing: assignmentId(canonical.wellbeing, staff.psychologistId, staff.psychologyId, data.assignedPsychologistId, data.assignedCounsellorId),
+    sen: assignmentId(canonical.sen, staff.senId, staff.educatorId, data.assignedSENEducatorId),
   };
 }
 
@@ -210,7 +217,7 @@ export function normalizeStudentRecord(data = {}, id = null) {
     },
     contact: {
       email: firstDefined(data.contact?.email, data.email, ''),
-      mobile: { countryCode: firstDefined(data.contact?.mobile?.countryCode, data.contactCountryCode, null), number: firstDefined(data.contact?.mobile?.number, data.contactNumber, data.phone, '') },
+      mobile: { countryCode: firstDefined(data.contact?.mobile?.countryCode, data.contactCountryCode, null), number: firstDefined(data.contactNumber, data.contact?.mobile?.number, data.phone, '') },
       city: firstDefined(data.contact?.city, data.city, ''),
     },
     family: { guardians },
