@@ -36,19 +36,6 @@ export function profileEditorToCanonicalPatch(payload = {}, currentProfile = {})
   upsertGuardian('father', { name: payload.fatherName, email: payload.fatherEmail, phone: payload.fatherPhone });
   upsertGuardian('mother', { name: payload.motherName, email: payload.motherEmail, phone: payload.motherPhone });
 
-  const services = { ...(currentProfile.services || {}) };
-  const track = String(payload.studentTrack || '').toLowerCase();
-  if (track === 'both') {
-    services.career = { ...(services.career || {}), status: 'active' };
-    services.wellbeing = { ...(services.wellbeing || {}), status: 'active' };
-  } else if (track === 'career_guidance' || track === 'career') {
-    services.career = { ...(services.career || {}), status: 'active' };
-    services.wellbeing = { ...(services.wellbeing || {}), status: 'inactive' };
-  } else if (track === 'counselling' || track === 'wellbeing') {
-    services.career = { ...(services.career || {}), status: 'inactive' };
-    services.wellbeing = { ...(services.wellbeing || {}), status: 'active' };
-  }
-
   const history = { ...currentHistory };
   ['tenth', 'twelfth', 'graduate', 'postGraduate'].forEach((tier) => { if (education[tier]) history[tier] = educationTier(education[tier]); });
   const personal = {
@@ -78,7 +65,6 @@ export function profileEditorToCanonicalPatch(payload = {}, currentProfile = {})
     family: { guardians },
     academic: { current: { ...currentAcademic, institutionName: clean(education.schoolName || currentAcademic.institutionName || ''), grade: clean(payload.grade ?? currentAcademic.grade ?? ''), stream: clean(payload.stream ?? currentAcademic.stream ?? ''), subjects: strings(education.subjects ?? currentAcademic.subjects) }, history, highestLevel: clean(education.highestLevel ?? currentProfile.academic?.highestLevel ?? ''), address: clean(education.address ?? currentProfile.academic?.address ?? ''), yearOfPassing: clean(education.yearOfPassing ?? currentProfile.academic?.yearOfPassing ?? ''), isPursuing: typeof education.isPursuing === 'boolean' ? education.isPursuing : (currentProfile.academic?.isPursuing ?? true), electives: strings(education.electives ?? currentProfile.academic?.electives) },
     personal,
-    services,
     governance: {
       ...(currentProfile.governance || {}),
       consent: {
