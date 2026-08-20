@@ -65,3 +65,14 @@ test('discovers canonical career RIASEC records and maps their path', () => {
   assert.equal(isStudentProfile(record), true);
   assert.equal(getStudentPath(record), 'Career');
 });
+
+test('never lets a nested studentProfile override a privileged top-level role', () => {
+  assert.equal(
+    isStudentProfile({ role: 'super_admin', studentProfile: { profileType: 'student', career: { riasec: { code: 'SIC' } } } }),
+    false,
+  );
+  assert.equal(
+    isStudentProfile({ role: 'admin', studentProfile: { profileType: 'student' } }),
+    false,
+  );
+});
