@@ -64,6 +64,15 @@ export function getSortValue(student = {}, field) {
   }
 }
 
+function getCoreProfileState(student = {}) {
+  const missing = [];
+  if (!String(student.identity?.fullName || student.identity?.preferredName || '').trim()) missing.push('name');
+  if (!String(student.contact?.email || '').trim()) missing.push('email');
+  if (!String(student.institution?.name || student.academic?.current?.institutionName || '').trim()) missing.push('institution');
+  if (!String(student.academic?.current?.grade || '').trim()) missing.push('grade');
+  return { status: missing.length ? 'incomplete' : 'complete', missing };
+}
+
 /**
  * Canonical, least-privilege presentation contract for the Admin Student
  * Master Control. The full canonical profile remains behind the appropriate
@@ -74,7 +83,8 @@ export function toAdminStudentDirectoryRecord(raw = {}, id = null) {
   const student = normalizeCanonicalStudent(raw, id || raw.id || raw.uid || null);
   const assessmentCode = getAssessmentCode(student);
   const assessmentStatus = getAssessmentStatus({ ...student, assessmentCode });
-  const profileStatus = getProfileStatus(student);
+  const coreProfile = getCoreProfileState(student);
+  const profileStatus = coreProfile.status;
   const assignments = student.relationships?.assignments || {};
   const activeServices = Object.entries(student.services || {})
     .filter(([, value]) => value?.status === 'active')
@@ -104,7 +114,6 @@ export function toAdminStudentDirectoryRecord(raw = {}, id = null) {
   );
 
   return {
-    // Canonical identity
     id: student.authUid || student.id || id || '',
     authUid: student.authUid || student.id || id || '',
     ssStudentId: getStudentId(student),
@@ -113,7 +122,6 @@ export function toAdminStudentDirectoryRecord(raw = {}, id = null) {
     photoURL: student.identity?.photoURL || '',
     email: student.contact?.email || '',
 
-    // Academic / institution summary
     institutionId: student.institution?.id || student.academic?.current?.institutionId || '',
     institutionName: student.institution?.name || student.academic?.current?.institutionName || '',
     schoolName: student.institution?.name || student.academic?.current?.institutionName || '',
@@ -122,45 +130,38 @@ export function toAdminStudentDirectoryRecord(raw = {}, id = null) {
     classLevel: student.academic?.current?.grade || '',
     section: student.academic?.current?.section || '',
 
-    // Service summary. These are derived from canonical services; legacy path
-    // aliases are retained only for compatibility with older consumers.
     path: getStudentPath(student),
     primary_path: getStudentPath(student),
     studentTrack: getStudentPath(student),
     activeServices,
     services: student.services,
 
-    // Assessment summary
     assessmentCode,
     assessmentStatus,
     riasecCode: assessmentCode,
     riasecScores: student.career?.riasec?.scores || {},
     careerAssessment: raw.careerAssessment || null,
 
-    // Profile / lifecycle summary
     profileStatus,
+    profileMissing: coreProfile.missing,
     profileComplete: profileStatus === 'complete',
     onboardingCompleted: student.onboarding?.completed === true,
     enrollmentStatus: student.institution?.enrollmentStatus || 'active',
-    needsAttention: getNeedsAttention({
-      ...student,
-      assessmentCode,
-      assessmentStatus,
-      profileStatus,
-      assignmentStatus: activeServices.length && assignmentIds[activeServices[0]] ? 'assigned' : 'unassigned',
-      enrollmentStatus: student.institution?.enrollmentStatus || 'active',
-    }),
 
-    // Operational relationships, IDs only; names are resolved by authorized
-    // detail/assignment surfaces rather than duplicated into this directory DTO.
     assignments: assignmentIds,
     assignedCareerCoachId: assignmentIds.career || null,
     assignedCounsellorId: assignmentIds.wellbeing || null,
     assignedSENEducatorId: assignmentIds.sen || null,
+    assignedProfessionalId: assignmentIds.career || assignmentIds.wellbeing || assignmentIds.sen || null,
+    assignedProfessionalName: '',
 
     createdAt: createdAtMs ? new Date(createdAtMs).toISOString() : null,
     updatedAt: lastActivityMs ? new Date(lastActivityMs).toISOString() : null,
+    lastActivityAt: lastActivityMs ? new Date(lastActivityMs).toISOString() : null,
     createdAtMs,
+    updatedAtMs: lastActivityMs,
     lastActivityMs,
+
+    needsAttention: false,
   };
 }
