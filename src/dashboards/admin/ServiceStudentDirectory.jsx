@@ -120,7 +120,7 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
         onClose={() => { setDetailOpen(false); window.setTimeout(() => { setSelectedStudent(null); setDetailError(''); }, 300); }}
       />
       <AdminStudentEditModal student={selectedStudent} isOpen={editOpen} theme={theme} onClose={() => setEditOpen(false)} onSaved={() => { setEditOpen(false); load(); }} />
-      <AdminStudentArchiveModal student={selectedStudent} isOpen={archiveOpen} theme={theme} onClose={() => setArchiveOpen(false)} onArchived={() => { setArchiveOpen(false); setSelectedStudent(null); load(); }} />
+      <AdminStudentArchiveModal student={selectedStudent} isOpen={archiveOpen} theme={theme} service={meta.path} onClose={() => setArchiveOpen(false)} onArchived={() => { setArchiveOpen(false); setSelectedStudent(null); load(); }} />
     </div>
   );
 }
