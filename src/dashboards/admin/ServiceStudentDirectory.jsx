@@ -5,6 +5,7 @@ import CanonicalStudentDirectoryTable from './CanonicalStudentDirectoryTable';
 import SlideOutDetailPanel from './SlideOutDetailPanel';
 import AdminStudentEditModal from './AdminStudentEditModal';
 import AdminStudentArchiveModal from './AdminStudentArchiveModal';
+import AdminStudentAssignmentModal from './AdminStudentAssignmentModal';
 
 const SERVICE_META = {
   career: { label: 'Career Guidance', path: 'career', icon: BriefcaseBusiness, tone: 'emerald' },
@@ -24,6 +25,7 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
   const [detailError, setDetailError] = useState('');
   const [editOpen, setEditOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [assignmentOpen, setAssignmentOpen] = useState(false);
 
   const load = useCallback(async () => {
     const currentUser = auth.currentUser;
@@ -88,9 +90,7 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
           </div>
           <p className={`mt-3 text-sm max-w-3xl ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Manage students enrolled in {meta.label}. Directory state is derived from the canonical student projection; Firebase UIDs remain internal.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${isDark ? 'border-slate-800 bg-white/[0.02] text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}><Users className="w-4 h-4" />{stats.total} students</div>
-        </div>
+        <div className="flex flex-wrap items-center gap-2"><div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${isDark ? 'border-slate-800 bg-white/[0.02] text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}><Users className="w-4 h-4" />{stats.total} students</div></div>
       </div>
       {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700" role="alert">{error}</div>}
       <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
@@ -106,8 +106,8 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
         filterOptions={directoryFilters}
         onViewDetails={openDetails}
         onEdit={student => { setSelectedStudent(student); setEditOpen(true); }}
+        onAssign={student => { setSelectedStudent(student); setAssignmentOpen(true); }}
         onDelete={student => { setSelectedStudent(student); setArchiveOpen(true); }}
-        userRole="student"
         theme={theme}
       />
       <SlideOutDetailPanel
@@ -120,6 +120,7 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
         onClose={() => { setDetailOpen(false); window.setTimeout(() => { setSelectedStudent(null); setDetailError(''); }, 300); }}
       />
       <AdminStudentEditModal student={selectedStudent} isOpen={editOpen} theme={theme} onClose={() => setEditOpen(false)} onSaved={() => { setEditOpen(false); load(); }} />
+      <AdminStudentAssignmentModal student={selectedStudent} isOpen={assignmentOpen} theme={theme} service={meta.path} onClose={() => setAssignmentOpen(false)} onSaved={() => { setAssignmentOpen(false); load(); }} />
       <AdminStudentArchiveModal student={selectedStudent} isOpen={archiveOpen} theme={theme} service={meta.path} onClose={() => setArchiveOpen(false)} onArchived={() => { setArchiveOpen(false); setSelectedStudent(null); load(); }} />
     </div>
   );
