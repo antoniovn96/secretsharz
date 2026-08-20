@@ -1,6 +1,6 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
-import { mergeCanonicalStudentProfile } from '../../../src/platform/studentProfileWriteAdapter.js';
+import { mergeCanonicalStudentProfile, profileEditorToCanonicalPatch } from '../../../src/platform/studentProfileWriteAdapter.js';
 
 function bearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization;
@@ -50,7 +50,8 @@ export default async function handler(req, res) {
     if (!looksLikeStudent(rawStudent)) return res.status(403).json({ error: 'Target account is not a student profile.' });
 
     const existing = rawStudent.studentProfile || normalizeStudentRecord(rawStudent, studentId);
-    const patch = req.body?.profile || {};
+    const payload = req.body?.profile || {};
+    const patch = profileEditorToCanonicalPatch(payload, existing);
     const nextProfile = mergeCanonicalStudentProfile({ ...existing, id: studentId }, patch);
 
     await ref.set({
