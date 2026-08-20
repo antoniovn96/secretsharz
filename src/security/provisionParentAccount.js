@@ -16,6 +16,8 @@ export async function provisionParentAccount({adminAuth,adminDb,parentName,paren
   const existingClaims=user.customClaims||{};const existingRole=typeof existingClaims.role==='string'?existingClaims.role:null;if(existingRole&&existingRole!=='parent')throw new Error(`This email is already assigned to the ${existingRole} role and cannot be provisioned as a parent.`);
   const now=new Date().toISOString();const parentRef=adminDb.collection('users').doc(user.uid);const existingProfileSnap=await parentRef.get();const existingProfile=existingProfileSnap.exists?existingProfileSnap.data()||{}:{};
   const existingInstitutionIds=Array.isArray(existingProfile.institutionIds)?existingProfile.institutionIds.filter(Boolean):[];
+  const existingPrimaryInstitution=existingProfile.institutionId||existingInstitutionIds[0]||null;
+  if(existingPrimaryInstitution&&institutionId&&existingPrimaryInstitution!==institutionId)throw new Error('This parent account is already linked to another institution and cannot be reassigned across institutions.');
   const mergedInstitutionIds=Array.from(new Set([...existingInstitutionIds,...(institutionId?[institutionId]:[])]));
   const existingInstitutionNames=existingProfile.institutionNames&&typeof existingProfile.institutionNames==='object'?existingProfile.institutionNames:{};
   const institutionNames={...existingInstitutionNames,...(institutionId&&institutionName?{[institutionId]:institutionName}:{})};
@@ -36,21 +38,8 @@ export async function provisionParentAccount({adminAuth,adminDb,parentName,paren
       const existingGuardians=Array.isArray(student.family?.guardians)?student.family.guardians:[];
       const guardianIndex=existingGuardians.findIndex((guardian)=>guardian?.accountId===user.uid || guardian?.uid===user.uid || guardian?.id===user.uid);
       const existingGuardian=guardianIndex>=0?existingGuardians[guardianIndex]:{};
-      const canonicalGuardian={
-        ...existingGuardian,
-        accountId:user.uid,
-        relationship:relation,
-        name:name || existingGuardian.name || '',
-        email:email || existingGuardian.email || '',
-        phone:existingGuardian.phone || '',
-        countryCode:existingGuardian.countryCode || null,
-        legalGuardian:existingGuardian.legalGuardian === true,
-        invitationStatus:existingGuardian.invitationStatus || 'invited',
-        consentStatus:existingGuardian.consentStatus || existingProfile.consentStatus || 'pending',
-      };
-      const guardians=guardianIndex>=0
-        ? existingGuardians.map((guardian,index)=>index===guardianIndex?canonicalGuardian:guardian)
-        : [...existingGuardians,canonicalGuardian];
+      const canonicalGuardian={...existingGuardian,accountId:user.uid,relationship:relation,name:name||existingGuardian.name||'',email:email||existingGuardian.email||'',phone:existingGuardian.phone||'',countryCode:existingGuardian.countryCode||null,legalGuardian:existingGuardian.legalGuardian===true,invitationStatus:existingGuardian.invitationStatus||'invited',consentStatus:existingGuardian.consentStatus||existingProfile.consentStatus||'pending'};
+      const guardians=guardianIndex>=0?existingGuardians.map((guardian,index)=>index===guardianIndex?canonicalGuardian:guardian):[...existingGuardians,canonicalGuardian];
       transaction.set(studentRef,{guardianRelationships:{...existingGuardianRelationships,[user.uid]:relation},family:{...(student.family||{}),guardians}},{merge:true});
     });
   }
