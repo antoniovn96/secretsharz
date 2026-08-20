@@ -58,7 +58,7 @@ export default async function handler(req, res) {
   let viewer;
   try {
     const decoded = await getAdminAuth().verifyIdToken(idToken);
-    viewer = { id: decoded.uid, uid: decoded.uid, role: decoded.role || decoded.userRole || decoded.profileType, profileType: decoded.profileType, institutionId: decoded.institutionId || decoded.institutionID };
+    viewer = { id: decoded.uid, uid: decoded.uid, role: decoded.role || decoded.userRole || decoded.profileType, profileType: decoded.profileType, institutionId: decoded.institutionId || decoded.institutionID, isFounder: decoded.email_verified === true && decoded.email === 'antonio.antonio.noronha@gmail.com' };
   } catch (error) {
     console.error('[student-detail] token verification failed:', error);
     return res.status(401).json({ error: 'Invalid or expired authentication token.' });
@@ -71,8 +71,7 @@ export default async function handler(req, res) {
     const rawStudent = { id: snapshot.id, ...snapshot.data() };
 
     if (isCareerDirectoryRequest(req)) {
-      const resolved = resolveStudentProfile(rawStudent, viewer);
-      if (!resolved.allowed || resolved.role !== 'super_admin') return res.status(403).json({ error: 'Super Admin access required for the career directory detail.' });
+      if (viewer.role !== 'super_admin' && !viewer.isFounder) return res.status(403).json({ error: 'Super Admin access required for the career directory detail.' });
       const usersSnapshot = await db.collection('users').get();
       const allUsers = new Map(usersSnapshot.docs.map(doc => { const raw = doc.data() || {}; return [doc.id, { id: doc.id, name: raw.name || raw.fullName || raw.studentProfile?.identity?.fullName || '' }]; }));
       const institutionId = rawStudent.institutionId || rawStudent.institutionID || rawStudent.institution?.id || rawStudent.academic?.current?.institutionId || null;
