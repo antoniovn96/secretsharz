@@ -1,12 +1,19 @@
+import normalizeCanonicalStudent from './canonicalStudentContract.js';
+
 // Canonical presentation helpers for admin student directories.
 // Business meaning belongs here rather than in table components so every admin
 // surface interprets student state consistently.
 
 export function getStudentId(student = {}) {
-  return String(student.ssStudentId || '').trim();
+  return String(student.ssStudentId || student.studentId || student.id || '').trim();
 }
 
 export function getStudentPath(student = {}) {
+  const services = student.services || {};
+  if (services.career?.status === 'active') return 'career';
+  if (services.wellbeing?.status === 'active') return 'wellbeing';
+  if (services.sen?.status === 'active') return 'sen';
+
   const value = String(student.path || student.primary_path || student.studentTrack || '').trim().toLowerCase();
   if (value === 'career' || value === 'career_guidance' || value === 'career guidance') return 'career';
   if (value === 'wellbeing' || value === 'psychology' || value === 'counselling' || value === 'counseling') return 'wellbeing';
@@ -20,7 +27,7 @@ export function getAssessmentCode(student = {}) {
     const code = holland.slice(0, 3).map(value => String(value).trim().toUpperCase()).join('');
     if (/^[RIASEC]{3}$/.test(code)) return code;
   }
-  const code = String(student.assessmentCode || student.riasecCode || student.careerDNA?.riasec?.code || '').trim().toUpperCase();
+  const code = String(student.assessmentCode || student.riasecCode || student.career?.riasec?.code || student.careerDNA?.riasec?.code || '').trim().toUpperCase();
   return /^[RIASEC]{3,6}$/.test(code) ? code : '';
 }
 
@@ -31,7 +38,8 @@ export function getAssessmentStatus(student = {}) {
 
 export function getProfileStatus(student = {}) {
   if (student.profileStatus === 'complete' || student.profileStatus === 'incomplete') return student.profileStatus;
-  return student.profileComplete === true ? 'complete' : 'incomplete';
+  if (student.onboarding?.profileComplete === true || student.profileComplete === true) return 'complete';
+  return 'incomplete';
 }
 
 export function getNeedsAttention(student = {}) {
@@ -54,4 +62,105 @@ export function getSortValue(student = {}, field) {
     case 'name':
     default: return String(student.name || student.preferredName || '').toLowerCase();
   }
+}
+
+/**
+ * Canonical, least-privilege presentation contract for the Admin Student
+ * Master Control. The full canonical profile remains behind the appropriate
+ * detail/relationship authorization boundary; the directory receives only
+ * fields needed for discovery, filtering, operational triage and navigation.
+ */
+export function toAdminStudentDirectoryRecord(raw = {}, id = null) {
+  const student = normalizeCanonicalStudent(raw, id || raw.id || raw.uid || null);
+  const assessmentCode = getAssessmentCode(student);
+  const assessmentStatus = getAssessmentStatus({ ...student, assessmentCode });
+  const profileStatus = getProfileStatus(student);
+  const assignments = student.relationships?.assignments || {};
+  const activeServices = Object.entries(student.services || {})
+    .filter(([, value]) => value?.status === 'active')
+    .map(([service]) => service);
+
+  const lastActivityMs = [
+    student.governance?.updatedAt,
+    raw.updatedAt,
+    raw.lastActivityAt,
+  ].map(value => {
+    if (typeof value?.toMillis === 'function') return value.toMillis();
+    if (typeof value === 'number') return value;
+    const parsed = Date.parse(value || '');
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }).find(Boolean) || 0;
+
+  const createdAtMs = (() => {
+    const value = student.governance?.createdAt || raw.createdAt;
+    if (typeof value?.toMillis === 'function') return value.toMillis();
+    if (typeof value === 'number') return value;
+    const parsed = Date.parse(value || '');
+    return Number.isNaN(parsed) ? 0 : parsed;
+  })();
+
+  const assignmentIds = Object.fromEntries(
+    Object.entries(assignments).map(([service, professionalId]) => [service, professionalId || null])
+  );
+
+  return {
+    // Canonical identity
+    id: student.authUid || student.id || id || '',
+    authUid: student.authUid || student.id || id || '',
+    ssStudentId: getStudentId(student),
+    name: student.identity?.fullName || '',
+    preferredName: student.identity?.preferredName || '',
+    photoURL: student.identity?.photoURL || '',
+    email: student.contact?.email || '',
+
+    // Academic / institution summary
+    institutionId: student.institution?.id || student.academic?.current?.institutionId || '',
+    institutionName: student.institution?.name || student.academic?.current?.institutionName || '',
+    schoolName: student.institution?.name || student.academic?.current?.institutionName || '',
+    academicYear: student.academic?.current?.academicYear || student.institution?.academicYear || '',
+    grade: student.academic?.current?.grade || '',
+    classLevel: student.academic?.current?.grade || '',
+    section: student.academic?.current?.section || '',
+
+    // Service summary. These are derived from canonical services; legacy path
+    // aliases are retained only for compatibility with older consumers.
+    path: getStudentPath(student),
+    primary_path: getStudentPath(student),
+    studentTrack: getStudentPath(student),
+    activeServices,
+    services: student.services,
+
+    // Assessment summary
+    assessmentCode,
+    assessmentStatus,
+    riasecCode: assessmentCode,
+    riasecScores: student.career?.riasec?.scores || {},
+    careerAssessment: raw.careerAssessment || null,
+
+    // Profile / lifecycle summary
+    profileStatus,
+    profileComplete: profileStatus === 'complete',
+    onboardingCompleted: student.onboarding?.completed === true,
+    enrollmentStatus: student.institution?.enrollmentStatus || 'active',
+    needsAttention: getNeedsAttention({
+      ...student,
+      assessmentCode,
+      assessmentStatus,
+      profileStatus,
+      assignmentStatus: activeServices.length && assignmentIds[activeServices[0]] ? 'assigned' : 'unassigned',
+      enrollmentStatus: student.institution?.enrollmentStatus || 'active',
+    }),
+
+    // Operational relationships, IDs only; names are resolved by authorized
+    // detail/assignment surfaces rather than duplicated into this directory DTO.
+    assignments: assignmentIds,
+    assignedCareerCoachId: assignmentIds.career || null,
+    assignedCounsellorId: assignmentIds.wellbeing || null,
+    assignedSENEducatorId: assignmentIds.sen || null,
+
+    createdAt: createdAtMs ? new Date(createdAtMs).toISOString() : null,
+    updatedAt: lastActivityMs ? new Date(lastActivityMs).toISOString() : null,
+    createdAtMs,
+    lastActivityMs,
+  };
 }
