@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BriefcaseBusiness, GraduationCap, HeartHandshake, Brain, Users, RefreshCw } from 'lucide-react';
+import { BriefcaseBusiness, GraduationCap, HeartHandshake, Brain, Users } from 'lucide-react';
 import { auth } from '../../firebase';
 import CanonicalStudentDirectoryTable from './CanonicalStudentDirectoryTable';
 import SlideOutDetailPanel from './SlideOutDetailPanel';
@@ -17,9 +17,7 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
   const [students, setStudents] = useState([]);
   const [directoryFilters, setDirectoryFilters] = useState({ institutions: [], grades: [], counsellors: [], academicYears: [] });
   const [loading, setLoading] = useState(true);
-  const [repairing, setRepairing] = useState(false);
   const [error, setError] = useState('');
-  const [repairMessage, setRepairMessage] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -49,24 +47,6 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
   }, [meta.path]);
 
   useEffect(() => { load(); }, [load]);
-
-  const repairIdentities = async () => {
-    if (!window.confirm('Repair missing Secret Sharz Student IDs and recover missing names from Firebase Auth? Existing canonical names and IDs will be preserved.')) return;
-    const currentUser = auth.currentUser;
-    if (!currentUser) { setError('Authentication required.'); return; }
-    setRepairing(true); setRepairMessage(''); setError('');
-    try {
-      const token = await currentUser.getIdToken(true);
-      const response = await fetch('/api/admin/backfill-student-identities', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || 'Unable to repair student identities.');
-      setRepairMessage(`Identity repair complete: ${payload.assigned || 0} IDs allocated, ${payload.namesRecovered || 0} names recovered.`);
-      await load();
-    } catch (err) {
-      console.error('[ServiceStudentDirectory] identity repair failed:', err);
-      setError(err?.message || 'Unable to repair student identities.');
-    } finally { setRepairing(false); }
-  };
 
   const openDetails = async student => {
     setSelectedStudent(student); setDetailOpen(true); setDetailLoading(true); setDetailError('');
@@ -109,18 +89,16 @@ export default function ServiceStudentDirectory({ service = 'career', theme = 'l
           <p className={`mt-3 text-sm max-w-3xl ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Manage students enrolled in {meta.label}. Directory state is derived from the canonical student projection; Firebase UIDs remain internal.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={repairIdentities} disabled={repairing || loading} className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold disabled:opacity-50 ${isDark ? 'border-slate-800 bg-white/[0.02] text-slate-300' : 'border-slate-200 bg-white text-slate-600'}`}><RefreshCw className={`w-4 h-4 ${repairing ? 'animate-spin' : ''}`} />{repairing ? 'Repairing…' : 'Repair Student IDs'}</button>
           <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold ${isDark ? 'border-slate-800 bg-white/[0.02] text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}><Users className="w-4 h-4" />{stats.total} students</div>
         </div>
       </div>
-      {repairMessage && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700" role="status">{repairMessage}</div>}
       {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700" role="alert">{error}</div>}
       <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
         <MiniMetric label="Total students" value={stats.total} icon={GraduationCap} theme={theme} />
         <MiniMetric label="Profiles complete" value={stats.completeProfiles} icon={Users} theme={theme} />
         <MiniMetric label="Assessment complete" value={stats.assessmentComplete} icon={BriefcaseBusiness} theme={theme} />
         <MiniMetric label="Assigned" value={stats.assigned} icon={Users} theme={theme} />
-        <MiniMetric label="Needs attention" value={stats.needsAttention} icon={RefreshCw} theme={theme} />
+        <MiniMetric label="Needs attention" value={stats.needsAttention} icon={Users} theme={theme} />
       </div>
       <CanonicalStudentDirectoryTable
         users={students}
