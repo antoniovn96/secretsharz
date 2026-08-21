@@ -6,6 +6,21 @@ import SlideOutDetailPanel from './SlideOutDetailPanel';
 import AddNewUserModal from './AddNewUserModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 
+const text = value => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return value.map(text).filter(Boolean).join(', ');
+  if (typeof value === 'object') return text(value.international || value.number || value.display || value.label || value.name || value.code || value.cityName || value.countryName || '');
+  return '';
+};
+
+const assessmentComplete = student => {
+  const code = text(student?.careerDNA?.riasec?.code || student?.riasecCode || student?.careerAssessment?.hollandCode);
+  return Boolean(code.trim() || student?.assessmentCompletedAt || student?.careerAssessment?.completedAt);
+};
+const profileComplete = student => student?.profileComplete === true || student?.onboardingCompleted === true;
+const assignedPath = student => ['wellbeing', 'sen', 'career'].includes(text(student?.primary_path || student?.path || student?.studentTrack).toLowerCase());
+
 const StudentDirectoryTab = ({ theme = 'light' }) => {
   const dark = theme === 'dark';
   const [students, setStudents] = useState([]); const [isLoading, setIsLoading] = useState(true); const [isRefreshing, setIsRefreshing] = useState(false); const [loadError, setLoadError] = useState('');
@@ -28,10 +43,10 @@ const StudentDirectoryTab = ({ theme = 'light' }) => {
   useEffect(() => { loadStudents(); }, [loadStudents]);
 
   const metrics = useMemo(() => {
-    const assessmentComplete = students.filter(student => { const code = student?.careerAssessment?.hollandCode?.length ? student.careerAssessment.hollandCode.join('') : student?.careerDNA?.riasec?.code || student?.riasecCode; return (typeof code === 'string' && code.trim()) || !!(student?.assessmentCompletedAt || student?.careerAssessment?.completedAt); }).length;
-    const profileComplete = students.filter(student => student?.profileComplete === true || student?.onboardingCompleted === true).length;
-    const assigned = students.filter(student => ['wellbeing', 'sen', 'career'].includes(String(student?.primary_path || student?.path || student?.studentTrack || '').toLowerCase())).length;
-    return { total: students.length, assessmentComplete, profileComplete, assigned, assessmentPending: Math.max(0, students.length - assessmentComplete) };
+    const completedAssessmentCount = students.filter(assessmentComplete).length;
+    const completedProfileCount = students.filter(profileComplete).length;
+    const assigned = students.filter(assignedPath).length;
+    return { total: students.length, assessmentComplete: completedAssessmentCount, profileComplete: completedProfileCount, assigned, assessmentPending: Math.max(0, students.length - completedAssessmentCount) };
   }, [students]);
 
   const handleViewDetails = async student => {
@@ -48,8 +63,8 @@ const StudentDirectoryTab = ({ theme = 'light' }) => {
   };
 
   const showNotification = message => { setNotification(message); window.setTimeout(() => setNotification(null), 4000); };
-  const handleDeleteSuccess = async deletedUser => { showNotification(`${deletedUser.name || 'Student'} has been deleted successfully.`); setDeleteTarget(null); await loadStudents(true); };
-  const handleCreateSuccess = async newUser => { setIsAddModalOpen(false); showNotification(`${newUser.name || 'Student'} has been added successfully.`); await loadStudents(true); };
+  const handleDeleteSuccess = async deletedUser => { showNotification(`${text(deletedUser?.name) || 'Student'} has been deleted successfully.`); setDeleteTarget(null); await loadStudents(true); };
+  const handleCreateSuccess = async newUser => { setIsAddModalOpen(false); showNotification(`${text(newUser?.name) || 'Student'} has been added successfully.`); await loadStudents(true); };
   const panel = dark ? 'bg-[#151515] border-[#292929]' : 'bg-white border-slate-200'; const heading = dark ? 'text-white' : 'text-slate-900'; const muted = dark ? 'text-[#777]' : 'text-slate-500';
 
   return <div className={`space-y-5 ${dark ? 'text-white' : 'text-slate-900'}`}>
