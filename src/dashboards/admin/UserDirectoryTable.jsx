@@ -125,13 +125,20 @@ const UserDirectoryTable = ({ users = [], isLoading = false, onViewDetails, onDe
         <tbody className={`divide-y ${dark ? 'divide-[#292929]' : 'divide-slate-100'}`}>
           {filteredUsers.length === 0 ? <tr><td colSpan={6} className="px-4 py-14 text-center"><div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 ${dark ? 'bg-white/5' : 'bg-slate-100'}`}><Search className={`w-6 h-6 ${dark ? 'text-[#555]' : 'text-slate-300'}`} /></div><p className={`${primaryText} font-semibold text-sm mb-1`}>No students found</p><p className={`${secondaryText} text-xs`}>Try adjusting your search or filters.</p></td></tr> : filteredUsers.map(user => {
             const assessment = getAssessmentStatus(user), profile = getProfileStatus(user), identity = getProfileIdentity(user);
-            return <tr key={asText(user.id) || identity.name} className={`${hoverRow} transition-colors cursor-pointer group`} onClick={() => onViewDetails?.(user)}>
+            const openDetails = () => onViewDetails?.(user);
+            const handleRowKeyDown = event => {
+              if ((event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) {
+                event.preventDefault();
+                openDetails();
+              }
+            };
+            return <tr key={asText(user.id) || identity.name} className={`${hoverRow} transition-colors cursor-pointer group focus:outline-none focus:ring-2 focus:ring-inset ${dark ? 'focus:ring-white/40' : 'focus:ring-slate-400'}`} onClick={openDetails} onKeyDown={handleRowKeyDown} tabIndex={0} aria-label={`Open student master record for ${asText(identity.name) || 'student'}`}>
               <td className="px-4 py-3"><div className="flex items-center gap-3"><ProfileAvatar user={user} dark={dark} /><div className="min-w-0"><p className={`${primaryText} font-semibold text-sm truncate max-w-[220px]`}>{asText(identity.name)}</p><p className={`${secondaryText} text-[10px] font-mono truncate max-w-[220px]`}>{asText(user.id)}</p></div></div></td>
               <td className="px-4 py-3"><p className={`${dark ? 'text-[#ddd]' : 'text-slate-700'} text-xs font-semibold`}>{getSchool(user) || 'School not set'}</p><p className={`${secondaryText} text-[10px] mt-0.5`}>{getGrade(user) || 'Grade not set'}</p></td>
               <td className="px-4 py-3">{getPathBadge(getPath(user))}</td>
               <td className="px-4 py-3"><div className="flex flex-col gap-1"><span className={`inline-flex w-fit px-2 py-1 rounded-md text-[10px] font-bold ${dark ? 'bg-white/10 text-white' : assessment === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{assessment === 'completed' ? 'RIASEC Complete' : 'RIASEC Pending'}</span>{getRiasec(user) && <span className={`${secondaryText} text-[10px] font-bold tracking-wider`}>{getRiasec(user)}</span>}</div></td>
               <td className="px-4 py-3"><span className={`inline-flex px-2 py-1 rounded-md text-[10px] font-bold ${dark ? 'bg-white/10 text-white' : profile === 'complete' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>{profile === 'complete' ? 'Complete' : 'Incomplete'}</span></td>
-              <td className="px-4 py-3"><div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}><ActionButton dark={dark} title="View details" onClick={() => onViewDetails?.(user)}><Eye className="w-3.5 h-3.5" /></ActionButton><ActionButton dark={dark} title="Open student record" onClick={() => onEdit?.(user)}><Edit3 className="w-3.5 h-3.5" /></ActionButton><ActionButton dark={dark} title="Delete student" onClick={() => onDelete?.(user)} danger><Trash2 className="w-3.5 h-3.5" /></ActionButton></div></td>
+              <td className="px-4 py-3"><div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}><ActionButton dark={dark} title="View details" onClick={openDetails}><Eye className="w-3.5 h-3.5" /></ActionButton><ActionButton dark={dark} title="Edit student" onClick={() => onEdit?.(user)}><Edit3 className="w-3.5 h-3.5" /></ActionButton><ActionButton dark={dark} title="Delete student" onClick={() => onDelete?.(user)} danger><Trash2 className="w-3.5 h-3.5" /></ActionButton></div></td>
             </tr>;
           })}
         </tbody></table></div>
@@ -151,6 +158,6 @@ const SortableHeader = ({ label, columnKey, onSort, SortIcon, dark }) => <th cla
 
 const FilterSelect = ({ label, value, onChange, options, dark }) => <label className="block"><span className={`block text-[9px] font-bold uppercase tracking-wide mb-1 ${dark ? 'text-[#777]' : 'text-slate-400'}`}>{label}</span><div className="relative"><select value={value} onChange={e => onChange(e.target.value)} className={`w-full appearance-none px-3 py-2 bg-transparent border rounded-lg text-xs font-medium focus:outline-none ${dark ? 'border-[#303030] text-white' : 'border-slate-200 text-slate-700'}`}>{options.map(([optionValue, optionLabel]) => <option key={optionValue} value={optionValue} className={dark ? 'bg-[#151515] text-white' : ''}>{optionLabel}</option>)}</select><ChevronDown className={`w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none ${dark ? 'text-[#666]' : 'text-slate-400'}`} /></div></label>;
 
-const ActionButton = ({ children, onClick, title, dark, danger = false }) => <button onClick={onClick} title={title} className={`p-2 rounded-md transition-all ${danger ? (dark ? 'text-[#777] hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-red-600 hover:bg-red-50') : (dark ? 'text-[#777] hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-black hover:bg-slate-100')}`}>{children}</button>;
+const ActionButton = ({ children, onClick, title, dark, danger = false }) => <button onClick={onClick} title={title} aria-label={title} className={`p-2 rounded-md transition-all ${danger ? (dark ? 'text-[#777] hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-red-600 hover:bg-red-50') : (dark ? 'text-[#777] hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-black hover:bg-slate-100')}`}>{children}</button>;
 
 export default UserDirectoryTable;
