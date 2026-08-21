@@ -10,6 +10,17 @@ const text = value => {
   return '';
 };
 
+const pathToTrack = { career: 'career', wellbeing: 'counselling', sen: 'sen', unassigned: 'unassigned' };
+const trackToPath = { career: 'career', counselling: 'wellbeing', sen: 'sen', unassigned: 'unassigned' };
+const normalisePath = value => {
+  const path = text(value).toLowerCase();
+  return ['career', 'wellbeing', 'sen', 'unassigned'].includes(path) ? path : 'unassigned';
+};
+const normaliseTrack = value => {
+  const track = text(value).toLowerCase();
+  return ['career', 'counselling', 'sen', 'both', 'unassigned'].includes(track) ? track : 'unassigned';
+};
+
 export default function EditStudentModal({ student, isOpen, onClose, onSaved, theme = 'light' }) {
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
@@ -18,6 +29,9 @@ export default function EditStudentModal({ student, isOpen, onClose, onSaved, th
 
   useEffect(() => {
     if (!isOpen || !student) return;
+    const primaryPath = normalisePath(student.primary_path || student.path || student.services?.primaryPath);
+    const suppliedTrack = normaliseTrack(student.studentTrack || student.track);
+    const studentTrack = suppliedTrack !== 'unassigned' ? suppliedTrack : (pathToTrack[primaryPath] || 'unassigned');
     setForm({
       name: text(student.name || student.fullName),
       email: text(student.email),
@@ -25,14 +39,26 @@ export default function EditStudentModal({ student, isOpen, onClose, onSaved, th
       gender: text(student.gender || student.profile?.gender),
       grade: text(student.grade || student.classLevel || student.gradeOrCourse || student.school?.grade),
       schoolName: text(student.schoolName || student.institutionName || student.school?.name),
-      studentTrack: text(student.studentTrack || student.path || student.primary_path || 'unassigned'),
-      primary_path: text(student.primary_path || student.path || student.studentTrack || 'unassigned'),
+      studentTrack,
+      primary_path: primaryPath,
     });
     setError('');
   }, [isOpen, student]);
 
   if (!isOpen || !student) return null;
-  const set = key => event => setForm(prev => ({ ...prev, [key]: event.target.value }));
+
+  const set = key => event => {
+    const value = event.target.value;
+    setForm(prev => {
+      if (key === 'primary_path') {
+        return { ...prev, primary_path: value, studentTrack: value === 'unassigned' ? 'unassigned' : (prev.studentTrack === 'both' ? 'both' : pathToTrack[value]) };
+      }
+      if (key === 'studentTrack') {
+        return { ...prev, studentTrack: value, primary_path: value === 'both' ? (prev.primary_path || 'unassigned') : (trackToPath[value] || prev.primary_path || 'unassigned') };
+      }
+      return { ...prev, [key]: value };
+    });
+  };
 
   const save = async event => {
     event.preventDefault();
