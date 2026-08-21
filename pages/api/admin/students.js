@@ -26,6 +26,22 @@ function toIso(value) {
   return millis == null ? null : new Date(millis).toISOString();
 }
 
+// Admin directory consumers render these values directly. Never allow a
+// structured Firestore/API value to cross this boundary as a React child.
+function toDisplayText(value, fallback = '') {
+  if (value == null) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return value.map(item => toDisplayText(item)).filter(Boolean).join(', ');
+  if (typeof value === 'object') {
+    for (const key of ['international', 'number', 'name', 'label', 'code', 'value']) {
+      if (value[key] != null) return toDisplayText(value[key], fallback);
+    }
+    try { return JSON.stringify(value); } catch (_) { return fallback; }
+  }
+  return fallback;
+}
+
 function safeAuthError(error) {
   return {
     code: error?.code || null,
@@ -38,25 +54,25 @@ function publicStudentRecord(doc) {
   const data = doc.data() || {};
   return {
     id: doc.id,
-    name: data.name || data.fullName || '',
-    email: data.email || '',
-    photoURL: data.photoURL || '',
-    role: data.role || '',
-    profileType: data.profileType || '',
+    name: toDisplayText(data.name || data.fullName),
+    email: toDisplayText(data.email),
+    photoURL: toDisplayText(data.photoURL),
+    role: toDisplayText(data.role),
+    profileType: toDisplayText(data.profileType),
     age: data.age ?? null,
-    dob: data.dob || data.dateOfBirth || '',
-    grade: data.grade || data.gradeOrCourse || '',
-    schoolName: data.schoolName || '',
-    institutionName: data.institutionName || '',
-    parentName: data.parentName || '',
-    parentContact: data.parentContact || '',
-    contactNumber: data.contactNumber || data.phone || '',
-    primary_path: data.primary_path || '',
-    studentTrack: data.studentTrack || '',
-    path: getStudentPath(data),
+    dob: toDisplayText(data.dob || data.dateOfBirth),
+    grade: toDisplayText(data.grade || data.gradeOrCourse),
+    schoolName: toDisplayText(data.schoolName),
+    institutionName: toDisplayText(data.institutionName),
+    parentName: toDisplayText(data.parentName),
+    parentContact: toDisplayText(data.parentContact),
+    contactNumber: toDisplayText(data.contactNumber || data.phone),
+    primary_path: toDisplayText(data.primary_path),
+    studentTrack: toDisplayText(data.studentTrack),
+    path: toDisplayText(getStudentPath(data), 'unassigned'),
     profileComplete: data.profileComplete === true,
     onboardingCompleted: data.onboardingCompleted === true,
-    riasecCode: data.riasecCode || data.careerDNA?.riasec?.code || '',
+    riasecCode: toDisplayText(data.riasecCode || data.careerDNA?.riasec?.code),
     riasecScores: data.riasecScores || data.careerDNA?.riasec?.scores || {},
     careerAssessment: data.careerAssessment || null,
     assessmentCompletedAt: toIso(data.assessmentCompletedAt || data.careerAssessment?.completedAt),
