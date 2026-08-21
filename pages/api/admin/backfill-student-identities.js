@@ -2,17 +2,7 @@ import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseA
 import { isStudentProfile } from '../../../src/platform/studentRecordModel.js';
 import { getExistingStudentId } from '../../../src/platform/studentIdentity.js';
 import { allocateStudentId, seedStudentIdentityCounter } from '../../../src/platform/studentIdentityAllocator.js';
-
-function bearerToken(req) {
-  const header = req.headers.authorization || req.headers.Authorization || '';
-  if (!header.startsWith('Bearer ')) return null;
-  return header.slice(7);
-}
-
-function isAdmin(decodedToken) {
-  return decodedToken?.role === 'super_admin' || decodedToken?.role === 'admin' ||
-    (decodedToken?.email_verified === true && decodedToken?.email === 'antonio.antonio.noronha@gmail.com');
-}
+import { requireSuperAdmin, sendAuthorizationFailure } from '../../../src/security/adminAuthorization.js';
 
 function resolveName(raw, authUser) {
   return String(
@@ -36,14 +26,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed.' });
   }
 
-  const token = bearerToken(req);
-  if (!token) return res.status(401).json({ error: 'Authentication required.' });
-
-  let decodedToken;
-  try { decodedToken = await getAdminAuth().verifyIdToken(token); }
-  catch { return res.status(401).json({ error: 'Invalid or expired authentication token.' }); }
-
-  if (!isAdmin(decodedToken)) return res.status(403).json({ error: 'Super Admin access required.' });
+  const authorization = await requireSuperAdmin(req);
+  if (sendAuthorizationFailure(res, authorization)) return;
 
   const db = getAdminFirestore();
   const auth = getAdminAuth();
