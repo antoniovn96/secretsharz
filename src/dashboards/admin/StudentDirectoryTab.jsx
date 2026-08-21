@@ -51,12 +51,18 @@ const StudentDirectoryTab = ({ theme = 'light' }) => {
 
   const metrics = useMemo(() => {
     const assessmentComplete = students.filter(student => {
-      const code = student?.careerAssessment?.hollandCode?.length ? student.careerAssessment.hollandCode.join('') : student?.careerDNA?.riasec?.code || student?.riasecCode;
-      return typeof code === 'string' && code.trim();
+      const code = student?.careerAssessment?.hollandCode?.length
+        ? student.careerAssessment.hollandCode.join('')
+        : student?.careerDNA?.riasec?.code || student?.riasecCode;
+      const completedAt = student?.assessmentCompletedAt || student?.careerAssessment?.completedAt;
+      return (typeof code === 'string' && code.trim()) || !!completedAt;
     }).length;
     const profileComplete = students.filter(student => student?.profileComplete === true || student?.onboardingCompleted === true).length;
-    const assigned = students.filter(student => student?.path && student.path !== 'Unassigned').length;
-    return { total: students.length, assessmentComplete, profileComplete, assigned, assessmentPending: students.length - assessmentComplete };
+    const assigned = students.filter(student => {
+      const path = String(student?.primary_path || student?.path || student?.studentTrack || '').toLowerCase();
+      return path && path !== 'unassigned' && path !== 'hybrid';
+    }).length;
+    return { total: students.length, assessmentComplete, profileComplete, assigned, assessmentPending: Math.max(students.length - assessmentComplete, 0) };
   }, [students]);
 
   const handleViewDetails = async student => {
@@ -67,15 +73,17 @@ const StudentDirectoryTab = ({ theme = 'light' }) => {
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error('Authentication required to load student details.');
+      const studentId = String(student?.id || '').trim();
+      if (!studentId) throw new Error('This student record has no valid student ID.');
       const idToken = await currentUser.getIdToken(true);
-      let response = await fetch(`/api/admin/student-detail?studentId=${encodeURIComponent(student.id)}`, {
+      let response = await fetch(`/api/admin/student-detail?studentId=${encodeURIComponent(studentId)}`, {
         method: 'GET',
         headers: { Authorization: `Bearer ${idToken}` },
         cache: 'no-store',
       });
       if (response.status === 401) {
         const refreshedToken = await currentUser.getIdToken(true);
-        response = await fetch(`/api/admin/student-detail?studentId=${encodeURIComponent(student.id)}`, {
+        response = await fetch(`/api/admin/student-detail?studentId=${encodeURIComponent(studentId)}`, {
           method: 'GET',
           headers: { Authorization: `Bearer ${refreshedToken}` },
           cache: 'no-store',
@@ -123,7 +131,7 @@ const StudentDirectoryTab = ({ theme = 'light' }) => {
       </div>
 
       <div className={`${panel} border rounded-lg shadow-sm overflow-hidden`}>
-        <UserDirectoryTable users={students} isLoading={isLoading} onViewDetails={handleViewDetails} onDelete={handleDelete} userRole="student" theme={theme} />
+        <UserDirectoryTable users={students} isLoading={isLoading} onViewDetails={handleViewDetails} onEdit={handleViewDetails} onDelete={handleDelete} userRole="student" theme={theme} />
       </div>
 
       <SlideOutDetailPanel
