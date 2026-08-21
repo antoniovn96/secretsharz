@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { X, Mail, Phone, MapPin, Calendar, GraduationCap, Users, BookOpen, Award, Clock, AlertCircle, CheckCircle, User, Link, FileText, TrendingUp, Building2, Briefcase, ShieldCheck, RefreshCw } from 'lucide-react';
-import { auth } from '../../firebase';
 import { getProfileIdentity } from '../../platform/profileIdentity';
 
 const PATH_INFO = { wellbeing: { label: 'Wellbeing', icon: '🧠', bg: 'bg-purple-100', text: 'text-purple-700', professional: 'Psychologist' }, sen: { label: 'SEN', icon: '🎯', bg: 'bg-amber-100', text: 'text-amber-700', professional: 'SEN Educator' }, career: { label: 'Career', icon: '🚀', bg: 'bg-emerald-100', text: 'text-emerald-700', professional: 'Career Counsellor' }, unassigned: { label: 'Unassigned', icon: '❓', bg: 'bg-slate-100', text: 'text-slate-600', professional: 'Professional not assigned' } };
@@ -10,18 +9,34 @@ const displayValue = (value, fallback = 'Not provided') => asText(value).trim() 
 const normalisePath = value => { const path = asText(value).toLowerCase(); if (['wellbeing', 'psychology', 'psychologist'].includes(path)) return 'wellbeing'; if (['sen', 'special_education'].includes(path)) return 'sen'; if (['career', 'career_guidance'].includes(path)) return 'career'; return 'unassigned'; };
 const formatDate = value => { if (!value) return 'N/A'; try { const date = value?.toDate ? value.toDate() : new Date(value); return Number.isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (_) { return 'N/A'; } };
 
-const SlideOutDetailPanel = ({ user, isOpen, onClose, onEdit, isLoading: externalLoading = false, error = '' }) => {
-  const [profile, setProfile] = useState(user || null); const [loading, setLoading] = useState(false); const [loadError, setLoadError] = useState('');
-  useEffect(() => { setProfile(user || null); }, [user]);
-  useEffect(() => { if (isOpen && user?.id) loadProfile(user.id); }, [isOpen, user?.id]);
-  const loadProfile = async studentId => { setLoading(true); setLoadError(''); try { const currentUser = auth.currentUser; if (!currentUser) throw new Error('Authentication required to load student details.'); const token = await currentUser.getIdToken(true); const response = await fetch(`/api/admin/student-detail?studentId=${encodeURIComponent(studentId)}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }); const payload = await response.json().catch(() => ({})); if (!response.ok) throw new Error(payload?.error || 'Unable to load the authorized student profile.'); setProfile(payload?.profile ? { ...(user || {}), ...payload.profile } : user); } catch (err) { console.error('[SlideOutDetailPanel] profile load failed:', err); setLoadError(err?.message || 'Unable to load student details.'); } finally { setLoading(false); } };
-  const merged = profile || {}; const identity = getProfileIdentity(merged, merged.identity || {}); const path = normalisePath(merged.primary_path || merged.path || merged.services?.primaryPath || merged.services?.path || merged.institution?.primary_path); const pathInfo = PATH_INFO[path]; const busy = loading || externalLoading; const institution = merged.institution || {}; const academic = merged.academic || {}; const contact = merged.contact || {}; const family = merged.family || {}; const relationships = merged.relationships || {}; const assignments = relationships.assignments || {}; const sen = merged.sen || {}; const services = merged.services || {}; const guardians = Array.isArray(family.guardians) ? family.guardians : []; const professionalName = asText(assignments[path] || merged.assignedProfessionalName || merged.assignedStaff?.[path]); const professionalId = asText(assignments[path] || merged.assignedProfessionalId || ''); const career = merged.career || {}; const riasec = career.riasec || career.careerDNA?.riasec || merged.careerDNA?.riasec || {}; const riasecScores = riasec.scores || merged.riasecScores || {}; const riasecCode = asText(riasec.code || merged.riasecCode);
+const SlideOutDetailPanel = ({ user, isOpen, onClose, onEdit, isLoading = false, error = '' }) => {
+  const profile = user || null;
+  const merged = profile || {};
+  const identity = getProfileIdentity(merged, merged.identity || {});
+  const path = normalisePath(merged.primary_path || merged.path || merged.services?.primaryPath || merged.services?.path || merged.institution?.primary_path);
+  const pathInfo = PATH_INFO[path];
+  const busy = Boolean(isLoading);
+  const institution = merged.institution || {};
+  const academic = merged.academic || {};
+  const contact = merged.contact || {};
+  const family = merged.family || {};
+  const relationships = merged.relationships || {};
+  const assignments = relationships.assignments || {};
+  const sen = merged.sen || {};
+  const services = merged.services || {};
+  const guardians = Array.isArray(family.guardians) ? family.guardians : [];
+  const professionalName = asText(assignments[path] || merged.assignedProfessionalName || merged.assignedStaff?.[path]);
+  const professionalId = asText(assignments[path] || merged.assignedProfessionalId || '');
+  const career = merged.career || {};
+  const riasec = career.riasec || career.careerDNA?.riasec || merged.careerDNA?.riasec || {};
+  const riasecScores = riasec.scores || merged.riasecScores || {};
+  const riasecCode = asText(riasec.code || merged.riasecCode);
   const getRIASECScores = useMemo(() => Object.entries(riasecScores).filter(([key]) => RIASEC_LABELS[key]).map(([code, value]) => ({ code, name: RIASEC_LABELS[code], score: Number(value) || 0 })).sort((a, b) => b.score - a.score), [riasecScores]);
   if (!isOpen) return null;
   const handleEdit = () => { if (!merged?.id || typeof onEdit !== 'function') return; onClose(); onEdit(merged); };
   return <><div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40" onClick={onClose} /><div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-2xl z-50 overflow-hidden flex flex-col">
     <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white"><div className="flex items-center gap-4 min-w-0"><ProfileAvatar user={merged} data={merged} /><div className="min-w-0"><h2 className="text-xl font-bold text-slate-900 truncate">{displayValue(identity.name || merged.name, 'Student')}</h2><p className="text-sm text-slate-500 font-mono truncate">{displayValue(merged.id, 'Unknown ID')}</p></div></div><button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"><X className="w-6 h-6" /></button></div>
-    <div className="flex-1 overflow-y-auto p-6 space-y-6">{(error || loadError) && <div className="p-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm font-medium"><AlertCircle className="inline w-4 h-4 mr-2" />{displayValue(error || loadError, 'Unable to load student details.')}</div>}
+    <div className="flex-1 overflow-y-auto p-6 space-y-6">{error && <div className="p-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm font-medium"><AlertCircle className="inline w-4 h-4 mr-2" />{displayValue(error, 'Unable to load student details.')}</div>}
       <div className="flex flex-wrap items-center gap-3"><span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold ${pathInfo.bg} ${pathInfo.text}`}><span>{pathInfo.icon}</span>{pathInfo.label} Student</span>{merged.status && <StatusBadge status={merged.status} />}{riasecCode && <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg text-sm font-bold text-slate-700"><TrendingUp className="w-4 h-4" />RIASEC: {riasecCode}</span>}</div>
       <SectionCard title="Relationship Overview" icon={Link}><div className="grid grid-cols-2 gap-3"><RelationshipItem icon={Building2} label="Institution" value={displayValue(institution.name || merged.institutionName || merged.schoolName, 'Not linked')} status={institution.id || merged.institutionId ? 'Linked' : 'Not linked'} /><RelationshipItem icon={Briefcase} label="Professional" value={displayValue(professionalName, 'Not assigned')} status={professionalId ? pathInfo.professional : 'Unassigned'} /><RelationshipItem icon={Users} label="Parents / Guardians" value={`${guardians.length} linked account${guardians.length === 1 ? '' : 's'}`} status={guardians.length ? 'Linked' : 'Not linked'} /><RelationshipItem icon={ShieldCheck} label="Service" value={displayValue(services.primary || services.name || pathInfo.label)} status="Active path" /></div></SectionCard>
       <SectionCard title="Contact Information" icon={User}><div className="grid grid-cols-2 gap-4"><InfoItem icon={Mail} label="Email" value={identity.email || contact.email || merged.email} /><InfoItem icon={Phone} label="Phone" value={contact.mobile || contact.phone || merged.phone || merged.contactNumber} /><InfoItem icon={MapPin} label="Location" value={contact.city || contact.location || merged.city || merged.location} /><InfoItem icon={Calendar} label="Onboarded" value={formatDate(merged.createdAt || merged.onboarding?.completedAt || merged.onboardingDate)} /></div></SectionCard>
