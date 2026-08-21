@@ -4,15 +4,28 @@ import { provisionParentAccount } from '../../src/security/provisionParentAccoun
 
 function makeDb(existingProfile = null) {
   const writes = [];
-  const ref = {
+  const parentRef = {
     set: async (data, options) => writes.push({ data, options }),
     get: async () => ({ exists: Boolean(existingProfile), data: () => existingProfile }),
+  };
+  const studentRef = {
+    set: async () => {},
+    get: async () => ({ exists: true, data: () => ({ role: 'student', family: { guardians: [] } }) }),
   };
   return {
     writes,
     collection(name) {
       assert.equal(name, 'users');
-      return { doc: () => ref };
+      return {
+        doc: (id) => id === 'new-parent-uid' || id === 'existing-parent' ? parentRef : studentRef,
+      };
+    },
+    async runTransaction(callback) {
+      const transaction = {
+        async get(ref) { return ref.get(); },
+        set(ref, data, options) { return ref.set(data, options); },
+      };
+      return callback(transaction);
     },
   };
 }
@@ -49,6 +62,7 @@ test('provisions a new parent Auth account and parent profile', async () => {
     parentEmail: 'PARENT@EXAMPLE.COM',
     institutionId: 'school-1',
     institutionName: 'Example School',
+    studentIds: ['student-1'],
   });
 
   assert.equal(result.uid, 'new-parent-uid');
