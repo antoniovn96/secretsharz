@@ -1,4 +1,5 @@
 import { requireSuperAdmin, sendAuthorizationFailure } from '../../../src/security/adminAuthorization.js';
+import { getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { CAREER_PRICING } from '../../../src/config/careerPricing.js';
 
 const ALLOWED = new Set(Object.keys(CAREER_PRICING));
@@ -8,7 +9,7 @@ export default async function handler(req, res) {
     const authorization = await requireSuperAdmin(req);
     if (sendAuthorizationFailure(res, authorization)) return;
 
-    const db = (await import('../../../src/security/firebaseAdmin.js')).getAdminFirestore();
+    const db = getAdminFirestore();
     const ref = db.collection('platformConfig').doc('careerPricing');
     const snap = await ref.get();
     const overrides = snap.exists ? (snap.data()?.products || {}) : {};
