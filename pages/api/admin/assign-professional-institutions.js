@@ -1,8 +1,8 @@
 // Privileged Super Admin endpoint for assigning a professional to institutions.
 // Institution membership is distinct from professional account creation and
 // is constrained by the institution's purchased service entitlements.
-import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
-import { isRequesterAdmin } from '../../../src/security/roleAssignment.js';
+import { requireSuperAdmin, sendAuthorizationFailure } from '../../../src/security/adminAuthorization.js';
+import { getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { hasInstitutionService } from '../../../src/institution/institutionServices.js';
 
 const ROLE_SERVICE = Object.freeze({
@@ -11,13 +11,6 @@ const ROLE_SERVICE = Object.freeze({
   counsellor: 'wellbeing',
   educator: 'sen'
 });
-
-function bearerToken(req) {
-  const header = req.headers.authorization || req.headers.Authorization;
-  if (typeof header !== 'string') return null;
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
-}
 
 function cleanIds(value) {
   if (!Array.isArray(value)) return null;
@@ -30,19 +23,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed.' });
   }
 
-  const token = bearerToken(req);
-  if (!token) return res.status(401).json({ error: 'Authentication required.' });
-
-  let requester;
-  try {
-    requester = await getAdminAuth().verifyIdToken(token);
-  } catch (_) {
-    return res.status(401).json({ error: 'Invalid or expired authentication token.' });
-  }
-
-  if (!isRequesterAdmin(requester)) {
-    return res.status(403).json({ error: 'Only an administrator may assign professional institutions.' });
-  }
+  const authorization = await requireSuperAdmin(req);
+  if (sendAuthorizationFailure(res, authorization)) return;
+  const requester = authorization.decodedToken;
 
   const professionalUid = typeof req.body?.professionalUid === 'string' ? req.body.professionalUid.trim() : '';
   const institutionIds = cleanIds(req.body?.institutionIds);
