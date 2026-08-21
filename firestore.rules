@@ -8,9 +8,17 @@ service cloud.firestore {
     function isAdmin() { return isFounderAdmin() || hasClaimRole('super_admin') || (isSignedIn() && profileRole(request.auth.uid) == 'super_admin'); }
     function isParent() { return isSignedIn() && (hasClaimRole('parent') || profileRole(request.auth.uid) == 'parent'); }
     function isStaff() { return isSignedIn() && (request.auth.token.role in ['counsellor','career_counsellor','psychologist','educator'] || profileRole(request.auth.uid) in ['counsellor','career_counsellor','psychologist','educator']); }
-    function isAssignedStaffForStudent(studentId) {
+    function hasLegacyAssignment(studentId) {
       return isStaff()
-        && get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.careerId == request.auth.uid;
+        && (get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.careerId == request.auth.uid
+          || get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.psychId == request.auth.uid
+          || get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.senId == request.auth.uid);
+    }
+    function isAssignedCareerProfessional(studentId) {
+      return isStaff() && (
+        get(/databases/$(database)/documents/students/$(studentId)).data.relationships.assignments.career == request.auth.uid
+        || get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.careerId == request.auth.uid
+      );
     }
 
     function validMobile(number) {
@@ -59,23 +67,28 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         request.auth.uid == studentId ||
         (isParent() && resource.data.parent.userId == request.auth.uid) ||
-        (isStaff() && (resource.data.assignedStaff.careerId == request.auth.uid || resource.data.assignedStaff.psychId == request.auth.uid || resource.data.assignedStaff.senId == request.auth.uid)) ||
+        hasLegacyAssignment(studentId) ||
+        (isStaff() && (
+          resource.data.relationships.assignments.career == request.auth.uid
+          || resource.data.relationships.assignments.wellbeing == request.auth.uid
+          || resource.data.relationships.assignments.sen == request.auth.uid
+        )) ||
         isAdmin()
       );
       allow write: if isAdmin();
 
       match /career_roadmaps/{roadmapId} {
-        allow read: if isAdmin() || isAssignedStaffForStudent(studentId) || (isSignedIn() && request.auth.uid == studentId);
-        allow create: if isAdmin() || (isAssignedStaffForStudent(studentId) && request.resource.data.providerId == request.auth.uid);
-        allow update: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid && request.resource.data.providerId == request.auth.uid);
-        allow delete: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid);
+        allow read: if isAdmin() || isAssignedCareerProfessional(studentId) || (isSignedIn() && request.auth.uid == studentId);
+        allow create: if isAdmin() || (isAssignedCareerProfessional(studentId) && request.resource.data.providerId == request.auth.uid);
+        allow update: if isAdmin() || (isAssignedCareerProfessional(studentId) && resource.data.providerId == request.auth.uid && request.resource.data.providerId == request.auth.uid);
+        allow delete: if isAdmin() || (isAssignedCareerProfessional(studentId) && resource.data.providerId == request.auth.uid);
       }
 
       match /career_notes/{noteId} {
-        allow read: if isAdmin() || isAssignedStaffForStudent(studentId);
-        allow create: if isAdmin() || (isAssignedStaffForStudent(studentId) && request.resource.data.providerId == request.auth.uid);
-        allow update: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid && request.resource.data.providerId == request.auth.uid);
-        allow delete: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid);
+        allow read: if isAdmin() || isAssignedCareerProfessional(studentId);
+        allow create: if isAdmin() || (isAssignedCareerProfessional(studentId) && request.resource.data.providerId == request.auth.uid);
+        allow update: if isAdmin() || (isAssignedCareerProfessional(studentId) && resource.data.providerId == request.auth.uid && request.resource.data.providerId == request.auth.uid);
+        allow delete: if isAdmin() || (isAssignedCareerProfessional(studentId) && resource.data.providerId == request.auth.uid);
       }
     }
 
