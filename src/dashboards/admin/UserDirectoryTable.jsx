@@ -9,12 +9,31 @@ const PATH_COLORS = {
   unassigned: { light: 'bg-slate-100 text-slate-600', dark: 'bg-white/10 text-[#aaa]' },
 };
 
-const getPath = user => String(user?.primary_path || user?.studentTrack || 'unassigned').toLowerCase();
-const getAssessmentStatus = user => {
-  const code = user?.careerDNA?.riasec?.code || user?.riasecCode;
-  return typeof code === 'string' && code.trim() ? 'completed' : 'pending';
+const asText = value => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return value.map(asText).filter(Boolean).join(', ');
+  if (typeof value === 'object') {
+    return asText(value.international || value.number || value.display || value.label || value.name || value.code || value.cityName || value.countryName || '');
+  }
+  return '';
 };
-const getProfileStatus = user => user?.profileComplete === true ? 'complete' : 'incomplete';
+
+const getPath = user => {
+  const raw = asText(user?.primary_path || user?.path || user?.studentTrack || 'unassigned').toLowerCase();
+  return ['wellbeing', 'sen', 'career'].includes(raw) ? raw : 'unassigned';
+};
+
+const getAssessmentStatus = user => {
+  const code = asText(user?.careerDNA?.riasec?.code || user?.riasecCode);
+  return code.trim() || user?.assessmentCompletedAt || user?.careerAssessment?.completedAt ? 'completed' : 'pending';
+};
+
+const getProfileStatus = user => user?.profileComplete === true || user?.onboardingCompleted === true ? 'complete' : 'incomplete';
+
+const getGrade = user => asText(user?.grade || user?.classLevel || user?.gradeLevel);
+const getSchool = user => asText(user?.schoolName || user?.institutionName || user?.institution?.name);
+const getRiasec = user => asText(user?.careerDNA?.riasec?.code || user?.riasecCode);
 
 const UserDirectoryTable = ({ users = [], isLoading = false, onViewDetails, onDelete, onEdit, userRole = 'student', theme = 'light' }) => {
   const dark = theme === 'dark';
@@ -27,25 +46,28 @@ const UserDirectoryTable = ({ users = [], isLoading = false, onViewDetails, onDe
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
 
   const gradeOptions = useMemo(() => {
-    const grades = [...new Set(users.map(user => user?.grade || user?.classLevel).filter(Boolean))];
+    const grades = [...new Set(users.map(getGrade).filter(Boolean))];
     return grades.sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
   }, [users]);
 
   const filteredUsers = useMemo(() => {
     let result = [...users];
     const q = searchQuery.trim().toLowerCase();
-    if (q) result = result.filter(user => [user.name, user.email, user.grade, user.classLevel, user.schoolName, user.institutionName, user.id, user.riasecCode, user?.careerDNA?.riasec?.code].some(value => String(value || '').toLowerCase().includes(q)));
+    if (q) result = result.filter(user => [
+      user.name, user.email, getGrade(user), getSchool(user), user.id, getRiasec(user), getPath(user),
+      user?.contact?.mobile, user?.phone, user?.contactNumber,
+    ].map(asText).some(value => value.toLowerCase().includes(q)));
     if (filterPath !== 'all') result = result.filter(user => getPath(user) === filterPath);
-    if (filterGrade !== 'all') result = result.filter(user => (user.grade || user.classLevel) === filterGrade);
+    if (filterGrade !== 'all') result = result.filter(user => getGrade(user) === filterGrade);
     if (filterAssessment !== 'all') result = result.filter(user => getAssessmentStatus(user) === filterAssessment);
     if (filterProfile !== 'all') result = result.filter(user => getProfileStatus(user) === filterProfile);
     result.sort((a, b) => {
       const getValue = user => {
-        if (sortConfig.key === 'grade') return user.grade || user.classLevel || '';
+        if (sortConfig.key === 'grade') return getGrade(user);
         if (sortConfig.key === 'path') return getPath(user);
         if (sortConfig.key === 'assessment') return getAssessmentStatus(user);
         if (sortConfig.key === 'profile') return getProfileStatus(user);
-        return user[sortConfig.key] || '';
+        return asText(user?.[sortConfig.key]);
       };
       let aVal = getValue(a), bVal = getValue(b);
       if (typeof aVal === 'string') aVal = aVal.toLowerCase();
@@ -63,7 +85,7 @@ const UserDirectoryTable = ({ users = [], isLoading = false, onViewDetails, onDe
 
   const exportCsv = () => {
     const headers = ['Student ID', 'Name', 'Email', 'Grade', 'School', 'Path', 'RIASEC', 'Assessment', 'Profile'];
-    const rows = filteredUsers.map(user => [user.id, user.name || '', user.email || '', user.grade || user.classLevel || '', user.schoolName || user.institutionName || '', getPath(user), user?.careerDNA?.riasec?.code || user.riasecCode || '', getAssessmentStatus(user), getProfileStatus(user)]);
+    const rows = filteredUsers.map(user => [user.id, asText(user.name), asText(user.email), getGrade(user), getSchool(user), getPath(user), getRiasec(user), getAssessmentStatus(user), getProfileStatus(user)]);
     const escape = value => `"${String(value).replace(/"/g, '""')}"`;
     const csv = [headers, ...rows].map(row => row.map(escape).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -92,49 +114,27 @@ const UserDirectoryTable = ({ users = [], isLoading = false, onViewDetails, onDe
       <div className={`p-4 border-b ${dark ? 'border-[#292929]' : 'border-slate-100'} space-y-3`}>
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
           <div className="flex items-center gap-2 w-full lg:w-auto">
-            <div className="relative flex-1 lg:w-[360px]">
-              <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${secondaryText}`} />
-              <input type="text" placeholder="Search name, email, school, ID, RIASEC..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className={`w-full pl-10 pr-9 py-2.5 border rounded-lg text-xs focus:outline-none focus:ring-1 ${dark ? 'focus:ring-white' : 'focus:ring-slate-400'} ${control}`} />
-              {searchQuery && <button onClick={() => setSearchQuery('')} className={`absolute right-3 top-1/2 -translate-y-1/2 ${secondaryText}`}><X className="w-3.5 h-3.5" /></button>}
-            </div>
+            <div className="relative flex-1 lg:w-[360px]"><Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${secondaryText}`} /><input type="text" placeholder="Search name, email, school, ID, RIASEC..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className={`w-full pl-10 pr-9 py-2.5 border rounded-lg text-xs focus:outline-none focus:ring-1 ${dark ? 'focus:ring-white' : 'focus:ring-slate-400'} ${control}`} />{searchQuery && <button onClick={() => setSearchQuery('')} className={`absolute right-3 top-1/2 -translate-y-1/2 ${secondaryText}`}><X className="w-3.5 h-3.5" /></button>}</div>
             <button onClick={() => setShowFilters(prev => !prev)} className={`relative flex items-center gap-2 px-3 py-2.5 rounded-lg border text-xs font-semibold ${dark ? 'border-[#303030] bg-[#111] text-[#ccc] hover:bg-white/5' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><SlidersHorizontal className="w-3.5 h-3.5" /> Filters{activeFilterCount > 0 && <span className={`w-4 h-4 rounded-full text-[9px] flex items-center justify-center ${dark ? 'bg-white text-black' : 'bg-black text-white'}`}>{activeFilterCount}</span>}</button>
           </div>
           <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end"><span className={`${secondaryText} text-xs font-medium`}>{filteredUsers.length} of {users.length} students</span><button onClick={exportCsv} className={`flex items-center gap-2 px-3 py-2.5 border rounded-lg text-xs font-semibold ${dark ? 'border-[#303030] bg-white text-black hover:bg-[#e5e5e5]' : 'border-slate-200 bg-black text-white hover:bg-slate-800'}`}><Download className="w-3.5 h-3.5" /> Export CSV</button></div>
         </div>
-        {showFilters && <div className={`grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 p-3 rounded-lg border ${dark ? 'bg-[#111] border-[#292929]' : 'bg-slate-50 border-slate-100'}`}>
-          <FilterSelect dark={dark} label="Learning Path" value={filterPath} onChange={setFilterPath} options={[['all','All paths'],['wellbeing','Wellbeing'],['sen','SEN'],['career','Career'],['unassigned','Unassigned']]} />
-          <FilterSelect dark={dark} label="Grade / Class" value={filterGrade} onChange={setFilterGrade} options={[['all','All grades'], ...gradeOptions.map(grade => [grade, grade])]} />
-          <FilterSelect dark={dark} label="RIASEC Assessment" value={filterAssessment} onChange={setFilterAssessment} options={[['all','All statuses'],['completed','Completed'],['pending','Pending']]} />
-          <FilterSelect dark={dark} label="Profile" value={filterProfile} onChange={setFilterProfile} options={[['all','All profiles'],['complete','Complete'],['incomplete','Incomplete']]} />
-          {activeFilterCount > 0 && <button onClick={clearFilters} className="sm:col-span-2 xl:col-span-4 text-[10px] font-bold text-red-500 hover:text-red-400 text-left">Clear all filters</button>}
-        </div>}
+        {showFilters && <div className={`grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 p-3 rounded-lg border ${dark ? 'bg-[#111] border-[#292929]' : 'bg-slate-50 border-slate-100'}`}><FilterSelect dark={dark} label="Learning Path" value={filterPath} onChange={setFilterPath} options={[['all','All paths'],['wellbeing','Wellbeing'],['sen','SEN'],['career','Career'],['unassigned','Unassigned']]} /><FilterSelect dark={dark} label="Grade / Class" value={filterGrade} onChange={setFilterGrade} options={[['all','All grades'], ...gradeOptions.map(grade => [grade, grade])]} /><FilterSelect dark={dark} label="RIASEC Assessment" value={filterAssessment} onChange={setFilterAssessment} options={[['all','All statuses'],['completed','Completed'],['pending','Pending']]} /><FilterSelect dark={dark} label="Profile" value={filterProfile} onChange={setFilterProfile} options={[['all','All profiles'],['complete','Complete'],['incomplete','Incomplete']]} />{activeFilterCount > 0 && <button onClick={clearFilters} className="sm:col-span-2 xl:col-span-4 text-[10px] font-bold text-red-500 hover:text-red-400 text-left">Clear all filters</button>}</div>}
       </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[1080px]">
-          <thead><tr className={`border-b ${header}`}>
-            <SortableHeader label="Student" columnKey="name" onSort={handleSort} SortIcon={SortIcon} dark={dark} />
-            <SortableHeader label="School / Grade" columnKey="grade" onSort={handleSort} SortIcon={SortIcon} dark={dark} />
-            <SortableHeader label="Path" columnKey="path" onSort={handleSort} SortIcon={SortIcon} dark={dark} />
-            <SortableHeader label="Assessment" columnKey="assessment" onSort={handleSort} SortIcon={SortIcon} dark={dark} />
-            <SortableHeader label="Profile" columnKey="profile" onSort={handleSort} SortIcon={SortIcon} dark={dark} />
-            <th className={`px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wider ${secondaryText}`}>Actions</th>
-          </tr></thead>
-          <tbody className={`divide-y ${dark ? 'divide-[#292929]' : 'divide-slate-100'}`}>
-            {filteredUsers.length === 0 ? <tr><td colSpan={6} className="px-4 py-14 text-center"><div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 ${dark ? 'bg-white/5' : 'bg-slate-100'}`}><Search className={`w-6 h-6 ${dark ? 'text-[#555]' : 'text-slate-300'}`} /></div><p className={`${primaryText} font-semibold text-sm mb-1`}>No students found</p><p className={`${secondaryText} text-xs`}>Try adjusting your search or filters.</p></td></tr> : filteredUsers.map(user => {
-              const assessment = getAssessmentStatus(user), profile = getProfileStatus(user);
-              return <tr key={user.id} className={`${hoverRow} transition-colors cursor-pointer group`} onClick={() => onViewDetails?.(user)}>
-                <td className="px-4 py-3"><div className="flex items-center gap-3"><ProfileAvatar user={user} dark={dark} /><div className="min-w-0"><p className={`${primaryText} font-semibold text-sm truncate max-w-[220px]`}>{getProfileIdentity(user).name}</p><p className={`${secondaryText} text-[10px] font-mono truncate max-w-[220px]`}>{user.id}</p></div></div></td>
-                <td className="px-4 py-3"><p className={`${dark ? 'text-[#ddd]' : 'text-slate-700'} text-xs font-semibold`}>{user.schoolName || user.institutionName || 'School not set'}</p><p className={`${secondaryText} text-[10px] mt-0.5`}>{user.grade || user.classLevel || 'Grade not set'}</p></td>
-                <td className="px-4 py-3">{getPathBadge(getPath(user))}</td>
-                <td className="px-4 py-3"><div className="flex flex-col gap-1"><span className={`inline-flex w-fit px-2 py-1 rounded-md text-[10px] font-bold ${dark ? 'bg-white/10 text-white' : assessment === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{assessment === 'completed' ? 'RIASEC Complete' : 'RIASEC Pending'}</span>{(user?.careerDNA?.riasec?.code || user?.riasecCode) && <span className={`${secondaryText} text-[10px] font-bold tracking-wider`}>{user?.careerDNA?.riasec?.code || user.riasecCode}</span>}</div></td>
-                <td className="px-4 py-3"><span className={`inline-flex px-2 py-1 rounded-md text-[10px] font-bold ${dark ? 'bg-white/10 text-white' : profile === 'complete' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>{profile === 'complete' ? 'Complete' : 'Incomplete'}</span></td>
-                <td className="px-4 py-3"><div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}><ActionButton dark={dark} title="View details" onClick={() => onViewDetails?.(user)}><Eye className="w-3.5 h-3.5" /></ActionButton><ActionButton dark={dark} title="Edit student" onClick={() => onEdit?.(user)}><Edit3 className="w-3.5 h-3.5" /></ActionButton><ActionButton dark={dark} title="Delete student" onClick={() => onDelete?.(user)} danger><Trash2 className="w-3.5 h-3.5" /></ActionButton></div></td>
-              </tr>;
-            })}
-          </tbody>
-        </table>
-      </div>
+      <div className="overflow-x-auto"><table className="w-full min-w-[1080px]"><thead><tr className={`border-b ${header}`}><SortableHeader label="Student" columnKey="name" onSort={handleSort} SortIcon={SortIcon} dark={dark} /><SortableHeader label="School / Grade" columnKey="grade" onSort={handleSort} SortIcon={SortIcon} dark={dark} /><SortableHeader label="Path" columnKey="path" onSort={handleSort} SortIcon={SortIcon} dark={dark} /><SortableHeader label="Assessment" columnKey="assessment" onSort={handleSort} SortIcon={SortIcon} dark={dark} /><SortableHeader label="Profile" columnKey="profile" onSort={handleSort} SortIcon={SortIcon} dark={dark} /><th className={`px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wider ${secondaryText}`}>Actions</th></tr></thead>
+        <tbody className={`divide-y ${dark ? 'divide-[#292929]' : 'divide-slate-100'}`}>
+          {filteredUsers.length === 0 ? <tr><td colSpan={6} className="px-4 py-14 text-center"><div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 ${dark ? 'bg-white/5' : 'bg-slate-100'}`}><Search className={`w-6 h-6 ${dark ? 'text-[#555]' : 'text-slate-300'}`} /></div><p className={`${primaryText} font-semibold text-sm mb-1`}>No students found</p><p className={`${secondaryText} text-xs`}>Try adjusting your search or filters.</p></td></tr> : filteredUsers.map(user => {
+            const assessment = getAssessmentStatus(user), profile = getProfileStatus(user), identity = getProfileIdentity(user);
+            return <tr key={asText(user.id) || identity.name} className={`${hoverRow} transition-colors cursor-pointer group`} onClick={() => onViewDetails?.(user)}>
+              <td className="px-4 py-3"><div className="flex items-center gap-3"><ProfileAvatar user={user} dark={dark} /><div className="min-w-0"><p className={`${primaryText} font-semibold text-sm truncate max-w-[220px]`}>{asText(identity.name)}</p><p className={`${secondaryText} text-[10px] font-mono truncate max-w-[220px]`}>{asText(user.id)}</p></div></div></td>
+              <td className="px-4 py-3"><p className={`${dark ? 'text-[#ddd]' : 'text-slate-700'} text-xs font-semibold`}>{getSchool(user) || 'School not set'}</p><p className={`${secondaryText} text-[10px] mt-0.5`}>{getGrade(user) || 'Grade not set'}</p></td>
+              <td className="px-4 py-3">{getPathBadge(getPath(user))}</td>
+              <td className="px-4 py-3"><div className="flex flex-col gap-1"><span className={`inline-flex w-fit px-2 py-1 rounded-md text-[10px] font-bold ${dark ? 'bg-white/10 text-white' : assessment === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{assessment === 'completed' ? 'RIASEC Complete' : 'RIASEC Pending'}</span>{getRiasec(user) && <span className={`${secondaryText} text-[10px] font-bold tracking-wider`}>{getRiasec(user)}</span>}</div></td>
+              <td className="px-4 py-3"><span className={`inline-flex px-2 py-1 rounded-md text-[10px] font-bold ${dark ? 'bg-white/10 text-white' : profile === 'complete' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>{profile === 'complete' ? 'Complete' : 'Incomplete'}</span></td>
+              <td className="px-4 py-3"><div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}><ActionButton dark={dark} title="View details" onClick={() => onViewDetails?.(user)}><Eye className="w-3.5 h-3.5" /></ActionButton><ActionButton dark={dark} title="Open student record" onClick={() => onEdit?.(user)}><Edit3 className="w-3.5 h-3.5" /></ActionButton><ActionButton dark={dark} title="Delete student" onClick={() => onDelete?.(user)} danger><Trash2 className="w-3.5 h-3.5" /></ActionButton></div></td>
+            </tr>;
+          })}
+        </tbody></table></div>
       {filteredUsers.length > 0 && <div className={`px-4 py-3 border-t flex items-center justify-between ${dark ? 'border-[#292929] bg-[#111]' : 'border-slate-100 bg-slate-50/50'}`}><p className={`${secondaryText} text-[10px]`}>Showing {filteredUsers.length} of {users.length} students</p><p className={`${secondaryText} text-[10px]`}>Click a row to open the student master record</p></div>}
     </div>
   );
