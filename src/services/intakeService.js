@@ -21,26 +21,44 @@ export const generateMasterId = async () => {
   }
 };
 
+const buildStudentIntakeRecord = (userAuth, formData) => ({
+  userId: userAuth?.uid || '',
+  profile: { name: formData.profile?.name || '', dob: formData.profile?.dob || '', gender: formData.profile?.gender || '', phone: formData.profile?.phone || '' },
+  school: { schoolId: formData.school?.schoolId || '', grade: formData.school?.grade || '', board: formData.school?.board || '' },
+  parent: { name: formData.parent?.name || '', email: formData.parent?.email || '', phone: formData.parent?.phone || '' },
+  intake: { primaryConcern: formData.intake?.primaryConcern || '', referralSource: formData.intake?.referralSource || '' },
+  activeDivisions: [],
+  assignedStaff: { careerId: null, psychId: null, senId: null, career: null, psych: null, sen: null },
+  relationships: { assignments: { career: null, wellbeing: null, sen: null } },
+  services: { career: { status: 'inactive' }, wellbeing: { status: 'inactive' }, sen: { status: 'inactive' } }
+});
+
 export const processIntake = async (userAuth, formData) => {
+  const MAX_ID_ALLOCATION_RETRIES = 5;
   try {
-    const masterId = await generateMasterId();
-    const batch = writeBatch(db);
-    const studentRef = doc(db, COLLECTIONS.STUDENTS, masterId);
-    batch.set(studentRef, {
-      userId: userAuth?.uid || '',
-      profile: { name: formData.profile?.name || '', dob: formData.profile?.dob || '', gender: formData.profile?.gender || '', phone: formData.profile?.phone || '' },
-      school: { schoolId: formData.school?.schoolId || '', grade: formData.school?.grade || '', board: formData.school?.board || '' },
-      parent: { name: formData.parent?.name || '', email: formData.parent?.email || '', phone: formData.parent?.phone || '' },
-      intake: { primaryConcern: formData.intake?.primaryConcern || '', referralSource: formData.intake?.referralSource || '' },
-      activeDivisions: [],
-      assignedStaff: { careerId: null, psychId: null, senId: null, career: null, psych: null, sen: null },
-      relationships: { assignments: { career: null, wellbeing: null, sen: null } },
-      services: { career: { status: 'inactive' }, wellbeing: { status: 'inactive' }, sen: { status: 'inactive' } }
-    });
-    const caseFileRef = doc(db, COLLECTIONS.CASE_FILES, masterId);
-    batch.set(caseFileRef, { studentId: masterId, history: [] });
-    await batch.commit();
-    return masterId;
+    for (let attempt = 0; attempt < MAX_ID_ALLOCATION_RETRIES; attempt += 1) {
+      const masterId = await generateMasterId();
+      try {
+        await runTransaction(db, async (transaction) => {
+          const studentRef = doc(db, COLLECTIONS.STUDENTS, masterId);
+          const caseFileRef = doc(db, COLLECTIONS.CASE_FILES, masterId);
+          const studentDoc = await transaction.get(studentRef);
+          if (studentDoc.exists()) {
+            const collision = new Error('MASTER_ID_COLLISION');
+            collision.code = 'MASTER_ID_COLLISION';
+            throw collision;
+          }
+
+          transaction.set(studentRef, buildStudentIntakeRecord(userAuth, formData));
+          transaction.set(caseFileRef, { studentId: masterId, history: [] });
+        });
+        return masterId;
+      } catch (error) {
+        if (error?.code === 'MASTER_ID_COLLISION' && attempt < MAX_ID_ALLOCATION_RETRIES - 1) continue;
+        throw error;
+      }
+    }
+    throw new Error('Unable to allocate a unique student master ID. Please try again.');
   } catch (error) {
     console.error('Error processing intake:', error);
     throw error;
@@ -56,9 +74,13 @@ export const assignStaffToStudent = async (adminUser, studentId, division, staff
     if (!ROLE_BY_DIVISION[division]) throw new Error('Invalid professional division. Choose career, psych, or sen.');
     if (!staffId) throw new Error('A professional must be selected.');
 
-    const staffDoc = await getDoc(doc(db, COLLECTIONS.STAFF || 'staff', staffId));
+    // Professional accounts are canonical in users/{uid}. Keep a legacy staff fallback
+    // only for records that have not yet been migrated.
+    let staffDoc = await getDoc(doc(db, COLLECTIONS.USERS, staffId));
+    if (!staffDoc.exists()) staffDoc = await getDoc(doc(db, 'staff', staffId));
     if (!staffDoc.exists()) throw new Error('Selected professional was not found.');
-    const staffData = staffDoc.data();
+
+    const staffData = staffDoc.data() || {};
     const role = staffData.role || staffData.professionalRole || '';
     if (!ROLE_BY_DIVISION[division].includes(role)) {
       const labels = { career: 'Career Counsellor', psych: 'Psychology Counsellor / Psychologist', sen: 'SEN Teacher / Educator' };
