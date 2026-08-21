@@ -1,28 +1,40 @@
 import React, { useState } from 'react';
 import { AlertTriangle, Trash2, X, Loader2 } from 'lucide-react';
-import { deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { auth } from '../../firebase';
 
-const DeleteConfirmationModal = ({ user, isOpen, onClose, onSuccess }) => {
+const DeleteConfirmationModal = ({ user, isOpen, onClose, onSuccess, userRole = 'student' }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmName, setConfirmName] = useState('');
+  const [error, setError] = useState('');
 
   if (!isOpen || !user) return null;
 
-  const userName = user.name || 'this user';
-  const isConfirmed = confirmName.toLowerCase() === userName.toLowerCase();
+  const roleLabel = userRole === 'student' ? 'Student' : 'User';
+  const userName = String(user.name || '').trim() || `this ${roleLabel.toLowerCase()}`;
+  const isConfirmed = confirmName.trim().toLowerCase() === userName.toLowerCase();
 
   const handleDelete = async () => {
-    if (!isConfirmed) return;
+    if (!isConfirmed || isDeleting) return;
     setIsDeleting(true);
+    setError('');
     try {
-      await deleteDoc(doc(db, 'users', user.id));
-      onSuccess?.(user);
+      const currentUser = auth.currentUser;
+      if (!currentUser) throw new Error('Authentication required.');
+      const token = await currentUser.getIdToken(true);
+      const endpoint = userRole === 'student' ? '/api/admin/delete-student' : '/api/admin/delete-user';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ studentId: user.id, userId: user.id, confirmationName: userName }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || `Unable to delete the ${roleLabel.toLowerCase()} record.`);
+      onSuccess?.({ ...user, name: payload?.name || userName });
       setConfirmName('');
       onClose();
-    } catch (error) {
-      console.error('Error deleting directory record:', error);
-      alert('Failed to delete the directory record. Please try again.');
+    } catch (deleteError) {
+      console.error(`[DeleteConfirmationModal] failed to delete ${userRole}:`, deleteError);
+      setError(deleteError?.message || `Unable to delete the ${roleLabel.toLowerCase()} record.`);
     } finally {
       setIsDeleting(false);
     }
@@ -31,6 +43,7 @@ const DeleteConfirmationModal = ({ user, isOpen, onClose, onSuccess }) => {
   const handleClose = () => {
     if (!isDeleting) {
       setConfirmName('');
+      setError('');
       onClose();
     }
   };
@@ -43,22 +56,25 @@ const DeleteConfirmationModal = ({ user, isOpen, onClose, onSuccess }) => {
           <div className="h-2 bg-gradient-to-r from-red-500 to-rose-500 rounded-t-2xl" />
           <div className="p-6 text-center">
             <div className="mx-auto mb-4 w-14 h-14 bg-red-100 rounded-full flex items-center justify-center"><AlertTriangle className="w-7 h-7 text-red-600" /></div>
-            <h2 className="text-xl font-bold text-slate-900 mb-2">Delete Professional Record?</h2>
-            <p className="text-slate-600 mb-4">This permanently removes <span className="font-semibold text-slate-900">{userName}</span> from the professional directory. It does not delete a Firebase Authentication account or unrelated linked records.</p>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Delete {roleLabel} Record?</h2>
+            <p className="text-slate-600 mb-4">This permanently removes <span className="font-semibold text-slate-900">{userName}</span> from the {roleLabel.toLowerCase()} directory.</p>
 
             <div className="p-4 bg-slate-50 rounded-xl mb-5 text-left">
               <p className="font-semibold text-slate-900">{userName}</p>
               <p className="text-sm text-slate-500">{user.email || 'No email'}</p>
+              {user.id && <p className="text-xs text-slate-400 font-mono mt-1 break-all">ID: {user.id}</p>}
             </div>
+
+            {error && <div className="mb-4 p-3 rounded-xl border border-red-200 bg-red-50 text-left text-sm font-medium text-red-700">{error}</div>}
 
             <div className="mb-5 text-left">
               <label className="block text-sm font-semibold text-slate-700 mb-2">Type <span className="font-bold text-red-600">{userName}</span> to confirm:</label>
-              <input type="text" value={confirmName} onChange={e => setConfirmName(e.target.value)} placeholder="Enter name to confirm" className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" disabled={isDeleting} />
+              <input autoFocus type="text" value={confirmName} onChange={e => { setConfirmName(e.target.value); setError(''); }} placeholder="Enter name to confirm" className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" disabled={isDeleting} />
             </div>
 
             <div className="text-left p-4 bg-red-50 rounded-xl mb-6 border border-red-100">
-              <p className="text-sm font-semibold text-red-800 mb-2 flex items-center gap-2"><Trash2 className="w-4 h-4" /> This will delete the Firestore directory record:</p>
-              <ul className="text-sm text-red-700 space-y-1 ml-6 list-disc"><li>Professional profile information</li><li>Directory status and registration details</li></ul>
+              <p className="text-sm font-semibold text-red-800 mb-2 flex items-center gap-2"><Trash2 className="w-4 h-4" /> This will remove the Firestore {roleLabel.toLowerCase()} directory record.</p>
+              <p className="text-xs text-red-700">The operation is performed server-side and is restricted to Super Admin access.</p>
             </div>
 
             <div className="flex items-center gap-3">
