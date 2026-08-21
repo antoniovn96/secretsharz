@@ -4,8 +4,9 @@
 // profile in one privileged server-side workflow. The browser never receives
 // or chooses a password and never receives Firebase Admin credentials.
 import { randomUUID } from 'crypto';
+import { requireSuperAdmin, sendAuthorizationFailure } from '../../../src/security/adminAuthorization.js';
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
-import { isFounderRequester, isRequesterAdmin, buildAuditRecord } from '../../../src/security/roleAssignment.js';
+import { buildAuditRecord } from '../../../src/security/roleAssignment.js';
 import { isAssignableClaimRole } from '../../../src/security/claimRoles.js';
 
 const ALLOWED_BODY_KEYS = Object.freeze([
@@ -18,13 +19,6 @@ const MAX = Object.freeze({ name: 120, email: 254, phone: 40, text: 250 });
 
 function jsonError(res, status, message) {
   return res.status(status).json({ error: message });
-}
-
-function bearerToken(req) {
-  const header = req.headers.authorization || req.headers.Authorization;
-  if (typeof header !== 'string') return null;
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
 }
 
 function cleanText(value, max) {
@@ -46,7 +40,6 @@ function validateBody(body) {
   const email = cleanText(body.email, MAX.email)?.toLowerCase();
   const role = body.role;
 
-  // Only professional roles may be provisioned through this endpoint.
   if (!name) return { ok: false, error: 'Full name is required.' };
   if (!email || !EMAIL_RE.test(email)) return { ok: false, error: 'A valid email address is required.' };
   if (!isAssignableClaimRole(role) || role === 'super_admin' || role === 'parent') {
@@ -69,8 +62,6 @@ function validateBody(body) {
 }
 
 function randomPassword() {
-  // Firebase requires a password for createUser. This random value is never
-  // returned; the professional sets their own password through the reset link.
   return `SS-${randomUUID()}-Aa9!`;
 }
 
@@ -80,19 +71,9 @@ export default async function handler(req, res) {
     return jsonError(res, 405, 'Method not allowed.');
   }
 
-  const idToken = bearerToken(req);
-  if (!idToken) return jsonError(res, 401, 'Authentication required.');
-
-  let decodedToken;
-  try {
-    decodedToken = await getAdminAuth().verifyIdToken(idToken);
-  } catch (_) {
-    return jsonError(res, 401, 'Invalid or expired authentication token.');
-  }
-
-  if (!isRequesterAdmin(decodedToken)) {
-    return jsonError(res, 403, 'Only an administrator may create professional accounts.');
-  }
+  const authorization = await requireSuperAdmin(req);
+  if (sendAuthorizationFailure(res, authorization)) return;
+  const decodedToken = authorization.decodedToken;
 
   const parsed = validateBody(req.body);
   if (!parsed.ok) return jsonError(res, 400, parsed.error);
@@ -111,8 +92,6 @@ export default async function handler(req, res) {
       disabled: false
     });
 
-    // The role is assigned server-side. Newly-created accounts normally have
-    // no claims, so this establishes the authoritative professional claim.
     await adminAuth.setCustomUserClaims(authUser.uid, { role: professional.role });
 
     await firestore.collection('users').doc(authUser.uid).set({
@@ -133,8 +112,6 @@ export default async function handler(req, res) {
       updatedAt: new Date()
     });
 
-    // Do not store this link. It is returned only to the authenticated admin
-    // who initiated the provisioning operation.
     const inviteLink = await adminAuth.generatePasswordResetLink(professional.email);
 
     try {
