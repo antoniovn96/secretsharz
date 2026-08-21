@@ -1,152 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { X, Mail, Phone, MapPin, Calendar, GraduationCap, Users, BookOpen, Award, Clock, AlertCircle, CheckCircle, User, Link, FileText, TrendingUp, Building2, Briefcase, ShieldCheck } from 'lucide-react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { getProfileIdentity, safeText } from '../../platform/profileIdentity';
-
-const PATH_INFO = {
-  wellbeing: { label: 'Wellbeing', color: 'purple', icon: '🧠', bg: 'bg-purple-100', text: 'text-purple-700', professional: 'Psychologist' },
-  sen: { label: 'SEN', color: 'amber', icon: '🎯', bg: 'bg-amber-100', text: 'text-amber-700', professional: 'SEN Educator' },
-  career: { label: 'Career', color: 'emerald', icon: '🚀', bg: 'bg-emerald-100', text: 'text-emerald-700', professional: 'Career Counsellor' },
-  unassigned: { label: 'Unassigned', color: 'slate', icon: '❓', bg: 'bg-slate-100', text: 'text-slate-600', professional: 'Professional not assigned' },
-};
-
-const RIASEC_LABELS = {
-  R: { name: 'Realistic', color: '#EF4444' }, I: { name: 'Investigative', color: '#3B82F6' },
-  A: { name: 'Artistic', color: '#8B5CF6' }, S: { name: 'Social', color: '#10B981' },
-  E: { name: 'Enterprising', color: '#F59E0B' }, C: { name: 'Conventional', color: '#6366F1' },
-};
-
-const normalisePath = (value) => {
-  const path = safeText(value).toLowerCase();
-  if (path === 'wellbeing' || path === 'psychology' || path === 'psychologist') return 'wellbeing';
-  if (path === 'sen' || path === 'special_education') return 'sen';
-  if (path === 'career' || path === 'career_guidance') return 'career';
-  return 'unassigned';
-};
-
-const getProfessionalId = (data = {}, path) => {
-  const staff = data.assignedStaff || {};
-  if (path === 'career') return staff.careerId || staff.career || data.assignedProfessionalId || data.assignedCounsellorId || null;
-  if (path === 'wellbeing') return staff.psychologistId || staff.psychologyId || staff.psych || data.assignedProfessionalId || data.assignedCounsellorId || null;
-  if (path === 'sen') return staff.senId || staff.educatorId || staff.sen || data.assignedProfessionalId || data.assignedCounsellorId || null;
-  return data.assignedProfessionalId || data.assignedCounsellorId || null;
-};
-
-const getParentIds = (data = {}) => {
-  const candidates = [data.parentUid, data.parentId, ...(Array.isArray(data.parentUids) ? data.parentUids : []), ...(Array.isArray(data.parentIds) ? data.parentIds : []), ...(Array.isArray(data.linkedParentIds) ? data.linkedParentIds : [])];
-  return [...new Set(candidates.filter(Boolean).map(value => safeText(value)).filter(Boolean))];
-};
-
-const displayValue = (value, fallback = 'Not provided') => {
-  const text = safeText(value, '');
-  return text.trim() || fallback;
-};
-
-const SlideOutDetailPanel = ({ user, isOpen, onClose, isLoading: externalLoading = false, error = '' }) => {
-  const [additionalData, setAdditionalData] = useState(null);
-  const [linkedParents, setLinkedParents] = useState([]);
-  const [assignedProfessional, setAssignedProfessional] = useState(null);
-  const [institution, setInstitution] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const identity = getProfileIdentity(user, additionalData || {});
-  const path = normalisePath(additionalData?.primary_path || user?.primary_path || user?.path);
-  const pathInfo = PATH_INFO[path];
-  const merged = useMemo(() => ({ ...(user || {}), ...(additionalData || {}) }), [user, additionalData]);
-
-  useEffect(() => { if (isOpen && user?.id) fetchAdditionalData(); }, [isOpen, user?.id]);
-
-  const fetchAdditionalData = async () => {
-    setLoading(true); setAdditionalData(null); setLinkedParents([]); setAssignedProfessional(null); setInstitution(null);
-    try {
-      const userSnap = await getDoc(doc(db, 'users', user.id));
-      const data = userSnap.exists() ? userSnap.data() : {};
-      setAdditionalData(data);
-      const combined = { ...user, ...data };
-      const parentIds = getParentIds(combined);
-      const professionalId = getProfessionalId(combined, normalisePath(data.primary_path || user.primary_path || user.path));
-      const institutionId = safeText(data.institutionId || user.institutionId || data.school?.institutionId, '');
-      const [parents, professionalSnap, institutionSnap] = await Promise.all([
-        Promise.all(parentIds.map(async id => { const snap = await getDoc(doc(db, 'users', id)); return snap.exists() ? { id: snap.id, ...snap.data() } : null; })),
-        professionalId ? getDoc(doc(db, 'users', safeText(professionalId))) : Promise.resolve(null),
-        institutionId ? getDoc(doc(db, 'institutions', institutionId)) : Promise.resolve(null),
-      ]);
-      setLinkedParents(parents.filter(Boolean));
-      if (professionalSnap?.exists()) setAssignedProfessional({ id: professionalSnap.id, ...professionalSnap.data() });
-      if (institutionSnap?.exists()) setInstitution({ id: institutionSnap.id, ...institutionSnap.data() });
-    } catch (error) { console.error('Error fetching student relationship data:', error); }
-    finally { setLoading(false); }
-  };
-
-  const formatDate = date => {
-    if (!date) return 'N/A';
-    try { const d = date.toDate ? date.toDate() : new Date(date); return Number.isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
-    catch (_) { return 'N/A'; }
-  };
-
-  const getRIASECScores = () => {
-    const scores = additionalData?.riasecScores || user?.riasecScores || additionalData?.careerDNA?.riasec?.scores || {};
-    return Object.entries(scores).filter(([key]) => RIASEC_LABELS[key]).map(([key, value]) => ({ code: key, ...RIASEC_LABELS[key], score: Number(value) || 0, percentage: Math.min(100, ((Number(value) || 0) / 12) * 100) })).sort((a, b) => b.score - a.score);
-  };
-
-  if (!isOpen) return null;
-  const busy = loading || externalLoading;
-
-  return (
-    <>
-      <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40" onClick={onClose} />
-      <div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-2xl z-50 overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-          <div className="flex items-center gap-4 min-w-0"><ProfileAvatar user={user} data={additionalData || {}} /><div className="min-w-0"><h2 className="text-xl font-bold text-slate-900 truncate">{displayValue(identity.name, 'Student')}</h2><p className="text-sm text-slate-500 font-mono truncate">{displayValue(user?.id, 'Unknown ID')}</p></div></div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"><X className="w-6 h-6" /></button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {error && <div className="p-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm font-medium"><AlertCircle className="inline w-4 h-4 mr-2" />{displayValue(error, 'Unable to load student details.')}</div>}
-          <div className="flex flex-wrap items-center gap-3">
-            <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold ${pathInfo.bg} ${pathInfo.text}`}><span>{pathInfo.icon}</span>{pathInfo.label} Student</span>
-            {merged.status && <StatusBadge status={safeText(merged.status)} />}
-            {(merged.riasecCode || merged.careerDNA?.riasec?.code) && <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg text-sm font-bold text-slate-700"><TrendingUp className="w-4 h-4" />RIASEC: {displayValue(merged.riasecCode || merged.careerDNA.riasec.code)}</span>}
-          </div>
-
-          <SectionCard title="Relationship Overview" icon={Link}>
-            <div className="grid grid-cols-2 gap-3">
-              <RelationshipItem icon={Building2} label="Institution" value={displayValue(institution?.name || merged.institutionName || merged.schoolName, 'Not linked')} status={institution ? 'Linked' : 'Not linked'} />
-              <RelationshipItem icon={Briefcase} label="Professional" value={displayValue(assignedProfessional?.name, 'Not assigned')} status={assignedProfessional ? pathInfo.professional : 'Unassigned'} />
-              <RelationshipItem icon={Users} label="Parents / Guardians" value={`${linkedParents.length} linked account${linkedParents.length === 1 ? '' : 's'}`} status={linkedParents.length ? 'Linked' : 'Not linked'} />
-              <RelationshipItem icon={ShieldCheck} label="Service" value={pathInfo.label} status="Active path" />
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Contact Information" icon={User}><div className="grid grid-cols-2 gap-4"><InfoItem icon={Mail} label="Email" value={displayValue(identity.email || merged.email)} /><InfoItem icon={Phone} label="Phone" value={displayValue(merged.phone || merged.contactNumber || merged.profile?.phone)} /><InfoItem icon={MapPin} label="Location" value={displayValue(merged.location || merged.city || merged.profile?.city, 'Not specified')} /><InfoItem icon={Calendar} label="Onboarded" value={formatDate(merged.createdAt || merged.onboardingDate)} /></div></SectionCard>
-
-          <SectionCard title="Academic Details" icon={GraduationCap}><div className="grid grid-cols-2 gap-4"><InfoItem icon={BookOpen} label="Grade / Class" value={displayValue(merged.grade || merged.classLevel || merged.gradeOrCourse || merged.school?.grade, 'N/A')} /><InfoItem icon={Building2} label="School" value={displayValue(merged.schoolName || merged.institutionName || merged.school?.name, 'Not specified')} />{merged.stream1112 && <InfoItem icon={BookOpen} label="Stream" value={displayValue(merged.stream1112)} />}{merged.marks10th != null && <InfoItem icon={Award} label="10th Marks" value={`${displayValue(merged.marks10th)}%`} />}{merged.marks12th != null && <InfoItem icon={Award} label="12th Marks" value={`${displayValue(merged.marks12th)}%`} />}</div></SectionCard>
-
-          {path === 'career' && (merged.riasecScores || merged.riasecCode || merged.careerDNA?.riasec) && <SectionCard title="RIASEC Career DNA" icon={TrendingUp}><div className="space-y-3">{getRIASECScores().map(item => <div key={item.code} className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg" style={{ backgroundColor: `${item.color}20`, color: item.color }}>{item.code}</div><div className="flex-1"><div className="flex items-center justify-between mb-1"><span className="text-sm font-semibold text-slate-700">{item.name}</span><span className="text-xs text-slate-500">{item.score}/12</span></div><div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full rounded-full" style={{ width: `${item.percentage}%`, backgroundColor: item.color }} /></div></div></div>)}</div>{merged.riasecSummary && <div className="mt-4 p-3 bg-slate-50 rounded-xl"><p className="text-sm text-slate-600">{displayValue(merged.riasecSummary)}</p></div>}</SectionCard>}
-
-          {merged.iepStatus && <SectionCard title="IEP Status" icon={FileText}><div className="flex items-center gap-3"><StatusBadge status={safeText(merged.iepStatus)} /><span className="text-sm text-slate-600">{safeText(merged.iepStatus) === 'active' ? 'Individualized Education Plan is active' : safeText(merged.iepStatus) === 'pending' ? 'IEP needs to be created' : safeText(merged.iepStatus) === 'completed' ? 'IEP goals have been achieved' : 'No IEP initiated'}</span></div>{merged.iepLastUpdated && <p className="text-xs text-slate-400 mt-2">Last updated: {formatDate(merged.iepLastUpdated)}</p>}</SectionCard>}
-
-          <SectionCard title="Assigned Professional" icon={Briefcase}>{assignedProfessional ? <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl"><ProfileAvatar user={assignedProfessional} data={assignedProfessional} className="w-12 h-12" /><div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 truncate">{displayValue(assignedProfessional.name, 'Unknown')}</p><p className="text-sm text-slate-500 truncate">{displayValue(assignedProfessional.email, 'No email')}</p><p className="text-xs text-slate-400 mt-1">{pathInfo.professional}</p></div><span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg">Assigned</span></div> : <EmptyState icon={AlertCircle} text="No professional assigned yet" tone="amber" />}</SectionCard>
-
-          <SectionCard title="Parents / Guardians" icon={Users}>{linkedParents.length ? linkedParents.map(parent => <div key={parent.id} className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl mb-2 last:mb-0"><ProfileAvatar user={parent} data={parent} className="w-11 h-11" /><div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 truncate">{displayValue(parent.name, 'Unknown')}</p><p className="text-sm text-slate-500 truncate">{displayValue(parent.email, 'No email')}</p><p className="text-xs text-slate-400 mt-1">{displayValue(parent.parentType || parent.relationship, 'Parent / Guardian')}</p></div><span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-lg">Linked</span></div>) : <EmptyState icon={User} text="No parent or guardian account is linked" />}</SectionCard>
-
-          <SectionCard title="Engagement" icon={Clock}><div className="grid grid-cols-3 gap-4"><Stat value={Number(merged.sessionsAttended) || 0} label="Sessions" /><Stat value={Number(merged.assessmentsCompleted) || 0} label="Assessments" /><Stat value={Number(merged.exPoints || merged.xp) || 0} label="XP Earned" /></div></SectionCard>
-        </div>
-
-        <div className="p-6 border-t border-slate-100 bg-slate-50 flex items-center justify-between"><button onClick={onClose} className="px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl">Close Panel</button><div className="flex items-center gap-2"><button className="px-4 py-2.5 bg-white border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 rounded-xl">Edit Profile</button><button className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-sm font-semibold text-white rounded-xl shadow-lg">Manage Student</button></div></div>
-        {busy && <div className="absolute inset-0 bg-white/80 flex items-center justify-center"><div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" /></div>}
-      </div>
-    </>
-  );
-};
-
-const ProfileAvatar = ({ user, data = {}, className = 'w-14 h-14' }) => { const identity = getProfileIdentity(user, data); const [imageFailed, setImageFailed] = useState(false); const showImage = Boolean(identity.photoURL) && !imageFailed; return showImage ? <img src={identity.photoURL} alt="" className={`${className} rounded-2xl object-cover shadow-lg bg-slate-100`} onError={() => setImageFailed(true)} /> : <div className={`${className} rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-lg shadow-lg`}>{identity.initial || 'S'}</div>; };
-const SectionCard = ({ title, icon: Icon, children }) => <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"><div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-2"><Icon className="w-4 h-4 text-slate-500" /><h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide">{title}</h3></div><div className="p-4">{children}</div></div>;
-const InfoItem = ({ icon: Icon, label, value }) => <div className="flex items-start gap-2"><Icon className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" /><div><p className="text-xs text-slate-400 font-medium">{label}</p><p className="text-sm text-slate-900 font-semibold truncate">{displayValue(value, 'N/A')}</p></div></div>;
-const RelationshipItem = ({ icon: Icon, label, value, status }) => <div className="p-3 bg-slate-50 rounded-xl"><div className="flex items-center gap-2"><Icon className="w-4 h-4 text-slate-400" /><p className="text-xs text-slate-400 font-medium">{label}</p></div><p className="text-sm font-semibold text-slate-900 mt-1 truncate">{displayValue(value)}</p><p className="text-xs text-slate-500 mt-1">{displayValue(status)}</p></div>;
-const EmptyState = ({ icon: Icon, text, tone = 'slate' }) => <div className={`flex items-center gap-3 p-4 rounded-xl border ${tone === 'amber' ? 'bg-amber-50 border-amber-100 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}><Icon className="w-5 h-5" /><p className="text-sm font-medium">{text}</p></div>;
-const Stat = ({ value, label }) => <div className="text-center p-3 bg-slate-50 rounded-xl"><p className="text-2xl font-bold text-slate-900">{Number(value) || 0}</p><p className="text-xs text-slate-500 font-medium">{label}</p></div>;
-const StatusBadge = ({ status }) => { const config = { active: ['bg-emerald-100', 'text-emerald-700', CheckCircle, 'Active'], pending: ['bg-amber-100', 'text-amber-700', Clock, 'Pending'], completed: ['bg-blue-100', 'text-blue-700', CheckCircle, 'Completed'], none: ['bg-slate-100', 'text-slate-600', AlertCircle, 'None'] }; const [bg, text, Icon, label] = config[safeText(status).toLowerCase()] || config.none; return <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold ${bg} ${text}`}><Icon className="w-4 h-4" />{label}</span>; };
-
-export default SlideOutDetailPanel;
+import React from 'react';
+import { X, Mail, Phone, MapPin, Calendar, GraduationCap, Users, BookOpen, Award, Clock, AlertCircle, FileText, TrendingUp, Building2, Briefcase, ShieldCheck, User } from 'lucide-react';
+const INFO={wellbeing:{label:'Wellbeing',icon:'🧠',professional:'Psychologist'},sen:{label:'SEN',icon:'🎯',professional:'SEN Educator'},career:{label:'Career',icon:'🚀',professional:'Career Counsellor'},unassigned:{label:'Unassigned',icon:'❓',professional:'Professional not assigned'}};
+const R={R:'Realistic',I:'Investigative',A:'Artistic',S:'Social',E:'Enterprising',C:'Conventional'};
+const t=(v,f='')=>{if(v==null)return f;if(['string','number','boolean'].includes(typeof v))return String(v);if(Array.isArray(v))return v.map(x=>t(x)).filter(Boolean).join(', ');if(typeof v==='object')return t(v.display||v.name||v.label||v.number||v.code||v.fullName,f);return f};
+const d=(v,f='Not provided')=>t(v,'').trim()||f;
+const pathOf=u=>{const x=t(u?.legacy?.primary_path||u?.primary_path||u?.path).toLowerCase();if(['wellbeing','sen','career'].includes(x))return x;return u?.services?.career?.status==='active'?'career':u?.services?.wellbeing?.status==='active'?'wellbeing':u?.services?.sen?.status==='active'?'sen':'unassigned'};
+const dateText=v=>{if(!v)return'N/A';try{const x=v?.toDate?v.toDate():new Date(v);return Number.isNaN(x.getTime())?'N/A':x.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}catch{return'N/A'}};
+export default function SlideOutDetailPanel({user,isOpen,onClose,isLoading=false,error=''}){if(!isOpen)return null;const p=user||{},i=p.identity||{},c=p.contact||{},a=p.academic?.current||{},ins=p.institution||{},family=p.family?.guardians||[],assign=p.relationships?.assignments||{},path=pathOf(p),info=INFO[path],professional=p.relationships?.professional||p.assignedProfessional||null,professionalName=professional?.name||professional?.identity?.fullName||assign[path]||'Not assigned',professionalEmail=professional?.email||professional?.contact?.email||'',riasec=p.career?.riasec||{},scores=Object.entries(riasec.scores||{}).filter(([k])=>R[k]).sort((x,y)=>(Number(y[1])||0)-(Number(x[1])||0));return <><div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40" onClick={onClose}/><aside className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white shadow-2xl z-50 overflow-hidden flex flex-col"><header className="flex items-center justify-between p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white"><div className="flex items-center gap-4 min-w-0"><Avatar user={p}/><div className="min-w-0"><h2 className="text-xl font-bold text-slate-900 truncate">{d(i.fullName||i.preferredName||p.name,'Student')}</h2><p className="text-sm text-slate-500 font-mono truncate">{d(p.id,'Unknown ID')}</p></div></div><button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl"><X className="w-6 h-6"/></button></header><div className="flex-1 overflow-y-auto p-6 space-y-6">{error&&<div className="p-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm font-medium"><AlertCircle className="inline w-4 h-4 mr-2"/>{d(error,'Unable to load student details.')}</div>}{isLoading&&<div className="p-4 rounded-xl border border-blue-100 bg-blue-50 text-blue-700 text-sm font-medium">Loading authorized student record…</div>}<div className="flex flex-wrap items-center gap-3"><span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-700"><span>{info.icon}</span>{info.label} Student</span>{p.status&&<Badge status={p.status}/>} {riasec.code&&<span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg text-sm font-bold text-slate-700"><TrendingUp className="w-4 h-4"/>RIASEC: {d(riasec.code)}</span>}</div><Card title="Relationship Overview" icon={ShieldCheck}><div className="grid grid-cols-2 gap-3"><Rel icon={Building2} label="Institution" value={d(ins.name||a.institutionName,'Not linked')} status={ins.id||a.institutionId?'Linked':'Not linked'}/><Rel icon={Briefcase} label="Professional" value={d(professionalName,'Not assigned')} status={assign[path]||professional?info.professional:'Unassigned'}/><Rel icon={Users} label="Parents / Guardians" value={`${family.length} linked account${family.length===1?'':'s'}`} status={family.length?'Linked':'Not linked'}/><Rel icon={ShieldCheck} label="Service" value={info.label} status="Active path"/></div></Card><Card title="Contact Information" icon={User}><div className="grid grid-cols-2 gap-4"><Item icon={Mail} label="Email" value={d(c.email||p.email)}/><Item icon={Phone} label="Phone" value={d(c.mobile?.number||c.number||p.phone||p.contactNumber)}/><Item icon={MapPin} label="Location" value={d(c.city||i.city||i.country,'Not specified')}/><Item icon={Calendar} label="Onboarded" value={dateText(p.governance?.createdAt||p.createdAt)}/></div></Card><Card title="Academic Details" icon={GraduationCap}><div className="grid grid-cols-2 gap-4"><Item icon={BookOpen} label="Grade / Class" value={d(a.grade,'N/A')}/><Item icon={Building2} label="School" value={d(a.institutionName||ins.name,'Not specified')}/>{a.stream&&<Item icon={BookOpen} label="Stream" value={d(a.stream)}/>} {p.academic?.history?.tenth?.marksValue&&<Item icon={Award} label="10th Marks" value={d(p.academic.history.tenth.marksValue)}/>} {p.academic?.history?.twelfth?.marksValue&&<Item icon={Award} label="12th Marks" value={d(p.academic.history.twelfth.marksValue)}/>}</div></Card>{path==='career'&&(riasec.code||scores.length)>0&&<Card title="RIASEC Career DNA" icon={TrendingUp}><div className="space-y-3">{scores.map(([code,val])=><div key={code} className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg bg-slate-100 text-slate-700">{code}</div><div className="flex-1"><div className="flex items-center justify-between mb-1"><span className="text-sm font-semibold text-slate-700">{R[code]}</span><span className="text-xs text-slate-500">{Number(val)||0}</span></div><div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden"><div className="h-full rounded-full bg-slate-700" style={{width:`${Math.min(100,(Number(val)||0)/12*100)}%`}}/></div></div></div>)}</div></Card>} {p.sen?.iepStatus&&<Card title="IEP Status" icon={FileText}><div className="flex items-center gap-3"><Badge status={p.sen.iepStatus}/><span className="text-sm text-slate-600">{t(p.sen.iepStatus)==='active'?'Individualized Education Plan is active':t(p.sen.iepStatus)==='pending'?'IEP needs to be created':t(p.sen.iepStatus)==='completed'?'IEP goals have been achieved':'No IEP initiated'}</span></div></Card>}<Card title="Assigned Professional" icon={Briefcase}>{assign[path]||professional?<div className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl"><Avatar user={professional||{identity:{fullName:professionalName}}} className="w-12 h-12"/><div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 truncate">{d(professionalName,'Unknown')}</p><p className="text-sm text-slate-500 truncate">{d(professionalEmail,'No email')}</p><p className="text-xs text-slate-400 mt-1">{info.professional}</p></div><span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg">Assigned</span></div>:<Empty icon={AlertCircle} value="No professional assigned yet"/>}</Card><Card title="Parents / Guardians" icon={Users}>{family.length?family.map((parent,n)=><div key={parent.accountId||n} className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl mb-2 last:mb-0"><Avatar user={{identity:{fullName:parent.name}}} className="w-11 h-11"/><div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 truncate">{d(parent.name,'Unknown')}</p><p className="text-sm text-slate-500 truncate">{d(parent.email,'No email')}</p><p className="text-xs text-slate-400 mt-1">{d(parent.relationship,'Parent / Guardian')}</p></div><span className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-lg">Linked</span></div>):<Empty icon={User} value="No parent or guardian account is linked"/>}</Card><Card title="Engagement" icon={Clock}><div className="grid grid-cols-3 gap-4"><Stat value={p.sessionsAttended||p.wellbeing?.sessionsAttended||0} label="Sessions"/><Stat value={p.assessments?.length||p.assessmentsCompleted||0} label="Assessments"/><Stat value={p.exPoints||p.xp||0} label="XP Earned"/></div></Card></div><footer className="p-6 border-t border-slate-100 bg-slate-50 flex items-center justify-between"><button onClick={onClose} className="px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl">Close Panel</button><div className="text-xs text-slate-400">Authorized Admin student record</div></footer></aside></>}
+const Avatar=({user,className='w-12 h-12'})=>{const i=user?.identity||{},name=t(i.fullName||i.preferredName||user?.name,'Student');return i.photoURL||user?.photoURL?<img src={i.photoURL||user.photoURL} alt="" className={`${className} rounded-lg object-cover bg-slate-100`}/>:<div className={`${className} rounded-lg flex items-center justify-center bg-black text-white font-bold text-xs`}>{name.charAt(0).toUpperCase()}</div>};
+const Card=({title,icon:Icon,children})=><section className="border border-slate-100 rounded-xl p-4"><div className="flex items-center gap-2 mb-4"><Icon className="w-4 h-4 text-slate-500"/><h3 className="text-sm font-bold text-slate-900">{title}</h3></div>{children}</section>;
+const Item=({icon:Icon,label,value})=><div className="flex items-start gap-2"><Icon className="w-4 h-4 text-slate-400 mt-0.5"/><div><p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</p><p className="text-sm font-medium text-slate-700 break-words">{value}</p></div></div>;
+const Rel=({icon:Icon,label,value,status})=><div className="p-3 bg-slate-50 rounded-xl"><div className="flex items-center gap-2 mb-1"><Icon className="w-3.5 h-3.5 text-slate-400"/><span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</span></div><p className="text-sm font-semibold text-slate-700 truncate">{value}</p><p className="text-[10px] text-slate-400 mt-1">{status}</p></div>;
+const Badge=({status})=><span className="inline-flex px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">{t(status)}</span>;
+const Empty=({icon:Icon,value})=><div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl text-sm text-slate-500"><Icon className="w-4 h-4"/>{value}</div>;
+const Stat=({value,label})=><div className="text-center p-3 bg-slate-50 rounded-xl"><p className="text-xl font-bold text-slate-900">{Number(value)||0}</p><p className="text-[10px] text-slate-500 mt-1">{label}</p></div>;
