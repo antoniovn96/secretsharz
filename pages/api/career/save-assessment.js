@@ -1,4 +1,6 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { isStudentProfile } from '../../../src/platform/studentRecordModel.js';
+import { normalizeStudentRecord } from '../../../src/platform/studentRecordNormalizer.js';
 
 function jsonError(res, status, message) {
   return res.status(status).json({ error: message });
@@ -50,7 +52,20 @@ export default async function handler(req, res) {
   if (hollandCode.length !== 3) return jsonError(res, 400, 'Invalid assessment result.');
 
   try {
-    await getAdminFirestore().collection('users').doc(decodedToken.uid).set({
+    const db = getAdminFirestore();
+    const studentRef = db.collection('users').doc(decodedToken.uid);
+    const studentSnapshot = await studentRef.get();
+    if (!studentSnapshot.exists || !isStudentProfile(studentSnapshot.data() || {})) {
+      return jsonError(res, 403, 'Career assessments can only be submitted for a student account.');
+    }
+
+    const normalized = normalizeStudentRecord(studentSnapshot.data() || {}, decodedToken.uid);
+    if (normalized.services?.career?.status !== 'active') {
+      return jsonError(res, 403, 'Career Guidance service access is not active for this student.');
+    }
+
+    const completedAt = new Date().toISOString();
+    await studentRef.set({
       careerAssessment: {
         hollandCode,
         riasecScores,
@@ -58,9 +73,9 @@ export default async function handler(req, res) {
         top5Careers,
         maturityPct,
         profile,
-        completedAt: new Date().toISOString()
+        completedAt
       },
-      assessmentCompletedAt: new Date().toISOString(),
+      assessmentCompletedAt: completedAt,
       riasecCode: hollandCode.join(''),
       riasecScores,
       recommendedStream: String(streams[0]?.id || ''),

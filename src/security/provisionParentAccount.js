@@ -10,11 +10,13 @@ import crypto from 'crypto';
 export async function provisionParentAccount({adminAuth,adminDb,parentName,parentEmail,institutionId=null,institutionName='',rosterIds=[],studentIds=[],provisioningMethod='admin',relationship='guardian',allowUnlinked=false}){
   const name=String(parentName||'').trim().slice(0,180);const email=String(parentEmail||'').trim().toLowerCase().slice(0,254);const relation=['father','mother','guardian'].includes(String(relationship).toLowerCase())?String(relationship).toLowerCase():'guardian';
   if(!name)throw new Error('Parent name is required.');if(!email||!email.includes('@'))throw new Error('A valid parent email is required.');
-  if(!Array.isArray(studentIds)||(!studentIds.length&&!allowUnlinked))throw new Error('At least one student must be linked to the parent account.');
   let user;let created=false;
   try{user=await adminAuth.getUserByEmail(email);}catch(error){if(error?.code!=='auth/user-not-found')throw error;const temporaryPassword=crypto.randomBytes(24).toString('base64url');user=await adminAuth.createUser({email,password:temporaryPassword,displayName:name,emailVerified:false,disabled:false});created=true;}
   const existingClaims=user.customClaims||{};const existingRole=typeof existingClaims.role==='string'?existingClaims.role:null;if(existingRole&&existingRole!=='parent')throw new Error(`This email is already assigned to the ${existingRole} role and cannot be provisioned as a parent.`);
   const now=new Date().toISOString();const parentRef=adminDb.collection('users').doc(user.uid);const existingProfileSnap=await parentRef.get();const existingProfile=existingProfileSnap.exists?existingProfileSnap.data()||{}:{};
+  const existingInstitutionId=String(existingProfile.institutionId||'').trim();
+  if(institutionId&&existingInstitutionId&&existingInstitutionId!==institutionId)throw new Error('Parent is already linked to another institution and cannot be reassigned through provisioning.');
+  if(!Array.isArray(studentIds)||(!studentIds.length&&!allowUnlinked))throw new Error('At least one student must be linked to the parent account.');
   const existingInstitutionIds=Array.isArray(existingProfile.institutionIds)?existingProfile.institutionIds.filter(Boolean):[];
   const existingPrimaryInstitution=existingProfile.institutionId||existingInstitutionIds[0]||null;
   if(existingPrimaryInstitution&&institutionId&&existingPrimaryInstitution!==institutionId)throw new Error('This parent account is already linked to another institution and cannot be reassigned across institutions.');

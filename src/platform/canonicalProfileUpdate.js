@@ -35,6 +35,14 @@ export async function updateCanonicalStudentProfile(user, updates) {
 export function buildProfileEditorPatch(updates = {}) {
   const patch = {};
 
+  if (updates.gender !== undefined || Object.prototype.hasOwnProperty.call(updates, 'profilePicture')) {
+    patch.identity = {};
+    if (updates.gender !== undefined) patch.identity.gender = String(updates.gender || '');
+    if (Object.prototype.hasOwnProperty.call(updates, 'profilePicture')) {
+      patch.identity.photoURL = updates.profilePicture || '';
+    }
+  }
+
   if (updates.phone !== undefined || updates.email !== undefined) {
     patch.contact = {};
     if (updates.phone !== undefined) patch.contact.mobile = { number: String(updates.phone || '') };
@@ -72,17 +80,13 @@ export function buildProfileEditorPatch(updates = {}) {
     };
   }
 
-  if (updates.studentTrack !== undefined) {
-    const track = updates.studentTrack;
-    patch.services = {
-      career: track === 'career_guidance' || track === 'both',
-      wellbeing: track === 'counselling' || track === 'both',
-    };
-  }
+  // Service enrolment/assignment is governed by the service-management workflow,
+  // not by the student-owned profile write API. studentTrack is intentionally
+  // excluded here so a profile edit cannot grant or revoke service access.
 
   if (updates.counsellingConsentAgreed !== undefined) {
     patch.governance = {
-      consents: { wellbeing: Boolean(updates.counsellingConsentAgreed) },
+      consent: { wellbeing: Boolean(updates.counsellingConsentAgreed) },
     };
   }
 

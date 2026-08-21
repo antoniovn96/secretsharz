@@ -1,29 +1,12 @@
 import { getAdminAuth, getAdminFirestore, getAdminApp } from '../../../src/security/firebaseAdmin.js';
-import { isStudentProfile, getStudentPath } from '../../../src/platform/studentRecordModel.js';
+import { isStudentProfile } from '../../../src/platform/studentRecordModel.js';
+import { toAdminStudentDirectoryRecord } from '../../../src/platform/adminStudentDirectory.js';
 
 function bearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization;
   if (typeof header !== 'string') return null;
   const match = header.match(/^Bearer\s+(.+)$/i);
   return match ? match[1] : null;
-}
-
-function toMillis(value) {
-  if (!value) return null;
-  if (typeof value.toMillis === 'function') return value.toMillis();
-  if (typeof value.toDate === 'function') return value.toDate().getTime();
-  if (value instanceof Date) return value.getTime();
-  if (typeof value === 'number') return value;
-  if (typeof value === 'string') {
-    const parsed = Date.parse(value);
-    return Number.isNaN(parsed) ? null : parsed;
-  }
-  return null;
-}
-
-function toIso(value) {
-  const millis = toMillis(value);
-  return millis == null ? null : new Date(millis).toISOString();
 }
 
 function safeAuthError(error) {
@@ -34,37 +17,16 @@ function safeAuthError(error) {
   };
 }
 
-function publicStudentRecord(doc) {
-  const data = doc.data() || {};
-  return {
-    id: doc.id,
-    name: data.name || data.fullName || '',
-    email: data.email || '',
-    photoURL: data.photoURL || '',
-    role: data.role || '',
-    profileType: data.profileType || '',
-    age: data.age ?? null,
-    dob: data.dob || data.dateOfBirth || '',
-    grade: data.grade || data.gradeOrCourse || '',
-    schoolName: data.schoolName || '',
-    institutionName: data.institutionName || '',
-    parentName: data.parentName || '',
-    parentContact: data.parentContact || '',
-    contactNumber: data.contactNumber || data.phone || '',
-    primary_path: data.primary_path || '',
-    studentTrack: data.studentTrack || '',
-    path: getStudentPath(data),
-    profileComplete: data.profileComplete === true,
-    onboardingCompleted: data.onboardingCompleted === true,
-    riasecCode: data.riasecCode || data.careerDNA?.riasec?.code || '',
-    riasecScores: data.riasecScores || data.careerDNA?.riasec?.scores || {},
-    careerAssessment: data.careerAssessment || null,
-    assessmentCompletedAt: toIso(data.assessmentCompletedAt || data.careerAssessment?.completedAt),
-    careerReportAccess: data.careerReportAccess || null,
-    createdAt: toIso(data.createdAt),
-    createdAtMs: toMillis(data.createdAt),
-    updatedAt: toIso(data.updatedAt),
-  };
+async function getReferencedDocuments(db, collectionName, ids) {
+  const uniqueIds = [...new Set(ids.filter(Boolean).map(String))];
+  if (!uniqueIds.length) return new Map();
+  const refs = uniqueIds.map(id => db.collection(collectionName).doc(id));
+  const snapshots = await db.getAll(...refs);
+  return new Map(snapshots.filter(snapshot => snapshot.exists).map(snapshot => [snapshot.id, snapshot.data() || {}]));
+}
+
+function professionalName(user = {}, profile = {}) {
+  return user.name || user.fullName || profile.displayName || profile.name || '';
 }
 
 export default async function handler(req, res) {
@@ -89,16 +51,63 @@ export default async function handler(req, res) {
   if (!isFounder && !isSuperAdmin) return res.status(403).json({ error: 'Super Admin access required.' });
 
   try {
-    const snapshot = await getAdminFirestore().collection('users').get();
+    const db = getAdminFirestore();
+    const snapshot = await db.collection('users').get();
     const students = snapshot.docs
       .filter(doc => isStudentProfile(doc.data() || {}))
-      .map(publicStudentRecord)
-      .sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+      .map(doc => toAdminStudentDirectoryRecord(doc.data() || {}, doc.id));
+
+    const assignmentIds = students
+      .flatMap(student => Object.values(student.assignments || {}))
+      .filter(Boolean);
+    const institutionIds = students.map(student => student.institutionId).filter(Boolean);
+
+    const [professionalUsers, professionalProfiles, institutions] = await Promise.all([
+      getReferencedDocuments(db, 'users', assignmentIds),
+      getReferencedDocuments(db, 'professionals', assignmentIds),
+      getReferencedDocuments(db, 'institutions', institutionIds),
+    ]);
+
+    const professionalDirectory = new Map();
+    for (const id of new Set(assignmentIds)) {
+      professionalDirectory.set(id, professionalName(professionalUsers.get(id) || {}, professionalProfiles.get(id) || {}));
+    }
+
+    students.forEach(student => {
+      const assignedNames = Object.entries(student.assignments || {})
+        .filter(([, professionalId]) => professionalId)
+        .map(([service, professionalId]) => {
+          const name = professionalDirectory.get(professionalId);
+          return name ? `${service}: ${name}` : '';
+        })
+        .filter(Boolean);
+      student.assignedProfessionalName = assignedNames.join(' · ');
+      student.assignedProfessionalNames = Object.fromEntries(
+        Object.entries(student.assignments || {})
+          .filter(([, professionalId]) => professionalId)
+          .map(([service, professionalId]) => [service, professionalDirectory.get(professionalId) || ''])
+      );
+
+      const institution = institutions.get(student.institutionId);
+      if (institution) {
+        student.institutionName = institution.name || student.institutionName;
+        student.schoolName = student.institutionName;
+        student.academicYear = institution.academicYear || student.academicYear;
+      }
+    });
+
+    students.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
 
     return res.status(200).json({
       generatedAt: new Date().toISOString(),
       students,
       count: students.length,
+      filters: {
+        institutions: [...new Set(students.map(student => student.institutionName).filter(Boolean))].sort(),
+        grades: [...new Set(students.map(student => student.grade).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true })),
+        academicYears: [...new Set(students.map(student => student.academicYear).filter(Boolean))].sort().reverse(),
+        counsellors: [...new Set(students.map(student => student.assignedProfessionalName).filter(Boolean))].sort(),
+      },
     });
   } catch (error) {
     console.error('[admin students] failed:', error);

@@ -20,10 +20,25 @@ const normaliseServices = (institution = {}) => {
   return Object.fromEntries(Object.entries(services).map(([key, value]) => [String(key).toLowerCase(), Boolean(value)]));
 };
 
+const displayText = (value, fallback = 'Not provided') => {
+  if (value === null || value === undefined || value === '') return fallback;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return value.map(item => displayText(item, '')).filter(Boolean).join(', ') || fallback;
+  if (typeof value === 'object') {
+    if (value.formatted) return String(value.formatted);
+    if (value.international) return String(value.international);
+    if (value.displayName) return String(value.displayName);
+    if (value.name) return String(value.name);
+    if (value.cityName || value.stateName || value.countryName) return [value.cityName, value.stateName, value.countryName].filter(Boolean).join(', ') || fallback;
+    return fallback;
+  }
+  return fallback;
+};
+
 const Stat = ({ icon: Icon, label, value }) => (
   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
     <Icon className="w-4 h-4 text-slate-400 mb-2" />
-    <p className="text-2xl font-black text-slate-900">{value}</p>
+    <p className="text-2xl font-black text-slate-900">{displayText(value, '0')}</p>
     <p className="text-xs font-semibold text-slate-500 mt-1">{label}</p>
   </div>
 );
@@ -70,13 +85,13 @@ const InstitutionDetailPanel = ({ institution, isOpen, onClose, onEdit }) => {
         <header className="p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white flex items-start justify-between">
           <div className="flex items-center gap-4 min-w-0">
             <div className="w-14 h-14 shrink-0 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-lg"><Building2 className="w-7 h-7" /></div>
-            <div className="min-w-0"><h2 className="text-xl font-black text-slate-900 truncate">{record.name || 'Institution'}</h2><p className="text-xs font-mono text-slate-400 mt-1">{record.institutionCode || record.id}</p><div className="flex gap-2 mt-2"><span className={`px-2.5 py-1 rounded-full text-xs font-bold ${record.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{record.status || 'pending'}</span><span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">{activeServices.length} service{activeServices.length === 1 ? '' : 's'}</span></div></div>
+            <div className="min-w-0"><h2 className="text-xl font-black text-slate-900 truncate">{displayText(record.name, 'Institution')}</h2><p className="text-xs font-mono text-slate-400 mt-1">{displayText(record.institutionCode || record.id, '—')}</p><div className="flex gap-2 mt-2"><span className={`px-2.5 py-1 rounded-full text-xs font-bold ${record.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{displayText(record.status, 'pending')}</span><span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">{activeServices.length} service{activeServices.length === 1 ? '' : 's'}</span></div></div>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700"><X className="w-6 h-6" /></button>
         </header>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {error && <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm font-semibold">{error}</div>}
+          {error && <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm font-semibold">{displayText(error)}</div>}
           <section><h3 className="text-sm font-bold text-slate-900 mb-3">Institution Overview</h3><div className="grid grid-cols-2 md:grid-cols-4 gap-3"><Stat icon={Users} label="Students" value={students.length || 0} /><Stat icon={Users} label="Parents" value={parents.length || 0} /><Stat icon={Briefcase} label="Professionals" value={professionals.length || 0} /><Stat icon={KeyRound} label="Available licences" value={licenses.available || 0} /></div></section>
 
           <section><h3 className="text-sm font-bold text-slate-900 mb-3">Institution Contact</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-3"><Info icon={Mail} label="Coordinator email" value={record.contactEmail || record.coordinator?.email} /><Info icon={Phone} label="Coordinator phone" value={record.contactPhone} /><Info icon={MapPin} label="Address" value={record.address} /><Info icon={Building2} label="Coordinator" value={record.contactPerson || record.coordinator?.name} /></div></section>
@@ -97,10 +112,10 @@ const InstitutionDetailPanel = ({ institution, isOpen, onClose, onEdit }) => {
   );
 };
 
-const Info = ({ icon: Icon, label, value }) => <div className="p-4 bg-slate-50 rounded-xl border border-slate-100"><div className="flex items-center gap-2 text-slate-400 mb-1"><Icon className="w-4 h-4" /><span className="text-xs font-bold uppercase tracking-wide">{label}</span></div><p className="text-sm font-semibold text-slate-800 break-words">{value || 'Not provided'}</p></div>;
-const Node = ({ label }) => <div className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-700">{label}</div>;
+const Info = ({ icon: Icon, label, value }) => <div className="p-4 bg-slate-50 rounded-xl border border-slate-100"><div className="flex items-center gap-2 text-slate-400 mb-1"><Icon className="w-4 h-4" /><span className="text-xs font-bold uppercase tracking-wide">{label}</span></div><p className="text-sm font-semibold text-slate-800 break-words">{displayText(value)}</p></div>;
+const Node = ({ label }) => <div className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-700">{displayText(label)}</div>;
 const Arrow = () => <span className="text-slate-300 font-bold">→</span>;
-const MiniStat = ({ value, label }) => <div className="p-2 rounded-lg bg-white border border-slate-100"><p className="text-sm font-black text-slate-900">{value}</p><p className="text-[10px] text-slate-400">{label}</p></div>;
-const PeopleList = ({ title, people }) => <div className="p-4 bg-white border border-slate-100 rounded-xl"><h4 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-3">{title}</h4>{people.length ? <div className="space-y-2 max-h-44 overflow-y-auto">{people.map(person => <div key={person.id} className="p-2.5 bg-slate-50 rounded-lg"><p className="text-sm font-semibold text-slate-800 truncate">{person.name || 'Unnamed'}</p><p className="text-[11px] text-slate-400 truncate">{person.email || person.role || 'No email'}</p></div>)}</div> : <p className="text-xs text-slate-400">No linked records.</p>}</div>;
+const MiniStat = ({ value, label }) => <div className="p-2 rounded-lg bg-white border border-slate-100"><p className="text-sm font-black text-slate-900">{displayText(value, '0')}</p><p className="text-[10px] text-slate-400">{label}</p></div>;
+const PeopleList = ({ title, people }) => <div className="p-4 bg-white border border-slate-100 rounded-xl"><h4 className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-3">{title}</h4>{people.length ? <div className="space-y-2 max-h-44 overflow-y-auto">{people.map(person => <div key={person.id} className="p-2.5 bg-slate-50 rounded-lg"><p className="text-sm font-semibold text-slate-800 truncate">{displayText(person.name, 'Unnamed')}</p><p className="text-[11px] text-slate-400 truncate">{displayText(person.email || person.role, 'No email')}</p></div>)}</div> : <p className="text-xs text-slate-400">No linked records.</p>}</div>;
 
 export default InstitutionDetailPanel;

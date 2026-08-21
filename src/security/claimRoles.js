@@ -8,7 +8,9 @@
 export const CLAIM_ROLE_KEY = 'role';
 export const FOUNDER_EMAIL = 'antonio.antonio.noronha@gmail.com';
 
-// Roles that may be assigned as a custom claim via the server endpoint.
+// Roles that may be assigned as a privileged custom claim via the server
+// endpoint. Institution-scoped users are represented by their institution
+// membership/role fields rather than a global privileged claim.
 // `student` is intentionally absent: absence of a privileged claim is the
 // default student state.
 export const ASSIGNABLE_CLAIM_ROLES = Object.freeze([
@@ -17,8 +19,7 @@ export const ASSIGNABLE_CLAIM_ROLES = Object.freeze([
   'career_counsellor',
   'psychologist',
   'educator',
-  'parent',
-  'institution'
+  'parent'
 ]);
 
 export const ADMIN_CLAIM_ROLES = Object.freeze(['super_admin']);
