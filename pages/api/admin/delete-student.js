@@ -1,11 +1,5 @@
-import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
-
-function bearerToken(req) {
-  const header = req.headers.authorization || req.headers.Authorization;
-  if (typeof header !== 'string') return null;
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
-}
+import { getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { requireSuperAdmin, sendAuthorizationFailure } from '../../../src/security/adminAuthorization.js';
 
 function clean(value, max = 160) {
   return String(value || '').trim().slice(0, max);
@@ -17,19 +11,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed.' });
   }
 
-  const token = bearerToken(req);
-  if (!token) return res.status(401).json({ error: 'Authentication required.' });
-
-  let decoded;
-  try {
-    decoded = await getAdminAuth().verifyIdToken(token);
-  } catch (_) {
-    return res.status(401).json({ error: 'Invalid or expired authentication token.' });
-  }
-
-  const isFounder = decoded.email_verified === true && decoded.email === 'antonio.antonio.noronha@gmail.com';
-  const isSuperAdmin = decoded.role === 'super_admin';
-  if (!isFounder && !isSuperAdmin) return res.status(403).json({ error: 'Super Admin access required.' });
+  const authorization = await requireSuperAdmin(req);
+  if (sendAuthorizationFailure(res, authorization)) return;
+  const decoded = authorization.decodedToken;
 
   const studentId = clean(req.body?.studentId, 128);
   const confirmationName = clean(req.body?.confirmationName, 180);
@@ -54,7 +38,8 @@ export default async function handler(req, res) {
       await db.collection('auditEvents').add({
         actorUid: decoded.uid || null,
         actorEmail: decoded.email || null,
-        actorRole: isFounder ? 'founder' : 'super_admin',
+        actorRole: 'super_admin',
+        authorizationSource: authorization.authorizationSource || 'claim',
         targetUid: studentId,
         targetRole: 'student',
         action: 'delete_student_directory_record',

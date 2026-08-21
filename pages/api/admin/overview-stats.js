@@ -1,12 +1,6 @@
-import { getAdminAuth, getAdminFirestore, getAdminApp } from '../../../src/security/firebaseAdmin.js';
+import { getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { requireSuperAdmin, sendAuthorizationFailure } from '../../../src/security/adminAuthorization.js';
 import { isStudentProfile, getStudentPath } from '../../../src/platform/studentRecordModel.js';
-
-function bearerToken(req) {
-  const header = req.headers.authorization || req.headers.Authorization;
-  if (typeof header !== 'string') return null;
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
-}
 
 function toMillis(value) {
   if (!value) return null;
@@ -29,24 +23,15 @@ function monthKey(timestamp) {
 function buildMonthSeries(now, records, months = 6) {
   const result = [];
   const start = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
-
   for (let index = 0; index < months; index += 1) {
     const date = new Date(start.getFullYear(), start.getMonth() + index, 1);
-    result.push({
-      key: monthKey(date.getTime()),
-      month: date.toLocaleString('en-IN', { month: 'short' }),
-      ...Object.fromEntries(records.map(record => [record.name, 0]))
-    });
+    result.push({ key: monthKey(date.getTime()), month: date.toLocaleString('en-IN', { month: 'short' }), ...Object.fromEntries(records.map(record => [record.name, 0])) });
   }
-
   const byKey = new Map(result.map(item => [item.key, item]));
-  records.forEach(({ name, timestamps }) => {
-    timestamps.forEach(timestamp => {
-      const item = byKey.get(monthKey(timestamp));
-      if (item) item[name] += 1;
-    });
-  });
-
+  records.forEach(({ name, timestamps }) => timestamps.forEach(timestamp => {
+    const item = byKey.get(monthKey(timestamp));
+    if (item) item[name] += 1;
+  }));
   return result.map(({ key, ...item }) => item);
 }
 
@@ -64,39 +49,18 @@ function getWindowCounts(timestamps, now, windowMs) {
   };
 }
 
-function safeAuthErrorDetails(error) {
-  return {
-    code: error?.code || null,
-    message: error?.message || 'Unknown Firebase Auth verification error',
-    expectedProjectId: getAdminApp()?.options?.projectId || null,
-  };
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed.' });
   }
 
-  const idToken = bearerToken(req);
-  if (!idToken) return res.status(401).json({ error: 'Authentication required.' });
-
-  let decodedToken;
-  try {
-    decodedToken = await getAdminAuth().verifyIdToken(idToken);
-  } catch (error) {
-    console.error('[admin overview auth] Firebase ID token verification failed:', safeAuthErrorDetails(error));
-    return res.status(401).json({ error: 'Invalid or expired authentication token.' });
-  }
-
-  const isFounder = decodedToken.email_verified === true && decodedToken.email === 'antonio.antonio.noronha@gmail.com';
-  const isSuperAdmin = decodedToken.role === 'super_admin';
-  if (!isFounder && !isSuperAdmin) return res.status(403).json({ error: 'Super Admin access required.' });
+  const authorization = await requireSuperAdmin(req);
+  if (sendAuthorizationFailure(res, authorization)) return;
 
   try {
     const db = getAdminFirestore();
     const now = new Date();
-
     const [usersSnapshot, sessionsSnapshot, iepSnapshot, moodSnapshot, roadmapSnapshot] = await Promise.all([
       db.collection('users').get(),
       db.collectionGroup('sessions').get(),
@@ -111,13 +75,9 @@ export default async function handler(req, res) {
     const moodLogs = moodSnapshot.docs.map(doc => doc.data());
     const roadmaps = roadmapSnapshot.docs.map(doc => doc.data());
 
-    // Use the canonical student resolver rather than relying on the legacy
-    // role field. This includes newer career profiles such as users who have
-    // a careerAssessment/profileType but were never assigned role=student.
     const studentUsers = users.filter(isStudentProfile);
     const professionals = users.filter(user => ['counsellor', 'psychologist', 'educator'].includes(String(user.role || '').toLowerCase()));
     const parents = users.filter(user => String(user.role || '').toLowerCase() === 'parent');
-
     const registrationTimestamps = users.map(user => toMillis(user.createdAt)).filter(Boolean);
     const sessionTimestamps = sessions.map(session => toMillis(session.timestamp)).filter(Boolean);
     const iepRecords = ieps.map(record => ({ ...record, timestampMs: toMillis(record.timestamp) })).filter(record => record.timestampMs);
@@ -130,24 +90,19 @@ export default async function handler(req, res) {
         : user?.careerDNA?.riasec?.code || user?.riasecCode;
       return typeof code === 'string' && code.trim().length > 0;
     });
-
     const pendingIEPs = iepRecords.filter(record => {
       const status = String(record.status || 'Active').toLowerCase();
       return !['completed', 'closed', 'archived'].includes(status);
     });
-
     const recentSessionWindow = getWindowCounts(sessionTimestamps, now, 7 * 24 * 60 * 60 * 1000);
     const registrationWindow = getWindowCounts(registrationTimestamps, now, 30 * 24 * 60 * 60 * 1000);
     const iepWindow = getWindowCounts(iepRecords.map(record => record.timestampMs), now, 30 * 24 * 60 * 60 * 1000);
-
     const studentPathCounts = studentUsers.reduce((acc, user) => {
       const normalized = getStudentPath(user).toLowerCase();
       acc[normalized] = (acc[normalized] || 0) + 1;
       return acc;
     }, { wellbeing: 0, sen: 0, career: 0, unassigned: 0 });
-
     const studentProfileComplete = studentUsers.filter(user => user.profileComplete === true || user.onboardingCompleted === true).length;
-
     const engagementData = buildMonthSeries(now, [
       { name: 'registrations', timestamps: registrationTimestamps },
       { name: 'sessions', timestamps: sessionTimestamps },
@@ -158,30 +113,10 @@ export default async function handler(req, res) {
     return res.status(200).json({
       generatedAt: now.toISOString(),
       stats: {
-        totalUsers: {
-          value: users.length,
-          change: percentChange(registrationWindow.current, registrationWindow.previous),
-          trend: registrationWindow.current >= registrationWindow.previous ? 'up' : 'down',
-          changeLabel: 'new users · 30d',
-        },
-        recentSessions: {
-          value: recentSessionWindow.current,
-          change: percentChange(recentSessionWindow.current, recentSessionWindow.previous),
-          trend: recentSessionWindow.current >= recentSessionWindow.previous ? 'up' : 'down',
-          changeLabel: 'sessions · 7d',
-        },
-        pendingIEPs: {
-          value: pendingIEPs.length,
-          change: percentChange(iepWindow.current, iepWindow.previous),
-          trend: iepWindow.current <= iepWindow.previous ? 'down' : 'up',
-          changeLabel: 'new IEPs · 30d',
-        },
-        completedAssessments: {
-          value: completedAssessmentUsers.length,
-          change: null,
-          trend: 'up',
-          changeLabel: 'live total',
-        },
+        totalUsers: { value: users.length, change: percentChange(registrationWindow.current, registrationWindow.previous), trend: registrationWindow.current >= registrationWindow.previous ? 'up' : 'down', changeLabel: 'new users · 30d' },
+        recentSessions: { value: recentSessionWindow.current, change: percentChange(recentSessionWindow.current, recentSessionWindow.previous), trend: recentSessionWindow.current >= recentSessionWindow.previous ? 'up' : 'down', changeLabel: 'sessions · 7d' },
+        pendingIEPs: { value: pendingIEPs.length, change: percentChange(iepWindow.current, iepWindow.previous), trend: iepWindow.current <= iepWindow.previous ? 'down' : 'up', changeLabel: 'new IEPs · 30d' },
+        completedAssessments: { value: completedAssessmentUsers.length, change: null, trend: 'up', changeLabel: 'live total' },
       },
       counts: {
         students: studentUsers.length,

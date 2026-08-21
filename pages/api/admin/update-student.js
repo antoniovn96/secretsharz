@@ -1,11 +1,5 @@
-import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
-
-function bearerToken(req) {
-  const header = req.headers.authorization || req.headers.Authorization;
-  if (typeof header !== 'string') return null;
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
-}
+import { getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { requireSuperAdmin, sendAuthorizationFailure } from '../../../src/security/adminAuthorization.js';
 
 const clean = (value, max = 180) => String(value ?? '').trim().slice(0, max);
 const plain = value => {
@@ -31,16 +25,10 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'PATCH');
     return res.status(405).json({ error: 'Method not allowed.' });
   }
-  const token = bearerToken(req);
-  if (!token) return res.status(401).json({ error: 'Authentication required.' });
 
-  let decoded;
-  try { decoded = await getAdminAuth().verifyIdToken(token); }
-  catch (_) { return res.status(401).json({ error: 'Invalid or expired authentication token.' }); }
-
-  const isFounder = decoded.email_verified === true && decoded.email === 'antonio.antonio.noronha@gmail.com';
-  const isSuperAdmin = decoded.role === 'super_admin';
-  if (!isFounder && !isSuperAdmin) return res.status(403).json({ error: 'Super Admin access required.' });
+  const authorization = await requireSuperAdmin(req);
+  if (sendAuthorizationFailure(res, authorization)) return;
+  const decoded = authorization.decodedToken;
 
   const studentId = clean(req.body?.studentId, 128);
   if (!studentId) return res.status(400).json({ error: 'Student ID is required.' });
@@ -75,8 +63,20 @@ export default async function handler(req, res) {
     const updatedAt = new Date().toISOString();
     await ref.set({ ...patch, primary_path: nextPath, studentTrack: nextTrack, updatedAt }, { merge: true });
     try {
-      await db.collection('auditEvents').add({ actorUid: decoded.uid || null, actorEmail: decoded.email || null, actorRole: isFounder ? 'founder' : 'super_admin', targetUid: studentId, targetRole: 'student', action: 'update_student_directory_profile', fields: Object.keys(patch).concat(['primary_path', 'studentTrack']).filter((value, index, list) => list.indexOf(value) === index), createdAt: updatedAt });
-    } catch (auditError) { console.error('[update-student] audit write failed:', auditError?.message || auditError); }
+      await db.collection('auditEvents').add({
+        actorUid: decoded.uid || null,
+        actorEmail: decoded.email || null,
+        actorRole: 'super_admin',
+        authorizationSource: authorization.authorizationSource || 'claim',
+        targetUid: studentId,
+        targetRole: 'student',
+        action: 'update_student_directory_profile',
+        fields: Object.keys(patch).concat(['primary_path', 'studentTrack']).filter((value, index, list) => list.indexOf(value) === index),
+        createdAt: updatedAt
+      });
+    } catch (auditError) {
+      console.error('[update-student] audit write failed:', auditError?.message || auditError);
+    }
     return res.status(200).json({ success: true, studentId, profile: { ...existing, ...patch, primary_path: nextPath, studentTrack: nextTrack, updatedAt } });
   } catch (error) {
     console.error('[update-student] failed:', error?.message || error);
