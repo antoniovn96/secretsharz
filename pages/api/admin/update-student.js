@@ -14,6 +14,17 @@ const plain = value => {
   if (typeof value === 'object') return String(value.display || value.label || value.name || value.number || value.international || '');
   return value;
 };
+const PRIMARY_PATHS = ['wellbeing', 'sen', 'career', 'unassigned'];
+const STUDENT_TRACKS = ['unassigned', 'career', 'counselling', 'both', 'sen'];
+const validPathTrack = (path, track) => {
+  if (!PRIMARY_PATHS.includes(path) || !STUDENT_TRACKS.includes(track)) return false;
+  if (path === 'unassigned') return track === 'unassigned';
+  if (track === 'both') return true;
+  if (path === 'career') return track === 'career';
+  if (path === 'wellbeing') return track === 'counselling';
+  if (path === 'sen') return track === 'sen';
+  return false;
+};
 
 export default async function handler(req, res) {
   if (req.method !== 'PATCH') {
@@ -38,8 +49,10 @@ export default async function handler(req, res) {
   const incoming = req.body?.profile && typeof req.body.profile === 'object' ? req.body.profile : {};
   const patch = {};
   allowed.forEach(key => { if (Object.prototype.hasOwnProperty.call(incoming, key)) patch[key] = plain(incoming[key]); });
-  if (patch.primary_path !== undefined) patch.primary_path = ['wellbeing', 'sen', 'career', 'unassigned'].includes(String(patch.primary_path)) ? String(patch.primary_path) : 'unassigned';
-  if (patch.studentTrack !== undefined) patch.studentTrack = clean(patch.studentTrack, 40);
+  if (patch.primary_path !== undefined) patch.primary_path = String(patch.primary_path).toLowerCase();
+  if (patch.studentTrack !== undefined) patch.studentTrack = String(patch.studentTrack).toLowerCase();
+  if (patch.primary_path !== undefined && !PRIMARY_PATHS.includes(patch.primary_path)) return res.status(400).json({ error: 'Invalid primary path.' });
+  if (patch.studentTrack !== undefined && !STUDENT_TRACKS.includes(patch.studentTrack)) return res.status(400).json({ error: 'Invalid student track.' });
   if (patch.name !== undefined) patch.name = clean(patch.name, 180);
   if (patch.email !== undefined) patch.email = clean(patch.email, 254).toLowerCase();
   if (patch.phone !== undefined) patch.phone = clean(patch.phone, 60);
@@ -55,12 +68,16 @@ export default async function handler(req, res) {
     const existing = snap.data() || {};
     if (String(existing.profileType || existing.role || 'student').toLowerCase() !== 'student') return res.status(409).json({ error: 'The selected record is not a student account.' });
 
+    const nextPath = patch.primary_path !== undefined ? patch.primary_path : clean(existing.primary_path || existing.path || existing.studentTrack || 'unassigned').toLowerCase();
+    const nextTrack = patch.studentTrack !== undefined ? patch.studentTrack : clean(existing.studentTrack || existing.track || 'unassigned').toLowerCase();
+    if (!validPathTrack(nextPath, nextTrack)) return res.status(400).json({ error: 'Primary Path and Student Track are incompatible. Use Career + Career, Wellbeing + Counselling, SEN + SEN, or any path + Both.' });
+
     const updatedAt = new Date().toISOString();
-    await ref.set({ ...patch, updatedAt }, { merge: true });
+    await ref.set({ ...patch, primary_path: nextPath, studentTrack: nextTrack, updatedAt }, { merge: true });
     try {
-      await db.collection('auditEvents').add({ actorUid: decoded.uid || null, actorEmail: decoded.email || null, actorRole: isFounder ? 'founder' : 'super_admin', targetUid: studentId, targetRole: 'student', action: 'update_student_directory_profile', fields: Object.keys(patch), createdAt: updatedAt });
+      await db.collection('auditEvents').add({ actorUid: decoded.uid || null, actorEmail: decoded.email || null, actorRole: isFounder ? 'founder' : 'super_admin', targetUid: studentId, targetRole: 'student', action: 'update_student_directory_profile', fields: Object.keys(patch).concat(['primary_path', 'studentTrack']).filter((value, index, list) => list.indexOf(value) === index), createdAt: updatedAt });
     } catch (auditError) { console.error('[update-student] audit write failed:', auditError?.message || auditError); }
-    return res.status(200).json({ success: true, studentId, profile: { ...existing, ...patch, updatedAt } });
+    return res.status(200).json({ success: true, studentId, profile: { ...existing, ...patch, primary_path: nextPath, studentTrack: nextTrack, updatedAt } });
   } catch (error) {
     console.error('[update-student] failed:', error?.message || error);
     return res.status(500).json({ error: 'Unable to update the student profile.' });
