@@ -4,6 +4,28 @@ const SERVICE_BY_DIVISION = Object.freeze({
   sen: 'sen',
 });
 
+const LEGACY_FIELD_BY_DIVISION = Object.freeze({
+  career: 'careerId',
+  psych: 'psychId',
+  sen: 'senId',
+});
+
+/**
+ * Resolve the currently assigned professional during the migration period.
+ * Canonical relationships win; legacy assignedStaff is the compatibility
+ * fallback for records that have not yet been migrated.
+ */
+export function getEffectiveStaffAssignment(studentData = {}, division) {
+  const service = SERVICE_BY_DIVISION[division];
+  if (!service) return null;
+
+  const canonical = studentData.relationships?.assignments?.[service];
+  if (canonical) return canonical;
+
+  const legacy = studentData.assignedStaff || {};
+  return legacy[LEGACY_FIELD_BY_DIVISION[division]] || legacy[division] || null;
+}
+
 /**
  * Build a migration-safe assignment update.
  * Canonical relationships are written first-class while legacy assignedStaff
@@ -27,11 +49,7 @@ export function buildStaffAssignmentUpdate(studentData = {}, division, staffId) 
     ? studentData.services
     : {};
 
-  const canonicalAssignments = {
-    ...existingAssignments,
-    [service]: staffId,
-  };
-
+  const canonicalAssignments = { ...existingAssignments, [service]: staffId };
   const canonicalServices = {
     ...existingServices,
     [service]: {
@@ -43,19 +61,15 @@ export function buildStaffAssignmentUpdate(studentData = {}, division, staffId) 
     },
   };
 
-  const legacyField = { career: 'careerId', psych: 'psychId', sen: 'senId' }[division];
   const legacyAssignments = {
     ...existingLegacy,
-    [legacyField]: staffId,
+    [LEGACY_FIELD_BY_DIVISION[division]]: staffId,
     [division]: staffId,
   };
 
   return {
     assignedStaff: legacyAssignments,
-    relationships: {
-      ...existingRelationships,
-      assignments: canonicalAssignments,
-    },
+    relationships: { ...existingRelationships, assignments: canonicalAssignments },
     services: canonicalServices,
   };
 }
