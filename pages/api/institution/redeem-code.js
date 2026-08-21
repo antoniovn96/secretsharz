@@ -36,6 +36,7 @@ export default async function handler(req,res){
       if(roster.parentUid) parentSnapshot=await transaction.get(db.collection('users').doc(roster.parentUid));
 
       const now=new Date().toISOString();
+      const parentRelationship=clean(roster.relationship||roster.parentRelationship||'guardian',40).toLowerCase()||'guardian';
       transaction.update(codeRef,{status:'redeemed',redeemedBy:decoded.uid,redeemedAt:now});
       transaction.set(rosterRef,{status:'claimed',claimedBy:decoded.uid,claimedAt:now,assessmentStatus:'not_started',reportStatus:'locked_until_completion'},{merge:true});
       transaction.set(db.collection('users').doc(decoded.uid),{
@@ -47,12 +48,15 @@ export default async function handler(req,res){
         parentUid:roster.parentUid||null,
         parentName:roster.parentName||null,
         parentEmail:roster.parentEmail||null,
+        guardianRelationships:roster.parentUid?{[roster.parentUid]:parentRelationship}:{},
       },{merge:true});
 
       if(parentSnapshot?.exists){
         const parent=parentSnapshot.data()||{};
+        const parentUid=roster.parentUid;
         const linkedStudentIds=Array.from(new Set([...(Array.isArray(parent.linkedStudentIds)?parent.linkedStudentIds:[]),decoded.uid]));
-        transaction.set(db.collection('users').doc(roster.parentUid),{linkedStudentIds,updatedAt:now},{merge:true});
+        const childRelationships={...(parent.childRelationships&&typeof parent.childRelationships==='object'?parent.childRelationships:{}),[decoded.uid]:parentRelationship};
+        transaction.set(db.collection('users').doc(parentUid),{linkedStudentIds,childRelationships,updatedAt:now},{merge:true});
       }
       return {institutionId:record.institutionId,institutionName:record.institutionName,roster:{...roster,fullName:roster.fullName||'',className:roster.className||'',section:roster.section||''}};
     });
