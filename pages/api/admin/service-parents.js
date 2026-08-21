@@ -1,19 +1,9 @@
-import { getAdminAuth, getAdminFirestore, getAdminApp } from '../../../src/security/firebaseAdmin.js';
+import { getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { requireSuperAdmin, sendAuthorizationFailure } from '../../../src/security/adminAuthorization.js';
 import { isStudentProfile, getStudentPath } from '../../../src/platform/studentRecordModel.js';
 
 const SERVICES = new Set(['career', 'wellbeing', 'sen']);
 const PATHS = { career: 'Career', wellbeing: 'Wellbeing', sen: 'SEN' };
-
-function bearerToken(req) {
-  const header = req.headers.authorization || req.headers.Authorization;
-  if (typeof header !== 'string') return null;
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
-}
-
-function safeAuthError(error) {
-  return { code: error?.code || null, message: error?.message || 'Unknown Firebase Auth verification error', expectedProjectId: getAdminApp()?.options?.projectId || null };
-}
 
 function studentRecord(doc) {
   const data = doc.data() || {};
@@ -53,20 +43,8 @@ export default async function handler(req, res) {
   const service = String(req.query?.service || '').toLowerCase();
   if (!SERVICES.has(service)) return res.status(400).json({ error: 'A valid service is required: career, wellbeing, or sen.' });
 
-  const idToken = bearerToken(req);
-  if (!idToken) return res.status(401).json({ error: 'Authentication required.' });
-
-  let decodedToken;
-  try {
-    decodedToken = await getAdminAuth().verifyIdToken(idToken);
-  } catch (error) {
-    console.error('[admin service parents auth] Firebase ID token verification failed:', safeAuthError(error));
-    return res.status(401).json({ error: 'Invalid or expired authentication token.' });
-  }
-
-  const isFounder = decodedToken.email_verified === true && decodedToken.email === 'antonio.antonio.noronha@gmail.com';
-  const isSuperAdmin = decodedToken.role === 'super_admin';
-  if (!isFounder && !isSuperAdmin) return res.status(403).json({ error: 'Super Admin access required.' });
+  const authorization = await requireSuperAdmin(req);
+  if (sendAuthorizationFailure(res, authorization)) return;
 
   try {
     const snapshot = await getAdminFirestore().collection('users').get();

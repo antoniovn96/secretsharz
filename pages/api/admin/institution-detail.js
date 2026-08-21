@@ -1,24 +1,7 @@
-import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { requireSuperAdmin, sendAuthorizationFailure } from '../../../src/security/adminAuthorization.js';
 import { isStudentProfile, getStudentPath } from '../../../src/platform/studentRecordModel.js';
 import { normaliseInstitutionServices } from '../../../src/institution/institutionServices.js';
-
-function bearerToken(req) {
-  const header = req.headers.authorization || req.headers.Authorization;
-  if (typeof header !== 'string') return null;
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
-}
-
-async function requireAdmin(req) {
-  const token = bearerToken(req);
-  if (!token) throw Object.assign(new Error('Authentication required.'), { statusCode: 401 });
-  let decoded;
-  try { decoded = await getAdminAuth().verifyIdToken(token); }
-  catch (_) { throw Object.assign(new Error('Invalid or expired authentication token.'), { statusCode: 401 }); }
-  const isFounder = decoded.email_verified === true && decoded.email?.toLowerCase() === 'antonio.antonio.noronha@gmail.com';
-  if (!isFounder && decoded.role !== 'super_admin') throw Object.assign(new Error('Super Admin access required.'), { statusCode: 403 });
-  return decoded;
-}
 
 function publicUser(doc) {
   const data = doc.data() || {};
@@ -55,8 +38,10 @@ function getStudentParentIds(student) {
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') { res.setHeader('Allow', 'GET'); return res.status(405).json({ error: 'Method not allowed.' }); }
+  const authorization = await requireSuperAdmin(req);
+  if (sendAuthorizationFailure(res, authorization)) return;
+
   try {
-    await requireAdmin(req);
     const institutionId = String(req.query?.id || '').trim();
     if (!institutionId) return res.status(400).json({ error: 'Institution id is required.' });
 
@@ -119,6 +104,7 @@ export default async function handler(req, res) {
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({ error: error.message || 'Unable to load institution details.' });
+    console.error('[admin institution-detail] failed:', error);
+    return res.status(500).json({ error: 'Unable to load institution details.' });
   }
 }
