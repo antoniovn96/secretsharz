@@ -1,26 +1,17 @@
-import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
-import { isRequesterAdmin } from '../../../src/security/roleAssignment.js';
+import { getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { requireSuperAdmin, sendAuthorizationFailure } from '../../../src/security/adminAuthorization.js';
 
 const ALLOWED_ROLES = new Set(['counsellor', 'career_counsellor', 'psychologist', 'educator']);
-
-function bearerToken(req) {
-  const header = req.headers.authorization || req.headers.Authorization;
-  if (typeof header !== 'string') return null;
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
-}
 
 export default async function handler(req, res) {
   if (req.method !== 'PATCH') {
     res.setHeader('Allow', 'PATCH');
     return res.status(405).json({ error: 'Method not allowed.' });
   }
-  const token = bearerToken(req);
-  if (!token) return res.status(401).json({ error: 'Authentication required.' });
-  let requester;
-  try { requester = await getAdminAuth().verifyIdToken(token); }
-  catch (_) { return res.status(401).json({ error: 'Invalid or expired authentication token.' }); }
-  if (!isRequesterAdmin(requester)) return res.status(403).json({ error: 'Only an administrator may update professionals.' });
+
+  const authorization = await requireSuperAdmin(req);
+  if (sendAuthorizationFailure(res, authorization)) return;
+  const requester = authorization.decodedToken;
 
   const professionalUid = typeof req.body?.professionalUid === 'string' ? req.body.professionalUid.trim() : '';
   if (!professionalUid) return res.status(400).json({ error: 'Professional ID is required.' });
@@ -56,7 +47,16 @@ export default async function handler(req, res) {
       updates.professionalService = null;
     }
     await ref.update(updates);
-    await db.collection('auditEvents').add({ actorUid: requester.uid || null, actorEmail: requester.email || null, targetUid: professionalUid, action: 'update_professional', changedFields: Object.keys(updates), timestamp: new Date() });
+    await db.collection('auditEvents').add({
+      actorUid: requester.uid || null,
+      actorEmail: requester.email || null,
+      actorRole: 'super_admin',
+      authorizationSource: authorization.authorizationSource || 'claim',
+      targetUid: professionalUid,
+      action: 'update_professional',
+      changedFields: Object.keys(updates),
+      timestamp: new Date()
+    });
     return res.status(200).json({ success: true, professional: { id: professionalUid, ...existing, ...updates } });
   } catch (error) {
     console.error('[update-professional] failed:', error?.message || error);
