@@ -1,4 +1,4 @@
-import { collection, query, where, orderBy, limit, getDocs, getDoc, writeBatch, doc, runTransaction } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, getDoc, doc, runTransaction } from 'firebase/firestore';
 import { db } from '../firebase';
 import { COLLECTIONS } from '../utils/constants';
 import { buildStaffAssignmentUpdate, getEffectiveStaffAssignment } from '../platform/studentRelationshipBridge';
@@ -48,7 +48,6 @@ export const processIntake = async (userAuth, formData) => {
             collision.code = 'MASTER_ID_COLLISION';
             throw collision;
           }
-
           transaction.set(studentRef, buildStudentIntakeRecord(userAuth, formData));
           transaction.set(caseFileRef, { studentId: masterId, history: [] });
         });
@@ -95,8 +94,6 @@ export const assignStaffToStudent = async (adminUser, studentId, division, staff
       const caseFileDoc = await transaction.get(caseFileRef);
       const studentData = studentDoc.data() || {};
       const previousStaffId = getEffectiveStaffAssignment(studentData, division);
-
-      // Idempotent assignment: do not create duplicate history for the same relationship.
       if (previousStaffId === staffId) return;
 
       const relationshipUpdate = buildStaffAssignmentUpdate(studentData, division, staffId);
