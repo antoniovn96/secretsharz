@@ -1,36 +1,9 @@
-import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { requireSuperAdmin, sendAuthorizationFailure } from '../../../src/security/adminAuthorization.js';
+import { getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { CAREER_PRICING } from '../../../src/config/careerPricing.js';
 import { CAREER_CUSTOMER_TYPES, normaliseCouponCode } from '../../../src/server/careerPricing.js';
 
-const FOUNDER_EMAIL = 'antonio.antonio.noronha@gmail.com';
 const COUPON_TYPES = new Set(['percentage', 'fixed', 'fixed_per_student', 'sponsored']);
-
-function bearerToken(req) {
-  const header = req.headers.authorization || req.headers.Authorization;
-  if (typeof header !== 'string') return null;
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
-}
-
-async function requireAdmin(req) {
-  const token = bearerToken(req);
-  if (!token) throw Object.assign(new Error('Authentication required.'), { status: 401 });
-  let decoded;
-  try {
-    decoded = await getAdminAuth().verifyIdToken(token);
-  } catch (_) {
-    throw Object.assign(new Error('Invalid or expired authentication token.'), { status: 401 });
-  }
-
-  const isFounder = decoded.email_verified === true && decoded.email?.toLowerCase() === FOUNDER_EMAIL;
-  const db = getAdminFirestore();
-  const snap = await db.collection('users').doc(decoded.uid).get();
-  const user = snap.exists ? snap.data() : {};
-  if (!isFounder && user.role !== 'super_admin') {
-    throw Object.assign(new Error('Super Admin access required.'), { status: 403 });
-  }
-  return { db, decoded };
-}
 
 function clean(value, max = 160) {
   return String(value || '').trim().slice(0, max);
@@ -105,7 +78,11 @@ async function audit(db, decoded, action, code, details = {}) {
 
 export default async function handler(req, res) {
   try {
-    const { db, decoded } = await requireAdmin(req);
+    const authorization = await requireSuperAdmin(req);
+    if (sendAuthorizationFailure(res, authorization)) return;
+
+    const db = getAdminFirestore();
+    const decoded = authorization.decodedToken;
     const collection = db.collection('careerCoupons');
 
     if (req.method === 'GET') {
