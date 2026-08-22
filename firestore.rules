@@ -14,6 +14,14 @@ service cloud.firestore {
           || get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.psychId == request.auth.uid
           || get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.senId == request.auth.uid);
     }
+    function isAssignedToStudent(studentId) {
+      return isStaff() && (
+        hasLegacyAssignment(studentId)
+        || get(/databases/$(database)/documents/students/$(studentId)).data.relationships.assignments.career == request.auth.uid
+        || get(/databases/$(database)/documents/students/$(studentId)).data.relationships.assignments.wellbeing == request.auth.uid
+        || get(/databases/$(database)/documents/students/$(studentId)).data.relationships.assignments.sen == request.auth.uid
+      );
+    }
     function isAssignedCareerProfessional(studentId) {
       return isStaff() && (
         get(/databases/$(database)/documents/students/$(studentId)).data.relationships.assignments.career == request.auth.uid
@@ -67,12 +75,7 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         request.auth.uid == studentId ||
         (isParent() && resource.data.parent.userId == request.auth.uid) ||
-        hasLegacyAssignment(studentId) ||
-        (isStaff() && (
-          resource.data.relationships.assignments.career == request.auth.uid
-          || resource.data.relationships.assignments.wellbeing == request.auth.uid
-          || resource.data.relationships.assignments.sen == request.auth.uid
-        )) ||
+        isAssignedToStudent(studentId) ||
         isAdmin()
       );
       allow write: if isAdmin();
@@ -93,9 +96,21 @@ service cloud.firestore {
     }
 
     match /caseFiles/{fileId} {
-      allow read: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid) || (isSignedIn() && request.auth.uid == resource.data.studentId && resource.data.isPrivate == false);
-      allow create: if isAdmin() || (isStaff() && request.resource.data.staffId == request.auth.uid);
-      allow update: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid && request.resource.data.staffId == resource.data.staffId && request.resource.data.studentId == resource.data.studentId && request.resource.data.isPrivate == resource.data.isPrivate);
+      allow read: if isAdmin()
+        || (isStaff() && (
+          resource.data.staffId == request.auth.uid
+          || isAssignedToStudent(resource.data.studentId)
+        ))
+        || (isSignedIn() && request.auth.uid == resource.data.studentId && resource.data.isPrivate == false);
+      allow create: if isAdmin()
+        || (isStaff() && request.resource.data.staffId == request.auth.uid && isAssignedToStudent(request.resource.data.studentId));
+      allow update: if isAdmin()
+        || (isStaff()
+          && resource.data.staffId == request.auth.uid
+          && isAssignedToStudent(resource.data.studentId)
+          && request.resource.data.staffId == resource.data.staffId
+          && request.resource.data.studentId == resource.data.studentId
+          && request.resource.data.isPrivate == resource.data.isPrivate);
       allow delete: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid);
     }
 
