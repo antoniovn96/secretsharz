@@ -5,12 +5,13 @@ import { provisionParentAccount } from '../../src/security/provisionParentAccoun
 function makeDb(existingProfile = null, students = {}) {
   const writes = [];
   const userRefs = new Map();
+  const existingParentId = existingProfile ? 'existing-parent' : null;
   const refFor = (id) => {
     if (!userRefs.has(id)) {
       userRefs.set(id, {
         id,
         set: async (data, options) => writes.push({ data, options }),
-        get: async () => ({ exists: id === 'parent-id' && Boolean(existingProfile), data: () => existingProfile }),
+        get: async () => ({ exists: id === existingParentId, data: () => existingProfile }),
       });
     }
     return userRefs.get(id);
@@ -88,7 +89,7 @@ test('reuses an existing parent account and preserves existing links', async () 
 test('rejects a cross-institution parent reassignment', async () => {
   const adminAuth = makeAuth({ uid: 'existing-parent', customClaims: { role: 'parent' } });
   const adminDb = makeDb({ role: 'parent', institutionId: 'school-original' });
-  await assert.rejects(() => provisionParentAccount({ adminAuth, adminDb, parentName: 'Parent One', parentEmail: 'parent@example.com', institutionId: 'school-other', studentIds: ['student-1'] }), /already linked to another institution/);
+  await assert.rejects(() => provisionParentAccount({ adminAuth, adminDb, parentName: 'Parent One', parentEmail: 'parent@example.com', institutionId: 'school-other', studentIds: ['student-1'], allowUnlinked: true }), /already linked to another institution/);
 });
 
 test('rejects an email already assigned to a non-parent role', async () => {
