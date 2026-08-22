@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateMessages } from '../../pages/api/chat.js';
+import { validateMessages, MAX_TOTAL_CHARS } from '../../pages/api/chat.js';
 
 test('AI validator accepts a normal conversation', () => {
   assert.deepEqual(validateMessages([
@@ -24,6 +24,9 @@ test('AI validator rejects oversized individual messages', () => {
 });
 
 test('AI validator rejects oversized conversations', () => {
-  const messages = Array.from({ length: 6 }, () => ({ role: 'user', content: 'x'.repeat(10000) }));
+  const messages = [
+    { role: 'user', content: 'x'.repeat(MAX_TOTAL_CHARS / 2) },
+    { role: 'assistant', content: 'x'.repeat(MAX_TOTAL_CHARS / 2 + 1) },
+  ];
   assert.equal(validateMessages(messages).ok, false);
 });
