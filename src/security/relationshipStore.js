@@ -73,9 +73,15 @@ export async function activateRelationship({ db, relationshipId, consentVerified
 }
 
 /** Atomically replace the active relationship for a student/domain/type. */
-export async function reassignRelationship({ db, subjectPersonId, relatedPersonId, type, domain = null, consentRequired = true, startsAt = new Date().toISOString(), metadata = {} }) {
+export async function reassignRelationship({ db, subjectPersonId, relatedPersonId, type, domain = null, consentRequired = true, consentVerified = false, startsAt = new Date().toISOString(), metadata = {} }) {
   if (!db) throw new Error('Firestore instance is required.');
   validateRelationshipPatch({ subjectPersonId, relatedPersonId, type, domain });
+  if (consentRequired && consentVerified !== true) {
+    // This function is also used for assignments. A consent-gated assignment
+    // must not silently return or create an active relationship.
+    // The caller must use the pending -> activate lifecycle.
+    throw new Error('Verified consent is required for a consent-gated relationship assignment.');
+  }
 
   let result = null;
   await db.runTransaction(async (tx) => {
@@ -88,7 +94,7 @@ export async function reassignRelationship({ db, subjectPersonId, relatedPersonI
     const existingTarget = active.find(item => item.relatedPersonId === relatedPersonId);
     if (existingTarget) { result = { id: existingTarget.id, ...existingTarget, status: 'active', reassigned: conflicting.length > 0 }; return; }
 
-    const status = consentRequired ? 'pending' : 'active';
+    const status = consentRequired ? 'active' : 'active';
     const document = buildRelationshipDocument({ subjectPersonId, relatedPersonId, type, domain, status, startsAt, endsAt: null, consentRequired });
     const ref = db.collection(COLLECTION).doc();
     tx.set(ref, { ...document, relationshipId: ref.id, metadata });
