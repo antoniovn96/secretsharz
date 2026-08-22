@@ -1,11 +1,12 @@
 import crypto from 'crypto';
+import { ensurePendingRelationship } from './relationshipStore.js';
 
 /**
  * Server-only parent account provisioning.
  *
- * The parent account and the student's canonical family.guardians entry are
- * updated together so Parent, Student, Institution and Admin views share the
- * same stable guardian UID and contact identity.
+ * Provisioning creates an invitation and a PENDING canonical relationship.
+ * It never manufactures parental consent or activates the relationship.
+ * Legacy family.guardians fields remain compatibility projections only.
  */
 export async function provisionParentAccount({adminAuth,adminDb,parentName,parentEmail,institutionId=null,institutionName='',rosterIds=[],studentIds=[],provisioningMethod='admin',relationship='guardian',allowUnlinked=false}){
   const name=String(parentName||'').trim().slice(0,180);const email=String(parentEmail||'').trim().toLowerCase().slice(0,254);const relation=['father','mother','guardian'].includes(String(relationship).toLowerCase())?String(relationship).toLowerCase():'guardian';
@@ -20,11 +21,17 @@ export async function provisionParentAccount({adminAuth,adminDb,parentName,paren
   if(existingPrimaryInstitution&&institutionId&&existingPrimaryInstitution!==institutionId)throw new Error('This parent account is already linked to another institution and cannot be reassigned across institutions.');
   const mergedInstitutionIds=Array.from(new Set([...existingInstitutionIds,...(institutionId?[institutionId]:[])]));
   const existingInstitutionNames=existingProfile.institutionNames&&typeof existingProfile.institutionNames==='object'?existingProfile.institutionNames:{};
-  const institutionNames={...existingInstitutionNames,...(institutionId&&institutionName?{[institutionId]:institutionName}:{})};
+  const institutionNames={...existingInstitutionNames,...(institutionId&&institutionName?{[institutionId]:institutionName}: {})};
   const mergedRosterIds=Array.from(new Set([...(Array.isArray(existingProfile.linkedRosterIds)?existingProfile.linkedRosterIds:[]),...rosterIds.filter(Boolean)]));
   const mergedStudentIds=Array.from(new Set([...(Array.isArray(existingProfile.linkedStudentIds)?existingProfile.linkedStudentIds:[]),...studentIds.filter(Boolean)]));
   const existingRelationships=existingProfile.childRelationships&&typeof existingProfile.childRelationships==='object'?existingProfile.childRelationships:{};
   const childRelationships={...existingRelationships};studentIds.forEach(studentId=>{childRelationships[studentId]=relation;});
+
+  const canonicalType=relation==='guardian'?'guardian':'parent';
+  for(const studentId of studentIds){
+    await ensurePendingRelationship({db:adminDb,subjectPersonId:studentId,relatedPersonId:user.uid,type:canonicalType,metadata:{source:'parent_provisioning',provisioningMethod}});
+  }
+
   await adminAuth.setCustomUserClaims(user.uid,{...existingClaims,role:'parent'});
   await parentRef.set({name,email,role:'parent',accountType:'parent',parentRelationship:relation,accountProvisioning:{method:provisioningMethod,status:'invited',firstProvisionedAt:existingProfile.accountProvisioning?.firstProvisionedAt||now,lastProvisionedAt:now},institutionId:institutionId||existingProfile.institutionId||null,institutionName:institutionName||existingProfile.institutionName||'',institutionIds:mergedInstitutionIds,institutionNames,linkedRosterIds:mergedRosterIds,linkedStudentIds:mergedStudentIds,childRelationships,consentStatus:existingProfile.consentStatus||'pending',profileComplete:true,updatedAt:now,...(existingProfileSnap.exists?{}:{createdAt:now})},{merge:true});
 
