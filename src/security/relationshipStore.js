@@ -1,9 +1,5 @@
 // Secret Sharz — First-class relationship storage (SERVER-ONLY).
-//
 // Relationships are an authorization primitive, not profile decoration.
-// This module deliberately keeps relationship state outside `users/*` so
-// downstream services can evaluate relationship + domain + status without
-// trusting denormalized profile fields.
 import { createRelationshipRecord, isKnownValue, RELATIONSHIP_TYPES, SERVICE_DOMAINS, RELATIONSHIP_STATUSES } from '../platform/canonicalModel.js';
 
 const COLLECTION = 'relationships';
@@ -17,13 +13,7 @@ function normalizeTimestamp(value) {
 
 export function buildRelationshipDocument(input) {
   const record = createRelationshipRecord(input);
-  return {
-    ...record,
-    startsAt: normalizeTimestamp(record.startsAt),
-    endsAt: normalizeTimestamp(record.endsAt),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
+  return { ...record, startsAt: normalizeTimestamp(record.startsAt), endsAt: normalizeTimestamp(record.endsAt), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
 }
 
 export function validateRelationshipPatch(patch = {}) {
@@ -37,22 +27,16 @@ export function validateRelationshipPatch(patch = {}) {
 }
 
 function activeRelationshipQuery(db, { subjectPersonId, type, domain = null }) {
-  let query = db.collection(COLLECTION)
-    .where('subjectPersonId', '==', subjectPersonId)
-    .where('type', '==', type)
-    .where('status', '==', 'active')
-    .limit(50);
+  const query = db.collection(COLLECTION).where('subjectPersonId', '==', subjectPersonId).where('type', '==', type).where('status', '==', 'active').limit(50);
   return { query, domain };
 }
 
-async function findActiveRelationships({ db, subjectPersonId, type, domain = null }) {
+export async function findActiveRelationships({ db, subjectPersonId, type, domain = null }) {
   if (!db) throw new Error('Firestore instance is required.');
   if (!subjectPersonId || !type) return [];
   const { query } = activeRelationshipQuery(db, { subjectPersonId, type, domain });
   const snapshot = await query.get();
-  return snapshot.docs
-    .map(doc => ({ ref: doc.ref, id: doc.id, ...doc.data() }))
-    .filter(item => domain == null || item.domain == null || item.domain === domain);
+  return snapshot.docs.map(doc => ({ ref: doc.ref, id: doc.id, ...doc.data() })).filter(item => domain == null || item.domain == null || item.domain === domain);
 }
 
 export async function createRelationship({ db, ...input }) {
@@ -63,13 +47,32 @@ export async function createRelationship({ db, ...input }) {
   return { id: ref.id, ...document, relationshipId: ref.id };
 }
 
-/**
- * Atomically replace the active relationship for a student/domain/type.
- * The previous relationship is retained as history with status=ended.
- * Canonical relationship state is changed here; profile compatibility
- * projections must be updated by the calling application in the same
- * transaction when required.
- */
+/** Create a consent-gated relationship in pending state. */
+export async function createPendingRelationship({ db, ...input }) {
+  return createRelationship({ db, ...input, status: 'pending', consentRequired: true });
+}
+
+/** Activate only after the caller has independently verified required consent. */
+export async function activateRelationship({ db, relationshipId, consentVerified = false, activatedAt = new Date().toISOString() }) {
+  if (!db) throw new Error('Firestore instance is required.');
+  if (!relationshipId) throw new Error('relationshipId is required.');
+  if (consentVerified !== true) throw new Error('Verified consent is required to activate this relationship.');
+
+  const ref = db.collection(COLLECTION).doc(relationshipId);
+  let result = null;
+  await db.runTransaction(async (tx) => {
+    const snapshot = await tx.get(ref);
+    if (!snapshot.exists) throw new Error('Relationship not found.');
+    const relationship = snapshot.data();
+    if (relationship.status === 'revoked' || relationship.status === 'ended' || relationship.status === 'suspended') throw new Error('Inactive relationship cannot be activated.');
+    if (relationship.consentRequired !== true) throw new Error('Relationship does not require consent; use an appropriate administrative transition.');
+    tx.update(ref, { status: 'active', startsAt: relationship.startsAt || activatedAt, updatedAt: activatedAt });
+    result = { id: relationshipId, ...relationship, status: 'active', startsAt: relationship.startsAt || activatedAt, updatedAt: activatedAt };
+  });
+  return result;
+}
+
+/** Atomically replace the active relationship for a student/domain/type. */
 export async function reassignRelationship({ db, subjectPersonId, relatedPersonId, type, domain = null, consentRequired = true, startsAt = new Date().toISOString(), metadata = {} }) {
   if (!db) throw new Error('Firestore instance is required.');
   validateRelationshipPatch({ subjectPersonId, relatedPersonId, type, domain });
@@ -78,41 +81,22 @@ export async function reassignRelationship({ db, subjectPersonId, relatedPersonI
   await db.runTransaction(async (tx) => {
     const { query } = activeRelationshipQuery(db, { subjectPersonId, type, domain });
     const snapshot = await tx.get(query);
-    const active = snapshot.docs
-      .map(doc => ({ ref: doc.ref, id: doc.id, ...doc.data() }))
-      .filter(item => domain == null || item.domain == null || item.domain === domain);
+    const active = snapshot.docs.map(doc => ({ ref: doc.ref, id: doc.id, ...doc.data() })).filter(item => domain == null || item.domain == null || item.domain === domain);
     const conflicting = active.filter(item => item.relatedPersonId !== relatedPersonId);
     const now = new Date().toISOString();
-
-    for (const relationship of conflicting) {
-      tx.update(relationship.ref, { status: 'ended', endsAt: now, updatedAt: now });
-    }
-
+    for (const relationship of conflicting) tx.update(relationship.ref, { status: 'ended', endsAt: now, updatedAt: now });
     const existingTarget = active.find(item => item.relatedPersonId === relatedPersonId);
-    if (existingTarget) {
-      result = { id: existingTarget.id, ...existingTarget, status: 'active', reassigned: conflicting.length > 0 };
-      return;
-    }
+    if (existingTarget) { result = { id: existingTarget.id, ...existingTarget, status: 'active', reassigned: conflicting.length > 0 }; return; }
 
-    const document = buildRelationshipDocument({
-      subjectPersonId,
-      relatedPersonId,
-      type,
-      domain,
-      status: 'active',
-      startsAt,
-      endsAt: null,
-      consentRequired,
-    });
+    const status = consentRequired ? 'pending' : 'active';
+    const document = buildRelationshipDocument({ subjectPersonId, relatedPersonId, type, domain, status, startsAt, endsAt: null, consentRequired });
     const ref = db.collection(COLLECTION).doc();
     tx.set(ref, { ...document, relationshipId: ref.id, metadata });
     result = { id: ref.id, ...document, relationshipId: ref.id, metadata, reassigned: conflicting.length > 0 };
   });
-
   return result;
 }
 
-/** End all active relationships for one student/domain/type atomically. */
 export async function endRelationships({ db, subjectPersonId, type, domain = null, endsAt = new Date().toISOString() }) {
   if (!db) throw new Error('Firestore instance is required.');
   validateRelationshipPatch({ subjectPersonId, type, domain });
@@ -120,12 +104,8 @@ export async function endRelationships({ db, subjectPersonId, type, domain = nul
   await db.runTransaction(async (tx) => {
     const { query } = activeRelationshipQuery(db, { subjectPersonId, type, domain });
     const snapshot = await tx.get(query);
-    const active = snapshot.docs
-      .map(doc => ({ ref: doc.ref, ...doc.data() }))
-      .filter(item => domain == null || item.domain == null || item.domain === domain);
-    for (const relationship of active) {
-      tx.update(relationship.ref, { status: 'ended', endsAt, updatedAt: endsAt });
-    }
+    const active = snapshot.docs.map(doc => ({ ref: doc.ref, ...doc.data() })).filter(item => domain == null || item.domain == null || item.domain === domain);
+    for (const relationship of active) tx.update(relationship.ref, { status: 'ended', endsAt, updatedAt: endsAt });
     count = active.length;
   });
   return count;
@@ -134,18 +114,8 @@ export async function endRelationships({ db, subjectPersonId, type, domain = nul
 export async function getActiveRelationship({ db, subjectPersonId, relatedPersonId, type, domain = null }) {
   if (!db) throw new Error('Firestore instance is required.');
   if (!subjectPersonId || !relatedPersonId || !type) return null;
-  const snapshot = await db.collection(COLLECTION)
-    .where('subjectPersonId', '==', subjectPersonId)
-    .where('relatedPersonId', '==', relatedPersonId)
-    .where('type', '==', type)
-    .where('status', '==', 'active')
-    .limit(20)
-    .get();
-
-  const matches = snapshot.docs
-    .map(doc => ({ id: doc.id, ...doc.data() }))
-    .filter(item => domain == null || item.domain == null || item.domain === domain);
-
+  const snapshot = await db.collection(COLLECTION).where('subjectPersonId', '==', subjectPersonId).where('relatedPersonId', '==', relatedPersonId).where('type', '==', type).where('status', '==', 'active').limit(20).get();
+  const matches = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(item => domain == null || item.domain == null || item.domain === domain);
   return matches[0] || null;
 }
 
