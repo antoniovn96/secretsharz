@@ -8,14 +8,14 @@ export const COUNSELLING_SCOPES = Object.freeze({
 });
 const PROFESSIONAL_ROLES = new Set(['counsellor', 'psychologist', 'clinical_psychologist', 'counselling_psychologist']);
 
-export function canAccessCounsellingScope({ role, scope, assignedCase = false, activeRelationship = false, parentSummaryConsent = false, safeguarding = false, subjectPersonId = null, safeguardingGrant = null }) {
+export function canAccessCounsellingScope({ role, scope, assignedCase = false, activeRelationship = false, parentSummaryConsent = false, safeguarding = false, subjectPersonId = null, safeguardingGrant = null, now = new Date() }) {
   if (!role || !scope) return { allowed: false, reason: 'missing_counselling_access_context' };
   if (scope === COUNSELLING_SCOPES.SAFEGUARDING) {
     if (role !== SAFEGUARDING_ROLE) return { allowed: false, reason: 'safeguarding_role_required' };
     if (!subjectPersonId) return { allowed: false, reason: 'safeguarding_subject_required' };
-    if (!isSafeguardingGrantActive(safeguardingGrant)) return { allowed: false, reason: 'safeguarding_grant_required_or_expired' };
+    if (!isSafeguardingGrantActive(safeguardingGrant, now)) return { allowed: false, reason: 'safeguarding_grant_required_or_expired' };
     if (safeguardingGrant.subjectPersonId !== subjectPersonId) return { allowed: false, reason: 'safeguarding_grant_subject_mismatch' };
-    if (!grantCoversScope(safeguardingGrant, 'counselling') && !grantCoversScope(safeguardingGrant, 'safeguarding')) return { allowed: false, reason: 'safeguarding_grant_scope_denied' };
+    if (!grantCoversScope(safeguardingGrant, 'counselling', now) && !grantCoversScope(safeguardingGrant, 'safeguarding', now)) return { allowed: false, reason: 'safeguarding_grant_scope_denied' };
     return { allowed: true, reason: 'trusted_safeguarding_grant' };
   }
   // Legacy `safeguarding` boolean is intentionally ignored; it cannot grant access.
