@@ -1,5 +1,4 @@
 import { getAdminAuth, getAdminFirestore } from './firebaseAdmin.js';
-import { FOUNDER_EMAIL } from './claimRoles.js';
 import normalizeStudentRecord from '../platform/studentRecordNormalizer.js';
 
 /** Server-side authorization for professional access to a student. Canonical assignments are authoritative; legacy assignments are migration fallback only. */
@@ -11,11 +10,8 @@ export async function authorizeProfessionalStudent({ req, studentId, service }) 
   let decoded;
   try { decoded = await getAdminAuth().verifyIdToken(authHeader.slice(7)); } catch { return { authorized: false, reason: 'invalid_auth' }; }
 
-  // A profile document is data, not an authorization authority. Privileged
-  // professional access must come from the verified Firebase claim. The
-  // founder identity remains a temporary bootstrap path while claims migrate.
-  const isAdmin = decoded.role === 'super_admin'
-    || (decoded.email_verified === true && decoded.email === FOUNDER_EMAIL);
+  // Privileged access is claim-based. Email identity is not an authorization primitive.
+  const isAdmin = decoded.role === 'super_admin';
 
   const db = getAdminFirestore();
   let studentSnap = await db.collection('students').doc(studentId).get();
