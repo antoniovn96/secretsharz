@@ -6,8 +6,8 @@ function makeDb({ relatedPersonId='p1', status='pending', type='parent', consent
   const relationship = { subjectPersonId:'s1', relatedPersonId, status, type, consentRequired, startsAt:null };
   return {
     collection(name){
-      if(name==='relationships') return { doc(){ return { async get(){return {exists:true,data:()=>relationship}} }; } };
-      if(name==='users') return { doc(){ return { async get(){return {exists:true,data:()=>({ageBand, dateOfBirth:'2012-01-01'})}}; } } };
+      if(name==='relationships') return { doc(){ return { async get(){ return {exists:true,data:()=>relationship}; } }; } };
+      if(name==='users') return { doc(){ return { async get(){ return {exists:true,data:()=>({ageBand, dateOfBirth:'2012-01-01'})}; } }; } };
       throw new Error(`Unexpected collection ${name}`);
     },
     async runTransaction(fn){
