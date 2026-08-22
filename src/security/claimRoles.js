@@ -18,13 +18,18 @@ export const ASSIGNABLE_CLAIM_ROLES = Object.freeze([
   'psychologist',
   'educator',
   'parent',
-  'institution'
+  'institution',
+  'safeguarding_officer'
 ]);
 
 export const ADMIN_CLAIM_ROLES = Object.freeze(['super_admin']);
+export const SAFEGUARDING_CLAIM_ROLES = Object.freeze(['safeguarding_officer']);
 
 export const isAssignableClaimRole = (role) =>
   typeof role === 'string' && ASSIGNABLE_CLAIM_ROLES.includes(role);
+
+export const isSafeguardingClaimRole = (role) =>
+  typeof role === 'string' && SAFEGUARDING_CLAIM_ROLES.includes(role);
 
 export const ROLE_ACTIONS = Object.freeze({ SET: 'set', REMOVE: 'remove' });
 
