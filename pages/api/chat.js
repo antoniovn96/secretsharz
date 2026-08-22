@@ -16,7 +16,7 @@ function bearerToken(req) {
   return match ? match[1] : null;
 }
 
-function validateMessages(messages) {
+export function validateMessages(messages) {
   if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) {
     return { ok: false, error: `messages must contain 1-${MAX_MESSAGES} items.` };
   }
