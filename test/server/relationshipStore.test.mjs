@@ -13,7 +13,7 @@ function makeDb(initial = []) {
     },
     doc() {
       const id = `new-${docs.size + 1}`;
-      return { id };
+      return { id, async set(data) { docs.set(id, data); } };
     },
   });
   return {
