@@ -6,7 +6,7 @@
  * administrative assignment state, bookings, notifications, or other context
  * responsibilities.
  */
-export async function updateCanonicalStudentProfile(user, updates) {
+export async function updateCanonicalStudentProfile(user, profile) {
   if (!user?.uid) {
     throw new Error('Authenticated student account is required.');
   }
@@ -20,7 +20,7 @@ export async function updateCanonicalStudentProfile(user, updates) {
     },
     body: JSON.stringify({
       studentId: user.uid,
-      updates,
+      profile,
     }),
   });
 
@@ -37,29 +37,51 @@ export function buildProfileEditorPatch(updates = {}) {
 
   if (updates.phone !== undefined || updates.email !== undefined) {
     patch.contact = {};
-    if (updates.phone !== undefined) patch.contact.mobile = { number: String(updates.phone || '') };
-    if (updates.email !== undefined) patch.contact.email = String(updates.email || '');
+    if (updates.phone !== undefined) {
+      patch.contact.mobile = { number: String(updates.phone || '') };
+    }
+    if (updates.email !== undefined) {
+      patch.contact.email = String(updates.email || '');
+    }
   }
 
-  if (updates.fatherName !== undefined || updates.fatherPhone !== undefined || updates.fatherEmail !== undefined ||
-      updates.motherName !== undefined || updates.motherPhone !== undefined || updates.motherEmail !== undefined) {
+  if (
+    updates.fatherName !== undefined || updates.fatherPhone !== undefined || updates.fatherEmail !== undefined ||
+    updates.motherName !== undefined || updates.motherPhone !== undefined || updates.motherEmail !== undefined
+  ) {
     patch.family = { guardians: [] };
     const father = {};
     const mother = {};
-    if (updates.fatherName !== undefined) father.name = updates.fatherName;
-    if (updates.fatherPhone !== undefined) father.phone = updates.fatherPhone;
-    if (updates.fatherEmail !== undefined) father.email = updates.fatherEmail;
+
+    if (updates.fatherName !== undefined) father.name = String(updates.fatherName || '').trim();
+    if (updates.fatherPhone !== undefined) father.phone = String(updates.fatherPhone || '').trim();
+    if (updates.fatherEmail !== undefined) father.email = String(updates.fatherEmail || '').trim();
     if (Object.keys(father).length) patch.family.guardians.push({ relationship: 'father', ...father });
-    if (updates.motherName !== undefined) mother.name = updates.motherName;
-    if (updates.motherPhone !== undefined) mother.phone = updates.motherPhone;
-    if (updates.motherEmail !== undefined) mother.email = updates.motherEmail;
+
+    if (updates.motherName !== undefined) mother.name = String(updates.motherName || '').trim();
+    if (updates.motherPhone !== undefined) mother.phone = String(updates.motherPhone || '').trim();
+    if (updates.motherEmail !== undefined) mother.email = String(updates.motherEmail || '').trim();
     if (Object.keys(mother).length) patch.family.guardians.push({ relationship: 'mother', ...mother });
   }
 
-  if (updates.education) patch.academic = { history: updates.education };
+  if (updates.education) {
+    patch.academic = {
+      history: updates.education,
+      highestLevel: updates.education.highestLevel,
+      address: updates.education.address,
+      yearOfPassing: updates.education.yearOfPassing,
+      isPursuing: updates.education.isPursuing,
+      current: {
+        institutionName: updates.education.schoolName,
+        subjects: updates.education.subjects,
+      },
+    };
+  }
 
-  if (updates.interests !== undefined || updates.hobbies !== undefined || updates.tvShows !== undefined ||
-      updates.movies !== undefined || updates.games !== undefined || updates.sports !== undefined) {
+  if (
+    updates.interests !== undefined || updates.hobbies !== undefined || updates.tvShows !== undefined ||
+    updates.movies !== undefined || updates.games !== undefined || updates.sports !== undefined
+  ) {
     patch.personal = {
       interests: updates.interests,
       hobbies: updates.hobbies,
@@ -73,17 +95,32 @@ export function buildProfileEditorPatch(updates = {}) {
   }
 
   if (updates.studentTrack !== undefined) {
-    const track = updates.studentTrack;
+    const track = String(updates.studentTrack || 'unassigned').toLowerCase();
+    const active = (value) => ({ status: value ? 'active' : 'inactive' });
+
     patch.services = {
-      career: track === 'career_guidance' || track === 'both',
-      wellbeing: track === 'counselling' || track === 'both',
+      career: active(track === 'career_guidance' || track === 'career' || track === 'both'),
+      wellbeing: active(track === 'counselling' || track === 'wellbeing' || track === 'both'),
+      sen: active(track === 'sen' || track === 'both'),
     };
   }
 
   if (updates.counsellingConsentAgreed !== undefined) {
     patch.governance = {
-      consents: { wellbeing: Boolean(updates.counsellingConsentAgreed) },
+      consent: {
+        wellbeing: Boolean(updates.counsellingConsentAgreed),
+      },
     };
+  }
+
+  if (updates.profilePicture !== undefined || updates.gender !== undefined) {
+    patch.identity = {};
+    if (updates.profilePicture !== undefined) {
+      patch.identity.photoURL = String(updates.profilePicture || '');
+    }
+    if (updates.gender !== undefined) {
+      patch.identity.gender = String(updates.gender || '').trim();
+    }
   }
 
   return patch;
