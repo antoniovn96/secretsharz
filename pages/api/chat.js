@@ -1,38 +1,87 @@
 // pages/api/chat.js
+//
+// Server-side AI gateway. This endpoint is intentionally authenticated:
+// Anthropic usage is a paid backend resource and may receive user-provided
+// content. Client-side visibility is never treated as authorization.
+import { getAdminAuth } from '../../src/security/firebaseAdmin.js';
 
-export default async function handler(req, res) {
-  // ── CORS ──────────────────────────────────────────────────────────
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+const MAX_MESSAGES = 40;
+const MAX_MESSAGE_CHARS = 12000;
+const MAX_TOTAL_CHARS = 60000;
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+function bearerToken(req) {
+  const header = req.headers.authorization || req.headers.Authorization;
+  if (typeof header !== 'string') return null;
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1] : null;
+}
 
-  // ── API KEY CHECK ─────────────────────────────────────────────────
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    console.error('[VidyaVantage] ANTHROPIC_API_KEY is not set in Vercel environment variables.');
-    return res.status(500).json({ error: 'Server configuration error: API key missing.' });
+function validateMessages(messages) {
+  if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) {
+    return { ok: false, error: `messages must contain 1-${MAX_MESSAGES} items.` };
   }
 
-  // ── PARSE BODY ────────────────────────────────────────────────────
+  let totalChars = 0;
+  for (const message of messages) {
+    if (!message || typeof message !== 'object' || Array.isArray(message)) {
+      return { ok: false, error: 'Each message must be an object.' };
+    }
+    const keys = Object.keys(message);
+    if (keys.some((key) => !['role', 'content'].includes(key))) {
+      return { ok: false, error: 'Messages contain unsupported fields.' };
+    }
+    if (!['user', 'assistant'].includes(message.role)) {
+      return { ok: false, error: 'Message role must be user or assistant.' };
+    }
+    if (typeof message.content !== 'string' || message.content.trim().length === 0) {
+      return { ok: false, error: 'Message content must be a non-empty string.' };
+    }
+    if (message.content.length > MAX_MESSAGE_CHARS) {
+      return { ok: false, error: `Each message is limited to ${MAX_MESSAGE_CHARS} characters.` };
+    }
+    totalChars += message.content.length;
+    if (totalChars > MAX_TOTAL_CHARS) {
+      return { ok: false, error: `The conversation is limited to ${MAX_TOTAL_CHARS} characters.` };
+    }
+  }
+
+  return { ok: true };
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Authenticate every caller before consuming the Anthropic resource.
+  const idToken = bearerToken(req);
+  if (!idToken) return res.status(401).json({ error: 'Authentication required.' });
+
+  try {
+    await getAdminAuth().verifyIdToken(idToken);
+  } catch (_) {
+    return res.status(401).json({ error: 'Invalid or expired authentication token.' });
+  }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.error('[AI] ANTHROPIC_API_KEY is not configured.');
+    return res.status(500).json({ error: 'Server configuration error.' });
+  }
+
   let body;
   try {
     body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  } catch {
+  } catch (_) {
     return res.status(400).json({ error: 'Invalid JSON in request body.' });
   }
 
-  if (!body?.messages || !Array.isArray(body.messages)) {
-    return res.status(400).json({ error: 'Request body must contain a messages array.' });
-  }
+  const validation = validateMessages(body?.messages);
+  if (!validation.ok) return res.status(400).json({ error: validation.error });
 
-  // ── CALL ANTHROPIC WITH TIMEOUT ───────────────────────────────────
-  // FIX: Added AbortController so the function doesn't hang past Vercel's
-  // serverless timeout limit (10s Hobby / 60s Pro).
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 50000); // 50 second hard limit
+  const timeoutId = setTimeout(() => controller.abort(), 50000);
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -42,9 +91,6 @@ export default async function handler(req, res) {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      // FIX: Pinned model string instead of rolling alias 'claude-3-5-haiku-latest'.
-      // FIX: Increased max_tokens from 3000 → 4096 to prevent mid-JSON truncation
-      // which caused JSON.parse to crash in the frontend.
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 4096,
@@ -53,30 +99,32 @@ export default async function handler(req, res) {
       signal: controller.signal,
     });
 
-    clearTimeout(timeoutId);
-
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('[VidyaVantage] Anthropic API error:', response.status, data);
-      return res.status(response.status).json({
-        error: 'Anthropic API returned an error.',
-        details: data?.error?.message || 'Unknown error from Anthropic.',
+      console.error('[AI] Anthropic API error:', response.status);
+      return res.status(response.status >= 400 && response.status < 600 ? response.status : 502).json({
+        error: 'AI service returned an error.',
       });
     }
 
-    console.log('[VidyaVantage] Successfully returned response from Anthropic.');
     return res.status(200).json(data);
-
   } catch (err) {
-    clearTimeout(timeoutId);
-
-    if (err.name === 'AbortError') {
-      console.error('[VidyaVantage] Anthropic request timed out after 50s.');
+    if (err?.name === 'AbortError') {
       return res.status(504).json({ error: 'The AI analysis timed out. Please try again.' });
     }
 
-    console.error('[VidyaVantage] Unexpected server error:', err.message);
-    return res.status(500).json({ error: 'Internal server error.', message: err.message });
+    console.error('[AI] Unexpected server error:', err?.message || err);
+    return res.status(500).json({ error: 'Internal server error.' });
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '128kb',
+    },
+  },
+};
