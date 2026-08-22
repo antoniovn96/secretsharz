@@ -106,28 +106,60 @@ export default async function handler(req, res) {
     const relationshipId = access.relationship?.relationshipId || access.relationship?.id || null;
     if (!relationshipId && access.source !== 'admin') return res.status(403).json({ error: 'A canonical SEN professional relationship is required for new IEP records.' });
 
-    const existingSnapshot = await db.collection('sen').doc(studentId).collection('iep_records').where('status', '==', 'active').limit(50).get();
-    const nextVersion = existingSnapshot.size + 1;
+    const collection = db.collection('sen').doc(studentId).collection('iep_records');
+    const recordRef = collection.doc();
     const now = new Date().toISOString();
-    const recordRef = db.collection('sen').doc(studentId).collection('iep_records').doc();
-    const record = {
-      iepId: recordRef.id,
-      authUid: canonicalStudent.authUid,
-      ssStudentId: canonicalStudent.ssStudentId,
-      providerId: decoded.uid,
-      providerRole: decoded.role,
-      relationshipId,
-      service: 'sen',
-      status: 'active',
-      version: nextVersion,
-      plop,
-      goals,
-      accommodations,
-      createdAt: now,
-      updatedAt: now,
-    };
+    let record;
 
-    await recordRef.set(record);
+    await db.runTransaction(async (transaction) => {
+      const latestSnapshot = await transaction.get(collection.orderBy('version', 'desc').limit(1));
+      const activeSnapshot = await transaction.get(collection.where('status', '==', 'active'));
+      const latestVersion = latestSnapshot.empty ? 0 : Number(latestSnapshot.docs[0].data()?.version || 0);
+      const nextVersion = Number.isFinite(latestVersion) ? latestVersion + 1 : 1;
+
+      record = {
+        iepId: recordRef.id,
+        authUid: canonicalStudent.authUid,
+        ssStudentId: canonicalStudent.ssStudentId,
+        providerId: decoded.uid,
+        providerRole: decoded.role,
+        relationshipId,
+        service: 'sen',
+        status: 'active',
+        version: nextVersion,
+        plop,
+        goals,
+        accommodations,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      for (const doc of activeSnapshot.docs) {
+        transaction.update(doc.ref, {
+          status: 'superseded',
+          supersededBy: recordRef.id,
+          supersededAt: now,
+          updatedAt: now,
+        });
+      }
+      transaction.set(recordRef, record);
+    });
+
+    try {
+      await db.collection('auditEvents').add({
+        kind: 'sen_iep_created',
+        actorUid: decoded.uid,
+        actorRole: decoded.role,
+        studentId,
+        iepId: record.iepId,
+        version: record.version,
+        relationshipId,
+        timestamp: now,
+      });
+    } catch (auditError) {
+      console.error('[professional/sen/iep] audit write failed:', auditError?.message || auditError);
+    }
+
     return res.status(201).json({ saved: true, record });
   } catch (error) {
     console.error('[professional/sen/iep] failed:', error?.message || error);
