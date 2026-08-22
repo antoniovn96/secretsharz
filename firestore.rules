@@ -97,21 +97,19 @@ service cloud.firestore {
 
     match /caseFiles/{fileId} {
       allow read: if isAdmin()
-        || (isStaff() && (
-          resource.data.staffId == request.auth.uid
-          || isAssignedToStudent(resource.data.studentId)
-        ))
+        || (isStaff() && isAssignedToStudent(resource.data.studentId))
         || (isSignedIn() && request.auth.uid == resource.data.studentId && resource.data.isPrivate == false);
       allow create: if isAdmin()
         || (isStaff() && request.resource.data.staffId == request.auth.uid && isAssignedToStudent(request.resource.data.studentId));
       allow update: if isAdmin()
         || (isStaff()
-          && resource.data.staffId == request.auth.uid
           && isAssignedToStudent(resource.data.studentId)
+          && resource.data.staffId == request.auth.uid
           && request.resource.data.staffId == resource.data.staffId
           && request.resource.data.studentId == resource.data.studentId
           && request.resource.data.isPrivate == resource.data.isPrivate);
-      allow delete: if isAdmin() || (isStaff() && resource.data.staffId == request.auth.uid);
+      allow delete: if isAdmin()
+        || (isStaff() && isAssignedToStudent(resource.data.studentId) && resource.data.staffId == request.auth.uid);
     }
 
     match /users/{userId} {
