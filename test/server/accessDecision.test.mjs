@@ -19,6 +19,6 @@ test('client-supplied safeguarding state is never enough', () => {
 });
 test('trusted safeguarding grant is the explicit exceptional path', () => {
   const grant = canIssueSafeguardingGrant({ actorRole: SAFEGUARDING_ROLE, actorPersonId: 'officer-1', targetPersonId: 'student-1', reason: 'Immediate safeguarding concern requiring review.', scope: ['safeguarding'], durationMs: 15 * 60 * 1000, now: new Date('2026-08-23T10:00:00.000Z') }).grant;
-  const result = decideAccess({ role: SAFEGUARDING_ROLE, relationship: 'safeguarding_officer', dataDomain: 'safeguarding', purpose: 'safeguarding', consent: 'unknown', safeguarding: 'active', timeStatus: 'active', serviceDomain: 'professional', subjectPersonId: 'student-1', safeguardingGrant: grant });
+  const result = decideAccess({ role: SAFEGUARDING_ROLE, relationship: 'safeguarding_officer', dataDomain: 'safeguarding', purpose: 'safeguarding', consent: 'unknown', safeguarding: 'active', timeStatus: 'active', serviceDomain: 'professional', subjectPersonId: 'student-1', safeguardingGrant: grant, now: new Date('2026-08-23T10:05:00.000Z') });
   assert.equal(result.allowed, true); assert.equal(result.reason, 'trusted_safeguarding_grant');
 });
