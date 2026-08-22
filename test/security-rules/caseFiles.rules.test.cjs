@@ -9,7 +9,7 @@ const {
   assertFails
 } = require('./helpers.cjs');
 
-const { setDoc, getDoc, doc } = require('firebase/firestore');
+const { setDoc, getDoc, deleteDoc, doc } = require('firebase/firestore');
 
 function fdb(env, uid, claims = {}) {
   return env.authenticatedContext(uid, claims).firestore();
@@ -32,6 +32,15 @@ async function seedStudent(env, studentId, assignedUid) {
       relationships: { assignments: { career: assignedUid, wellbeing: null, sen: null } },
       parent: { userId: null }
     })
+  );
+}
+
+async function seedCaseFile(env, studentId, staffId, isPrivate = true) {
+  await assertSucceeds(
+    setDoc(
+      doc(fdb(env, staffId, { role: 'career_counsellor' }), 'caseFiles', studentId),
+      { studentId, staffId, isPrivate, history: [] }
+    )
   );
 }
 
@@ -76,16 +85,52 @@ describe('caseFiles — assignment boundary', () => {
     const env = await getEnv();
     await seedStudent(env, 'student-case-4', 'career-pro-4');
     await seedStudent(env, 'student-case-5', 'career-pro-5');
+    await seedCaseFile(env, 'student-case-5', 'career-pro-5');
+
+    await assertFails(
+      getDoc(doc(fdb(env, 'career-pro-4', { role: 'career_counsellor' }), 'caseFiles', 'student-case-5'))
+    );
+  });
+
+  it('DENIES a previously assigned professional after the student is reassigned', async () => {
+    const env = await getEnv();
+    await seedStudent(env, 'student-case-reassigned', 'career-pro-old');
+    await seedCaseFile(env, 'student-case-reassigned', 'career-pro-old');
 
     await assertSucceeds(
       setDoc(
-        doc(fdb(env, 'career-pro-5', { role: 'career_counsellor' }), 'caseFiles', 'student-case-5'),
-        { studentId: 'student-case-5', staffId: 'career-pro-5', isPrivate: true, history: [] }
+        doc(fdb(env, 'admin-case-test', { role: 'super_admin' }), 'students', 'student-case-reassigned'),
+        {
+          assignedStaff: { careerId: 'career-pro-new', psychId: null, senId: null },
+          relationships: { assignments: { career: 'career-pro-new', wellbeing: null, sen: null } }
+        },
+        { merge: true }
       )
     );
 
     await assertFails(
-      getDoc(doc(fdb(env, 'career-pro-4', { role: 'career_counsellor' }), 'caseFiles', 'student-case-5'))
+      getDoc(doc(fdb(env, 'career-pro-old', { role: 'career_counsellor' }), 'caseFiles', 'student-case-reassigned'))
+    );
+  });
+
+  it('DENIES a previously assigned professional from deleting a stale case file after reassignment', async () => {
+    const env = await getEnv();
+    await seedStudent(env, 'student-case-delete', 'career-pro-old-delete');
+    await seedCaseFile(env, 'student-case-delete', 'career-pro-old-delete');
+
+    await assertSucceeds(
+      setDoc(
+        doc(fdb(env, 'admin-case-test', { role: 'super_admin' }), 'students', 'student-case-delete'),
+        {
+          assignedStaff: { careerId: 'career-pro-new-delete', psychId: null, senId: null },
+          relationships: { assignments: { career: 'career-pro-new-delete', wellbeing: null, sen: null } }
+        },
+        { merge: true }
+      )
+    );
+
+    await assertFails(
+      deleteDoc(doc(fdb(env, 'career-pro-old-delete', { role: 'career_counsellor' }), 'caseFiles', 'student-case-delete'))
     );
   });
 });
