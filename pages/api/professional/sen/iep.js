@@ -1,26 +1,10 @@
-import { getAdminAuth, getAdminFirestore } from '../../../../src/security/firebaseAdmin.js';
+import { getAdminFirestore } from '../../../../src/security/firebaseAdmin.js';
 import { normalizeCanonicalStudent } from '../../../../src/platform/canonicalStudentContract.js';
 import { normalizeServiceAssignment } from '../../../../src/platform/serviceAssignmentContract.js';
 import { getActiveRelationship } from '../../../../src/security/relationshipStore.js';
-
-function bearerToken(req) {
-  const header = req.headers.authorization || req.headers.Authorization;
-  if (typeof header !== 'string') return null;
-  const match = header.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
-}
+import { requireProfessional, sendProfessionalAuthorizationFailure } from '../../../../src/security/professionalAuthorization.js';
 
 function safeString(value, max = 5000) { return String(value || '').trim().slice(0, max); }
-function isProfessionalRole(role) { return ['educator', 'sen_educator', 'super_admin'].includes(String(role || '').toLowerCase()); }
-
-async function authenticate(req, res) {
-  const token = bearerToken(req);
-  if (!token) { res.status(401).json({ error: 'Authentication required.' }); return null; }
-  let decoded;
-  try { decoded = await getAdminAuth().verifyIdToken(token); } catch (_) { res.status(401).json({ error: 'Invalid or expired authentication token.' }); return null; }
-  if (!isProfessionalRole(decoded.role)) { res.status(403).json({ error: 'SEN professional access required.' }); return null; }
-  return decoded;
-}
 
 async function resolveStudent(db, studentId) {
   const candidates = [db.collection('students').doc(studentId), db.collection('users').doc(studentId)];
@@ -66,8 +50,9 @@ async function isAssignedToSen(db, studentId, student, professionalId) {
 
 export default async function handler(req, res) {
   if (!['GET', 'POST'].includes(req.method)) { res.setHeader('Allow', 'GET, POST'); return res.status(405).json({ error: 'Method not allowed.' }); }
-  const decoded = await authenticate(req, res);
-  if (!decoded) return;
+  const authorization = await requireProfessional(req, ['educator', 'sen_educator']);
+  if (sendProfessionalAuthorizationFailure(res, authorization)) return;
+  const decoded = authorization.decodedToken;
   const studentId = String(req.query?.studentId || '').trim();
   if (!studentId) return res.status(400).json({ error: 'studentId is required.' });
 
