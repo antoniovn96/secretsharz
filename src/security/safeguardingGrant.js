@@ -21,18 +21,7 @@ export function normalizeSafeguardingGrantInput(input = {}) {
   if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) throw new Error('issuedAt and expiresAt must be valid timestamps.');
   if (end <= start) throw new Error('expiresAt must be after issuedAt.');
   if (end.getTime() - start.getTime() > MAX_DURATION_MS) throw new Error('Safeguarding grants cannot exceed one hour.');
-  return Object.freeze({
-    grantId,
-    subjectPersonId,
-    issuedByPersonId,
-    issuedByRole: SAFEGUARDING_ROLE,
-    purpose: SAFEGUARDING_PURPOSE,
-    reason: reason.trim(),
-    scope: Object.freeze([...new Set(scope)]),
-    issuedAt: start.toISOString(),
-    expiresAt: end.toISOString(),
-    status: 'active',
-  });
+  return Object.freeze({ grantId, subjectPersonId, issuedByPersonId, issuedByRole: SAFEGUARDING_ROLE, purpose: SAFEGUARDING_PURPOSE, reason: reason.trim(), scope: Object.freeze([...new Set(scope)]), issuedAt: start.toISOString(), expiresAt: end.toISOString(), status: 'active' });
 }
 
 export function isSafeguardingGrantActive(grant, now = new Date()) {
@@ -40,7 +29,7 @@ export function isSafeguardingGrantActive(grant, now = new Date()) {
   const current = new Date(now).getTime(); const issued = new Date(grant.issuedAt).getTime(); const expires = new Date(grant.expiresAt).getTime();
   return Number.isFinite(current) && Number.isFinite(issued) && Number.isFinite(expires) && current >= issued && current < expires;
 }
-export function grantCoversScope(grant, requestedScope) { return isSafeguardingGrantActive(grant) && typeof requestedScope === 'string' && grant.scope.includes(requestedScope); }
+export function grantCoversScope(grant, requestedScope, now = new Date()) { return isSafeguardingGrantActive(grant, now) && typeof requestedScope === 'string' && grant.scope.includes(requestedScope); }
 
 export function canIssueSafeguardingGrant({ actorRole, actorPersonId, targetPersonId, reason, now = new Date(), durationMs = 15 * 60 * 1000, scope = ['safeguarding'] }) {
   if (!isSafeguardingRole(actorRole)) return { allowed: false, reason: 'safeguarding_role_required' };
