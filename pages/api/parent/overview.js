@@ -1,4 +1,5 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { hasActiveRelationship } from '../../../src/security/relationshipStore.js';
 import { resolveStudentProfile } from '../../../src/platform/studentProfileResolver.js';
 import { careerRoadmapShareId, SHARED_INFORMATION_AUDIENCES, SHARED_INFORMATION_STATUS } from '../../../src/platform/sharedInformation.js';
 
@@ -16,8 +17,6 @@ async function latestCareerReport(db, childId){
 }
 
 async function latestSenReport(db, childId){
-  // The SEN professional API writes canonical IEP records here. Do not read
-  // the legacy users/{id}/iep_records collection from the parent surface.
   const snap=await db.collection('sen').doc(childId).collection('iep_records').orderBy('createdAt','desc').limit(1).get();
   if(snap.empty)return null;
   return {type:'sen',data:snap.docs[0].data()||{}};
@@ -69,6 +68,17 @@ export default async function handler(req,res){
   for(const childId of studentIds){
     const childSnap=await db.collection('users').doc(childId).get();
     if(!childSnap.exists)continue;
+
+    // Legacy linkedStudentIds/family.guardians are compatibility projections only.
+    // Parent authorization requires a canonical active relationship.
+    const hasCanonicalParentLink=await hasActiveRelationship({
+      db,
+      subjectPersonId:childId,
+      relatedPersonId:decoded.uid,
+      types:['parent','guardian'],
+    });
+    if(!hasCanonicalParentLink)continue;
+
     const child=childSnap.data()||{};
     const resolved=resolveStudentProfile(child,{role:'parent',uid:decoded.uid});
     if(!resolved.allowed)continue;
