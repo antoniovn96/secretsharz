@@ -1,4 +1,5 @@
 import { getAdminAuth, getAdminFirestore } from './firebaseAdmin.js';
+import { FOUNDER_EMAIL } from './claimRoles.js';
 import normalizeStudentRecord from '../platform/studentRecordNormalizer.js';
 
 /** Server-side authorization for professional access to a student. Canonical assignments are authoritative; legacy assignments are migration fallback only. */
@@ -10,12 +11,13 @@ export async function authorizeProfessionalStudent({ req, studentId, service }) 
   let decoded;
   try { decoded = await getAdminAuth().verifyIdToken(authHeader.slice(7)); } catch { return { authorized: false, reason: 'invalid_auth' }; }
 
-  const db = getAdminFirestore();
-  const viewerSnap = await db.collection('users').doc(decoded.uid).get();
-  const viewer = viewerSnap.exists ? viewerSnap.data() : {};
-  const roles = Array.isArray(viewer.roles) ? viewer.roles : (viewer.role ? [viewer.role] : []);
-  const isAdmin = roles.some(role => ['admin', 'super_admin', 'superadmin'].includes(String(role).toLowerCase()));
+  // A profile document is data, not an authorization authority. Privileged
+  // professional access must come from the verified Firebase claim. The
+  // founder identity remains a temporary bootstrap path while claims migrate.
+  const isAdmin = decoded.role === 'super_admin'
+    || (decoded.email_verified === true && decoded.email === FOUNDER_EMAIL);
 
+  const db = getAdminFirestore();
   let studentSnap = await db.collection('students').doc(studentId).get();
   if (!studentSnap.exists) studentSnap = await db.collection('users').doc(studentId).get();
   if (!studentSnap.exists) return { authorized: false, reason: 'student_not_found' };
@@ -35,7 +37,11 @@ export async function authorizeProfessionalStudent({ req, studentId, service }) 
   }
 
   const assignedStaff = student.assignedStaff || student.assignedProfessionals || {};
-  const assignmentKeys = { career: ['careerId', 'careerCounsellorId', 'careerCounselorId'], psychology: ['psychologistId', 'psychologyId', 'counsellorId', 'counselorId'], sen: ['senId', 'senEducatorId', 'specialEducatorId'] }[service];
+  const assignmentKeys = {
+    career: ['careerId', 'careerCounsellorId', 'careerCounselorId'],
+    psychology: ['psychologistId', 'psychologyId', 'counsellorId', 'counselorId'],
+    sen: ['senId', 'senEducatorId', 'specialEducatorId'],
+  }[service];
   if (!assignmentKeys.some(key => assignedStaff[key] === decoded.uid)) return { authorized: false, reason: 'not_assigned' };
   return { authorized: true, viewerId: decoded.uid, studentId, student, isAdmin: false };
 }
