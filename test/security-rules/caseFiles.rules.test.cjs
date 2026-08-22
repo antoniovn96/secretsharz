@@ -84,9 +84,8 @@ describe('caseFiles — assignment boundary', () => {
       )
     );
 
-    const deniedRead = await assertFails(
+    await assertFails(
       getDoc(doc(fdb(env, 'career-pro-4', { role: 'career_counsellor' }), 'caseFiles', 'student-case-5'))
     );
-    return deniedRead;
   });
 });
