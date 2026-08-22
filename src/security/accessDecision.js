@@ -15,16 +15,11 @@ const ALLOWED_PURPOSES_BY_SERVICE = Object.freeze({
 
 export function createAccessContext(input = {}) {
   const context = {
-    role: input.role || null,
-    relationship: input.relationship || null,
-    dataDomain: input.dataDomain || null,
-    purpose: input.purpose || null,
-    consent: input.consent || 'unknown',
-    safeguarding: input.safeguarding || 'normal',
-    timeStatus: input.timeStatus || 'active',
-    serviceDomain: input.serviceDomain || null,
-    subjectPersonId: input.subjectPersonId || null,
-    safeguardingGrant: input.safeguardingGrant || null,
+    role: input.role || null, relationship: input.relationship || null, dataDomain: input.dataDomain || null,
+    purpose: input.purpose || null, consent: input.consent || 'unknown', safeguarding: input.safeguarding || 'normal',
+    timeStatus: input.timeStatus || 'active', serviceDomain: input.serviceDomain || null,
+    subjectPersonId: input.subjectPersonId || null, safeguardingGrant: input.safeguardingGrant || null,
+    now: input.now || new Date(),
   };
   if (context.role && !isKnownValue(context.role, PLATFORM_ROLES)) throw new Error('Unknown platform role.');
   if (context.dataDomain && !isKnownValue(context.dataDomain, DATA_DOMAINS)) throw new Error('Unknown data domain.');
@@ -35,20 +30,18 @@ export function createAccessContext(input = {}) {
 
 export function decideAccess(input = {}) {
   const context = createAccessContext(input);
-  for (const field of ACCESS_DECISION_FIELDS) {
-    if (context[field] == null || context[field] === '') return { allowed: false, reason: `missing_${field}`, context };
-  }
+  for (const field of ACCESS_DECISION_FIELDS) if (context[field] == null || context[field] === '') return { allowed: false, reason: `missing_${field}`, context };
 
   if (context.purpose === SAFEGUARDING_PURPOSE || context.safeguarding === 'active') {
     if (context.purpose !== SAFEGUARDING_PURPOSE) return { allowed: false, reason: 'safeguarding_requires_safeguarding_purpose', context };
     if (context.role !== SAFEGUARDING_ROLE) return { allowed: false, reason: 'safeguarding_role_required', context };
     if (context.relationship !== 'safeguarding_officer') return { allowed: false, reason: 'safeguarding_relationship_required', context };
     if (!context.subjectPersonId) return { allowed: false, reason: 'safeguarding_subject_required', context };
-    if (!isSafeguardingGrantActive(context.safeguardingGrant)) return { allowed: false, reason: 'safeguarding_grant_required_or_expired', context };
+    if (!isSafeguardingGrantActive(context.safeguardingGrant, context.now)) return { allowed: false, reason: 'safeguarding_grant_required_or_expired', context };
     if (context.safeguardingGrant.subjectPersonId !== context.subjectPersonId) return { allowed: false, reason: 'safeguarding_grant_subject_mismatch', context };
     if (context.safeguardingGrant.issuedByRole !== SAFEGUARDING_ROLE) return { allowed: false, reason: 'safeguarding_grant_issuer_role_invalid', context };
     if (context.safeguardingGrant.purpose !== SAFEGUARDING_PURPOSE) return { allowed: false, reason: 'safeguarding_grant_purpose_invalid', context };
-    if (!grantCoversScope(context.safeguardingGrant, context.dataDomain)) return { allowed: false, reason: 'safeguarding_grant_scope_denied', context };
+    if (!grantCoversScope(context.safeguardingGrant, context.dataDomain, context.now)) return { allowed: false, reason: 'safeguarding_grant_scope_denied', context };
     if (context.safeguardingGrant.issuedByPersonId === context.subjectPersonId) return { allowed: false, reason: 'safeguarding_self_grant_denied', context };
   }
 
@@ -60,7 +53,6 @@ export function decideAccess(input = {}) {
   if (expectedService && context.serviceDomain !== expectedService && context.purpose !== SAFEGUARDING_PURPOSE) return { allowed: false, reason: 'service_domain_mismatch', context };
   const allowedPurposes = ALLOWED_PURPOSES_BY_SERVICE[context.serviceDomain];
   if (allowedPurposes && !allowedPurposes.has(context.purpose)) return { allowed: false, reason: 'purpose_not_allowed_for_service', context };
-
   return { allowed: true, reason: context.purpose === SAFEGUARDING_PURPOSE ? 'trusted_safeguarding_grant' : 'policy_requirements_satisfied', context };
 }
 export { PURPOSES };
