@@ -1,7 +1,7 @@
 import { getAdminFirestore } from '../../../../src/security/firebaseAdmin.js';
 import { authorizeProfessionalStudent } from '../../../../src/security/authorizeProfessionalStudent.js';
 import { resolveStudentProfile } from '../../../../src/platform/studentProfileResolver.js';
-import { buildCareerRoadmapShare, careerRoadmapShareId } from '../../../../src/platform/sharedInformation.js';
+import { buildCareerRoadmapShare, careerRoadmapShareId, SHARED_INFORMATION_AUDIENCES } from '../../../../src/platform/sharedInformation.js';
 
 export default async function handler(req, res) {
   if (!['GET', 'POST'].includes(req.method)) { res.setHeader('Allow', 'GET, POST'); return res.status(405).json({ error: 'Method not allowed.' }); }
