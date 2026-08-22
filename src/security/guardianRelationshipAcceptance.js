@@ -3,7 +3,6 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import { getAdminFirestore } from './firebaseAdmin.js';
 import { getStudentAgeBand, evaluateConsentEligibility } from './consentEligibility.js';
-import { getActiveRelationship } from './relationshipStore.js';
 
 const ALLOWED_TYPES = new Set(['parent', 'guardian']);
 
@@ -19,17 +18,16 @@ export async function acceptGuardianRelationship({ db = getAdminFirestore(), gua
     if (relationship.relatedPersonId !== guardianId) throw new Error('Only the invited guardian can accept this relationship.');
     if (relationship.status !== 'pending') throw new Error('Only pending relationships can be accepted.');
     if (relationship.consentRequired !== true) throw new Error('This relationship is not configured for guardian acceptance.');
-
     const studentSnap = await tx.get(db.collection('users').doc(relationship.subjectPersonId));
     if (!studentSnap.exists) throw new Error('Consent subject not found.');
     const ageBand = getStudentAgeBand(studentSnap.data() || {});
     if (ageBand === 'unknown') throw new Error('Student age band cannot be established.');
     const eligibility = evaluateConsentEligibility({ consentType: 'guardian', actorType: 'guardian', ageBand });
     if (!eligibility.allowed) throw new Error('Guardian acceptance is not eligible under the current service policy.');
-
     const now = new Date().toISOString();
-    tx.update(ref, { status: 'active', startsAt: relationship.startsAt || now, acceptedAt: FieldValue.serverTimestamp(), acceptedBy: guardianId, updatedAt: now });
-    accepted = { relationshipId, subjectPersonId: relationship.subjectPersonId, relatedPersonId: guardianId, type: relationship.type, status: 'active' };
+    const authorizationBasis = ageBand === '18_plus' ? 'adult_explicit_relationship' : 'minor_guardian_acceptance';
+    tx.update(ref, { status: 'active', authorizationBasis, startsAt: relationship.startsAt || now, acceptedAt: FieldValue.serverTimestamp(), acceptedBy: guardianId, updatedAt: now });
+    accepted = { relationshipId, subjectPersonId: relationship.subjectPersonId, relatedPersonId: guardianId, type: relationship.type, status: 'active', authorizationBasis };
   });
   return accepted;
 }
