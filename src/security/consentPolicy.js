@@ -27,26 +27,11 @@ export const AGE_BANDS = Object.freeze({
 });
 
 export const SERVICE_COPY = Object.freeze({
-  [CONSENT_TYPES.ACCOUNT]: {
-    title: 'Your Secret Sharz account',
-    summary: 'We need to process the information required to create, secure and operate your account.',
-  },
-  [CONSENT_TYPES.COUNSELLING]: {
-    title: 'Counselling and professional support',
-    summary: 'Counselling information is kept within the counselling domain and shared only according to the authorised professional relationship, consent and safeguarding rules.',
-  },
-  [CONSENT_TYPES.SEN]: {
-    title: 'SEN and learning support',
-    summary: 'SEN information is protected as its own domain and is not automatically shared with other professional domains.',
-  },
-  [CONSENT_TYPES.CAREER]: {
-    title: 'Career guidance',
-    summary: 'Career information may include assessments, interests, education and goals used to provide career guidance and opportunities.',
-  },
-  [CONSENT_TYPES.COMMUNITY]: {
-    title: 'Community participation',
-    summary: 'Community contributions can use an anonymous or pseudonymous identity according to the options available to you.',
-  },
+  [CONSENT_TYPES.ACCOUNT]: { title: 'Your Secret Sharz account', summary: 'We need to process the information required to create, secure and operate your account.' },
+  [CONSENT_TYPES.COUNSELLING]: { title: 'Counselling and professional support', summary: 'Counselling information is kept within the counselling domain and shared only according to the authorised professional relationship, consent and safeguarding rules.' },
+  [CONSENT_TYPES.SEN]: { title: 'SEN and learning support', summary: 'SEN information is protected as its own domain and is not automatically shared with other professional domains.' },
+  [CONSENT_TYPES.CAREER]: { title: 'Career guidance', summary: 'Career information may include assessments, interests, education and goals used to provide career guidance and opportunities.' },
+  [CONSENT_TYPES.COMMUNITY]: { title: 'Community participation', summary: 'Community contributions can use an anonymous or pseudonymous identity according to the options available to you.' },
 });
 
 export const buildConsentEvent = ({
@@ -56,8 +41,10 @@ export const buildConsentEvent = ({
   actorType = 'self',
   relationshipId = null,
   serviceContext = null,
+  subjectId = null,
 }) => ({
   userId,
+  subjectId,
   type,
   action,
   actorType,
