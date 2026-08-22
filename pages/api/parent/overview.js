@@ -1,5 +1,6 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
 import { hasActiveRelationship } from '../../../src/security/relationshipStore.js';
+import { resolveSubjectServiceConsent } from '../../../src/security/consentResolver.js';
 import { resolveStudentProfile } from '../../../src/platform/studentProfileResolver.js';
 import { careerRoadmapShareId, SHARED_INFORMATION_AUDIENCES, SHARED_INFORMATION_STATUS } from '../../../src/platform/sharedInformation.js';
 
@@ -39,14 +40,8 @@ function sanitizeChild(profile,id,reports,relationship){
     section:clean(profile.academic?.current?.section||''),
     primary_path:activeService(profile),
     guardianRelationship:relationshipLabel(relationship),
-    career:{
-      hollandCode:clean(careerDNA.code||''),
-      roadmapSummary:clean(careerReport?.phases?.phase2_explore||careerReport?.summary||'',1200),
-    },
-    sen:{
-      goals:Array.isArray(sen.goals)?sen.goals.slice(0,20).map(x=>clean(x,300)):[],
-      accommodations:Array.isArray(sen.accommodations)?sen.accommodations.slice(0,20).map(x=>clean(x,200)):[],
-    },
+    career:{hollandCode:clean(careerDNA.code||''),roadmapSummary:clean(careerReport?.phases?.phase2_explore||careerReport?.summary||'',1200)},
+    sen:{goals:Array.isArray(sen.goals)?sen.goals.slice(0,20).map(x=>clean(x,300)):[],accommodations:Array.isArray(sen.accommodations)?sen.accommodations.slice(0,20).map(x=>clean(x,200)):[]},
     wellbeing:{specialistDetailsHidden:true},
   };
 }
@@ -56,43 +51,31 @@ export default async function handler(req,res){
   const token=bearerToken(req);if(!token)return res.status(401).json({error:'Authentication required.'});
   let decoded;try{decoded=await getAdminAuth().verifyIdToken(token);}catch(_){return res.status(401).json({error:'Invalid or expired authentication token.'});}
   if(decoded.role!=='parent')return res.status(403).json({error:'Parent access required.'});
-
   const db=getAdminFirestore();
   const parentSnap=await db.collection('users').doc(decoded.uid).get();
   if(!parentSnap.exists)return res.status(404).json({error:'Parent profile not found.'});
   const parent=parentSnap.data()||{};
   if(parent.role!=='parent')return res.status(403).json({error:'Parent access required.'});
-
   const studentIds=Array.isArray(parent.linkedStudentIds)?parent.linkedStudentIds.filter(Boolean):[];
   const children=[];
   for(const childId of studentIds){
     const childSnap=await db.collection('users').doc(childId).get();
     if(!childSnap.exists)continue;
-
-    // Legacy linkedStudentIds/family.guardians are compatibility projections only.
-    // Parent authorization requires a canonical active relationship.
-    const hasCanonicalParentLink=await hasActiveRelationship({
-      db,
-      subjectPersonId:childId,
-      relatedPersonId:decoded.uid,
-      types:['parent','guardian'],
-    });
+    const hasCanonicalParentLink=await hasActiveRelationship({db,subjectPersonId:childId,relatedPersonId:decoded.uid,types:['parent','guardian']});
     if(!hasCanonicalParentLink)continue;
-
     const child=childSnap.data()||{};
     const resolved=resolveStudentProfile(child,{role:'parent',uid:decoded.uid});
     if(!resolved.allowed)continue;
-
-    const relationship=resolved.profile.family?.guardians?.find((guardian)=>guardian.accountId===decoded.uid)?.relationship
-      || parent.childRelationships?.[childId]
-      || 'guardian';
+    const relationship=resolved.profile.family?.guardians?.find((guardian)=>guardian.accountId===decoded.uid)?.relationship || parent.childRelationships?.[childId] || 'guardian';
     const reports={career:null,sen:null};
     try{
       if(resolved.profile.services?.career?.status==='active')reports.career=await latestCareerReport(db,childId);
-      if(resolved.profile.services?.sen?.status==='active')reports.sen=await latestSenReport(db,childId);
+      if(resolved.profile.services?.sen?.status==='active'){
+        const consent=await resolveSubjectServiceConsent({db,userId:decoded.uid,subjectId:childId,serviceType:'sen'});
+        if(consent.allowed)reports.sen=await latestSenReport(db,childId);
+      }
     }catch(error){console.error('[parent/overview] report lookup failed:',error?.message||error);}
     children.push(sanitizeChild(resolved.profile,childId,reports,relationship));
   }
-
   return res.status(200).json({success:true,parent:{uid:decoded.uid,name:clean(parent.name||decoded.name||'Parent'),email:clean(parent.email||decoded.email||'',254),relationship:relationshipLabel(parent.parentRelationship),institutionId:parent.institutionId||null,institutionName:clean(parent.institutionName||'')},children});
 }
