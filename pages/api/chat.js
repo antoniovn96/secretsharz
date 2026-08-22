@@ -5,9 +5,9 @@
 // content. Client-side visibility is never treated as authorization.
 import { getAdminAuth } from '../../src/security/firebaseAdmin.js';
 
-const MAX_MESSAGES = 40;
-const MAX_MESSAGE_CHARS = 12000;
-const MAX_TOTAL_CHARS = 60000;
+export const MAX_MESSAGES = 40;
+export const MAX_MESSAGE_CHARS = 12000;
+export const MAX_TOTAL_CHARS = 60000;
 
 function bearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization;
@@ -54,7 +54,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Authenticate every caller before consuming the Anthropic resource.
   const idToken = bearerToken(req);
   if (!idToken) return res.status(401).json({ error: 'Authentication required.' });
 
