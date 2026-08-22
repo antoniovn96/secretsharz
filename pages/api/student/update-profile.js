@@ -17,6 +17,13 @@ function looksLikeStudent(raw = {}) {
   return raw.role === 'student' || raw.profileType === 'student' || Boolean(raw.studentProfile?.identity) || Boolean(raw.grade || raw.gradeOrCourse || raw.schoolName || raw.studentId);
 }
 
+const GOVERNANCE_FIELDS = new Set([
+  'fatherName', 'fatherEmail', 'fatherPhone',
+  'motherName', 'motherEmail', 'motherPhone',
+  'counsellingConsentAgreed',
+  'studentTrack',
+]);
+
 export default async function handler(req, res) {
   if (req.method !== 'PATCH' && req.method !== 'POST') {
     res.setHeader('Allow', 'PATCH, POST');
@@ -40,6 +47,21 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'You may only update your own student profile.' });
   }
 
+  const submittedProfile = req.body?.profile && typeof req.body.profile === 'object' ? req.body.profile : {};
+  const submittedGovernanceFields = Object.keys(submittedProfile).filter((key) => GOVERNANCE_FIELDS.has(key));
+  if (submittedGovernanceFields.length > 0) {
+    return res.status(400).json({
+      error: 'Governance, guardian relationships, consent and service activation must use their dedicated backend workflows.',
+      fields: submittedGovernanceFields,
+    });
+  }
+
+  if (Object.prototype.hasOwnProperty.call(submittedProfile, 'family') || Object.prototype.hasOwnProperty.call(submittedProfile, 'governance') || Object.prototype.hasOwnProperty.call(submittedProfile, 'services')) {
+    return res.status(400).json({
+      error: 'Family relationships, consent and service memberships cannot be changed through the profile editor.',
+    });
+  }
+
   try {
     const db = getAdminFirestore();
     const ref = db.collection('users').doc(studentId);
@@ -50,8 +72,13 @@ export default async function handler(req, res) {
     if (!looksLikeStudent(rawStudent)) return res.status(403).json({ error: 'Target account is not a student profile.' });
 
     const existing = rawStudent.studentProfile || normalizeStudentRecord(rawStudent, studentId);
-    const patch = req.body?.profile || {};
-    const nextProfile = mergeCanonicalStudentProfile({ ...existing, id: studentId }, patch);
+    const nextProfile = mergeCanonicalStudentProfile({ ...existing, id: studentId }, submittedProfile);
+
+    // Deliberately preserve platform-governed sections. The profile editor is
+    // not an authorization, consent, relationship, or service-membership API.
+    nextProfile.family = existing.family || {};
+    nextProfile.governance = existing.governance || {};
+    nextProfile.services = existing.services || {};
 
     await ref.set({
       studentProfile: nextProfile,
