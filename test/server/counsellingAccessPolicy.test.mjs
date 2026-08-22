@@ -16,6 +16,6 @@ test('counselling safeguarding scope rejects the legacy boolean and old role nam
 });
 test('counselling safeguarding scope requires a trusted grant', () => {
   const grant = canIssueSafeguardingGrant({ actorRole: SAFEGUARDING_ROLE, actorPersonId: 'officer', targetPersonId: 'student', reason: 'Immediate safeguarding concern requiring review.', scope: ['counselling'], durationMs: 15 * 60 * 1000, now: new Date('2026-08-23T10:00:00Z') }).grant;
-  const result = canAccessCounsellingScope({ role: SAFEGUARDING_ROLE, scope: COUNSELLING_SCOPES.SAFEGUARDING, subjectPersonId: 'student', safeguardingGrant: grant });
+  const result = canAccessCounsellingScope({ role: SAFEGUARDING_ROLE, scope: COUNSELLING_SCOPES.SAFEGUARDING, subjectPersonId: 'student', safeguardingGrant: grant, now: new Date('2026-08-23T10:05:00Z') });
   assert.equal(result.allowed, true); assert.equal(result.reason, 'trusted_safeguarding_grant');
 });
