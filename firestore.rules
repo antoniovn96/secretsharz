@@ -12,21 +12,11 @@ service cloud.firestore {
       return isStaff()
         && get(/databases/$(database)/documents/students/$(studentId)).data.assignedStaff.careerId == request.auth.uid;
     }
-
-    function validMobile(number) {
-      return number == '' || number.matches('^[6-9][0-9]{9}$');
-    }
-
+    function validMobile(number) { return number == '' || number.matches('^[6-9][0-9]{9}$'); }
     function validUserPhoneData() {
-      return (!request.resource.data.keys().hasAny(['phone'])
-        || !request.resource.data.phone.keys().hasAny(['number'])
-        || validMobile(request.resource.data.phone.number))
-        && (!request.resource.data.keys().hasAny(['careerProfile'])
-        || !request.resource.data.careerProfile.keys().hasAny(['phone'])
-        || !request.resource.data.careerProfile.phone.keys().hasAny(['number'])
-        || validMobile(request.resource.data.careerProfile.phone.number));
+      return (!request.resource.data.keys().hasAny(['phone']) || !request.resource.data.phone.keys().hasAny(['number']) || validMobile(request.resource.data.phone.number))
+        && (!request.resource.data.keys().hasAny(['careerProfile']) || !request.resource.data.careerProfile.keys().hasAny(['phone']) || !request.resource.data.careerProfile.phone.keys().hasAny(['number']) || validMobile(request.resource.data.careerProfile.phone.number));
     }
-
     function hasAccountConsent(uid) {
       return isSignedIn()
         && exists(/databases/$(database)/documents/consentEvents/$('account_' + uid))
@@ -36,7 +26,6 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.policyVersion == '1.0.0'
         && get(/databases/$(database)/documents/consentEvents/$('account_' + uid)).data.keys().hasAll(['userId','type','action','actorType','relationshipId','serviceContext','policyVersion','createdAt']);
     }
-
     function validConsentEventCreate() {
       return isSignedIn()
         && request.resource.data.userId == request.auth.uid
@@ -49,28 +38,20 @@ service cloud.firestore {
     }
 
     match /consentEvents/{eventId} {
-      allow create: if validConsentEventCreate()
-        && (request.resource.data.type == 'account_privacy') == (eventId == 'account_' + request.auth.uid);
+      allow create: if validConsentEventCreate() && (request.resource.data.type == 'account_privacy') == (eventId == 'account_' + request.auth.uid);
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow update, delete: if false;
     }
 
     match /students/{studentId} {
-      allow read: if isSignedIn() && (
-        request.auth.uid == studentId ||
-        (isParent() && resource.data.parent.userId == request.auth.uid) ||
-        (isStaff() && (resource.data.assignedStaff.careerId == request.auth.uid || resource.data.assignedStaff.psychId == request.auth.uid || resource.data.assignedStaff.senId == request.auth.uid)) ||
-        isAdmin()
-      );
+      allow read: if isSignedIn() && (request.auth.uid == studentId || (isParent() && resource.data.parent.userId == request.auth.uid) || (isStaff() && (resource.data.assignedStaff.careerId == request.auth.uid || resource.data.assignedStaff.psychId == request.auth.uid || resource.data.assignedStaff.senId == request.auth.uid)) || isAdmin());
       allow write: if isAdmin();
-
       match /career_roadmaps/{roadmapId} {
         allow read: if isAdmin() || isAssignedStaffForStudent(studentId) || (isSignedIn() && request.auth.uid == studentId);
         allow create: if isAdmin() || (isAssignedStaffForStudent(studentId) && request.resource.data.providerId == request.auth.uid);
         allow update: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid && request.resource.data.providerId == request.auth.uid);
         allow delete: if isAdmin() || (isAssignedStaffForStudent(studentId) && resource.data.providerId == request.auth.uid);
       }
-
       match /career_notes/{noteId} {
         allow read: if isAdmin() || isAssignedStaffForStudent(studentId);
         allow create: if isAdmin() || (isAssignedStaffForStudent(studentId) && request.resource.data.providerId == request.auth.uid);
@@ -88,25 +69,19 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-      allow create: if isAdmin()
-        || (isSignedIn()
-          && request.auth.uid == userId
-          && hasAccountConsent(userId)
-          && request.resource.data.role == 'student'
-          && validUserPhoneData()
-          && !request.resource.data.keys().hasAny(['admin','permissions','careerReportAccess']));
-      allow update: if isAdmin()
-        || (isSignedIn()
-          && request.auth.uid == userId
-          && validUserPhoneData()
-          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role','admin','permissions','careerReportAccess']));
+      allow create: if isAdmin() || (isSignedIn() && request.auth.uid == userId && hasAccountConsent(userId) && request.resource.data.role == 'student' && validUserPhoneData() && !request.resource.data.keys().hasAny(['admin','permissions','careerReportAccess']));
+      allow update: if isAdmin() || (isSignedIn() && request.auth.uid == userId && validUserPhoneData() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role','admin','permissions','careerReportAccess']));
       allow delete: if isAdmin();
     }
 
+    // All sensitive service data and safeguarding grants are server-only. A
+    // client-provided safeguarding state can never be used as an authorization
+    // boundary in Firestore rules.
     match /counselling/{document=**} { allow read, write: if false; }
     match /sen/{document=**} { allow read, write: if false; }
     match /career/{document=**} { allow read, write: if false; }
     match /safeguarding/{document=**} { allow read, write: if false; }
+    match /safeguardingGrants/{grantId} { allow read, write: if false; }
     match /auditEvents/{document=**} { allow read, write: if false; }
     match /{document=**} { allow read, write: if false; }
   }
