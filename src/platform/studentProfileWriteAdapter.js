@@ -41,12 +41,23 @@ export function profileEditorToCanonicalPatch(payload = {}, currentProfile = {})
   if (track === 'both') {
     services.career = { ...(services.career || {}), status: 'active' };
     services.wellbeing = { ...(services.wellbeing || {}), status: 'active' };
+    services.sen = { ...(services.sen || {}), status: 'active' };
   } else if (track === 'career_guidance' || track === 'career') {
     services.career = { ...(services.career || {}), status: 'active' };
     services.wellbeing = { ...(services.wellbeing || {}), status: 'inactive' };
+    services.sen = { ...(services.sen || {}), status: 'inactive' };
   } else if (track === 'counselling' || track === 'wellbeing') {
     services.career = { ...(services.career || {}), status: 'inactive' };
     services.wellbeing = { ...(services.wellbeing || {}), status: 'active' };
+    services.sen = { ...(services.sen || {}), status: 'inactive' };
+  } else if (track === 'sen' || track === 'special_education' || track === 'special_educator') {
+    services.career = { ...(services.career || {}), status: 'inactive' };
+    services.wellbeing = { ...(services.wellbeing || {}), status: 'inactive' };
+    services.sen = { ...(services.sen || {}), status: 'active' };
+  } else if (track === 'unassigned') {
+    services.career = { ...(services.career || {}), status: 'inactive' };
+    services.wellbeing = { ...(services.wellbeing || {}), status: 'inactive' };
+    services.sen = { ...(services.sen || {}), status: 'inactive' };
   }
 
   const history = { ...currentHistory };
@@ -66,8 +77,6 @@ export function profileEditorToCanonicalPatch(payload = {}, currentProfile = {})
     ...(currentProfile.identity || {}),
     gender: clean(payload.gender ?? currentProfile.identity?.gender ?? ''),
   };
-  // ProfileEditor explicitly owns this field. null/empty therefore means
-  // the student intentionally removed the picture, not "preserve old value".
   if (Object.prototype.hasOwnProperty.call(payload, 'profilePicture')) {
     identity.photoURL = clean(payload.profilePicture || '');
   } else if (currentProfile.identity?.photoURL !== undefined) {
