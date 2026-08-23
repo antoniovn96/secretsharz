@@ -1,4 +1,5 @@
 import { getAdminAuth, getAdminFirestore } from '../../../src/security/firebaseAdmin.js';
+import { ensurePendingRelationship } from '../../../src/security/relationshipStore.js';
 
 function bearerToken(req){const header=req.headers.authorization||req.headers.Authorization;if(typeof header!=='string')return null;const match=header.match(/^Bearer\s+(.+)$/i);return match?match[1]:null;}
 function clean(value,max=120){return String(value||'').trim().slice(0,max);}
@@ -52,10 +53,16 @@ export default async function handler(req,res){
       if(parentSnapshot?.exists){
         const parent=parentSnapshot.data()||{};
         const linkedStudentIds=Array.from(new Set([...(Array.isArray(parent.linkedStudentIds)?parent.linkedStudentIds:[]),decoded.uid]));
-        transaction.set(db.collection('users').doc(roster.parentUid),{linkedStudentIds,updatedAt:now},{merge:true});
+        const existingChildRelationships=parent.childRelationships&&typeof parent.childRelationships==='object'?parent.childRelationships:{};
+        transaction.set(db.collection('users').doc(roster.parentUid),{linkedStudentIds,childRelationships:{...existingChildRelationships,[decoded.uid]:'guardian'},updatedAt:now},{merge:true});
       }
       return {institutionId:record.institutionId,institutionName:record.institutionName,roster:{...roster,fullName:roster.fullName||'',className:roster.className||'',section:roster.section||''}};
     });
+
+    if(result.roster.parentUid){
+      await ensurePendingRelationship({db,subjectPersonId:decoded.uid,relatedPersonId:result.roster.parentUid,type:'guardian',metadata:{source:'institutional_redemption',institutionId:result.institutionId,rosterId:result.roster.id}});
+      await db.collection('users').doc(decoded.uid).set({guardianRelationships:{[result.roster.parentUid]:'guardian'}},{merge:true});
+    }
 
     return res.status(200).json({success:true,institution:{id:result.institutionId,name:result.institutionName},student:{fullName:result.roster.fullName||'',className:result.roster.className||'',section:result.roster.section||'',parentUid:result.roster.parentUid||null}});
   }catch(error){return res.status(error.status||500).json({error:error.message||'Unable to redeem institutional access code.'});}
