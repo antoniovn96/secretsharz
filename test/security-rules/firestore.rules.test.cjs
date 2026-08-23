@@ -9,28 +9,13 @@
 //
 // IMPORTANT: Passing tests do not constitute production security approval.
 const {
-  getEnv,
-  clearDb,
-  teardownEnv,
-  userContext,
-  anonContext,
-  founderContext,
-  validAccountConsent,
-  validStudentProfile,
-  seedAccountConsent,
-  seedConsentDoc,
-  seedRawConsentDoc,
-  seedStudentProfile,
-  accountConsentId,
-  CONSENT_TYPES,
-  POLICY_VERSION,
-  STATIC_TIMESTAMP,
-  assertSucceeds,
-  assertFails
+  getEnv, clearDb, teardownEnv, userContext, anonContext, founderContext,
+  validAccountConsent, validStudentProfile, seedAccountConsent, seedConsentDoc,
+  seedRawConsentDoc, seedStudentProfile, accountConsentId, CONSENT_TYPES,
+  POLICY_VERSION, STATIC_TIMESTAMP, assertSucceeds, assertFails
 } = require('./helpers.cjs');
 
 const { setDoc, doc, getDoc, updateDoc, deleteDoc, serverTimestamp } = require('firebase/firestore');
-
 function db(ctx) { return ctx.firestore(); }
 function fdb(env, uid, claims = {}) { return env.authenticatedContext(uid, claims).firestore(); }
 function afdb(env) { return env.unauthenticatedContext().firestore(); }
@@ -38,9 +23,6 @@ function afdb(env) { return env.unauthenticatedContext().firestore(); }
 beforeEach(async () => { await clearDb(); });
 afterAll(async () => { await teardownEnv(); });
 
-// ============================================================
-// TEST GROUP 1 — CONSENT BEFORE PROFILE
-// ============================================================
 describe('GROUP 1 — consent before profile', () => {
   const uid = 'student-1';
   it('DENIES self profile creation when account consent is missing', async () => { const env = await getEnv(); await assertFails(setDoc(doc(db(userContext(env, uid)), 'users', uid), validStudentProfile())); });
@@ -57,9 +39,6 @@ describe('GROUP 1 — consent before profile', () => {
   it('DENIES deletion of a consent event', async () => { const env = await getEnv(); await assertSucceeds(setDoc(doc(fdb(env, uid), 'consentEvents', accountConsentId(uid)), { ...validAccountConsent(uid), createdAt: serverTimestamp() })); await assertFails(deleteDoc(doc(fdb(env, uid), 'consentEvents', accountConsentId(uid)))); });
 });
 
-// ============================================================
-// TEST GROUP 2 — SELF ROLE ESCALATION
-// ============================================================
 describe('GROUP 2 — self role escalation is blocked', () => {
   const uid = 'esc-1';
   beforeEach(async () => { await seedAccountConsent(uid); });
@@ -73,9 +52,6 @@ describe('GROUP 2 — self role escalation is blocked', () => {
   it('ALLOWS updating a non-privileged own profile field', async () => { const env = await getEnv(); await seedStudentProfile(uid); await assertSucceeds(updateDoc(doc(db(userContext(env, uid)), 'users', uid), { displayName: 'New Name' })); });
 });
 
-// ============================================================
-// TEST GROUP 3 — CROSS-USER ACCESS
-// ============================================================
 describe('GROUP 3 — cross-user profile access', () => {
   const a = 'studentA'; const b = 'studentB';
   beforeEach(async () => { await seedAccountConsent(a); await seedAccountConsent(b); await seedStudentProfile(a); await seedStudentProfile(b); });
@@ -84,9 +60,6 @@ describe('GROUP 3 — cross-user profile access', () => {
   it('DENIES studentB reading studentA profile', async () => { const env = await getEnv(); await assertFails(getDoc(doc(db(userContext(env, b)), 'users', a))); });
 });
 
-// ============================================================
-// TEST GROUP 4 — PROTECTED SPECIALIST DOMAINS
-// ============================================================
 describe('GROUP 4 — protected specialist domains', () => {
   const domains = ['counselling', 'sen', 'career', 'safeguarding', 'auditEvents'];
   test.each(domains)('DENIES authenticated read on %s', async (domain) => { const env = await getEnv(); await assertFails(getDoc(doc(db(userContext(env, 'any-user')), domain, 'anyDoc'))); });
@@ -95,9 +68,6 @@ describe('GROUP 4 — protected specialist domains', () => {
   test.each(domains)('DENIES unauthenticated write on %s', async (domain) => { const env = await getEnv(); await assertFails(setDoc(doc(afdb(env), domain, 'anyDoc'), { x: 1 })); });
 });
 
-// ============================================================
-// TEST GROUP 5 — CONSENT IMMUTABILITY
-// ============================================================
 describe('GROUP 5 — consent immutability', () => {
   const uid = 'consent-user';
   beforeEach(async () => { await seedAccountConsent(uid); });
@@ -109,55 +79,20 @@ describe('GROUP 5 — consent immutability', () => {
   it('DENIES a user creating an account consent event for another UID', async () => { const env = await getEnv(); const a = 'consent-a'; const b = 'consent-b'; await assertFails(setDoc(doc(fdb(env, a), 'consentEvents', accountConsentId(b)), { ...validAccountConsent(b), createdAt: serverTimestamp() })); await assertFails(setDoc(doc(fdb(env, b), 'users', b), validStudentProfile())); });
 });
 
-// ============================================================
-// TEST GROUP 6 — LEGACY STUDENT RECORDS ARE SERVER-ONLY
-// ============================================================
-// The aggregate students/{studentId} record can contain career, wellbeing,
-// SEN, assessment, family, relationship and governance data. Direct client
-// reads are intentionally denied even to assigned staff. Staff access is now
-// server-mediated through /api/professional/caseload, which applies service,
-// role, institution and canonical-relationship authorization and returns a
-// minimal projection.
 describe('GROUP 6 — legacy student aggregate is server-only', () => {
-  const studentId = 'legacy-student';
-  const counsellorUid = 'counsellor-1';
-
-  it('DENIES an assigned counsellor claim direct read of students/{id}', async () => {
-    const env = await getEnv();
-    await env.withSecurityRulesDisabled(async (adminCtx) => {
-      await setDoc(doc(adminCtx.firestore(), 'students', studentId), { assignedStaff: { careerId: counsellorUid, psychId: null, senId: null } });
-    });
-    await assertFails(getDoc(doc(db(userContext(env, counsellorUid, { role: 'counsellor' })), 'students', studentId)));
-  });
-
-  it('DENIES an assigned counsellor claim direct read of an unassigned students/{id}', async () => {
-    const env = await getEnv();
-    await env.withSecurityRulesDisabled(async (adminCtx) => {
-      await setDoc(doc(adminCtx.firestore(), 'students', studentId), { assignedStaff: { careerId: 'other-counsellor', psychId: null, senId: null } });
-    });
-    await assertFails(getDoc(doc(db(userContext(env, counsellorUid, { role: 'counsellor' })), 'students', studentId)));
-  });
-
-  it('DENIES a normal student direct read of students/{id}', async () => {
-    const env = await getEnv();
-    await env.withSecurityRulesDisabled(async (adminCtx) => { await setDoc(doc(adminCtx.firestore(), 'students', studentId), { assignedStaff: {} }); });
-    await assertFails(getDoc(doc(db(userContext(env, 'student-reader')), 'students', studentId)));
-  });
+  const studentId = 'legacy-student'; const counsellorUid = 'counsellor-1';
+  it('DENIES an assigned counsellor claim direct read of students/{id}', async () => { const env = await getEnv(); await env.withSecurityRulesDisabled(async (adminCtx) => { await setDoc(doc(adminCtx.firestore(), 'students', studentId), { assignedStaff: { careerId: counsellorUid, psychId: null, senId: null } }); }); await assertFails(getDoc(doc(db(userContext(env, counsellorUid, { role: 'counsellor' })), 'students', studentId))); });
+  it('DENIES an assigned counsellor claim direct read of an unassigned students/{id}', async () => { const env = await getEnv(); await env.withSecurityRulesDisabled(async (adminCtx) => { await setDoc(doc(adminCtx.firestore(), 'students', studentId), { assignedStaff: { careerId: 'other-counsellor', psychId: null, senId: null } }); }); await assertFails(getDoc(doc(db(userContext(env, counsellorUid, { role: 'counsellor' })), 'students', studentId))); });
+  it('DENIES a normal student direct read of students/{id}', async () => { const env = await getEnv(); await env.withSecurityRulesDisabled(async (adminCtx) => { await setDoc(doc(adminCtx.firestore(), 'students', studentId), { assignedStaff: {} }); }); await assertFails(getDoc(doc(db(userContext(env, 'student-reader')), 'students', studentId))); });
 });
 
-// ============================================================
-// TEST GROUP 7 — ADMIN/ANON PROFILE ACCESS
-// ============================================================
 describe('GROUP 7 — profile access', () => {
   const uid = 'profile-target';
   it('ALLOWS the founder admin to read any user profile', async () => { const env = await getEnv(); await seedStudentProfile(uid); await assertSucceeds(getDoc(doc(db(founderContext(env, 'founder-uid')), 'users', uid))); });
   it('ALLOWS the founder admin to create (provision) a user profile', async () => { const env = await getEnv(); await assertSucceeds(setDoc(doc(db(founderContext(env, 'founder-uid')), 'users', uid), { role: 'educator', displayName: 'Provisioned' })); });
-  it('DENIES an unauthenticated user reading any profile', async () => { const env = await getEnv(); await seedStudentProfile(uid); await assertFails(getDoc(doc(db(anonContext(env), 'users', uid)))); });
+  it('DENIES an unauthenticated user reading any profile', async () => { const env = await getEnv(); await seedStudentProfile(uid); await assertFails(getDoc(doc(afdb(env), 'users', uid))); });
 });
 
-// ============================================================
-// TEST GROUP 8 — ACCOUNT CONSENT CONTENT VALIDATION
-// ============================================================
 describe('GROUP 8 — account consent content validation', () => {
   const uid = 'content-user';
   async function attemptProfileCreate(env, u) { return assertFails(setDoc(doc(fdb(env, u), 'users', u), validStudentProfile())); }
@@ -174,9 +109,6 @@ describe('GROUP 8 — account consent content validation', () => {
   it('also DENIES when consent action is "updated" (not granted)', async () => { const env = await getEnv(); await seedConsentDoc(uid, { action: 'updated' }); await attemptProfileCreate(env, uid); });
 });
 
-// ============================================================
-// TEST GROUP 9 — CLAIM-BASED PRIVILEGED AUTHORIZATION
-// ============================================================
 describe('GROUP 9 — claim-based privileged authorization', () => {
   const target = 'provision-target';
   it('ALLOWS a super_admin CLAIM holder to read any user profile (no profile.role needed)', async () => { const env = await getEnv(); await seedStudentProfile(target); await assertSucceeds(getDoc(doc(db(userContext(env, 'admin-by-claim', { role: 'super_admin' })), 'users', target))); });
@@ -189,9 +121,6 @@ describe('GROUP 9 — claim-based privileged authorization', () => {
   it('DENIES a self-assigned super_admin profile value from granting admin when no claim and no legacy doc', async () => { const env = await getEnv(); const uid = 'self-promoted'; await seedAccountConsent(uid); await assertFails(setDoc(doc(db(userContext(env, uid)), 'users', uid), { role: 'super_admin', displayName: 'Self-promoted' })); });
 });
 
-// ============================================================
-// TEST GROUP 10 — CONSENT NAMESPACE RESERVATION
-// ============================================================
 describe('GROUP 10 — consent namespace reservation (defense-in-depth)', () => {
   const uid = 'namespace-user';
   it('DENIES creating a non-account consent at the account_{uid} id (counselling)', async () => { const env = await getEnv(); await assertFails(setDoc(doc(fdb(env, uid), 'consentEvents', accountConsentId(uid)), { ...validAccountConsent(uid), type: CONSENT_TYPES.COUNSELLING, createdAt: serverTimestamp() })); });
