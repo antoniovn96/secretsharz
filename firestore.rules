@@ -43,8 +43,12 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Student profiles are now server-mediated. The document is a normalized
+    // aggregate that can contain career, wellbeing, SEN, assessment, family,
+    // relationship and governance data; document-level Firestore reads would
+    // therefore defeat the service-specific authorization/projection layer.
     match /students/{studentId} {
-      allow read: if isSignedIn() && (request.auth.uid == studentId || (isParent() && resource.data.parent.userId == request.auth.uid) || (isStaff() && (resource.data.assignedStaff.careerId == request.auth.uid || resource.data.assignedStaff.psychId == request.auth.uid || resource.data.assignedStaff.senId == request.auth.uid)) || isAdmin());
+      allow read: if false;
       allow write: if isAdmin();
       match /career_roadmaps/{roadmapId} {
         allow read: if isAdmin() || isAssignedStaffForStudent(studentId) || (isSignedIn() && request.auth.uid == studentId);
@@ -74,9 +78,6 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // All sensitive service data and safeguarding grants are server-only. A
-    // client-provided safeguarding state can never be used as an authorization
-    // boundary in Firestore rules.
     match /counselling/{document=**} { allow read, write: if false; }
     match /sen/{document=**} { allow read, write: if false; }
     match /career/{document=**} { allow read, write: if false; }
