@@ -30,7 +30,7 @@ function activeService(profile){
 }
 
 function sanitizeChild(profile,id,reports,relationship){
-  const careerDNA=profile.career?.profile?.riasec||profile.career?.riasec||{};
+  const careerDNA=reports.career?.profile?.career?.profile?.riasec||reports.career?.profile?.career?.riasec||{};
   const careerReport=reports.career?.data||{};
   const sen=reports.sen?.data||{};
   return {
@@ -66,10 +66,16 @@ export default async function handler(req,res){
     const child=childSnap.data()||{};
     const resolved=resolveStudentProfile(child,{role:'parent',uid:decoded.uid});
     if(!resolved.allowed)continue;
-    const relationship=resolved.profile.family?.guardians?.find((guardian)=>guardian.accountId===decoded.uid)?.relationship || parent.childRelationships?.[childId] || 'guardian';
+    const relationship=child.family?.guardians?.find((guardian)=>guardian.accountId===decoded.uid)?.relationship || parent.childRelationships?.[childId] || 'guardian';
     const reports={career:null,sen:null};
     try{
-      if(resolved.profile.services?.career?.status==='active')reports.career=await latestCareerReport(db,childId);
+      if(resolved.profile.services?.career?.status==='active'){
+        const consent=await resolveSubjectServiceConsent({db,userId:decoded.uid,subjectId:childId,serviceType:'career_guidance'});
+        if(consent.allowed){
+          const shared=await latestCareerReport(db,childId);
+          if(shared)reports.career={...shared,profile:{career:child.career||{}}};
+        }
+      }
       if(resolved.profile.services?.sen?.status==='active'){
         const consent=await resolveSubjectServiceConsent({db,userId:decoded.uid,subjectId:childId,serviceType:'sen'});
         if(consent.allowed)reports.sen=await latestSenReport(db,childId);
