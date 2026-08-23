@@ -91,8 +91,8 @@ describe('GROUP 4 — protected specialist domains', () => {
   const domains = ['counselling', 'sen', 'career', 'safeguarding', 'auditEvents'];
   test.each(domains)('DENIES authenticated read on %s', async (domain) => { const env = await getEnv(); await assertFails(getDoc(doc(db(userContext(env, 'any-user')), domain, 'anyDoc'))); });
   test.each(domains)('DENIES authenticated write on %s', async (domain) => { const env = await getEnv(); await assertFails(setDoc(doc(db(userContext(env, 'any-user')), domain, 'anyDoc'), { x: 1 })); });
-  test.each(domains)('DENIES unauthenticated read on %s', async (domain) => { const env = await getEnv(); await assertFails(getDoc(doc(anonContext(env), domain, 'anyDoc'))); });
-  test.each(domains)('DENIES unauthenticated write on %s', async (domain) => { const env = await getEnv(); await assertFails(setDoc(doc(anonContext(env), domain, 'anyDoc'), { x: 1 })); });
+  test.each(domains)('DENIES unauthenticated read on %s', async (domain) => { const env = await getEnv(); await assertFails(getDoc(doc(afdb(env), domain, 'anyDoc'))); });
+  test.each(domains)('DENIES unauthenticated write on %s', async (domain) => { const env = await getEnv(); await assertFails(setDoc(doc(afdb(env), domain, 'anyDoc'), { x: 1 })); });
 });
 
 // ============================================================
@@ -125,7 +125,7 @@ describe('GROUP 6 — legacy student aggregate is server-only', () => {
   it('DENIES an assigned counsellor claim direct read of students/{id}', async () => {
     const env = await getEnv();
     await env.withSecurityRulesDisabled(async (adminCtx) => {
-      await setDoc(doc(adminCtx, 'students', studentId), { assignedStaff: { careerId: counsellorUid, psychId: null, senId: null } });
+      await setDoc(doc(adminCtx.firestore(), 'students', studentId), { assignedStaff: { careerId: counsellorUid, psychId: null, senId: null } });
     });
     await assertFails(getDoc(doc(db(userContext(env, counsellorUid, { role: 'counsellor' })), 'students', studentId)));
   });
@@ -133,14 +133,14 @@ describe('GROUP 6 — legacy student aggregate is server-only', () => {
   it('DENIES an assigned counsellor claim direct read of an unassigned students/{id}', async () => {
     const env = await getEnv();
     await env.withSecurityRulesDisabled(async (adminCtx) => {
-      await setDoc(doc(adminCtx, 'students', studentId), { assignedStaff: { careerId: 'other-counsellor', psychId: null, senId: null } });
+      await setDoc(doc(adminCtx.firestore(), 'students', studentId), { assignedStaff: { careerId: 'other-counsellor', psychId: null, senId: null } });
     });
     await assertFails(getDoc(doc(db(userContext(env, counsellorUid, { role: 'counsellor' })), 'students', studentId)));
   });
 
   it('DENIES a normal student direct read of students/{id}', async () => {
     const env = await getEnv();
-    await env.withSecurityRulesDisabled(async (adminCtx) => { await setDoc(doc(adminCtx, 'students', studentId), { assignedStaff: {} }); });
+    await env.withSecurityRulesDisabled(async (adminCtx) => { await setDoc(doc(adminCtx.firestore(), 'students', studentId), { assignedStaff: {} }); });
     await assertFails(getDoc(doc(db(userContext(env, 'student-reader')), 'students', studentId)));
   });
 });
@@ -182,8 +182,8 @@ describe('GROUP 9 — claim-based privileged authorization', () => {
   it('ALLOWS a super_admin CLAIM holder to read any user profile (no profile.role needed)', async () => { const env = await getEnv(); await seedStudentProfile(target); await assertSucceeds(getDoc(doc(db(userContext(env, 'admin-by-claim', { role: 'super_admin' })), 'users', target))); });
   it('ALLOWS a super_admin CLAIM holder to create (provision) a user profile', async () => { const env = await getEnv(); await assertSucceeds(setDoc(doc(db(userContext(env, 'admin-by-claim', { role: 'super_admin' })), 'users', target), { role: 'educator', displayName: 'Provisioned' })); });
   it('ALLOWS a super_admin CLAIM holder to delete a user profile', async () => { const env = await getEnv(); await seedStudentProfile(target); await assertSucceeds(deleteDoc(doc(db(userContext(env, 'admin-by-claim', { role: 'super_admin' })), 'users', target))); });
-  it('DENIES a staff CLAIM holder direct read of an assigned legacy student record', async () => { const env = await getEnv(); const staffUid = 'counsellor-by-claim'; await env.withSecurityRulesDisabled(async (adminCtx) => { await setDoc(doc(adminCtx, 'students', target), { assignedStaff: { careerId: staffUid, psychId: null, senId: null } }); }); await assertFails(getDoc(doc(db(userContext(env, staffUid, { role: 'counsellor' })), 'students', target))); });
-  it('MIGRATION-ONLY: a legacy profile.role super_admin (no claim) still grants admin read until fallback removed', async () => { const env = await getEnv(); await env.withSecurityRulesDisabled(async (adminCtx) => { await setDoc(doc(adminCtx, 'users', target), { role: 'super_admin', displayName: 'Legacy' }); }); await assertSucceeds(getDoc(doc(db(userContext(env, target)), 'users', target))); });
+  it('DENIES a staff CLAIM holder direct read of an assigned legacy student record', async () => { const env = await getEnv(); const staffUid = 'counsellor-by-claim'; await env.withSecurityRulesDisabled(async (adminCtx) => { await setDoc(doc(adminCtx.firestore(), 'students', target), { assignedStaff: { careerId: staffUid, psychId: null, senId: null } }); }); await assertFails(getDoc(doc(db(userContext(env, staffUid, { role: 'counsellor' })), 'students', target))); });
+  it('MIGRATION-ONLY: a legacy profile.role super_admin (no claim) still grants admin read until fallback removed', async () => { const env = await getEnv(); await env.withSecurityRulesDisabled(async (adminCtx) => { await setDoc(doc(adminCtx.firestore(), 'users', target), { role: 'super_admin', displayName: 'Legacy' }); }); await assertSucceeds(getDoc(doc(db(userContext(env, target)), 'users', target))); });
   it('DENIES a student CLAIM holder from writing to admin-only resources (students write)', async () => { const env = await getEnv(); await assertFails(setDoc(doc(db(userContext(env, 'plain-student')), 'students', 'someone'), { assignedStaff: { careerId: 'x', psychId: null, senId: null } })); });
   it('DENIES a counsellor CLAIM holder from writing to admin-only resources (students write)', async () => { const env = await getEnv(); const uid = 'counsellor-claim'; await assertFails(setDoc(doc(db(userContext(env, uid, { role: 'counsellor' })), 'students', 'someone'), { assignedStaff: { careerId: uid, psychId: null, senId: null } })); });
   it('DENIES a self-assigned super_admin profile value from granting admin when no claim and no legacy doc', async () => { const env = await getEnv(); const uid = 'self-promoted'; await seedAccountConsent(uid); await assertFails(setDoc(doc(db(userContext(env, uid)), 'users', uid), { role: 'super_admin', displayName: 'Self-promoted' })); });
