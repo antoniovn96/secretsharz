@@ -58,6 +58,22 @@ test('assessment-gated empty fields are explicitly not assessed', () => {
   assert.equal(section(reflection, 'reasoning_profile').source, 'not_assessed');
 });
 
+test('stale assessment-gated values cannot be promoted without current evidence', () => {
+  const reflection = buildInstitutionCareerReflection({
+    scores: {
+      riasecCode: 'RIA',
+      big5: { openness: 4 },
+      values: { autonomy: 4 },
+      reasoning: { percent: 70 },
+    }
+  });
+
+  for (const id of ['riasec_profile', 'personality_profile', 'career_values', 'reasoning_profile']) {
+    assert.equal(section(reflection, id).available, false, `${id} should require current evidence`);
+    assert.equal(section(reflection, id).source, 'not_assessed', `${id} should remain not assessed`);
+  }
+});
+
 test('meaningful arrays and objects remain available', () => {
   const report = {
     topCareerDirections: [{ name: 'Engineer' }],
