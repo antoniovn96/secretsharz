@@ -2,8 +2,9 @@ import { getAssessmentEvidenceCoverage } from '../career/assessmentCoverage.js';
 import { buildDecisionSupportCoverage } from '../career/decisionSupportCoverage.js';
 
 // Canonical Student Career Report -> Institution/Admin field contract.
-// Paths mirror the persisted Student Career Assessment V2 report. Missing
-// evidence remains missing; the Admin must never manufacture it.
+// This list mirrors STUDENT_PREMIUM_REPORT exactly. Supporting V2 outputs such
+// as careerExploration are handled separately and must not inflate the
+// canonical 20-section report coverage count.
 export const STUDENT_CAREER_ADMIN_CONTRACT = Object.freeze([
   ['executive_snapshot','Executive Snapshot',['executiveSnapshot','executiveSummary','snapshot','reflection.statement','bundleTitle']],
   ['interest_personality','Interests & Personality Tendencies',['scores.riasecCode','scores.big5']],
@@ -16,7 +17,6 @@ export const STUDENT_CAREER_ADMIN_CONTRACT = Object.freeze([
   ['decision_readiness','Career Decision Readiness',['scores.readinessPercent','scores.readiness']],
   ['adaptability','Adaptability & Career Resilience',['scores.adaptabilityPercent','scores.adaptability']],
   ['work_environment','Preferred Work Environment',['scores.environment','scores.workEnvironment','workEnvironment']],
-  ['career_directions','Career Directions to Explore',['careerExploration']],
   ['top_career_directions','Top Career Directions',['topCareerDirections']],
   ['alternative_careers','Alternative & Unexpected Careers',['alternativeCareers']],
   ['pathway_analysis','Non-Linear Pathway Analysis',['pathwayAnalysis','pathways']],
@@ -50,9 +50,7 @@ export function buildInstitutionCareerReflection(report) {
     const value = readReportField(source, paths);
     let evidenceSource = value === undefined ? 'unavailable' : assessmentSource(source, id);
 
-    if (!evidenceSource && id === 'career_directions' && decision.career_directions.source === 'derived_from_assessment') {
-      evidenceSource = 'derived_from_assessment';
-    } else if (!evidenceSource && id === 'education_roadmap' && decision.education_roadmap.source === 'career_catalogue') {
+    if (!evidenceSource && id === 'education_roadmap' && decision.education_roadmap.source === 'career_catalogue') {
       evidenceSource = 'career_catalogue';
     } else if (!evidenceSource && id === 'stream_analysis' && decision.stream_subject_scenarios.source === 'career_catalogue') {
       evidenceSource = 'career_catalogue';
@@ -63,4 +61,18 @@ export function buildInstitutionCareerReflection(report) {
 
     return { id, title, available: value !== undefined, source: evidenceSource, value };
   });
+}
+
+// Supporting Student V2 output. It is intentionally not part of the canonical
+// 20-section premium coverage count because the premium architecture names
+// Top Career Directions as the canonical section. The Admin may still render
+// this evidence when present, without relabelling it as a top-direction result.
+export const INSTITUTION_CAREER_EXPLORATION_FIELD = Object.freeze({
+  id: 'career_directions_supporting_output',
+  title: 'Career Directions to Explore',
+  paths: ['careerExploration']
+});
+
+export function readInstitutionCareerExploration(report) {
+  return readReportField(report || {}, INSTITUTION_CAREER_EXPLORATION_FIELD.paths);
 }
