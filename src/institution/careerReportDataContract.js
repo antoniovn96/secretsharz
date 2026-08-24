@@ -2,9 +2,8 @@ import { getAssessmentEvidenceCoverage } from '../career/assessmentCoverage.js';
 import { buildDecisionSupportCoverage } from '../career/decisionSupportCoverage.js';
 
 // Canonical Student Career Report -> Institution/Admin field contract.
-// This list mirrors STUDENT_PREMIUM_REPORT exactly. Supporting V2 outputs such
-// as careerExploration are handled separately and must not inflate the
-// canonical 20-section report coverage count.
+// Supporting V2 outputs such as careerExploration are handled separately and
+// must not inflate the canonical 20-section report coverage count.
 export const STUDENT_CAREER_ADMIN_CONTRACT = Object.freeze([
   ['executive_snapshot','Executive Snapshot',['executiveSnapshot','executiveSummary','snapshot','reflection.statement']],
   ['interest_personality','Interests & Personality Tendencies',['scores.riasecCode','scores.big5']],
@@ -36,8 +35,6 @@ const ASSESSMENT_GATED_SECTIONS = new Set([
 function readPath(source, path) { return path.split('.').reduce((value, key) => value == null ? undefined : value[key], source); }
 
 // A serialized field is only available when it contains substantive evidence.
-// The serializer intentionally normalizes absent objects/arrays to {} / [], so
-// `value !== undefined` is not sufficient to establish report coverage.
 function hasMeaningfulValue(value) {
   if (value === undefined || value === null || value === '') return false;
   if (Array.isArray(value)) return value.some(hasMeaningfulValue);
@@ -53,16 +50,21 @@ export function readReportField(source, paths=[]) {
   return undefined;
 }
 
-function assessmentSource(report, id) {
+function getAssessmentSection(report, id) {
   const coverage = getAssessmentEvidenceCoverage(report);
-  return coverage.sections.find(section => section.id === id)?.assessed ? 'assessed' : null;
+  return coverage.sections.find(section => section.id === id);
 }
 
 function combinedInterestPersonalitySource(report) {
-  const coverage = getAssessmentEvidenceCoverage(report);
-  const riasec = coverage.sections.find(section => section.id === 'riasec_profile')?.assessed;
-  const personality = coverage.sections.find(section => section.id === 'personality_profile')?.assessed;
-  return riasec || personality ? 'assessed' : null;
+  const riasec = Boolean(getAssessmentSection(report, 'riasec_profile')?.assessed);
+  const personality = Boolean(getAssessmentSection(report, 'personality_profile')?.assessed);
+  if (riasec && personality) return 'assessed';
+  if (riasec || personality) return 'partially_assessed';
+  return null;
+}
+
+function assessmentSource(report, id) {
+  return getAssessmentSection(report, id)?.assessed ? 'assessed' : null;
 }
 
 export function buildInstitutionCareerReflection(report) {
@@ -70,15 +72,11 @@ export function buildInstitutionCareerReflection(report) {
   const decision = buildDecisionSupportCoverage(source);
   return STUDENT_CAREER_ADMIN_CONTRACT.map(([id,title,paths]) => {
     const value = readReportField(source, paths);
+    const isCombined = id === 'interest_personality';
     const gated = ASSESSMENT_GATED_SECTIONS.has(id);
-    const assessedSource = id === 'interest_personality'
-      ? combinedInterestPersonalitySource(source)
-      : assessmentSource(source, id);
+    const assessedSource = isCombined ? combinedInterestPersonalitySource(source) : assessmentSource(source, id);
     let evidenceSource = assessedSource;
 
-    // Assessment-gated sections may contain stale/legacy serialized values even
-    // when the current V2 evidence layer says the assessment was not produced.
-    // Never promote those values into an assessed or derived result.
     if (gated && !assessedSource) {
       evidenceSource = 'not_assessed';
     } else if (!evidenceSource && id === 'education_roadmap' && decision.education_roadmap.source === 'career_catalogue') {
@@ -93,6 +91,8 @@ export function buildInstitutionCareerReflection(report) {
       evidenceSource = 'unavailable';
     }
 
+    // The combined Interests + Personality section is informative when one
+    // component is assessed, but its component-level cards remain independent.
     const available = value !== undefined && (!gated || Boolean(assessedSource));
     return { id, title, available, source: evidenceSource, value: available ? value : undefined };
   });
