@@ -1,6 +1,7 @@
-import { RIASEC_ITEMS, BIG5_ITEMS, VALUE_ITEMS, REASONING_ITEMS, READINESS_ITEMS, ENVIRONMENT_ITEMS, ADAPTABILITY_ITEMS, scoreLikert } from './careerAssessmentBlueprint.js';
+import { RIASEC_ITEMS } from './riasecInterestBank.js';
+import { BIG5_ITEMS, VALUE_ITEMS, REASONING_ITEMS, READINESS_ITEMS, ENVIRONMENT_ITEMS, ADAPTABILITY_ITEMS, scoreLikert } from './careerAssessmentBlueprint.js';
 
-export const SCORING_SCHEMA_VERSION = '2.1.0';
+export const SCORING_SCHEMA_VERSION = '2.2.0';
 export const LIKERT_MIN = 1;
 export const LIKERT_MAX = 5;
 export const RIASEC_CODES = Object.freeze(['R','I','A','S','E','C']);
@@ -10,6 +11,8 @@ export const COMPLETION_RULES = Object.freeze({
   objectiveSampler: 'all_items_required',
   singleItemPreference: 'single_item_descriptive_only',
   missingItemHandling: 'do_not_score',
+  riasecResponseModel: 'interest_strength',
+  riasecResponseAnchors: ['Strongly dislike','Dislike','Unsure','Like','Strongly like'],
 });
 
 function validAnswer(value) {
@@ -32,7 +35,7 @@ export function scoreAssessmentV21(answers={}, {selectedFamilyIds=[],fullGuidanc
   const selected=new Set(selectedFamilyIds); const includeGuidance=fullGuidance||selected.size===5;
   const result={scoringSchemaVersion:SCORING_SCHEMA_VERSION,completionRule:COMPLETION_RULES,selectedFamilyIds:[...selected],assessmentStatus:'incomplete',riasec:null,riasecMeans:null,riasecPercent:null,riasecCode:null,riasecCodeStatus:'not_assessed',big5:null,big5Means:null,big5Percent:null,values:null,reasoning:null,skills:null,learning:null,readiness:null,readinessPercent:null,environment:null,adaptability:null,adaptabilityPercent:null,quality:{}};
 
-  if(selected.has('interest')){const scales=scoreLikertDomain(RIASEC_ITEMS,answers,item=>item.riasecKey);const complete=RIASEC_CODES.every(code=>scales[code]?.complete);result.quality.riasec={complete,scales};if(complete){result.riasecMeans=Object.fromEntries(RIASEC_CODES.map(code=>[code,Number(scales[code].rawMean.toFixed(3))]));result.riasecPercent=Object.fromEntries(RIASEC_CODES.map(code=>[code,scales[code].percent]));result.riasec=Object.fromEntries(RIASEC_CODES.map(code=>[code,Math.round(scales[code].rawMean*6)]));result.riasecCode=topCodes(result.riasecMeans).join('');result.riasecCodeStatus=topCodeTieStatus(result.riasecMeans);}}
+  if(selected.has('interest')){const scales=scoreLikertDomain(RIASEC_ITEMS,answers,item=>item.riasecKey);const complete=RIASEC_CODES.every(code=>scales[code]?.complete);result.quality.riasec={complete,scales,responseModel:'interest_strength',responseOptions:['Strongly dislike','Dislike','Unsure','Like','Strongly like']};if(complete){result.riasecMeans=Object.fromEntries(RIASEC_CODES.map(code=>[code,Number(scales[code].rawMean.toFixed(3))]));result.riasecPercent=Object.fromEntries(RIASEC_CODES.map(code=>[code,scales[code].percent]));result.riasec=Object.fromEntries(RIASEC_CODES.map(code=>[code,Math.round(scales[code].rawMean*6)]));result.riasecCode=topCodes(result.riasecMeans).join('');result.riasecCodeStatus=topCodeTieStatus(result.riasecMeans);}}
   if(selected.has('personality')){const scales=scoreLikertDomain(BIG5_ITEMS,answers,item=>item.big5Key);const complete=BIG5_CODES.every(code=>scales[code]?.complete);result.quality.big5={complete,scales};if(complete){result.big5Means=Object.fromEntries(BIG5_CODES.map(code=>[code,Number(scales[code].rawMean.toFixed(3))]));result.big5Percent=Object.fromEntries(BIG5_CODES.map(code=>[code,scales[code].percent]));result.big5=Object.fromEntries(BIG5_CODES.map(code=>[code,Math.round(scales[code].rawMean*6)]));}}
   if(selected.has('work_values')){const completion=scaleSummary(VALUE_ITEMS,answers);result.quality.values=completion;if(completion.complete)result.values=scorePreferenceItems(VALUE_ITEMS,answers,'valueKey');}
   if(selected.has('aptitude_skills')){result.reasoning=scoreReasoning(REASONING_ITEMS,answers);const skillScales=scoreLikertDomain(itemsForSkillAnswers(),answers,item=>item.skillKey);const skillComplete=Object.values(skillScales).every(scale=>scale.complete);result.quality.skills={complete:skillComplete,scales:skillScales};if(skillComplete){result.skills=Object.fromEntries(Object.entries(skillScales).map(([key,scale])=>[key,scale.percent]));result.skills.percent=Math.round(Object.values(skillScales).reduce((sum,scale)=>sum+scale.percent,0)/Object.keys(skillScales).length);}}
