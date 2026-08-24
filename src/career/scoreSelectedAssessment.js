@@ -69,8 +69,24 @@ export function createSelectedUserVector(scored) {
  * deliberately excluded from ranking until career-side norms exist.
  */
 export function matchCareerToSelectedProfile(career, scored) {
-  const v = createSelectedUserVector(scored);
+  const hasRiasecEvidence = Boolean(scored?.riasec && Object.values(scored.riasec).some(value => Number(value) > 0));
   const careerProfile = buildCareerEvidenceProfile(career);
+  if (!hasRiasecEvidence) {
+    return {
+      similarity: null,
+      interestAlignmentIndex: null,
+      explorationIndex: null,
+      scoreLabel: 'Interest Alignment Index',
+      evidenceProfile: careerProfile,
+      explanation: buildInterestAlignmentExplanation({}, careerProfile.interestProfile),
+      skillAlignment: null,
+      excludedFromRanking: ['big5', 'values', 'reasoning', 'skills', 'learning', 'academicAverage', 'readiness', 'environment', 'adaptability'],
+      rankingStatus: 'insufficient_evidence',
+      rankingLimitation: 'Complete the RIASEC assessment before calculating career interest alignment.',
+    };
+  }
+
+  const v = createSelectedUserVector(scored);
   const p = Object.fromEntries(['R', 'I', 'A', 'S', 'E', 'C'].map(code => [`riasec_${code}`, careerProfile.interestProfile.includes(code) ? 5 : 1]));
   const similarity = cosineSimilarity(v, p);
   const interestAlignmentIndex = Math.round(Math.max(0, Math.min(1, (similarity + 1) / 2)) * 100);
@@ -85,5 +101,6 @@ export function matchCareerToSelectedProfile(career, scored) {
     explanation,
     skillAlignment,
     excludedFromRanking: ['big5', 'values', 'reasoning', 'skills', 'learning', 'academicAverage', 'readiness', 'environment', 'adaptability'],
+    rankingStatus: 'available',
   };
 }
