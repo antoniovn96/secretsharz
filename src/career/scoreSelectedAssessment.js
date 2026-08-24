@@ -1,102 +1,116 @@
-import { ASSESSMENT_VERSION, scoreLikert, cosineSimilarity } from './careerAssessmentBlueprint.js';
-import { getItemsForBundle, getItemsForFamilies, resolveBundle } from './assessmentSelection.js';
+import { ASSESSMENT_VERSION } from './careerAssessmentBlueprint.js';
+import { resolveBundle, getItemsForFamilies } from './assessmentSelection.js';
+import { scoreAssessmentV21, RIASEC_CODES } from './assessmentScoring.js';
 import { buildCareerEvidenceProfile, buildInterestAlignmentExplanation } from './careerEvidenceProfile.js';
 import { buildSkillAlignmentEvidence } from './skillAlignmentEvidence.js';
 
-const emptyResult = () => ({
-  version: ASSESSMENT_VERSION,
-  selectedFamilyIds: [], riasec: null, riasecCode: null, big5: null, values: null,
-  reasoning: null, skills: null, learning: null, readiness: null, readinessPercent: null,
-  environment: null, adaptability: null, adaptabilityPercent: null,
-});
+export { RIASEC_CODES };
 
 export function scoreSelectedAssessment(answers = {}, { bundleId = null, familyIds = null } = {}) {
   const bundle = bundleId ? resolveBundle(bundleId) : null;
   const selectedFamilyIds = [...new Set(familyIds || bundle?.familyIds || [])];
-  const items = bundleId ? getItemsForBundle(bundleId) : getItemsForFamilies(selectedFamilyIds);
-  const result = emptyResult();
-  result.selectedFamilyIds = selectedFamilyIds;
-  const isFullBundle = Boolean(bundle && bundle.familyCount === 5);
-  if (selectedFamilyIds.includes('interest')) result.riasec = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
-  if (selectedFamilyIds.includes('personality')) result.big5 = { O: 0, C: 0, E: 0, A: 0, N: 0 };
-  if (selectedFamilyIds.includes('work_values')) result.values = {};
-  if (selectedFamilyIds.includes('aptitude_skills')) { result.reasoning = { correct: 0, total: 0, verbal: 0, numerical: 0, logical: 0 }; result.skills = {}; }
-  if (selectedFamilyIds.includes('learning')) result.learning = {};
-  if (isFullBundle) { result.readiness = {}; result.environment = {}; result.adaptability = {}; }
-
-  for (const item of items) {
-    const value = answers?.[item.id];
-    if (value === undefined || value === null || value === '') continue;
-    if (item.type === 'objective') {
-      if (!result.reasoning) continue;
-      result.reasoning.total += 1;
-      if (Number(value) === item.correct) { result.reasoning.correct += 1; result.reasoning[item.construct] += 1; }
-      continue;
-    }
-    const score = scoreLikert(value, item.reverse);
-    if (score == null) continue;
-    if (item.riasecKey && result.riasec) result.riasec[item.riasecKey] += score;
-    if (item.big5Key && result.big5) result.big5[item.big5Key] += score;
-    if (item.valueKey && result.values) result.values[item.valueKey] = score;
-    if (item.skillKey && result.skills) result.skills[item.skillKey] = score;
-    if (item.learningKey && result.learning) result.learning[item.learningKey] = score;
-    if (item.domain === 'readiness' && result.readiness) result.readiness[item.construct.replace('readiness_', '')] = score;
-    if (item.environmentKey && result.environment) result.environment[item.environmentKey] = score;
-    if (item.domain === 'adaptability' && result.adaptability) result.adaptability[item.construct.replace('adaptability_', '')] = score;
-  }
-  if (result.riasec) {
-    const completed = Object.values(result.riasec).some(v => v > 0);
-    result.riasecCode = completed ? Object.entries(result.riasec).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k).join('') : null;
-  }
-  if (result.reasoning) result.reasoning.percent = result.reasoning.total ? Math.round((result.reasoning.correct / result.reasoning.total) * 100) : null;
-  if (result.skills) { const vals = Object.values(result.skills); result.skills.percent = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / (vals.length * 5)) * 100) : null; }
-  if (result.learning) { const vals = Object.values(result.learning); result.learning.percent = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / (vals.length * 5)) * 100) : null; }
-  if (result.readiness) { const vals = Object.values(result.readiness); result.readinessPercent = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / (vals.length * 5)) * 100) : null; }
-  if (result.adaptability) { const vals = Object.values(result.adaptability); result.adaptabilityPercent = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / (vals.length * 5)) * 100) : null; }
-  return result;
-}
-
-export function createSelectedUserVector(scored) {
   return {
-    riasec_R: scored?.riasec?.R || 0, riasec_I: scored?.riasec?.I || 0, riasec_A: scored?.riasec?.A || 0,
-    riasec_S: scored?.riasec?.S || 0, riasec_E: scored?.riasec?.E || 0, riasec_C: scored?.riasec?.C || 0,
+    version: ASSESSMENT_VERSION,
+    ...scoreAssessmentV21(answers, {
+      selectedFamilyIds,
+      fullGuidance: Boolean(bundle && bundle.familyCount === 5),
+    }),
   };
 }
 
+export function createSelectedUserVector(scored) {
+  const source = scored?.riasecMeans || scored?.riasec || {};
+  return Object.fromEntries(RIASEC_CODES.map(code => [`riasec_${code}`, Number(source?.[code] || 0)]));
+}
+
+function pearsonProfileSimilarity(a, b) {
+  const av = RIASEC_CODES.map(code => Number(a?.[code] || 0));
+  const bv = RIASEC_CODES.map(code => Number(b?.[code] || 0));
+  const meanA = av.reduce((s, x) => s + x, 0) / av.length;
+  const meanB = bv.reduce((s, x) => s + x, 0) / bv.length;
+  let numerator = 0;
+  let denomA = 0;
+  let denomB = 0;
+  for (let i = 0; i < av.length; i += 1) {
+    const da = av[i] - meanA;
+    const db = bv[i] - meanB;
+    numerator += da * db;
+    denomA += da * da;
+    denomB += db * db;
+  }
+  if (!denomA || !denomB) return null;
+  return numerator / Math.sqrt(denomA * denomB);
+}
+
+function careerProfileVector(codes = []) {
+  const normalized = Array.isArray(codes) ? codes.map(String).map(code => code.toUpperCase()) : [];
+  // A catalogue high-point code is a categorical representation, not a
+  // validated occupation norm. The 3/2/1 weighting is therefore explicitly
+  // an exploratory fallback until numeric career-side profiles are available.
+  const weights = [3, 2, 1];
+  return Object.fromEntries(RIASEC_CODES.map(code => {
+    const rank = normalized.indexOf(code);
+    return [code, rank >= 0 && rank < weights.length ? weights[rank] : 0];
+  }));
+}
+
 /**
- * The current career catalogue supports a quantitative RIASEC relationship.
- * Other assessment domains remain evidence for the report/counsellor and are
- * deliberately excluded from ranking until career-side norms exist.
+ * Quantitative career matching uses whole-profile RIASEC congruence.
+ * This follows the profile-shape logic used by O*NET's occupational-interest
+ * linkage rather than the previous arbitrary 5/1 cosine vector. The resulting
+ * 0-100 value is an exploratory index, not a validated probability of success.
  */
 export function matchCareerToSelectedProfile(career, scored) {
-  const hasRiasecEvidence = Boolean(scored?.riasec && Object.values(scored.riasec).some(value => Number(value) > 0));
+  const hasCompleteRiasec = Boolean(scored?.quality?.riasec?.complete && scored?.riasecMeans);
   const careerProfile = buildCareerEvidenceProfile(career);
-  if (!hasRiasecEvidence) {
+  if (!hasCompleteRiasec) {
     return {
       similarity: null,
       interestAlignmentIndex: null,
       explorationIndex: null,
       scoreLabel: 'Interest Alignment Index',
+      scoreMeaning: 'Exploratory RIASEC profile congruence; not a probability of success or suitability.',
+      similarityMethod: 'pearson_profile_congruence',
       evidenceProfile: careerProfile,
       explanation: buildInterestAlignmentExplanation({}, careerProfile.interestProfile),
       skillAlignment: null,
       excludedFromRanking: ['big5', 'values', 'reasoning', 'skills', 'learning', 'academicAverage', 'readiness', 'environment', 'adaptability'],
       rankingStatus: 'insufficient_evidence',
-      rankingLimitation: 'Complete the RIASEC assessment before calculating career interest alignment.',
+      rankingLimitation: 'Complete all RIASEC items before calculating career interest alignment.',
     };
   }
 
-  const v = createSelectedUserVector(scored);
-  const p = Object.fromEntries(['R', 'I', 'A', 'S', 'E', 'C'].map(code => [`riasec_${code}`, careerProfile.interestProfile.includes(code) ? 5 : 1]));
-  const similarity = cosineSimilarity(v, p);
-  const interestAlignmentIndex = Math.round(Math.max(0, Math.min(1, (similarity + 1) / 2)) * 100);
-  const explanation = buildInterestAlignmentExplanation(scored?.riasec, careerProfile.interestProfile);
+  const student = scored.riasecMeans;
+  const occupation = careerProfile.numericInterestProfile || careerProfile.interestProfileObject || careerProfileVector(careerProfile.interestProfile);
+  const similarity = pearsonProfileSimilarity(student, occupation);
+  if (similarity == null) {
+    return {
+      similarity: null,
+      interestAlignmentIndex: null,
+      explorationIndex: null,
+      scoreLabel: 'Interest Alignment Index',
+      scoreMeaning: 'Exploratory RIASEC profile congruence; not a probability of success or suitability.',
+      similarityMethod: 'pearson_profile_congruence',
+      evidenceProfile: careerProfile,
+      explanation: buildInterestAlignmentExplanation(scored.riasecMeans, careerProfile.interestProfile),
+      skillAlignment: null,
+      excludedFromRanking: ['big5', 'values', 'reasoning', 'skills', 'learning', 'academicAverage', 'readiness', 'environment', 'adaptability'],
+      rankingStatus: 'insufficient_career_profile',
+      rankingLimitation: 'The career catalogue does not contain enough RIASEC profile variation for a meaningful profile comparison.',
+    };
+  }
+
+  const interestAlignmentIndex = Math.round(Math.max(0, Math.min(100, ((similarity + 1) / 2) * 100)));
+  const explanation = buildInterestAlignmentExplanation(scored.riasecMeans, careerProfile.interestProfile);
   const skillAlignment = buildSkillAlignmentEvidence(scored, career);
   return {
     similarity,
     interestAlignmentIndex,
     explorationIndex: interestAlignmentIndex,
+    explorationIndexStatus: 'legacy_alias',
     scoreLabel: 'Interest Alignment Index',
+    scoreMeaning: 'Exploratory RIASEC profile congruence; not a probability of success or suitability.',
+    similarityMethod: 'pearson_profile_congruence',
     evidenceProfile: careerProfile,
     explanation,
     skillAlignment,
