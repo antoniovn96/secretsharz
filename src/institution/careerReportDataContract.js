@@ -35,10 +35,20 @@ const ASSESSMENT_GATED_SECTIONS = new Set([
 
 function readPath(source, path) { return path.split('.').reduce((value, key) => value == null ? undefined : value[key], source); }
 
-export function readReportField(report, paths=[]) {
+// A serialized field is only available when it contains substantive evidence.
+// The serializer intentionally normalizes absent objects/arrays to {} / [], so
+// `value !== undefined` is not sufficient to establish report coverage.
+function hasMeaningfulValue(value) {
+  if (value === undefined || value === null || value === '') return false;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === 'object') return Object.keys(value).length > 0;
+  return true;
+}
+
+export function readReportField(source, paths=[]) {
   for (const path of paths) {
-    const value = readPath(report, path);
-    if (value !== undefined && value !== null && value !== '') return value;
+    const value = readPath(source, path);
+    if (hasMeaningfulValue(value)) return value;
   }
   return undefined;
 }
