@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { TEST_BUNDLES, TEST_BUNDLE_COUNT, getBundleByFamilies } from '../../src/career/testBundleCatalogue.js';
-import { getItemsForBundle } from '../../src/career/assessmentSelection.js';
+import { getItemsForBundle, getBundleByFamilies as getRuntimeBundleByFamilies } from '../../src/career/assessmentSelection.js';
 import { scoreSelectedAssessment } from '../../src/career/scoreSelectedAssessment.js';
 
 test('catalogue contains exactly 31 non-empty combinations',()=>{
@@ -53,6 +53,13 @@ test('full bundle contains the embedded guidance layer and scores it',()=>{
  assert.equal(Object.keys(scored.environment).length,8);
  assert.ok(scored.skills);
  assert.ok(scored.learning);
+});
+
+test('runtime full bundle exposes the real question count and duration',()=>{
+ const bundle=getRuntimeBundleByFamilies(['interest','personality','aptitude_skills','work_values','learning']);
+ assert.equal(bundle.questionCount,136);
+ assert.equal(bundle.durationMinutes,104);
+ assert.equal(bundle.embeddedGuidanceLayer.length,3);
 });
 
 test('premium bundle report envelope is 20 pages',()=>{
