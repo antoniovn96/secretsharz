@@ -14,6 +14,7 @@ function nearestLevel(value) {
 
 export default function SubjectEnjoymentSlider({ value, onChange, subject, disabled = false }) {
   const id = useId();
+  const descriptionId = `${id}-description`;
   const numeric = Number.isFinite(Number(value)) ? Number(value) : 50;
   const level = nearestLevel(numeric);
 
@@ -22,10 +23,10 @@ export default function SubjectEnjoymentSlider({ value, onChange, subject, disab
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom:10 }}>
         <div>
           <div style={{ fontSize:13, fontWeight:900, color:'#334155' }}>{subject ? `How do you feel when you study ${subject}?` : 'How much do you enjoy this subject?'}</div>
-          <div style={{ marginTop:3, fontSize:11, color:'#94a3b8' }}>Slide the smile to show how the subject feels to you.</div>
+          <div id={descriptionId} style={{ marginTop:3, fontSize:11, color:'#64748b' }}>Use the slider from 0 to 100. 0 means you do not enjoy the subject; 100 means you enjoy it very much.</div>
         </div>
-        <div aria-live="polite" style={{ minWidth:76, textAlign:'center' }}>
-          <div style={{ fontSize:34, lineHeight:1.05, transition:'transform .18s ease' }} key={level.value}>{level.face}</div>
+        <div aria-live="polite" aria-atomic="true" style={{ minWidth:76, textAlign:'center' }}>
+          <div aria-hidden="true" style={{ fontSize:34, lineHeight:1.05, transition:'transform .18s ease' }} key={level.value}>{level.face}</div>
           <div style={{ marginTop:4, fontSize:10, fontWeight:900, color:'#4f46e5' }}>{level.label}</div>
         </div>
       </div>
@@ -34,6 +35,7 @@ export default function SubjectEnjoymentSlider({ value, onChange, subject, disab
         <input
           id={id}
           aria-label={subject ? `Enjoyment of ${subject}` : 'Subject enjoyment'}
+          aria-describedby={descriptionId}
           type="range"
           min="0"
           max="100"
@@ -41,17 +43,17 @@ export default function SubjectEnjoymentSlider({ value, onChange, subject, disab
           value={numeric}
           disabled={disabled}
           onChange={e => onChange?.(Number(e.target.value))}
-          style={{ width:'100%', accentColor:'#4f46e5', cursor:disabled?'not-allowed':'pointer' }}
+          style={{ width:'100%', minHeight:44, accentColor:'#4f46e5', cursor:disabled?'not-allowed':'pointer', touchAction:'pan-x' }}
         />
-        <div style={{ display:'flex', justifyContent:'space-between', marginTop:5, color:'#94a3b8', fontSize:10, fontWeight:800 }}>
+        <div aria-hidden="true" style={{ display:'flex', justifyContent:'space-between', marginTop:5, color:'#64748b', fontSize:10, fontWeight:800 }}>
           <span>😞 Not enjoyable</span>
           <span>😐 Okay</span>
           <span>🥳 Ultimate!</span>
         </div>
       </div>
 
-      <div style={{ marginTop:10, textAlign:'center', color:'#475569', fontSize:12, fontWeight:800 }}>
-        {level.face} {level.short}
+      <div role="status" aria-live="polite" style={{ marginTop:10, textAlign:'center', color:'#334155', fontSize:12, fontWeight:800 }}>
+        Current choice: {level.short} ({numeric} out of 100)
       </div>
     </div>
   );
