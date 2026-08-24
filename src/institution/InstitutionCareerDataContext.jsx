@@ -1,5 +1,6 @@
 import React,{createContext,useCallback,useContext,useEffect,useMemo,useRef,useState} from 'react';
 import {auth} from '../firebase';
+import {onAuthStateChanged} from 'firebase/auth';
 
 const InstitutionCareerDataContext=createContext(null);
 
@@ -7,14 +8,17 @@ export function InstitutionCareerDataProvider({children}){
   const [data,setData]=useState({institution:null,students:[],summary:{},analytics:null});
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState('');
+  const [authReady,setAuthReady]=useState(false);
   const requestRef=useRef(0);
 
   const refresh=useCallback(async(institutionId='')=>{
     const requestId=++requestRef.current;
     setError('');
+    setLoading(true);
     try{
-      const token=await auth.currentUser?.getIdToken();
-      if(!token)throw new Error('Authentication required.');
+      const user=auth.currentUser;
+      if(!user)throw new Error('Authentication required.');
+      const token=await user.getIdToken();
       const key=String(institutionId||'');
       const url=key?`/api/institution/dashboard?institutionId=${encodeURIComponent(key)}`:'/api/institution/dashboard';
       const response=await fetch(url,{headers:{Authorization:`Bearer ${token}`}});
@@ -30,9 +34,18 @@ export function InstitutionCareerDataProvider({children}){
     }
   },[]);
 
-  useEffect(()=>{refresh().catch(()=>{});},[refresh]);
+  useEffect(()=>{
+    let active=true;
+    const unsubscribe=onAuthStateChanged(auth,(user)=>{
+      if(!active)return;
+      setAuthReady(true);
+      if(user)refresh().catch(()=>{});
+      else{setData({institution:null,students:[],summary:{},analytics:null});setError('Authentication required.');setLoading(false);}
+    });
+    return ()=>{active=false;unsubscribe();};
+  },[refresh]);
 
-  const value=useMemo(()=>({...data,loading,error,refresh}),[data,loading,error,refresh]);
+  const value=useMemo(()=>({...data,loading,error,refresh,authReady}),[data,loading,error,refresh,authReady]);
   return <InstitutionCareerDataContext.Provider value={value}>{children}</InstitutionCareerDataContext.Provider>;
 }
 
