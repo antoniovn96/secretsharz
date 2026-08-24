@@ -4,7 +4,7 @@ import { getBundleByFamilies as getCanonicalBundleByFamilies, getTestBundle, TES
 import { BOARD_OPTIONS, SCHOOL_STAGES, SENIOR_PATHWAYS, CBSE_SENIOR_ACADEMIC_SUBJECTS, CBSE_SECONDARY_SKILL_SUBJECTS, CBSE_SENIOR_SKILL_SUBJECTS, COMMON_SUBJECTS_BELOW_CLASS_11, ageGradeGuidance, buildAcademicDecisionContext } from './academicContext.js';
 
 export const CONTEXT_FIELDS = Object.freeze([
-  'dob','age','ageBand','educationStage','board','className','grade','stream','pathway','subjects','subjectMarks','academicAverage','institutionName','likedSubjects','dislikedSubjects','hobbies','curiosity','goal','currentRole','employer','experienceYears','qualification','dailyDuties','skills','professionalIntent','workMode','goodParts','badParts','targetDirection','targetRole','department','roleResponsibilities','roleTechnical','roleBehavioural'
+  'dob','age','ageBand','educationStage','board','className','grade','stream','pathway','subjects','subjectMarks','subjectDetails','academicAverage','institutionName','likedSubjects','dislikedSubjects','hobbies','curiosity','goal','currentRole','employer','experienceYears','qualification','dailyDuties','skills','professionalIntent','workMode','goodParts','badParts','targetDirection','targetRole','department','roleResponsibilities','roleTechnical','roleBehavioural'
 ]);
 export { BOARD_OPTIONS, SCHOOL_STAGES, SENIOR_PATHWAYS, CBSE_SENIOR_ACADEMIC_SUBJECTS, CBSE_SECONDARY_SKILL_SUBJECTS, CBSE_SENIOR_SKILL_SUBJECTS, COMMON_SUBJECTS_BELOW_CLASS_11, ageGradeGuidance, buildAcademicDecisionContext };
 
@@ -28,6 +28,24 @@ export function getRuntimeBundle(bundle){if(!bundle)return null;const full=bundl
 export function getBundleByFamilies(familyIds=[]){return getRuntimeBundle(getCanonicalBundleByFamilies(familyIds));}
 export function getDefaultBundle(){return getRuntimeBundle(TEST_BUNDLES.find(bundle=>bundle.familyCount===5)||TEST_BUNDLES[TEST_BUNDLES.length-1]);}
 export function resolveBundle(bundleId){return getRuntimeBundle(getTestBundle(bundleId)||TEST_BUNDLES.find(bundle=>bundle.familyCount===5)||TEST_BUNDLES[TEST_BUNDLES.length-1]);}
-export function prepareContext(intake={}){const age=intake.age||calculateAge(intake.dob);const ageGrade=ageGradeGuidance(age,intake.grade||intake.className);const academicContext=buildAcademicDecisionContext({age,grade:intake.grade||intake.className,board:intake.board,stream:intake.stream||intake.pathway,subjects:intake.subjects||[],subjectMarks:intake.subjectMarks||{},goal:intake.goal});return{...intake,age:age==null?null:Number(age),ageBand:intake.ageBand||(age==null?null:ageBandFor(Number(age))),grade:ageGrade.declaredGrade,ageGradeGuidance:ageGrade,academicContext};}
+
+function normaliseSubjectDetails(subjectDetails={}){
+  return Object.fromEntries(Object.entries(subjectDetails||{}).filter(([subject,data])=>subject&&data&&typeof data==='object').map(([subject,data])=>[subject,{mark:data.mark===''||data.mark==null?null:Number(data.mark),enjoyment:Number.isFinite(Number(data.enjoyment))?Math.max(0,Math.min(100,Number(data.enjoyment))):null}]));
+}
+
+function subjectMarksFromDetails(subjectDetails={}){
+  return Object.fromEntries(Object.entries(subjectDetails).filter(([,data])=>Number.isFinite(Number(data?.mark))&&Number(data.mark)>=0&&Number(data.mark)<=100).map(([subject,data])=>[subject,Number(data.mark)]));
+}
+
+export function prepareContext(intake={}){
+  const age=intake.age||calculateAge(intake.dob);
+  const declaredGrade=intake.grade||intake.className;
+  const subjectDetails=normaliseSubjectDetails(intake.subjectDetails||{});
+  const subjectMarks={...subjectMarksFromDetails(subjectDetails),...(intake.subjectMarks||{})};
+  const subjects=[...new Set([...(Array.isArray(intake.subjects)?intake.subjects:[]),...Object.keys(subjectDetails)])];
+  const ageGrade=ageGradeGuidance(age,declaredGrade);
+  const academicContext=buildAcademicDecisionContext({age,grade:declaredGrade,board:intake.board,stream:intake.stream||intake.pathway,subjects,subjectMarks,goal:intake.goal});
+  return{...intake,age:age==null?null:Number(age),ageBand:intake.ageBand||(age==null?null:ageBandFor(Number(age))),grade:ageGrade.declaredGrade,subjectDetails,subjectMarks,subjects,ageGradeGuidance:ageGrade,academicContext};
+}
 export function pathwayAllowsBundle(pathway,bundle){if(!bundle)return false;if(pathway===PATHWAYS.HR)return bundle.familyIds.some(id=>['personality','aptitude_skills','work_values','learning'].includes(id));return bundle.familyIds.length>0;}
 export const TEST_FAMILY_ITEM_COUNTS=Object.freeze(Object.fromEntries(Object.entries(FAMILY_ITEMS).map(([key,items])=>[key,items.length])));
