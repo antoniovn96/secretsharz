@@ -63,9 +63,16 @@ export function buildInstitutionCareerReflection(report) {
   const decision = buildDecisionSupportCoverage(source);
   return STUDENT_CAREER_ADMIN_CONTRACT.map(([id,title,paths]) => {
     const value = readReportField(source, paths);
-    let evidenceSource = value === undefined ? null : assessmentSource(source, id);
+    const gated = ASSESSMENT_GATED_SECTIONS.has(id);
+    const assessedSource = assessmentSource(source, id);
+    let evidenceSource = assessedSource;
 
-    if (!evidenceSource && id === 'education_roadmap' && decision.education_roadmap.source === 'career_catalogue') {
+    // Assessment-gated sections may contain stale/legacy serialized values even
+    // when the current V2 evidence layer says the assessment was not produced.
+    // Never promote those values into an assessed or derived result.
+    if (gated && !assessedSource) {
+      evidenceSource = 'not_assessed';
+    } else if (!evidenceSource && id === 'education_roadmap' && decision.education_roadmap.source === 'career_catalogue') {
       evidenceSource = 'career_catalogue';
     } else if (!evidenceSource && id === 'stream_analysis' && decision.stream_subject_scenarios.source === 'career_catalogue') {
       evidenceSource = 'career_catalogue';
@@ -73,13 +80,12 @@ export function buildInstitutionCareerReflection(report) {
       evidenceSource = decision.affordability.source;
     } else if (!evidenceSource && value !== undefined) {
       evidenceSource = 'derived_from_assessment';
-    } else if (!evidenceSource && value === undefined && ASSESSMENT_GATED_SECTIONS.has(id)) {
-      evidenceSource = 'not_assessed';
     } else if (!evidenceSource) {
       evidenceSource = 'unavailable';
     }
 
-    return { id, title, available: value !== undefined, source: evidenceSource, value };
+    const available = value !== undefined && (!gated || Boolean(assessedSource));
+    return { id, title, available, source: evidenceSource, value: available ? value : undefined };
   });
 }
 
