@@ -1,5 +1,7 @@
 export const FREE_REPORT_PAGE_COUNT = 5;
-export const PREMIUM_REPORT_PAGE_COUNT = 18;
+// Keep this value aligned with the canonical Student premium section list below.
+// The Student premium report currently contains 20 sections, not 18.
+export const PREMIUM_REPORT_PAGE_COUNT = 20;
 
 export const STUDENT_FREE_REPORT = Object.freeze([
   { id: 'executive_snapshot', title: 'Career Snapshot', purpose: 'A concise picture of the student’s current interests, context and strongest exploration signals.' },
@@ -57,4 +59,10 @@ export function getReportPages({ tier = 'free', pathway = 'student' } = {}) {
   const fullTiers = new Set(['full', 'premium', 'institution']);
   if (!fullTiers.has(tier)) return STUDENT_FREE_REPORT;
   return pathway === 'working_professional' ? PROFESSIONAL_PREMIUM_REPORT : STUDENT_PREMIUM_REPORT;
+}
+
+// Runtime guard used by tests and report consumers so the declared page count
+// cannot silently drift from the actual canonical section list.
+export function getCanonicalStudentPremiumPageCount() {
+  return STUDENT_PREMIUM_REPORT.length;
 }
