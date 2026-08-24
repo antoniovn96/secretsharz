@@ -11,6 +11,11 @@ const emptyResult = () => ({
   reasoning: null,
   skills: null,
   learning: null,
+  readiness: null,
+  readinessPercent: null,
+  environment: null,
+  adaptability: null,
+  adaptabilityPercent: null,
 });
 
 export function scoreSelectedAssessment(answers = {}, { bundleId = null, familyIds = null } = {}) {
@@ -18,15 +23,23 @@ export function scoreSelectedAssessment(answers = {}, { bundleId = null, familyI
   const selectedFamilyIds = [...new Set(familyIds || bundle?.familyIds || [])];
   const items = bundleId ? getItemsForBundle(bundleId) : getItemsForFamilies(selectedFamilyIds);
   const result = emptyResult();
-  result.selectedFamilyIds = selectedFamilyIds;
 
-  const has = domain => selectedFamilyIds.includes(domain);
-  if (has('interest')) result.riasec = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
-  if (has('personality')) result.big5 = { O: 0, C: 0, E: 0, A: 0, N: 0 };
-  if (has('work_values')) result.values = {};
-  if (has('aptitude_skills')) result.reasoning = { correct: 0, total: 0, verbal: 0, numerical: 0, logical: 0 };
-  if (has('aptitude_skills')) result.skills = {};
-  if (has('learning')) result.learning = {};
+  result.selectedFamilyIds = selectedFamilyIds;
+  const isFullBundle = Boolean(bundle && bundle.familyCount === 5);
+  if (selectedFamilyIds.includes('interest')) result.riasec = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+  if (selectedFamilyIds.includes('personality')) result.big5 = { O: 0, C: 0, E: 0, A: 0, N: 0 };
+  if (selectedFamilyIds.includes('work_values')) result.values = {};
+  if (selectedFamilyIds.includes('aptitude_skills')) result.reasoning = { correct: 0, total: 0, verbal: 0, numerical: 0, logical: 0 };
+  if (selectedFamilyIds.includes('aptitude_skills')) result.skills = {};
+  if (selectedFamilyIds.includes('learning')) result.learning = {};
+
+  // These indicators are intentionally available only in the complete bundle.
+  // They are not presented as separately purchased psychometric families.
+  if (isFullBundle) {
+    result.readiness = {};
+    result.environment = {};
+    result.adaptability = {};
+  }
 
   for (const item of items) {
     const value = answers?.[item.id];
@@ -49,6 +62,9 @@ export function scoreSelectedAssessment(answers = {}, { bundleId = null, familyI
     if (item.valueKey && result.values) result.values[item.valueKey] = score;
     if (item.skillKey && result.skills) result.skills[item.skillKey] = score;
     if (item.learningKey && result.learning) result.learning[item.learningKey] = score;
+    if (item.domain === 'readiness' && result.readiness) result.readiness[item.construct.replace('readiness_', '')] = score;
+    if (item.environmentKey && result.environment) result.environment[item.environmentKey] = score;
+    if (item.domain === 'adaptability' && result.adaptability) result.adaptability[item.construct.replace('adaptability_', '')] = score;
   }
 
   if (result.riasec) {
@@ -69,6 +85,14 @@ export function scoreSelectedAssessment(answers = {}, { bundleId = null, familyI
   if (result.learning) {
     const vals = Object.values(result.learning);
     result.learning.percent = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / (vals.length * 5)) * 100) : null;
+  }
+  if (result.readiness) {
+    const vals = Object.values(result.readiness);
+    result.readinessPercent = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / (vals.length * 5)) * 100) : null;
+  }
+  if (result.adaptability) {
+    const vals = Object.values(result.adaptability);
+    result.adaptabilityPercent = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / (vals.length * 5)) * 100) : null;
   }
   return result;
 }
