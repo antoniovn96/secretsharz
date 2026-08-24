@@ -1,6 +1,7 @@
 import { ASSESSMENT_VERSION, scoreLikert, cosineSimilarity } from './careerAssessmentBlueprint.js';
 import { getItemsForBundle, getItemsForFamilies, resolveBundle } from './assessmentSelection.js';
 import { buildCareerEvidenceProfile, buildInterestAlignmentExplanation } from './careerEvidenceProfile.js';
+import { buildSkillAlignmentEvidence } from './skillAlignmentEvidence.js';
 
 const emptyResult = () => ({
   version: ASSESSMENT_VERSION,
@@ -74,6 +75,7 @@ export function matchCareerToSelectedProfile(career, scored) {
   const similarity = cosineSimilarity(v, p);
   const interestAlignmentIndex = Math.round(Math.max(0, Math.min(1, (similarity + 1) / 2)) * 100);
   const explanation = buildInterestAlignmentExplanation(scored?.riasec, careerProfile.interestProfile);
+  const skillAlignment = buildSkillAlignmentEvidence(scored, career);
   return {
     similarity,
     interestAlignmentIndex,
@@ -81,6 +83,7 @@ export function matchCareerToSelectedProfile(career, scored) {
     scoreLabel: 'Interest Alignment Index',
     evidenceProfile: careerProfile,
     explanation,
+    skillAlignment,
     excludedFromRanking: ['big5', 'values', 'reasoning', 'skills', 'learning', 'academicAverage', 'readiness', 'environment', 'adaptability'],
   };
 }
