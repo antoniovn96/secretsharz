@@ -10,6 +10,7 @@ export function getInstitutionCareerReportStatus(report = {}) {
   const assessedSections = canonicalSections.filter(section => section.source === 'assessed').length;
   const derivedSections = canonicalSections.filter(section => section.source === 'derived_from_assessment').length;
   const catalogueSections = canonicalSections.filter(section => section.source === 'career_catalogue').length;
+  const notAssessedSections = canonicalSections.filter(section => section.source === 'not_assessed').length;
   const unavailableSections = canonicalSections.filter(section => section.source === 'unavailable').length;
   return {
     totalSections: canonicalIds.length,
@@ -17,6 +18,7 @@ export function getInstitutionCareerReportStatus(report = {}) {
     assessedSections,
     derivedSections,
     catalogueSections,
+    notAssessedSections,
     unavailableSections,
     coveragePercent: canonicalSections.length ? Math.round((availableSections / canonicalSections.length) * 100) : 0,
     sections: canonicalIds.map(id => canonicalSections.find(section => section.id === id) || {
