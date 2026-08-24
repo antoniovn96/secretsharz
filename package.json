@@ -11,8 +11,9 @@
     "start": "next start",
     "test:rules": "firebase emulators:exec --project secretsharz-emulator-test --only firestore \"npx jest --config jest.rules.config.cjs\"",
     "test:server": "node --test test/server/*.test.mjs",
+    "test:institution": "node --test test/institution/*.test.mjs",
     "test:integration": "firebase emulators:exec --project secretsharz-emulator-test --only auth,firestore \"node --test test/integration/*.integration.test.mjs\"",
-    "test": "npm run test:server && npm run test:integration && npm run test:rules",
+    "test": "npm run test:server && npm run test:institution && npm run test:integration && npm run test:rules",
     "dry-run:migration": "node scripts/dry-run-claim-migration.mjs",
     "inventory:production": "node scripts/production-claim-inventory.mjs"
   },
@@ -36,7 +37,7 @@
     "autoprefixer": "^10.5.0",
     "firebase-tools": "^13.16.0",
     "jest": "^29.7.0",
-    "postcss": "^8.5.15",
+    "postcss": "^8.5.0",
     "tailwindcss": "^4.3.1"
   }
 }
