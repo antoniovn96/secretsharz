@@ -1,12 +1,13 @@
+import { buildCareerSkillEvidence } from './careerSkillOntology.js';
+
 const asArray = value => Array.isArray(value) ? value.filter(Boolean).map(String) : [];
 
 /**
  * Converts the existing career catalogue into an auditable evidence profile.
  * This file deliberately does NOT invent psychometric norms for careers.
- * Fields such as personality, values, learning style or aptitude requirements
- * must not be treated as quantified career requirements until validated data exists.
  */
 export function buildCareerEvidenceProfile(career = {}) {
+  const skillEvidence = buildCareerSkillEvidence(career);
   return {
     careerId: String(career.id || ''),
     title: String(career.title || ''),
@@ -15,6 +16,7 @@ export function buildCareerEvidenceProfile(career = {}) {
     streams: asArray(career.stream),
     education: String(career.education || ''),
     skills: asArray(career.skills),
+    skillEvidence,
     exams: asArray(career.exams),
     colleges: asArray(career.colleges),
     growth: String(career.growth || ''),
@@ -31,7 +33,8 @@ export function buildCareerEvidenceProfile(career = {}) {
       'The current catalogue does not contain validated career-side Big Five norms.',
       'The current catalogue does not contain validated career-side values norms.',
       'The current catalogue does not contain validated career-side learning-preference norms.',
-      'The current catalogue does not contain validated career-side reasoning or skills norms.',
+      'The current catalogue skill list is descriptive and is not a calibrated ability requirement.',
+      'The current catalogue does not contain validated career-side reasoning norms.',
     ],
   };
 }
