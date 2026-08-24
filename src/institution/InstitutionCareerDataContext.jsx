@@ -3,6 +3,7 @@ import {auth} from '../firebase';
 import {onAuthStateChanged} from 'firebase/auth';
 
 const InstitutionCareerDataContext=createContext(null);
+const FOUNDER_EMAIL='antonio.antonio.noronha@gmail.com';
 
 export function InstitutionCareerDataProvider({children}){
   const [data,setData]=useState({institution:null,students:[],summary:{},analytics:null});
@@ -42,8 +43,20 @@ export function InstitutionCareerDataProvider({children}){
     const unsubscribe=onAuthStateChanged(auth,(user)=>{
       if(!active)return;
       setAuthReady(true);
-      if(user)refresh().catch(()=>{});
-      else{setData({institution:null,students:[],summary:{},analytics:null});setError('Authentication required.');setLoading(false);}
+      if(user){
+        const isFounder=user.email?.toLowerCase()===FOUNDER_EMAIL;
+        if(isFounder){
+          setData({institution:null,students:[],summary:{},analytics:null});
+          setError('');
+          setLoading(false);
+        }else{
+          refresh().catch(()=>{});
+        }
+      }else{
+        setData({institution:null,students:[],summary:{},analytics:null});
+        setError('Authentication required.');
+        setLoading(false);
+      }
     });
     return ()=>{active=false;unsubscribe();};
   },[refresh]);
