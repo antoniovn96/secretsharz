@@ -40,8 +40,8 @@ function readPath(source, path) { return path.split('.').reduce((value, key) => 
 // `value !== undefined` is not sufficient to establish report coverage.
 function hasMeaningfulValue(value) {
   if (value === undefined || value === null || value === '') return false;
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === 'object') return Object.keys(value).length > 0;
+  if (Array.isArray(value)) return value.some(hasMeaningfulValue);
+  if (typeof value === 'object') return Object.values(value).some(hasMeaningfulValue);
   return true;
 }
 
