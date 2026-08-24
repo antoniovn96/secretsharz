@@ -26,3 +26,10 @@ test('career dashboard no longer owns the institutional dashboard API request',(
   assert.match(dashboard,/await refresh\(d\.institution\.id\)/);
   assert.doesNotMatch(dashboard,/fetch\(['\"]\/api\/institution\/dashboard/);
 });
+
+test('founder can reach institution provisioning without an institution claim',()=>{
+  assert.match(source,/const FOUNDER_EMAIL='antonio\.antonio\.noronha@gmail\.com'/);
+  assert.match(source,/const isFounder=user\.email\?\.toLowerCase\(\)===FOUNDER_EMAIL/);
+  assert.match(source,/if\(isFounder\)\{/);
+  assert.doesNotMatch(source,/if\(user\)refresh\(\)\.catch\(\(\)=>\{\}\);/);
+});
