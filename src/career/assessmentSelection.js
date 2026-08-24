@@ -32,17 +32,7 @@ export const LEARNING_ITEMS = Object.freeze([
   ['pace', 'I prefer learning experiences that let me revisit difficult material at my own pace.'],
   ['collaboration', 'Working with others can improve my learning when the roles are clear.'],
   ['challenge', 'I enjoy learning activities that require me to solve unfamiliar problems.'],
-].map(([key, question], i) => ({
-  id: `learning_${i + 1}`,
-  domain: 'learning',
-  type: 'likert5',
-  question,
-  construct: `learning_${key}`,
-  learningKey: key,
-  options: ['Strongly disagree', 'Disagree', 'Neither agree nor disagree', 'Agree', 'Strongly agree'],
-  scaleMin: 1,
-  scaleMax: 5,
-})));
+].map(([key, question], i) => ({ id:`learning_${i+1}`, domain:'learning', type:'likert5', question, construct:`learning_${key}`, learningKey:key, options:['Strongly disagree','Disagree','Neither agree nor disagree','Agree','Strongly agree'], scaleMin:1, scaleMax:5 })));
 
 export const SKILL_ITEMS = Object.freeze([
   ['communication', 'I can explain ideas clearly to people with different levels of knowledge.'],
@@ -55,49 +45,21 @@ export const SKILL_ITEMS = Object.freeze([
   ['presentation', 'I can present my ideas in a structured way.'],
   ['adaptation', 'I can learn a new method when the previous approach is no longer effective.'],
   ['selfManagement', 'I can manage my effort and attention across a longer task.'],
-].map(([key, question], i) => ({
-  id: `skill_${i + 1}`,
-  domain: 'skills',
-  type: 'likert5',
-  question,
-  construct: `skill_${key}`,
-  skillKey: key,
-  options: ['Strongly disagree', 'Disagree', 'Neither agree nor disagree', 'Agree', 'Strongly agree'],
-  scaleMin: 1,
-  scaleMax: 5,
-})));
+].map(([key, question], i) => ({ id:`skill_${i+1}`, domain:'skills', type:'likert5', question, construct:`skill_${key}`, skillKey:key, options:['Strongly disagree','Disagree','Neither agree nor disagree','Agree','Strongly agree'], scaleMin:1, scaleMax:5 })));
 
-const FAMILY_ITEMS = Object.freeze({ interest: RIASEC_ITEMS, personality: BIG5_ITEMS, aptitude_skills: [...REASONING_ITEMS, ...SKILL_ITEMS], work_values: VALUE_ITEMS, learning: LEARNING_ITEMS });
-
-export const FULL_GUIDANCE_ITEMS = Object.freeze([
-  ...READINESS_ITEMS,
-  ...ENVIRONMENT_ITEMS,
-  ...ADAPTABILITY_ITEMS,
-]);
-
+const FAMILY_ITEMS = Object.freeze({ interest:RIASEC_ITEMS, personality:BIG5_ITEMS, aptitude_skills:[...REASONING_ITEMS,...SKILL_ITEMS], work_values:VALUE_ITEMS, learning:LEARNING_ITEMS });
+export const FULL_GUIDANCE_ITEMS = Object.freeze([...READINESS_ITEMS,...ENVIRONMENT_ITEMS,...ADAPTABILITY_ITEMS]);
 export const FULL_GUIDANCE_ITEM_COUNT = FULL_GUIDANCE_ITEMS.length;
 export const FULL_GUIDANCE_DURATION_MINUTES = 10;
 
-export function getSelectedFamilyIds(bundleId) { const bundle = getTestBundle(bundleId); return bundle ? [...bundle.familyIds] : []; }
-export function getItemsForFamilies(familyIds = []) { const ids = [...new Set(familyIds)]; return ids.flatMap(id => FAMILY_ITEMS[id] || []); }
-export function isFullCareerIntelligenceBundle(bundleId) { const bundle = getTestBundle(bundleId); return Boolean(bundle && bundle.familyCount === 5); }
-export function getItemsForBundle(bundleId) {
-  const base = getItemsForFamilies(getSelectedFamilyIds(bundleId));
-  return isFullCareerIntelligenceBundle(bundleId) ? [...base, ...FULL_GUIDANCE_ITEMS] : base;
-}
-
-export function getRuntimeBundle(bundle) {
-  if (!bundle) return null;
-  const full = bundle.familyCount === 5;
-  const baseItems = getItemsForFamilies(bundle.familyIds);
-  const questionCount = baseItems.length + (full ? FULL_GUIDANCE_ITEM_COUNT : 0);
-  const estimatedMinutes = Number(bundle.durationMinutes || 0) + (full ? FULL_GUIDANCE_DURATION_MINUTES : 0);
-  return { ...bundle, questionCount, questionCountLabel: `${questionCount} questions`, durationMinutes: estimatedMinutes, durationLabel: `${estimatedMinutes} minutes estimated`, embeddedGuidanceLayer: full ? ['career_decision_readiness','work_environment','adaptability_resilience'] : [] };
-}
-
-export function getBundleByFamilies(familyIds = []) { return getRuntimeBundle(getCanonicalBundleByFamilies(familyIds)); }
-export function getDefaultBundle() { return getRuntimeBundle(TEST_BUNDLES.find(bundle => bundle.familyCount === 5) || TEST_BUNDLES[TEST_BUNDLES.length - 1]); }
-export function resolveBundle(bundleId) { return getRuntimeBundle(getTestBundle(bundleId) || getDefaultBundle()); }
-export function prepareContext(intake = {}) { const age = intake.age || calculateAge(intake.dob); return { ...intake, age: age == null ? null : Number(age), ageBand: intake.ageBand || (age == null ? null : ageBandFor(Number(age))) }; }
-export function pathwayAllowsBundle(pathway, bundle) { if (!bundle) return false; if (pathway === PATHWAYS.HR) return bundle.familyIds.some(id => ['personality','aptitude_skills','work_values','learning'].includes(id)); return bundle.familyIds.length > 0; }
-export const TEST_FAMILY_ITEM_COUNTS = Object.freeze(Object.fromEntries(Object.entries(FAMILY_ITEMS).map(([key, items]) => [key, items.length])));
+export function getSelectedFamilyIds(bundleId){const bundle=getTestBundle(bundleId);return bundle?[...bundle.familyIds]:[];}
+export function getItemsForFamilies(familyIds=[]){const ids=[...new Set(familyIds)];return ids.flatMap(id=>FAMILY_ITEMS[id]||[]);}
+export function isFullCareerIntelligenceBundle(bundleId){const bundle=getTestBundle(bundleId);return Boolean(bundle&&bundle.familyCount===5);}
+export function getItemsForBundle(bundleId){const base=getItemsForFamilies(getSelectedFamilyIds(bundleId));return isFullCareerIntelligenceBundle(bundleId)?[...base,...FULL_GUIDANCE_ITEMS]:base;}
+export function getRuntimeBundle(bundle){if(!bundle)return null;const full=bundle.familyCount===5;const baseItems=getItemsForFamilies(bundle.familyIds);const questionCount=baseItems.length+(full?FULL_GUIDANCE_ITEM_COUNT:0);const estimatedMinutes=Number(bundle.durationMinutes||0)+(full?FULL_GUIDANCE_DURATION_MINUTES:0);return{...bundle,questionCount,questionCountLabel:`${questionCount} questions`,durationMinutes:estimatedMinutes,durationLabel:`${estimatedMinutes} minutes estimated`,embeddedGuidanceLayer:full?['career_decision_readiness','work_environment','adaptability_resilience']:[]};}
+export function getBundleByFamilies(familyIds=[]){return getRuntimeBundle(getCanonicalBundleByFamilies(familyIds));}
+export function getDefaultBundle(){return getRuntimeBundle(TEST_BUNDLES.find(bundle=>bundle.familyCount===5)||TEST_BUNDLES[TEST_BUNDLES.length-1]);}
+export function resolveBundle(bundleId){return getRuntimeBundle(getTestBundle(bundleId)||TEST_BUNDLES.find(bundle=>bundle.familyCount===5)||TEST_BUNDLES[TEST_BUNDLES.length-1]);}
+export function prepareContext(intake={}){const age=intake.age||calculateAge(intake.dob);return{...intake,age:age==null?null:Number(age),ageBand:intake.ageBand||(age==null?null:ageBandFor(Number(age)))};}
+export function pathwayAllowsBundle(pathway,bundle){if(!bundle)return false;if(pathway===PATHWAYS.HR)return bundle.familyIds.some(id=>['personality','aptitude_skills','work_values','learning'].includes(id));return bundle.familyIds.length>0;}
+export const TEST_FAMILY_ITEM_COUNTS=Object.freeze(Object.fromEntries(Object.entries(FAMILY_ITEMS).map(([key,items])=>[key,items.length])));
