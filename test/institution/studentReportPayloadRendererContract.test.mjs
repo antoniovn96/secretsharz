@@ -6,10 +6,11 @@ import { fileURLToPath } from 'node:url';
 const root = new URL('../../', import.meta.url);
 const read = path => readFile(fileURLToPath(new URL(path, root)), 'utf8');
 
-const [serializer, contract, shell] = await Promise.all([
+const [serializer, contract, shell, dashboard] = await Promise.all([
   read('src/institution/institutionalCareerReportSerializer.js'),
   read('src/institution/careerReportDataContract.js'),
   read('src/institution/InstitutionCareerReportShell.jsx'),
+  read('src/institution/InstitutionCareerDashboard.jsx'),
 ]);
 
 test('institution serializer preserves every canonical report output field', () => {
@@ -45,6 +46,22 @@ test('canonical contract and renderer cover every premium report section', () =>
     'Affordability, scholarships & friction','Alternative & unexpected careers','90-day career action roadmap',
     'Counsellor conversation & limitations'
   ]) assert.match(shell, new RegExp(label.replace(/[.*+?^${}()|[\\]\\]/g,'\\$&')), `renderer must contain ${label}`);
+});
+
+test('Admin renderer displays student age and age-band when supplied', () => {
+  assert.match(shell, /\[\['Age',intake\.age\]/);
+  assert.match(shell, /\['Age band',intake\.ageBand\]/);
+});
+
+test('Admin career lists preserve student-visible direction evidence', () => {
+  for (const field of ['explorationIndex','matchScore','interestAlignmentIndex','rationale','stream']) {
+    assert.match(shell, new RegExp(`\\b${field}\\b`), `renderer must display ${field} when present`);
+  }
+});
+
+test('Admin report has a single canonical report renderer', () => {
+  assert.doesNotMatch(dashboard, /InstitutionCareerReportViewV2/);
+  assert.match(dashboard, /InstitutionCareerReportShell/);
 });
 
 test('renderer does not turn a generic reflection statement into a 90-day roadmap', () => {
