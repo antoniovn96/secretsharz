@@ -37,6 +37,55 @@ test('coverage does not convert missing premium evidence into availability', () 
   assert.equal(byId.personality_profile, false);
 });
 
+test('explicit family selection prevents stale score objects from inflating evidence coverage', () => {
+  const report = serializeInstitutionalCareerReport({
+    selectedFamilyIds: ['interest'],
+    scores: {
+      riasecCode: 'RIA',
+      big5: { openness: 4 },
+      values: { autonomy: 5 },
+      reasoning: { percent: 90 },
+      readinessPercent: 95,
+      adaptabilityPercent: 95,
+      environment: { collaboration: true },
+      skills: { percent: 88 },
+      learning: { percent: 88 }
+    },
+    careerExploration: [{ id: 'c1', name: 'Engineer' }]
+  });
+  const coverage = getAssessmentEvidenceCoverage(report);
+  const byId = Object.fromEntries(coverage.sections.map(x => [x.id, x.assessed]));
+  assert.equal(byId.riasec_profile, true);
+  assert.equal(byId.career_directions, true);
+  assert.equal(byId.personality_profile, false);
+  assert.equal(byId.career_values, false);
+  assert.equal(byId.reasoning_profile, false);
+  assert.equal(byId.decision_readiness, false);
+  assert.equal(byId.adaptability, false);
+  assert.equal(byId.work_environment, false);
+  assert.equal(byId.skills_profile, false);
+  assert.equal(byId.learning_preferences, false);
+});
+
+test('full family selection is required for embedded guidance evidence', () => {
+  const report = serializeInstitutionalCareerReport({
+    selectedFamilyIds: ['interest', 'personality', 'aptitude_skills', 'work_values'],
+    scores: { readinessPercent: 80, adaptabilityPercent: 75, environment: { collaboration: true } }
+  });
+  const coverage = getAssessmentEvidenceCoverage(report);
+  const byId = Object.fromEntries(coverage.sections.map(x => [x.id, x.assessed]));
+  assert.equal(byId.decision_readiness, false);
+  assert.equal(byId.adaptability, false);
+  assert.equal(byId.work_environment, false);
+
+  report.selectedFamilyIds.push('learning');
+  const fullCoverage = getAssessmentEvidenceCoverage(report);
+  const fullById = Object.fromEntries(fullCoverage.sections.map(x => [x.id, x.assessed]));
+  assert.equal(fullById.decision_readiness, true);
+  assert.equal(fullById.adaptability, true);
+  assert.equal(fullById.work_environment, true);
+});
+
 test('admin contract requires explicit top-career evidence instead of reusing exploration', () => {
   const sections = buildInstitutionCareerReflection({ careerExploration: [{ name: 'Engineer' }] });
   const byId = Object.fromEntries(sections.map(x => [x.id, x.available]));
