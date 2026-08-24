@@ -3,6 +3,9 @@ import {
   BIG5_ITEMS,
   VALUE_ITEMS,
   REASONING_ITEMS,
+  READINESS_ITEMS,
+  ENVIRONMENT_ITEMS,
+  ADAPTABILITY_ITEMS,
   calculateAge,
   ageBandFor,
   PATHWAYS,
@@ -65,12 +68,28 @@ export const SKILL_ITEMS = Object.freeze([
 })));
 
 const FAMILY_ITEMS = Object.freeze({ interest: RIASEC_ITEMS, personality: BIG5_ITEMS, aptitude_skills: [...REASONING_ITEMS, ...SKILL_ITEMS], work_values: VALUE_ITEMS, learning: LEARNING_ITEMS });
+
+// Guidance indicators are not separate commercial test families. They are
+// embedded only in the complete five-family bundle because the full Career
+// Intelligence report explicitly promises evidence for these dimensions.
+// Partial bundles never collect or interpret them silently.
+export const FULL_GUIDANCE_ITEMS = Object.freeze([
+  ...READINESS_ITEMS,
+  ...ENVIRONMENT_ITEMS,
+  ...ADAPTABILITY_ITEMS,
+]);
+
 export function getSelectedFamilyIds(bundleId) { const bundle = getTestBundle(bundleId); return bundle ? [...bundle.familyIds] : []; }
 export function getItemsForFamilies(familyIds = []) { const ids = [...new Set(familyIds)]; return ids.flatMap(id => FAMILY_ITEMS[id] || []); }
-export function getItemsForBundle(bundleId) { return getItemsForFamilies(getSelectedFamilyIds(bundleId)); }
+export function isFullCareerIntelligenceBundle(bundleId) { const bundle = getTestBundle(bundleId); return Boolean(bundle && bundle.familyCount === 5); }
+export function getItemsForBundle(bundleId) {
+  const base = getItemsForFamilies(getSelectedFamilyIds(bundleId));
+  return isFullCareerIntelligenceBundle(bundleId) ? [...base, ...FULL_GUIDANCE_ITEMS] : base;
+}
 export function getBundleByFamilies(familyIds = []) { return getCanonicalBundleByFamilies(familyIds); }
 export function getDefaultBundle() { return TEST_BUNDLES.find(bundle => bundle.familyCount === 5) || TEST_BUNDLES[TEST_BUNDLES.length - 1]; }
 export function resolveBundle(bundleId) { return getTestBundle(bundleId) || getDefaultBundle(); }
 export function prepareContext(intake = {}) { const age = intake.age || calculateAge(intake.dob); return { ...intake, age: age == null ? null : Number(age), ageBand: intake.ageBand || (age == null ? null : ageBandFor(Number(age))) }; }
 export function pathwayAllowsBundle(pathway, bundle) { if (!bundle) return false; if (pathway === PATHWAYS.HR) return bundle.familyIds.some(id => ['personality','aptitude_skills','work_values','learning'].includes(id)); return bundle.familyIds.length > 0; }
 export const TEST_FAMILY_ITEM_COUNTS = Object.freeze(Object.fromEntries(Object.entries(FAMILY_ITEMS).map(([key, items]) => [key, items.length])));
+export const FULL_GUIDANCE_ITEM_COUNT = FULL_GUIDANCE_ITEMS.length;
