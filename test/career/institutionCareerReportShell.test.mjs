@@ -13,6 +13,14 @@ test('canonical institutional report shell uses evidence and coverage components
  assert.match(file,/Professional-use boundary/);
 });
 
+test('institutional shell does not reinterpret context as unsupported recommendations',()=>{
+ const file=read('src/institution/InstitutionCareerReportShell.jsx');
+ assert.doesNotMatch(file,/Preferred work environment.*intake\.goal/);
+ assert.doesNotMatch(file,/Alternative & unexpected careers.*careerExploration/);
+ assert.match(file,/Career decision readiness/);
+ assert.match(file,/Not available in this assessment/);
+});
+
 test('institution career dashboard delegates report rendering to the canonical shell',()=>{
  const file=read('src/institution/InstitutionCareerDashboard.jsx');
  assert.match(file,/import InstitutionCareerReportShell from '\.\/InstitutionCareerReportShell';/);
