@@ -1,6 +1,5 @@
 // Canonical Student Career Report -> Institution/Admin field contract.
-// The institution API returns careerAssessmentV2 directly as `report`, so the
-// contract reads fields from that exact persisted report shape. Missing
+// Paths mirror the persisted Student Career Assessment V2 report. Missing
 // evidence remains missing; the Admin must never manufacture it.
 export const STUDENT_CAREER_ADMIN_CONTRACT = Object.freeze([
   ['executive_snapshot','Executive Snapshot',['bundleTitle','reflection.statement']],
@@ -13,7 +12,7 @@ export const STUDENT_CAREER_ADMIN_CONTRACT = Object.freeze([
   ['reasoning_profile','Reasoning Sampler',['scores.reasoning']],
   ['decision_readiness','Career Decision Readiness',['scores.readinessPercent','scores.readiness']],
   ['adaptability','Adaptability & Career Resilience',['scores.adaptabilityPercent','scores.adaptability']],
-  ['work_environment','Preferred Work Environment',['workEnvironment','scores.workEnvironment']],
+  ['work_environment','Preferred Work Environment',['scores.environment','scores.workEnvironment','workEnvironment']],
   ['career_directions','Career Directions to Explore',['careerExploration']],
   ['top_career_directions','Top Career Directions',['topCareerDirections']],
   ['alternative_careers','Alternative & Unexpected Careers',['alternativeCareers']],
@@ -26,10 +25,7 @@ export const STUDENT_CAREER_ADMIN_CONTRACT = Object.freeze([
   ['counsellor_review','Counsellor Conversation & Limitations',['counsellorReview','reviewLimitations']]
 ]);
 
-function readPath(source, path) {
-  return path.split('.').reduce((value, key) => value == null ? undefined : value[key], source);
-}
-
+function readPath(source, path) { return path.split('.').reduce((value, key) => value == null ? undefined : value[key], source); }
 export function readReportField(report, paths=[]) {
   for (const path of paths) {
     const value = readPath(report, path);
@@ -37,7 +33,6 @@ export function readReportField(report, paths=[]) {
   }
   return undefined;
 }
-
 export function buildInstitutionCareerReflection(report) {
   const source = report || {};
   return STUDENT_CAREER_ADMIN_CONTRACT.map(([id,title,paths]) => {
