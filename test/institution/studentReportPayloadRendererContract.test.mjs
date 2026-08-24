@@ -59,6 +59,14 @@ test('Admin career lists preserve student-visible direction evidence', () => {
   }
 });
 
+test('Admin assessment displays remain gated by actual assessment evidence', () => {
+  assert.match(shell, /const assessed=id=>Boolean\(evidence\.find\(x=>x\.id===id\)\?\.assessed\)/);
+  assert.match(shell, /hasRiasec=assessed\('riasec_profile'\)/);
+  assert.match(shell, /hasReasoning=assessed\('reasoning_profile'\)/);
+  assert.match(shell, /hasValues=assessed\('career_values'\)/);
+  assert.match(shell, /hasBig5=assessed\('personality_profile'\)/);
+});
+
 test('Admin report has a single canonical report renderer', () => {
   assert.doesNotMatch(dashboard, /InstitutionCareerReportViewV2/);
   assert.match(dashboard, /InstitutionCareerReportShell/);
