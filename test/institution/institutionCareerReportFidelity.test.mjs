@@ -27,6 +27,21 @@ test('institution serializer preserves explicit report evidence and strips unrel
   assert.equal(report.senRecord, undefined);
 });
 
+test('institution serializer has an explicit top-level allowlist', () => {
+  const report = serializeInstitutionalCareerReport({ unexpectedPrivateField: 'secret', counsellingNotes: 'private' });
+  const allowed = new Set([
+    'version','pathway','bundleId','bundleSku','bundleTitle','selectedFamilyIds','selectedTestCount','deliveryMode',
+    'estimatedMinutes','questionCount','reportPages','reportType','reportTier','embeddedGuidanceLayer','careerMatching',
+    'completedAt','executiveSnapshot','executiveSummary','snapshot','topCareerDirections','alternativeCareers',
+    'pathwayAnalysis','pathways','streamAnalysis','streamScenarios','educationRoadmap','education','skillsEvidence',
+    'skillsPlan','affordability','friction','actionRoadmap','actionPlan','counsellorReview','reviewLimitations',
+    'workEnvironment','intake','scores','careerExploration','decisionSupportCoverage','reflection'
+  ]);
+  for (const key of Object.keys(report)) assert.equal(allowed.has(key), true, `Unexpected serialized field: ${key}`);
+  assert.equal(report.unexpectedPrivateField, undefined);
+  assert.equal(report.counsellingNotes, undefined);
+});
+
 test('coverage does not convert missing premium evidence into availability', () => {
   const report = serializeInstitutionalCareerReport({ scores: { riasecCode: 'RIA' } });
   const coverage = getAssessmentEvidenceCoverage(report);
@@ -91,7 +106,6 @@ test('affordability provenance is only catalogue when explicitly declared', () =
   const catalogueRow = catalogue.find(x => x.id === 'affordability');
   assert.equal(catalogueRow.available, true);
   assert.equal(catalogueRow.source, 'career_catalogue');
-
   const derived = buildInstitutionCareerReflection({ affordability: { scholarships: ['Merit'] } });
   const derivedRow = derived.find(x => x.id === 'affordability');
   assert.equal(derivedRow.source, 'derived_from_assessment');
