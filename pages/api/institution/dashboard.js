@@ -4,7 +4,9 @@ import { careerStatusCounts, careerFollowUpQueue, careerClassAnalytics, careerAn
 const FOUNDER_EMAIL = 'antonio.antonio.noronha@gmail.com';
 function bearerToken(req) { const header=req.headers.authorization||req.headers.Authorization; if(typeof header!=='string')return null; const match=header.match(/^Bearer\s+(.+)$/i); return match?match[1]:null; }
 export default async function handler(req,res){
- if(req.method!=='GET')return res.status(405).json({error:'Method not allowed.'});const token=bearerToken(req);if(!token)return res.status(401).json({error:'Authentication required.'});let decoded;try{decoded=await getAdminAuth().verifyIdToken(token);}catch(_){return res.status(401).json({error:'Invalid or expired authentication token.'});}
+ if(req.method!=='GET')return res.status(405).json({error:'Method not allowed.'});
+ res.setHeader('Cache-Control','private, no-store, max-age=0');
+ const token=bearerToken(req);if(!token)return res.status(401).json({error:'Authentication required.'});let decoded;try{decoded=await getAdminAuth().verifyIdToken(token);}catch(_){return res.status(401).json({error:'Invalid or expired authentication token.'});}
  const db=getAdminFirestore(),isFounder=decoded.email_verified===true&&decoded.email?.toLowerCase()===FOUNDER_EMAIL,institutionId=String(req.query?.institutionId||decoded.institutionId||'').trim();if(!institutionId)return res.status(400).json({error:'Institution ID is required.'});
  const hasInstitutionAccess=decoded.role==='institution_member'&&decoded.institutionRole==='coordinator'&&decoded.institutionId===institutionId;if(!isFounder&&!hasInstitutionAccess)return res.status(403).json({error:'Institution coordinator access required.'});
  const institutionSnap=await db.collection('institutions').doc(institutionId).get();if(!institutionSnap.exists)return res.status(404).json({error:'Institution not found.'});const institution=institutionSnap.data(),paidEntitlement=institution.licenses?.paymentStatus==='paid';
