@@ -31,6 +31,28 @@ test('combined bundles score only selected families',()=>{
  assert.equal(scored.big5,null);
  assert.equal(scored.reasoning,null);
  assert.equal(scored.learning,null);
+ assert.equal(scored.readiness,null);
+ assert.equal(scored.environment,null);
+ assert.equal(scored.adaptability,null);
+});
+
+test('full bundle contains the embedded guidance layer and scores it',()=>{
+ const bundle=getBundleByFamilies(['interest','personality','aptitude_skills','work_values','learning']);
+ assert.ok(bundle);
+ const items=getItemsForBundle(bundle.id);
+ assert.equal(items.length,136);
+ assert.ok(items.some(item=>item.domain==='readiness'));
+ assert.ok(items.some(item=>item.domain==='environment'));
+ assert.ok(items.some(item=>item.domain==='adaptability'));
+ const answers={};
+ for(const item of items) answers[item.id]=item.type==='objective'?item.correct:5;
+ const scored=scoreSelectedAssessment(answers,{bundleId:bundle.id});
+ assert.equal(scored.readinessPercent,100);
+ assert.equal(scored.adaptabilityPercent,100);
+ assert.ok(scored.environment);
+ assert.equal(Object.keys(scored.environment).length,8);
+ assert.ok(scored.skills);
+ assert.ok(scored.learning);
 });
 
 test('premium bundle report envelope is 20 pages',()=>{
