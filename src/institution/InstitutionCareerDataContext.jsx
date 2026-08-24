@@ -1,4 +1,4 @@
-import React,{createContext,useCallback,useContext,useEffect,useMemo,useState} from 'react';
+import React,{createContext,useCallback,useContext,useEffect,useMemo,useRef,useState} from 'react';
 import {auth} from '../firebase';
 
 const InstitutionCareerDataContext=createContext(null);
@@ -7,8 +7,10 @@ export function InstitutionCareerDataProvider({children}){
   const [data,setData]=useState({institution:null,students:[],summary:{},analytics:null});
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState('');
+  const requestRef=useRef(0);
 
   const refresh=useCallback(async(institutionId='')=>{
+    const requestId=++requestRef.current;
     setError('');
     try{
       const token=await auth.currentUser?.getIdToken();
@@ -18,12 +20,14 @@ export function InstitutionCareerDataProvider({children}){
       const response=await fetch(url,{headers:{Authorization:`Bearer ${token}`}});
       const next=await response.json();
       if(!response.ok)throw new Error(next?.error||'Unable to load institution dashboard.');
-      setData({institution:next.institution||null,students:Array.isArray(next.students)?next.students:[],summary:next.summary||{},analytics:next.analytics||null});
+      if(requestId===requestRef.current)setData({institution:next.institution||null,students:Array.isArray(next.students)?next.students:[],summary:next.summary||{},analytics:next.analytics||null});
       return next;
     }catch(error){
-      setError(error.message||'Unable to load institution dashboard.');
+      if(requestId===requestRef.current)setError(error.message||'Unable to load institution dashboard.');
       throw error;
-    }finally{setLoading(false);}
+    }finally{
+      if(requestId===requestRef.current)setLoading(false);
+    }
   },[]);
 
   useEffect(()=>{refresh().catch(()=>{});},[refresh]);
