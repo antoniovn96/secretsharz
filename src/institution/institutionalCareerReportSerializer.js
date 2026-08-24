@@ -7,8 +7,7 @@ const cleanCareer = career => ({
   interestAlignmentIndex: Number.isFinite(Number(career?.interestAlignmentIndex)) ? Number(career.interestAlignmentIndex) : null,
   scoreLabel: career?.scoreLabel || 'Interest Alignment Index',
   explanation: career?.explanation || { whyExplore: null, whatToCheck: [] },
-  evidenceUsed: career?.evidenceUsed || {},
-  decisionProfile: career?.decisionProfile || null,
+  evidenceUsed: career?.evidenceUsed || {}, decisionProfile: career?.decisionProfile || null,
   limitations: cloneArray(career?.limitations),
 });
 const serializeScores = scores => ({
@@ -16,7 +15,8 @@ const serializeScores = scores => ({
   reasoning: cloneObject(scores?.reasoning), readinessPercent: scores?.readinessPercent ?? null,
   adaptabilityPercent: scores?.adaptabilityPercent ?? null, adaptability: cloneObject(scores?.adaptability),
   readiness: cloneObject(scores?.readiness), values: cloneObject(scores?.values), big5: cloneObject(scores?.big5),
-  environment: cloneObject(scores?.environment), skills: cloneObject(scores?.skills), learning: cloneObject(scores?.learning),
+  environment: cloneObject(scores?.environment), workEnvironment: cloneObject(scores?.workEnvironment),
+  skills: cloneObject(scores?.skills), learning: cloneObject(scores?.learning),
 });
 export function serializeInstitutionalCareerReport(report = {}) {
   const intake = report.intake || {};
@@ -29,6 +29,15 @@ export function serializeInstitutionalCareerReport(report = {}) {
     reportType: report.reportType || null, reportTier: report.reportTier || null,
     embeddedGuidanceLayer: report.embeddedGuidanceLayer || { included: false, assessed: false, domains: [] },
     careerMatching: report.careerMatching || null, completedAt: report.completedAt || null,
+    topCareerDirections: cloneArray(report.topCareerDirections), alternativeCareers: cloneArray(report.alternativeCareers),
+    pathwayAnalysis: cloneObject(report.pathwayAnalysis), pathways: cloneArray(report.pathways),
+    streamAnalysis: cloneObject(report.streamAnalysis), streamScenarios: cloneArray(report.streamScenarios),
+    educationRoadmap: cloneObject(report.educationRoadmap), education: cloneObject(report.education),
+    skillsEvidence: cloneObject(report.skillsEvidence), skillsPlan: cloneObject(report.skillsPlan),
+    affordability: cloneObject(report.affordability), friction: cloneObject(report.friction),
+    actionRoadmap: cloneObject(report.actionRoadmap), actionPlan: cloneObject(report.actionPlan),
+    counsellorReview: cloneObject(report.counsellorReview), reviewLimitations: cloneObject(report.reviewLimitations),
+    workEnvironment: cloneObject(report.workEnvironment),
     intake: {
       educationStage: intake.educationStage || null, board: intake.board || null, className: intake.className || null,
       stream: intake.stream || null, institutionName: intake.institutionName || null,
