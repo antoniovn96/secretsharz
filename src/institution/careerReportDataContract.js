@@ -6,7 +6,7 @@ import { buildDecisionSupportCoverage } from '../career/decisionSupportCoverage.
 // as careerExploration are handled separately and must not inflate the
 // canonical 20-section report coverage count.
 export const STUDENT_CAREER_ADMIN_CONTRACT = Object.freeze([
-  ['executive_snapshot','Executive Snapshot',['executiveSnapshot','executiveSummary','snapshot','reflection.statement','bundleTitle']],
+  ['executive_snapshot','Executive Snapshot',['executiveSnapshot','executiveSummary','snapshot','reflection.statement']],
   ['interest_personality','Interests & Personality Tendencies',['scores.riasecCode','scores.big5']],
   ['strengths_values','Strengths, Values & Preferences',['intake.likedSubjects','intake.hobbies','intake.curiosity','scores.values']],
   ['developmental_context','Developmental & Academic Context',['intake']],
@@ -29,7 +29,7 @@ export const STUDENT_CAREER_ADMIN_CONTRACT = Object.freeze([
 ]);
 
 const ASSESSMENT_GATED_SECTIONS = new Set([
-  'interest_personality','riasec_profile','personality_profile','career_values','reasoning_profile',
+  'riasec_profile','personality_profile','career_values','reasoning_profile',
   'decision_readiness','adaptability','work_environment'
 ]);
 
@@ -58,13 +58,22 @@ function assessmentSource(report, id) {
   return coverage.sections.find(section => section.id === id)?.assessed ? 'assessed' : null;
 }
 
+function combinedInterestPersonalitySource(report) {
+  const coverage = getAssessmentEvidenceCoverage(report);
+  const riasec = coverage.sections.find(section => section.id === 'riasec_profile')?.assessed;
+  const personality = coverage.sections.find(section => section.id === 'personality_profile')?.assessed;
+  return riasec || personality ? 'assessed' : null;
+}
+
 export function buildInstitutionCareerReflection(report) {
   const source = report || {};
   const decision = buildDecisionSupportCoverage(source);
   return STUDENT_CAREER_ADMIN_CONTRACT.map(([id,title,paths]) => {
     const value = readReportField(source, paths);
     const gated = ASSESSMENT_GATED_SECTIONS.has(id);
-    const assessedSource = assessmentSource(source, id);
+    const assessedSource = id === 'interest_personality'
+      ? combinedInterestPersonalitySource(source)
+      : assessmentSource(source, id);
     let evidenceSource = assessedSource;
 
     // Assessment-gated sections may contain stale/legacy serialized values even
