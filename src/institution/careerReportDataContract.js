@@ -54,6 +54,8 @@ export function buildInstitutionCareerReflection(report) {
       evidenceSource = 'career_catalogue';
     } else if (!evidenceSource && id === 'stream_analysis' && decision.stream_subject_scenarios.source === 'career_catalogue') {
       evidenceSource = 'career_catalogue';
+    } else if (!evidenceSource && id === 'affordability') {
+      evidenceSource = decision.affordability.source;
     } else if (!evidenceSource && value !== undefined) {
       // These are report outputs/context, not independently assessed test domains.
       evidenceSource = 'derived_from_assessment';
