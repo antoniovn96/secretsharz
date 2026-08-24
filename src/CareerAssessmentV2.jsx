@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { auth } from './firebase';
 import { AGE_BANDS, ASSESSMENT_VERSION, DOMAINS, PATHWAYS, PROFESSIONAL_INTENTS, STUDENT_STAGES, buildItemSet, calculateAge, ageBandFor, reportPlan } from './career/careerAssessmentBlueprint';
+import SubjectEnjoymentSlider from './career/SubjectEnjoymentSlider';
 
 const inputStyle = { width:'100%', padding:'13px 14px', border:'1px solid #dbe3ef', borderRadius:12, fontSize:14, outline:'none', background:'#fff' };
 const cardStyle = { background:'#fff', border:'1px solid #e2e8f0', borderRadius:20, padding:24, boxShadow:'0 8px 28px rgba(15,23,42,.05)' };
@@ -71,18 +72,31 @@ function FullReport({ report }) {
   </div>;
 }
 
+function SubjectAcademicRow({ subject, data, onChange }) {
+  const enjoyment = data?.enjoyment ?? 50;
+  return <div style={{ padding:'16px 0', borderTop:'1px solid #eef2f7' }}>
+    <div style={{ display:'grid', gridTemplateColumns:'minmax(180px,1fr) 150px', gap:14, alignItems:'end' }}>
+      <div><div style={{ fontSize:14, fontWeight:900, color:'#0f172a' }}>{subject}</div><div style={{ marginTop:4, fontSize:11, color:'#94a3b8' }}>Optional academic evidence</div></div>
+      <Field label="Recent mark / %" hint="optional"><input type="number" min="0" max="100" style={inputStyle} value={data?.mark ?? ''} onChange={e=>onChange({ ...(data||{}), mark:e.target.value===''?'':Number(e.target.value) })} placeholder="e.g. 78" /></Field>
+    </div>
+    <div style={{ marginTop:14 }}><SubjectEnjoymentSlider subject={subject} value={enjoyment} onChange={value=>onChange({ ...(data||{}), enjoyment:value })} /></div>
+  </div>;
+}
+
 function StudentContext({ intake, setIntake, age }) {
   const subjects = ['Mathematics','Physics','Chemistry','Biology','Computer Science / IT','Economics','Business Studies','Accountancy','English / Literature','History / Political Science','Geography','Psychology / Sociology','Languages','Fine Arts / Music / Drama','Physical Education'];
+  const subjectDetails = intake.subjectDetails || {};
+  const setSubjectDetails = (subject, data) => setIntake({...intake, subjectDetails:{...subjectDetails,[subject]:data}});
   return <>
     <div style={{ ...cardStyle, marginBottom:16 }}><SectionTitle eyebrow="Student context" title="Tell us about the person behind the marks" text="Academic results matter, but they are only one source of evidence. We also look at interests, subject experience, activities, preferences and aspirations."/><div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
       <Field label="Education stage"><select style={inputStyle} value={intake.educationStage} onChange={e=>setIntake({...intake,educationStage:e.target.value})}><option value="">Select</option>{STUDENT_STAGES.map(x=><option key={x.id} value={x.id}>{x.label}</option>)}</select></Field>
       <Field label="Board / curriculum"><input style={inputStyle} value={intake.board} onChange={e=>setIntake({...intake,board:e.target.value})} placeholder="CBSE, ISC, Karnataka PUC, State Board, IB…" /></Field>
-      <Field label="Current class / year"><input style={inputStyle} value={intake.className} onChange={e=>setIntake({...intake,className:e.target.value})} placeholder="Grade 10 / 2nd PUC / BCom Year 2" /></Field>
-      <Field label="Current stream / combination"><input style={inputStyle} value={intake.stream} onChange={e=>setIntake({...intake,stream:e.target.value})} placeholder="Commerce CEBA, PCM, Humanities…" /></Field>
+      <Field label="Current class / year"><input style={inputStyle} value={intake.className} onChange={e=>setIntake({...intake,className:e.target.value})} placeholder="Grade 7, Grade 10, Class 11…" /></Field>
+      <Field label="Current stream / combination"><input style={inputStyle} value={intake.stream} onChange={e=>setIntake({...intake,stream:e.target.value})} placeholder="PCM, PCB, Commerce, Humanities, ITI…" /></Field>
       <Field label="Average / recent academic percentage or CGPA"><input type="number" min="0" max="100" style={inputStyle} value={intake.academicAverage} onChange={e=>setIntake({...intake,academicAverage:e.target.value})} /></Field>
       <Field label="School / college"><input style={inputStyle} value={intake.institutionName} onChange={e=>setIntake({...intake,institutionName:e.target.value})} /></Field>
     </div></div>
-    <div style={cardStyle}><h3 style={{ margin:'0 0 10px' }}>Subjects you enjoy or feel strongest in</h3><div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>{subjects.map(s=><button key={s} type="button" onClick={()=>setIntake({...intake,likedSubjects:intake.likedSubjects.includes(s)?intake.likedSubjects.filter(x=>x!==s):[...intake.likedSubjects,s]})} style={{ padding:'9px 12px', borderRadius:999, border:'1px solid '+(intake.likedSubjects.includes(s)?'#4f46e5':'#dbe3ef'), background:intake.likedSubjects.includes(s)?'#eef2ff':'#fff', color:intake.likedSubjects.includes(s)?'#4338ca':'#475569', fontWeight:800, cursor:'pointer', fontSize:12 }}>{s}</button>)}</div><Field label="Subjects you dislike or find difficult" hint="optional" ><input style={inputStyle} value={intake.dislikedSubjects.join(', ')} onChange={e=>setIntake({...intake,dislikedSubjects:e.target.value.split(',').map(x=>x.trim()).filter(Boolean)})} placeholder="Separate with commas" /></Field><div style={{ marginTop:14, display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}><Field label="Hobbies / interests"><textarea style={{...inputStyle,minHeight:90}} value={intake.hobbies} onChange={e=>setIntake({...intake,hobbies:e.target.value})} placeholder="Sports, gaming, photography, volunteering, coding…" /></Field><Field label="What are you currently curious about?"><textarea style={{...inputStyle,minHeight:90}} value={intake.curiosity} onChange={e=>setIntake({...intake,curiosity:e.target.value})} /></Field></div><div style={{ marginTop:14 }}><Field label="What do you most want help with?"><textarea style={{...inputStyle,minHeight:80}} value={intake.goal} onChange={e=>setIntake({...intake,goal:e.target.value})} placeholder="Stream choice, college, career ideas, changing course, research, etc." /></Field></div></div>
+    <div style={cardStyle}><h3 style={{ margin:'0 0 6px' }}>Your subjects: performance + enjoyment</h3><p style={{ margin:'0 0 8px', color:'#64748b', fontSize:13, lineHeight:1.6 }}>Marks show current academic performance. The smile slider captures how the subject feels to you. Neither is a career verdict by itself.</p>{subjects.map(subject=><SubjectAcademicRow key={subject} subject={subject} data={subjectDetails[subject]} onChange={data=>setSubjectDetails(subject,data)} />)}<div style={{ marginTop:18 }}><h3 style={{ margin:'0 0 10px', fontSize:16 }}>Subjects you feel strongest in</h3><div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>{subjects.map(s=><button key={s} type="button" onClick={()=>setIntake({...intake,likedSubjects:intake.likedSubjects.includes(s)?intake.likedSubjects.filter(x=>x!==s):[...intake.likedSubjects,s]})} style={{ padding:'9px 12px', borderRadius:999, border:'1px solid '+(intake.likedSubjects.includes(s)?'#4f46e5':'#dbe3ef'), background:intake.likedSubjects.includes(s)?'#eef2ff':'#fff', color:intake.likedSubjects.includes(s)?'#4338ca':'#475569', fontWeight:800, cursor:'pointer', fontSize:12 }}>{s}</button>)}</div></div><Field label="Subjects you dislike or find difficult" hint="optional"><input style={inputStyle} value={intake.dislikedSubjects.join(', ')} onChange={e=>setIntake({...intake,dislikedSubjects:e.target.value.split(',').map(x=>x.trim()).filter(Boolean)})} placeholder="Separate with commas" /></Field><div style={{ marginTop:14, display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}><Field label="Hobbies / interests"><textarea style={{...inputStyle,minHeight:90}} value={intake.hobbies} onChange={e=>setIntake({...intake,hobbies:e.target.value})} placeholder="Sports, gaming, photography, volunteering, coding…" /></Field><Field label="What are you currently curious about?"><textarea style={{...inputStyle,minHeight:90}} value={intake.curiosity} onChange={e=>setIntake({...intake,curiosity:e.target.value})} /></Field></div><div style={{ marginTop:14 }}><Field label="What do you most want help with?"><textarea style={{...inputStyle,minHeight:80}} value={intake.goal} onChange={e=>setIntake({...intake,goal:e.target.value})} placeholder="Stream choice, college, career ideas, changing course, research, etc." /></Field></div></div>
   </>;
 }
 
@@ -119,7 +133,7 @@ export default function CareerAssessmentV2({ onComplete, onUnlock }) {
   const [report, setReport] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [intake, setIntake] = useState({ dob:'', age:'', ageBand:'', educationStage:'', board:'', className:'', stream:'', academicAverage:'', institutionName:'', likedSubjects:[], dislikedSubjects:[], hobbies:'', curiosity:'', goal:'', institutionId:'', licenseCode:'', currentRole:'', employer:'', experienceYears:'', qualification:'', dailyDuties:'', skills:'', professionalIntent:'', workMode:'', goodParts:'', badParts:'', targetDirection:'', targetRole:'', department:'', roleResponsibilities:'', roleTechnical:'', roleBehavioural:'' });
+  const [intake, setIntake] = useState({ dob:'', age:'', ageBand:'', educationStage:'', board:'', className:'', stream:'', academicAverage:'', institutionName:'', likedSubjects:[], dislikedSubjects:[], subjectDetails:{}, hobbies:'', curiosity:'', goal:'', institutionId:'', licenseCode:'', currentRole:'', employer:'', experienceYears:'', qualification:'', dailyDuties:'', skills:'', professionalIntent:'', workMode:'', goodParts:'', badParts:'', targetDirection:'', targetRole:'', department:'', roleResponsibilities:'', roleTechnical:'', roleBehavioural:'' });
 
   const items = useMemo(()=>buildItemSet({ pathway, age:Number(intake.age)||18, paid:true }),[pathway,intake.age]);
   const pageSize = 8;
@@ -139,7 +153,7 @@ export default function CareerAssessmentV2({ onComplete, onUnlock }) {
     setStep(1);
   };
 
-  const currentItems = items.slice((step-1)*pageSize, step*pageSize);
+  const currentItems = items.slice((step-2)*pageSize, (step-1)*pageSize);
   const answeredCount = items.filter(i=>answers[i.id]!==undefined).length;
   const progress = Math.round((answeredCount/items.length)*100);
 
