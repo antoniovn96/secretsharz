@@ -28,6 +28,11 @@ export const STUDENT_CAREER_ADMIN_CONTRACT = Object.freeze([
   ['counsellor_review','Counsellor Conversation & Limitations',['counsellorReview','reviewLimitations']]
 ]);
 
+const ASSESSMENT_GATED_SECTIONS = new Set([
+  'interest_personality','riasec_profile','personality_profile','career_values','reasoning_profile',
+  'decision_readiness','adaptability','work_environment'
+]);
+
 function readPath(source, path) { return path.split('.').reduce((value, key) => value == null ? undefined : value[key], source); }
 
 export function readReportField(report, paths=[]) {
@@ -48,7 +53,7 @@ export function buildInstitutionCareerReflection(report) {
   const decision = buildDecisionSupportCoverage(source);
   return STUDENT_CAREER_ADMIN_CONTRACT.map(([id,title,paths]) => {
     const value = readReportField(source, paths);
-    let evidenceSource = value === undefined ? 'unavailable' : assessmentSource(source, id);
+    let evidenceSource = value === undefined ? null : assessmentSource(source, id);
 
     if (!evidenceSource && id === 'education_roadmap' && decision.education_roadmap.source === 'career_catalogue') {
       evidenceSource = 'career_catalogue';
@@ -57,18 +62,17 @@ export function buildInstitutionCareerReflection(report) {
     } else if (!evidenceSource && id === 'affordability') {
       evidenceSource = decision.affordability.source;
     } else if (!evidenceSource && value !== undefined) {
-      // These are report outputs/context, not independently assessed test domains.
       evidenceSource = 'derived_from_assessment';
+    } else if (!evidenceSource && value === undefined && ASSESSMENT_GATED_SECTIONS.has(id)) {
+      evidenceSource = 'not_assessed';
+    } else if (!evidenceSource) {
+      evidenceSource = 'unavailable';
     }
 
     return { id, title, available: value !== undefined, source: evidenceSource, value };
   });
 }
 
-// Supporting Student V2 output. It is intentionally not part of the canonical
-// 20-section premium coverage count because the premium architecture names
-// Top Career Directions as the canonical section. The Admin may still render
-// this evidence when present, without relabelling it as a top-direction result.
 export const INSTITUTION_CAREER_EXPLORATION_FIELD = Object.freeze({
   id: 'career_directions_supporting_output',
   title: 'Career Directions to Explore',
