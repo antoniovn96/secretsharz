@@ -28,6 +28,9 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Institution career report contract tests
+        run: npm run test:institution
+
       - name: Server role-assignment authorization tests
         run: npm run test:server
 
