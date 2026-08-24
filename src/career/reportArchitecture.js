@@ -1,5 +1,5 @@
 export const FREE_REPORT_PAGE_COUNT = 5;
-export const PREMIUM_REPORT_PAGE_COUNT = 20;
+export const PREMIUM_REPORT_PAGE_COUNT = 18;
 
 export const STUDENT_FREE_REPORT = Object.freeze([
   { id: 'executive_snapshot', title: 'Career Snapshot', purpose: 'A concise picture of the student’s current interests, context and strongest exploration signals.' },
@@ -19,7 +19,6 @@ export const STUDENT_PREMIUM_REPORT = Object.freeze([
   { id: 'decision_readiness', title: 'Career Decision Readiness', purpose: 'Identify current exploration and decision-process strengths and development areas.' },
   { id: 'adaptability', title: 'Adaptability & Career Resilience', purpose: 'Describe change-readiness and developmental opportunities.' },
   { id: 'work_environment', title: 'Preferred Work Environment', purpose: 'Translate preferences into real-world work-condition considerations.' },
-  { id: 'career_directions', title: 'Career Directions to Explore', purpose: 'Present leading career clusters and alternatives with reasons to investigate them.' },
   { id: 'top_career_directions', title: 'Top Career Directions', purpose: 'Show strongest career clusters with match, confidence and evidence.' },
   { id: 'alternative_careers', title: 'Alternative & Unexpected Careers', purpose: 'Surface viable alternatives, including exploratory recommendations outside the original shortlist.' },
   { id: 'pathway_analysis', title: 'Non-Linear Pathway Analysis', purpose: 'Map direct, bridge and alternative routes from the student’s current position.' },
