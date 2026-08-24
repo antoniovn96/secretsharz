@@ -13,6 +13,26 @@ test('canonical institutional report shell uses evidence and coverage components
  assert.match(file,/Professional-use boundary/);
 });
 
+test('canonical institutional report shell renders all 20 premium report sections',()=>{
+ const file=read('src/institution/InstitutionCareerReportShell.jsx');
+ const sections=[
+  'Executive snapshot','Interests & personality tendencies','Strengths, values & preferences',
+  'Academic & developmental context','Career interest profile','Personality tendencies',
+  'Career values','Reasoning sampler','Career decision readiness','Adaptability & career resilience',
+  'Preferred work environment','Top career directions','Alternative & unexpected careers',
+  'Non-linear pathway analysis','Stream & subject scenarios','Education roadmap','Skills & evidence plan',
+  'Affordability, scholarships & friction','90-day career action roadmap','Counsellor conversation & limitations'
+ ];
+ for(const title of sections) assert.match(file,new RegExp(title.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')),`missing canonical section: ${title}`);
+});
+
+test('career directions supporting output is not counted as an extra premium section',()=>{
+ const file=read('src/institution/InstitutionCareerReportShell.jsx');
+ assert.match(file,/Career directions to explore/);
+ assert.match(file,/careerDirectionsSource/);
+ assert.match(file,/readInstitutionCareerExploration/);
+});
+
 test('institutional shell does not reinterpret context as unsupported recommendations',()=>{
  const file=read('src/institution/InstitutionCareerReportShell.jsx');
  assert.doesNotMatch(file,/Preferred work environment.*intake\.goal/);
