@@ -41,15 +41,9 @@ test('explicit family selection prevents stale score objects from inflating evid
   const report = serializeInstitutionalCareerReport({
     selectedFamilyIds: ['interest'],
     scores: {
-      riasecCode: 'RIA',
-      big5: { openness: 4 },
-      values: { autonomy: 5 },
-      reasoning: { percent: 90 },
-      readinessPercent: 95,
-      adaptabilityPercent: 95,
-      environment: { collaboration: true },
-      skills: { percent: 88 },
-      learning: { percent: 88 }
+      riasecCode: 'RIA', big5: { openness: 4 }, values: { autonomy: 5 }, reasoning: { percent: 90 },
+      readinessPercent: 95, adaptabilityPercent: 95, environment: { collaboration: true },
+      skills: { percent: 88 }, learning: { percent: 88 }
     },
     careerExploration: [{ id: 'c1', name: 'Engineer' }]
   });
@@ -77,7 +71,6 @@ test('full family selection is required for embedded guidance evidence', () => {
   assert.equal(byId.decision_readiness, false);
   assert.equal(byId.adaptability, false);
   assert.equal(byId.work_environment, false);
-
   report.selectedFamilyIds.push('learning');
   const fullCoverage = getAssessmentEvidenceCoverage(report);
   const fullById = Object.fromEntries(fullCoverage.sections.map(x => [x.id, x.assessed]));
@@ -88,7 +81,18 @@ test('full family selection is required for embedded guidance evidence', () => {
 
 test('admin contract requires explicit top-career evidence instead of reusing exploration', () => {
   const sections = buildInstitutionCareerReflection({ careerExploration: [{ name: 'Engineer' }] });
-  const byId = Object.fromEntries(sections.map(x => [x.id, x.available]));
-  assert.equal(byId.career_directions, true);
-  assert.equal(byId.top_career_directions, false);
+  const byId = Object.fromEntries(sections.map(x => [x.id, x]));
+  assert.equal(byId.career_directions, undefined);
+  assert.equal(byId.top_career_directions.available, false);
+});
+
+test('affordability provenance is only catalogue when explicitly declared', () => {
+  const catalogue = buildInstitutionCareerReflection({ affordability: { source: 'career_catalogue', scholarships: ['Merit'] } });
+  const catalogueRow = catalogue.find(x => x.id === 'affordability');
+  assert.equal(catalogueRow.available, true);
+  assert.equal(catalogueRow.source, 'career_catalogue');
+
+  const derived = buildInstitutionCareerReflection({ affordability: { scholarships: ['Merit'] } });
+  const derivedRow = derived.find(x => x.id === 'affordability');
+  assert.equal(derivedRow.source, 'derived_from_assessment');
 });
