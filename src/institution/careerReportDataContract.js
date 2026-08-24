@@ -1,3 +1,6 @@
+import { getAssessmentEvidenceCoverage } from '../career/assessmentCoverage.js';
+import { buildDecisionSupportCoverage } from '../career/decisionSupportCoverage.js';
+
 // Canonical Student Career Report -> Institution/Admin field contract.
 // Paths mirror the persisted Student Career Assessment V2 report. Missing
 // evidence remains missing; the Admin must never manufacture it.
@@ -26,6 +29,7 @@ export const STUDENT_CAREER_ADMIN_CONTRACT = Object.freeze([
 ]);
 
 function readPath(source, path) { return path.split('.').reduce((value, key) => value == null ? undefined : value[key], source); }
+
 export function readReportField(report, paths=[]) {
   for (const path of paths) {
     const value = readPath(report, path);
@@ -33,10 +37,30 @@ export function readReportField(report, paths=[]) {
   }
   return undefined;
 }
+
+function assessmentSource(report, id) {
+  const coverage = getAssessmentEvidenceCoverage(report);
+  return coverage.sections.find(section => section.id === id)?.assessed ? 'assessed' : null;
+}
+
 export function buildInstitutionCareerReflection(report) {
   const source = report || {};
+  const decision = buildDecisionSupportCoverage(source);
   return STUDENT_CAREER_ADMIN_CONTRACT.map(([id,title,paths]) => {
     const value = readReportField(source, paths);
-    return { id, title, available: value !== undefined, value };
+    let evidenceSource = value === undefined ? 'unavailable' : assessmentSource(source, id);
+
+    if (!evidenceSource && id === 'career_directions' && decision.career_directions.source === 'derived_from_assessment') {
+      evidenceSource = 'derived_from_assessment';
+    } else if (!evidenceSource && id === 'education_roadmap' && decision.education_roadmap.source === 'career_catalogue') {
+      evidenceSource = 'career_catalogue';
+    } else if (!evidenceSource && id === 'stream_analysis' && decision.stream_subject_scenarios.source === 'career_catalogue') {
+      evidenceSource = 'career_catalogue';
+    } else if (!evidenceSource && value !== undefined) {
+      // These are report outputs, not independently assessed test domains.
+      evidenceSource = 'derived_from_assessment';
+    }
+
+    return { id, title, available: value !== undefined, source: evidenceSource, value };
   });
 }
