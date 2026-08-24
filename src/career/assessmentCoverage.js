@@ -5,11 +5,14 @@ export const ASSESSMENT_EVIDENCE_FAMILIES = Object.freeze([
   ['developmental_context', 'Academic / developmental context', r => Boolean(r?.intake)],
   ['riasec_profile', 'RIASEC', r => Boolean(r?.scores?.riasec || r?.scores?.riasecCode)],
   ['reasoning_profile', 'Reasoning', r => Boolean(r?.scores?.reasoning)],
-  ['decision_readiness', 'Decision readiness', r => r?.scores?.readinessPercent != null || r?.scores?.readiness != null],
-  ['adaptability', 'Adaptability', r => r?.scores?.adaptabilityPercent != null || r?.scores?.adaptability != null],
+  ['decision_readiness', 'Decision readiness', r => r?.scores?.readinessPercent != null],
+  ['adaptability', 'Adaptability & resilience', r => r?.scores?.adaptabilityPercent != null],
+  ['work_environment', 'Work-environment preferences', r => Boolean(r?.scores?.environment && Object.keys(r.scores.environment).length > 0)],
   ['career_directions', 'Career exploration', r => Array.isArray(r?.careerExploration) && r.careerExploration.length > 0],
-  ['career_values', 'Career values', r => Boolean(r?.scores?.values)],
-  ['personality_profile', 'Big Five personality', r => Boolean(r?.scores?.big5)],
+  ['career_values', 'Career values', r => Boolean(r?.scores?.values && Object.keys(r.scores.values).length > 0)],
+  ['personality_profile', 'Big Five personality', r => Boolean(r?.scores?.big5 && Object.keys(r.scores.big5).length > 0)],
+  ['skills_profile', 'Skills', r => Boolean(r?.scores?.skills && r.scores.skills.percent != null)],
+  ['learning_preferences', 'Learning preferences', r => Boolean(r?.scores?.learning && r.scores.learning.percent != null)],
   ['action_roadmap', 'Career reflection / next action', r => Boolean(r?.reflection)]
 ]);
 
