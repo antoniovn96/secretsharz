@@ -13,7 +13,7 @@ export const STUDENT_CAREER_ADMIN_CONTRACT = Object.freeze([
   ['reasoning_profile','Reasoning Sampler',['scores.reasoning']],
   ['decision_readiness','Career Decision Readiness',['scores.readinessPercent','scores.readiness']],
   ['adaptability','Adaptability & Career Resilience',['scores.adaptabilityPercent','scores.adaptability']],
-  ['work_environment','Preferred Work Environment',['report.workEnvironment','scores.workEnvironment']],
+  ['work_environment','Preferred Work Environment',['workEnvironment','scores.workEnvironment']],
   ['career_directions','Career Directions to Explore',['careerExploration']],
   ['top_career_directions','Top Career Directions',['topCareerDirections']],
   ['alternative_careers','Alternative & Unexpected Careers',['alternativeCareers']],
