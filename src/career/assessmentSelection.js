@@ -1,15 +1,5 @@
-import {
-  RIASEC_ITEMS,
-  BIG5_ITEMS,
-  VALUE_ITEMS,
-  REASONING_ITEMS,
-  READINESS_ITEMS,
-  ENVIRONMENT_ITEMS,
-  ADAPTABILITY_ITEMS,
-  calculateAge,
-  ageBandFor,
-  PATHWAYS,
-} from './careerAssessmentBlueprint.js';
+import { BIG5_ITEMS, VALUE_ITEMS, REASONING_ITEMS, READINESS_ITEMS, ENVIRONMENT_ITEMS, ADAPTABILITY_ITEMS, calculateAge, ageBandFor, PATHWAYS } from './careerAssessmentBlueprint.js';
+import { RIASEC_ITEMS } from './riasecInterestBank.js';
 import { getBundleByFamilies as getCanonicalBundleByFamilies, getTestBundle, TEST_BUNDLES } from './testBundleCatalogue.js';
 
 export const CONTEXT_FIELDS = Object.freeze([
