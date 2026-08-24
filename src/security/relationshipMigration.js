@@ -10,9 +10,11 @@ function relationshipIdFor({ subjectPersonId, relatedPersonId, type, domain }) {
 
 function candidate({ studentId, relatedPersonId, type, domain, source }) {
   if (!relatedPersonId) return null;
-  const document = buildRelationshipDocument({ subjectPersonId: studentId, relatedPersonId, type, domain, status: 'active', consentRequired: type === 'guardian' || type === 'parent' });
+  const consentRequired = type === 'guardian' || type === 'parent';
+  const status = consentRequired ? 'pending' : 'active';
+  const document = buildRelationshipDocument({ subjectPersonId: studentId, relatedPersonId, type, domain, status, consentRequired });
   const relationshipId = relationshipIdFor({ subjectPersonId: studentId, relatedPersonId, type, domain });
-  return { relationshipId, ...document, migration: { source, version: 1 } };
+  return { relationshipId, ...document, migration: { source, version: 2 } };
 }
 
 export function buildLegacyRelationshipCandidates(studentId, rawStudentRecord = {}) {
@@ -40,7 +42,7 @@ export function reconcileRelationshipReport({ candidates = [], existing = [], un
     const current = existingMap.get(candidateRecord.relationshipId);
     if (!current) { missing.push(candidateRecord); continue; }
     const sameCore = current.subjectPersonId === candidateRecord.subjectPersonId && current.relatedPersonId === candidateRecord.relatedPersonId && current.type === candidateRecord.type && (current.domain || null) === (candidateRecord.domain || null);
-    if (sameCore && current.status === candidateRecord.status) matching.push(candidateRecord);
+    if (sameCore && current.status === candidateRecord.status && Boolean(current.consentRequired) === Boolean(candidateRecord.consentRequired)) matching.push(candidateRecord);
     else conflicts.push({ candidate: candidateRecord, existing: current });
   }
   const stale = existing.filter(item => !candidateMap.has(item.relationshipId || item.id));

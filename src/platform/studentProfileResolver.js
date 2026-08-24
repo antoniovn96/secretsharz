@@ -9,7 +9,7 @@ const ROLE_ALIASES = {
 
 const DOMAIN_BY_ROLE = {
   student: ['identity', 'contact', 'family', 'institution', 'academic', 'services', 'career', 'wellbeing', 'sen', 'assessments', 'goals', 'relationships', 'onboarding', 'governance'],
-  parent: ['identity', 'academic', 'institution', 'services', 'career', 'wellbeing', 'sen', 'goals'],
+  parent: ['identity', 'academic', 'institution', 'services', 'goals'],
   career_counsellor: ['identity', 'contact', 'institution', 'academic', 'services', 'career', 'assessments', 'goals', 'relationships'],
   psychologist: ['identity', 'contact', 'institution', 'academic', 'services', 'wellbeing', 'assessments', 'goals', 'relationships'],
   sen_educator: ['identity', 'contact', 'institution', 'academic', 'family', 'services', 'sen', 'assessments', 'goals', 'relationships'],

@@ -1,6 +1,7 @@
 // Secret Sharz — server-side consent resolver (SERVER-ONLY).
 // Consent is an authorization input, not a UI-only checkbox.
 import { CONSENT_TYPES } from './consentPolicy.js';
+import { getSubjectConsentState } from './consentService.js';
 
 export async function resolveServiceConsent({ db, userId, serviceType = CONSENT_TYPES.COUNSELLING }) {
   if (!db || !userId) return { allowed: false, source: 'none', consent: null };
@@ -11,12 +12,21 @@ export async function resolveServiceConsent({ db, userId, serviceType = CONSENT_
   return { allowed, source: 'canonical', consent: latest };
 }
 
+export async function resolveSubjectServiceConsent({ db, userId, subjectId, serviceType = CONSENT_TYPES.COUNSELLING, relationshipId = null }) {
+  const result = await getSubjectConsentState({ db, userId, subjectId, type: serviceType, relationshipId });
+  return { allowed: result.state === 'active', source: result.event ? 'canonical_subject' : 'none', consent: result.event };
+}
+
 export async function requireServiceConsent(args) {
   const result = await resolveServiceConsent(args);
   if (!result.allowed) { const error = new Error('Required service consent is not active.'); error.code = 'CONSENT_REQUIRED'; throw error; }
   return result;
 }
 
-// Compatibility export for API consumers that import the counselling consent type
-// from the resolver rather than the underlying policy module.
+export async function requireSubjectServiceConsent(args) {
+  const result = await resolveSubjectServiceConsent(args);
+  if (!result.allowed) { const error = new Error('Required subject-scoped service consent is not active.'); error.code = 'CONSENT_REQUIRED'; throw error; }
+  return result;
+}
+
 export { CONSENT_TYPES };
