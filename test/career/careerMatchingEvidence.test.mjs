@@ -20,6 +20,28 @@ test('career matcher ranks using RIASEC evidence only', () => {
   assert.equal(result.excludedFromRanking.includes('academicAverage'), true);
   assert.ok(Number.isInteger(result.interestAlignmentIndex));
   assert.equal(result.interestAlignmentIndex, result.explorationIndex);
+  assert.equal(result.rankingStatus, 'available');
+});
+
+test('career matcher refuses to calculate an alignment score without RIASEC evidence', () => {
+  const result = matchCareerToSelectedProfile(
+    { id:'software', title:'Software Engineer', riasec:['I','R'], stream:['Science'], skills:['Coding'] },
+    { riasec:null, big5:{O:30,C:30,E:30,A:30,N:30}, values:{autonomy:5}, reasoning:{percent:100} }
+  );
+  assert.equal(result.interestAlignmentIndex, null);
+  assert.equal(result.explorationIndex, null);
+  assert.equal(result.similarity, null);
+  assert.equal(result.rankingStatus, 'insufficient_evidence');
+  assert.match(result.rankingLimitation, /RIASEC/i);
+});
+
+test('zeroed RIASEC containers cannot manufacture an alignment score', () => {
+  const result = matchCareerToSelectedProfile(
+    { id:'software', title:'Software Engineer', riasec:['I','R'] },
+    { riasec:{R:0,I:0,A:0,S:0,E:0,C:0} }
+  );
+  assert.equal(result.interestAlignmentIndex, null);
+  assert.equal(result.rankingStatus, 'insufficient_evidence');
 });
 
 test('career explanation identifies actual overlapping interest themes', () => {
