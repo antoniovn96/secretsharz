@@ -5,7 +5,7 @@ import { buildDecisionSupportCoverage } from '../career/decisionSupportCoverage.
 // Paths mirror the persisted Student Career Assessment V2 report. Missing
 // evidence remains missing; the Admin must never manufacture it.
 export const STUDENT_CAREER_ADMIN_CONTRACT = Object.freeze([
-  ['executive_snapshot','Executive Snapshot',['bundleTitle','reflection.statement']],
+  ['executive_snapshot','Executive Snapshot',['executiveSnapshot','executiveSummary','snapshot','reflection.statement','bundleTitle']],
   ['interest_personality','Interests & Personality Tendencies',['scores.riasecCode','scores.big5']],
   ['strengths_values','Strengths, Values & Preferences',['intake.likedSubjects','intake.hobbies','intake.curiosity','scores.values']],
   ['developmental_context','Developmental & Academic Context',['intake']],
@@ -57,7 +57,7 @@ export function buildInstitutionCareerReflection(report) {
     } else if (!evidenceSource && id === 'stream_analysis' && decision.stream_subject_scenarios.source === 'career_catalogue') {
       evidenceSource = 'career_catalogue';
     } else if (!evidenceSource && value !== undefined) {
-      // These are report outputs, not independently assessed test domains.
+      // These are report outputs/context, not independently assessed test domains.
       evidenceSource = 'derived_from_assessment';
     }
 
