@@ -21,11 +21,18 @@ test('institution serializer preserves every canonical report output field', () 
   ]) assert.match(serializer, new RegExp(`\\b${field}\\b`), `serializer must preserve ${field}`);
 });
 
+test('institution serializer preserves student-visible career and intake evidence', () => {
+  for (const field of [
+    'explorationIndex','matchScore','interestAlignmentIndex','stream','desc','rationale',
+    'age','ageBand','likedSubjects','dislikedSubjects','subjectsLiked','subjectsDisliked'
+  ]) assert.match(serializer, new RegExp(`\\b${field}\\b`), `serializer must preserve ${field}`);
+});
+
 test('canonical contract and renderer cover every premium report section', () => {
   const ids = [
     'executive_snapshot','interest_personality','strengths_values','developmental_context',
     'riasec_profile','personality_profile','career_values','reasoning_profile','decision_readiness',
-    'adaptability','work_environment','career_directions','top_career_directions','alternative_careers',
+    'adaptability','work_environment','top_career_directions','alternative_careers',
     'pathway_analysis','stream_analysis','education_roadmap','skills_evidence','affordability',
     'action_roadmap','counsellor_review'
   ];
