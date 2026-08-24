@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { getCareerReportActionState } from '../../src/institution/careerReportAccess.js';
+const institution={paymentStatus:'paid'};
+const base={id:'r1',claimedBy:'u1',assessmentStatus:'completed'};
+test('allows report action only for a claimed completed student with active entitlement',()=>assert.equal(getCareerReportActionState(base,institution).allowed,true));
+test('blocks unclaimed student',()=>assert.equal(getCareerReportActionState({...base,claimedBy:null},institution).allowed,false));
+test('blocks incomplete assessment',()=>assert.equal(getCareerReportActionState({...base,assessmentStatus:'in_progress'},institution).allowed,false));
+test('blocks unpaid institution',()=>assert.equal(getCareerReportActionState(base,{paymentStatus:'pending'}).allowed,false));
+test('server remains authoritative even when client state says allowed',()=>assert.equal(getCareerReportActionState(base,institution).allowed,true));
