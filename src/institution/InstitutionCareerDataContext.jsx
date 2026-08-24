@@ -18,10 +18,13 @@ export function InstitutionCareerDataProvider({children}){
     try{
       const user=auth.currentUser;
       if(!user)throw new Error('Authentication required.');
-      const token=await user.getIdToken();
-      const key=String(institutionId||'');
-      const url=key?`/api/institution/dashboard?institutionId=${encodeURIComponent(key)}`:'/api/institution/dashboard';
-      const response=await fetch(url,{headers:{Authorization:`Bearer ${token}`}});
+      const tokenResult=await user.getIdTokenResult(true);
+      const token=tokenResult.token;
+      const claimInstitutionId=typeof tokenResult.claims?.institutionId==='string'?tokenResult.claims.institutionId.trim():'';
+      const key=String(institutionId||claimInstitutionId||'').trim();
+      if(!key)throw new Error('Institution ID is required.');
+      const url=`/api/institution/dashboard?institutionId=${encodeURIComponent(key)}`;
+      const response=await fetch(url,{headers:{Authorization:`Bearer ${token}`},cache:'no-store'});
       const next=await response.json();
       if(!response.ok)throw new Error(next?.error||'Unable to load institution dashboard.');
       if(requestId===requestRef.current)setData({institution:next.institution||null,students:Array.isArray(next.students)?next.students:[],summary:next.summary||{},analytics:next.analytics||null});
