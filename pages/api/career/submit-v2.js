@@ -3,6 +3,7 @@ import { CAREER_DATA } from '../../../src/data/careers.js';
 import { ASSESSMENT_VERSION } from '../../../src/career/careerAssessmentBlueprint.js';
 import { resolveBundle } from '../../../src/career/assessmentSelection.js';
 import { matchCareerToSelectedProfile, scoreSelectedAssessment } from '../../../src/career/scoreSelectedAssessment.js';
+import { PREMIUM_REPORT_PAGE_COUNT, FREE_REPORT_PAGE_COUNT } from '../../../src/career/reportArchitecture.js';
 
 function bearerToken(req){const h=req.headers.authorization||req.headers.Authorization;if(typeof h!=='string')return null;const m=h.match(/^Bearer\s+(.+)$/i);return m?m[1]:null;}
 function safeObject(v){return v&&typeof v==='object'&&!Array.isArray(v)?v:{};}
@@ -50,7 +51,7 @@ export default async function handler(req,res){
    selectedTestCount:bundle.familyCount,
    deliveryMode:bundle.deliveryMode,
    estimatedMinutes:bundle.durationMinutes,
-   reportPages:premiumAccess?20:5,
+   reportPages:premiumAccess?PREMIUM_REPORT_PAGE_COUNT:FREE_REPORT_PAGE_COUNT,
    reportType:premiumAccess?'full_career_intelligence':'career_snapshot',
    reportTier,
    completedAt:new Date().toISOString(),
