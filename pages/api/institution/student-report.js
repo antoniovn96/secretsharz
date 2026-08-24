@@ -8,6 +8,7 @@ function bearerToken(req) { const h=req.headers.authorization||req.headers.Autho
 
 export default async function handler(req,res){
  if(req.method!=='GET')return res.status(405).json({error:'Method not allowed.'});
+ res.setHeader('Cache-Control','private, no-store, max-age=0');
  const token=bearerToken(req);if(!token)return res.status(401).json({error:'Authentication required.'});
  let decoded;try{decoded=await getAdminAuth().verifyIdToken(token);}catch(_){return res.status(401).json({error:'Invalid or expired authentication token.'});}
  const db=getAdminFirestore(),isFounder=decoded.email_verified===true&&decoded.email?.toLowerCase()===FOUNDER_EMAIL,institutionId=String(req.query?.institutionId||decoded.institutionId||'').trim(),rosterId=String(req.query?.rosterId||'').trim();
