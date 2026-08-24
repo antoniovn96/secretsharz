@@ -5,13 +5,30 @@ import { resolveBundle, getItemsForBundle } from '../../../src/career/assessment
 import { matchCareerToSelectedProfile, scoreSelectedAssessment } from '../../../src/career/scoreSelectedAssessment.js';
 import { PREMIUM_REPORT_PAGE_COUNT, FREE_REPORT_PAGE_COUNT } from '../../../src/career/reportArchitecture.js';
 
-function bearerToken(req){const h=req.headers.authorization||req.headers.Authorization;if(typeof h!=='string')return null;const m=h.match(/^Bearer\s+(.+)$/i);return m?m[1]:null;}
+function bearerToken(req){const h=req.headers.authorization||req.headers.Authorization;if(typeof h!=='string')return null;const m=h.match(/^Bearer\\s+(.+)$/i);return m?m[1]:null;}
 function safeObject(v){return v&&typeof v==='object'&&!Array.isArray(v)?v:{};}
 function safeString(v,max=300){return String(v||'').trim().slice(0,max);}
 
 function buildCareerMatches(scored,intake){
- const academicAverage=Number(intake?.academicAverage||0);
- return CAREER_DATA.map(c=>{const m=matchCareerToSelectedProfile(c,scored,{academicAverage});return{id:c.id,name:c.title,category:c.category,stream:Array.isArray(c.stream)?c.stream.join(' / '):'',riasec:c.riasec||[],explorationIndex:m.explorationIndex,rationale:'This pathway shares some characteristics with the available profile evidence. Explore the pathway details before making a decision.'};}).sort((a,b)=>b.explorationIndex-a.explorationIndex).slice(0,12);
+ return CAREER_DATA.map(c=>{
+   const m=matchCareerToSelectedProfile(c,scored);
+   return {
+     id:c.id,name:c.title,category:c.category,
+     stream:Array.isArray(c.stream)?c.stream.join(' / '):'',
+     riasec:c.riasec||[],
+     explorationIndex:m.explorationIndex,
+     interestAlignmentIndex:m.interestAlignmentIndex,
+     scoreLabel:m.scoreLabel,
+     rationale:m.explanation.rationale,
+     evidenceUsed:{
+       riasec:m.explanation.studentTopInterests,
+       careerInterestProfile:m.explanation.careerInterestProfile,
+       overlappingInterests:m.explanation.overlappingInterests,
+     },
+     evidenceLimitations:m.evidenceProfile.evidenceLimitations,
+     excludedFromRanking:m.excludedFromRanking,
+   };
+ }).sort((a,b)=>b.interestAlignmentIndex-a.interestAlignmentIndex).slice(0,12);
 }
 
 export default async function handler(req,res){
@@ -42,38 +59,25 @@ export default async function handler(req,res){
  const guidanceIncluded=bundle.familyCount===5;
  const guidanceAssessed=guidanceIncluded&&(scored.readinessPercent!=null||scored.adaptabilityPercent!=null||(scored.environment&&Object.keys(scored.environment).length>0));
  const report={
-   version:ASSESSMENT_VERSION,
-   pathway,
-   bundleId:bundle.id,
-   bundleSku:bundle.sku,
-   bundleTitle:bundle.title,
-   selectedFamilyIds:bundle.familyIds,
-   selectedTestCount:bundle.familyCount,
-   deliveryMode:bundle.deliveryMode,
-   estimatedMinutes:bundle.durationMinutes,
-   questionCount:items.length,
+   version:ASSESSMENT_VERSION,pathway,bundleId:bundle.id,bundleSku:bundle.sku,bundleTitle:bundle.title,
+   selectedFamilyIds:bundle.familyIds,selectedTestCount:bundle.familyCount,deliveryMode:bundle.deliveryMode,
+   estimatedMinutes:bundle.durationMinutes,questionCount:items.length,
    reportPages:premiumAccess?PREMIUM_REPORT_PAGE_COUNT:FREE_REPORT_PAGE_COUNT,
-   reportType:premiumAccess?'full_career_intelligence':'career_snapshot',
-   reportTier,
+   reportType:premiumAccess?'full_career_intelligence':'career_snapshot',reportTier,
    embeddedGuidanceLayer:guidanceIncluded?{included:true,assessed:guidanceAssessed,domains:['career_decision_readiness','work_environment','adaptability_resilience']}:{included:false,assessed:false,domains:[]},
+   careerMatching:{method:'riasec_interest_alignment_v1',scoreLabel:'Interest Alignment Index',limitations:['Career-side validated norms for Big Five, values, reasoning, skills, learning, academic performance, readiness, environment and adaptability are not currently available; those domains are therefore excluded from ranking.']},
    completedAt:new Date().toISOString(),
    intake:{dob:safeString(intake.dob,30),age:Number.isFinite(Number(intake.age))?Number(intake.age):null,ageBand:safeString(intake.ageBand,30),educationStage:safeString(intake.educationStage,80),board:safeString(intake.board,100),className:safeString(intake.className,100),stream:safeString(intake.stream,100),institutionName:safeString(intake.institutionName||userData.institutionName,160),likedSubjects:Array.isArray(intake.likedSubjects)?intake.likedSubjects.slice(0,30):[],dislikedSubjects:Array.isArray(intake.dislikedSubjects)?intake.dislikedSubjects.slice(0,30):[],hobbies:safeString(intake.hobbies,500),curiosity:safeString(intake.curiosity,500),goal:safeString(intake.goal,500),currentRole:safeString(intake.currentRole,160),professionalIntent:safeString(intake.professionalIntent,80),academicAverage:Number(intake.academicAverage||0)},
-   scores:scored,
-   careerExploration:matches,
+   scores:scored,careerExploration:matches,
    reflection:{statement:'Results are a structured starting point for exploration, not a verdict about the person.',recommendedNextStep:pathway==='working_professional'?'Review the available stay/grow, lateral pivot and industry pivot pathways with a career professional.':'Explore at least three pathways and compare their education, work, skills and lived experience before deciding.'}
  };
  try{
    await db.collection('users').doc(decoded.uid).set({
      careerAssessmentV2:report,
-     careerAssessment:{version:ASSESSMENT_VERSION,completedAt:report.completedAt,bundleId:bundle.id,bundleSku:bundle.sku,selectedFamilyIds:bundle.familyIds,hollandCode:scored.riasecCode?scored.riasecCode.split('').slice(0,3):[],riasecScores:scored.riasec||null,top5Careers:matches.slice(0,5).map(c=>({name:c.name,stream:c.stream,matchScore:c.explorationIndex,tags:c.riasec}))},
-     assessmentCompletedAt:report.completedAt,
-     riasecCode:scored.riasecCode||null,
-     riasecScores:scored.riasec||null,
-     careerAssessmentFamilies:bundle.familyIds,
-     careerAssessmentBundleId:bundle.id,
-     careerAssessmentReportTier:reportTier,
-     careerAssessmentReportPages:report.reportPages,
-     careerAssessmentQuestionCount:report.questionCount,
+     careerAssessment:{version:ASSESSMENT_VERSION,completedAt:report.completedAt,bundleId:bundle.id,bundleSku:bundle.sku,selectedFamilyIds:bundle.familyIds,hollandCode:scored.riasecCode?scored.riasecCode.split('').slice(0,3):[],riasecScores:scored.riasec||null,top5Careers:matches.slice(0,5).map(c=>({name:c.name,stream:c.stream,matchScore:c.interestAlignmentIndex,scoreLabel:c.scoreLabel,tags:c.riasec}))},
+     assessmentCompletedAt:report.completedAt,riasecCode:scored.riasecCode||null,riasecScores:scored.riasec||null,
+     careerAssessmentFamilies:bundle.familyIds,careerAssessmentBundleId:bundle.id,careerAssessmentReportTier:reportTier,
+     careerAssessmentReportPages:report.reportPages,careerAssessmentQuestionCount:report.questionCount,
      careerAssessmentEmbeddedGuidance:report.embeddedGuidanceLayer
    },{merge:true});
    if(institutionEntitled&&institutionCodeRecord?.institutionId&&institutionCodeRecord?.rosterId){await db.collection('institutions').doc(institutionCodeRecord.institutionId).collection('roster').doc(institutionCodeRecord.rosterId).set({assessmentStatus:'completed',reportStatus:'ready',bundleId:bundle.id,bundleSku:bundle.sku,selectedFamilyIds:bundle.familyIds,reportPages:report.reportPages,questionCount:report.questionCount,reportTier,embeddedGuidanceLayer:report.embeddedGuidanceLayer,updatedAt:report.completedAt,claimedBy:decoded.uid,claimedAt:institutionCodeRecord.redeemedAt||null},{merge:true});}
