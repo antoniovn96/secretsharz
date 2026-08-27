@@ -55,6 +55,35 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Service selection is intentionally narrow: students may create only their own
+    // primary onboarding membership after account consent. Changes are server/admin managed.
+    match /serviceMemberships/{membershipId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.personId == request.auth.uid);
+      allow create: if isSignedIn()
+        && hasAccountConsent(request.auth.uid)
+        && request.resource.data.personId == request.auth.uid
+        && request.resource.data.domain in ['counselling','sen','career']
+        && request.resource.data.status == 'active'
+        && request.resource.data.source == 'student'
+        && request.resource.data.isPrimary == true
+        && request.resource.data.institutionId == null
+        && request.resource.data.keys().hasOnly(['personId','institutionId','domain','status','source','isPrimary','startedAt','endedAt']);
+      allow update, delete: if isAdmin();
+    }
+
+    // Guardian relationships are protected. A client may not self-verify or activate one.
+    match /relationships/{relationshipId} {
+      allow read: if isAdmin()
+        || (isSignedIn() && (resource.data.subjectPersonId == request.auth.uid || resource.data.guardianPersonId == request.auth.uid));
+      allow create: if isSignedIn()
+        && request.resource.data.subjectPersonId == request.auth.uid
+        && request.resource.data.type in ['guardian','parent']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.verified == false
+        && request.resource.data.verifiedAt == null;
+      allow update, delete: if isAdmin();
+    }
+
     match /students/{studentId} {
       allow read: if isSignedIn() && (
         request.auth.uid == studentId ||
