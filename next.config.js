@@ -2,15 +2,21 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  output: 'standalone',
+  poweredByHeader: false,
 
   async rewrites() {
-    return [
-      {
-        source: '/:path*',
-        destination: '/',
-      },
-    ];
+    return {
+      // Keep the legacy client-side route fallback, but allow real
+      // filesystem/API routes such as /healthz to resolve first.
+      fallback: [
+        {
+          source: '/:path*',
+          destination: '/',
+        },
+      ],
+    };
   },
-}
+};
 
 module.exports = nextConfig;
