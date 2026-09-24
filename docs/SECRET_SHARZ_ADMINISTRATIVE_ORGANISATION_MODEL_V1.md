@@ -615,3 +615,156 @@ For highly sensitive committees such as POSH and safeguarding-related committees
 - committee members receive only the data required for their statutory/assigned function
 - audit logs must be immutable/append-only at the platform layer
 - no SuperAdmin title alone should silently expose confidential case content
+
+
+## 18. Founder-confirmed operational decisions — 24 September 2026
+
+### Legal-entity status
+- Secret Sharz is currently unregistered.
+- Registration is planned.
+- The platform must therefore distinguish current organisational configuration from future legal-entity applicability.
+- Legal/statutory rules must not be hard-coded as if the current unregistered state were permanent.
+
+### Current workforce size
+- Current expected Secret Sharz workforce is under 10 people.
+- Statutory committee applicability must still be calculated from the actual legal entity, workplace, worker/employee count, jurisdiction and applicable law at the time of activation.
+
+### Committee creation gate
+Before HR can select members for a committee, the platform must first present the applicable law/regulatory basis and require the responsible administrator to review a checklist.
+
+Working flow:
+1. Identify legal entity / workplace.
+2. Determine jurisdiction and applicable regulation.
+3. Determine whether the committee is applicable.
+4. Display the governing law, regulation, circular, bye-law or official guidance.
+5. Present a required applicability/composition checklist.
+6. Record review/acknowledgement.
+7. Only then allow member selection.
+8. Validate proposed members against the applicable composition requirements.
+9. Obtain required Executive Leadership / SuperAdmin approvals.
+10. Activate the committee and begin its evidence/meeting lifecycle.
+
+The law-review checklist is a governance control, not a claim that the software itself provides legal advice.
+
+### Leadership permissions over committees
+Committee administration must support controlled permissions for:
+- HR
+- Department Head / relevant operational owner
+- Executive Leadership
+- SuperAdmin
+
+The platform must distinguish:
+- who can create a draft committee;
+- who can review the legal basis;
+- who can propose members;
+- who can approve the constitution;
+- who can activate the committee;
+- who can view confidential committee cases;
+- who can reconstitute/suspend the committee.
+
+The exact duty-separation matrix remains a Founder decision.
+
+### SuperAdmin final authority
+- SuperAdmin is the final administrative authority in the system.
+- A SuperAdmin may grant another person SuperAdmin dashboard access through a governed action.
+- Granting access to another SuperAdmin does not create a second authentication identity for the original SuperAdmin; each person retains their own canonical Person/Account identity.
+- The system must record which SuperAdmin granted access, to whom, when, for what scope and under what governance context.
+- SuperAdmin access remains subject to explicit audit and sensitive-domain authorisation; the SuperAdmin title alone is not a blanket bypass of specialist data protections.
+
+### Case management requirement
+Secret Sharz will use a common case-management foundation across relevant dashboards.
+
+Every case record should have a system-generated case number and, at minimum:
+- case number
+- date of submission
+- exact submission time
+- submitting person/account or authorised anonymous/intake identity
+- intake channel
+- case type/category
+- source department
+- current owner
+- current department/team
+- sensitivity level
+- affected service/domain
+- applicable policy/law/framework
+- current status
+- priority/severity where configured
+- escalation state
+- assigned investigator/handler where applicable
+- notes and evidence references
+- action history
+- decision/outcome
+- closure date/time
+- closure reason
+- audit trail
+
+The case number must be immutable after creation.
+
+Submission time and all material status/assignment/escalation changes should be recorded server-side, not accepted from the browser as authoritative values.
+
+### Case visibility across dashboards
+A common case engine must appear as a consistent capability across the organisational dashboards, but each dashboard receives only the case fields and records authorised for that role, department, purpose and sensitivity.
+
+For example:
+- HR sees HR-authorised workforce cases.
+- Counselling sees authorised counselling cases.
+- Career sees authorised career cases.
+- SEN sees authorised SEN cases.
+- Community/Trust & Safety sees authorised community cases.
+- Safeguarding sees restricted safeguarding cases.
+- Executive Leadership sees permitted overview information and only the underlying case detail explicitly delegated.
+- SuperAdmin has final administrative authority but still uses governed access controls for sensitive case content.
+
+This creates one case identity across the platform without creating unrestricted cross-department visibility.
+
+### Escalation architecture
+The platform must include a first-class escalation engine.
+
+Working baseline:
+Case Intake → Triage → Assignment → Action → Review → Escalation (when triggered) → Resolution → Closure → Retention/Audit
+
+Escalation triggers may include:
+- statutory reporting duty
+- safeguarding concern
+- allegation against a senior leader or relevant decision-maker
+- conflict of interest
+- inactivity/SLA breach
+- severity threshold
+- repeated incidents
+- professional misconduct concern
+- complaint involving a committee member
+- complaint involving the assigned handler
+- appeal/review request
+- legal/regulatory deadline
+
+Escalation must be able to move a case to a different authorised team or authority without exposing the full record to everyone along the route.
+
+The escalation engine must support:
+- configured escalation rules
+- human override where authorised
+- automatic escalation for defined trigger conditions
+- deadline/SLA clocks
+- escalation history
+- recipient acknowledgement
+- conflict-of-interest reassignment
+- restricted break-glass path for emergencies
+- audit trail
+
+Where applicable, the platform should route a case toward the relevant statutory mechanism rather than creating an internal substitute for that authority.
+
+### Mandatory committee evidence
+Committee existence alone is not enough. The system should track operation and evidence, including:
+- constitution/appointment record
+- member acknowledgements
+- required training
+- meeting dates
+- agenda
+- minutes/evidence
+- actions
+- cases handled, where applicable
+- annual review/reporting requirements
+- term expiry
+- reconstitution
+- notices/contact details where publication is required
+
+This is especially important for school safety and child-protection governance, where CBSE enforcement material has distinguished between merely listing committees and demonstrating that they actually function.
