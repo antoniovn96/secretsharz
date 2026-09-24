@@ -485,3 +485,132 @@ The organisational permission hierarchy is:
 Person → Account → Department Membership → Position → Role → Permissions → authorised actions
 
 This is organisational context, not a bypass of the canonical Secret Sharz authorisation model.
+
+## 14. Founder-confirmed leadership operating model — 24 September 2026
+
+### Grace Noronha — Executive Leadership
+- Grace Noronha receives an organisational dashboard covering the same broad department/module landscape as the SuperAdmin control plane.
+- Her dashboard is governed by SuperAdmin-controlled permissions and does not inherit SuperAdmin authority simply because she is Executive Leadership.
+- The interface should present Grace Noronha's Executive Leadership identity prominently at the top of the organisational hierarchy.
+- Executive Leadership should focus on high-level organisational visibility and non-technical oversight such as:
+  - blogs and public-content overview
+  - organisational notes
+  - feedback
+  - reports and high-level analytics
+  - departmental summaries
+  - key operational updates
+  - approvals or decisions explicitly delegated by SuperAdmin
+- Technical infrastructure, security administration, permission engineering, identity architecture and other deeply technical controls remain outside ordinary Executive Leadership access unless explicitly delegated.
+
+### Antonio Vian Noronha — SuperAdmin
+- Antonio Vian Noronha is the initial SuperAdmin.
+- Antonio is the initial backend/platform technical authority and may use controlled context switching from his own dashboard.
+- Context switching must not create fake employment records or bypass authorisation. It changes the effective administrative context while preserving the real actor identity.
+- Every context-sensitive action must remain auditable.
+
+### Leadership administration
+- The administrative model must support a governed mechanism through which authorised administrators decide who holds Executive Leadership and SuperAdmin roles.
+- Appointment/removal of leadership roles must be represented as explicit organisational governance actions rather than ordinary department membership.
+- The exact separation-of-duties rule for changing SuperAdmin membership remains open and is a required Founder decision.
+
+## 15. Department staffing and workload division
+
+The organisation may have more than one person performing the same department function.
+
+The model must therefore support:
+- multiple HR staff
+- multiple Accounts staff
+- multiple Intake & Operations staff
+- multiple Media staff
+- multiple staff within every specialist department
+- multiple people holding the same position
+- different work queues, responsibilities and case/task ownership within the same department
+- reassignment of work without changing the person's canonical identity
+
+The department model is therefore not one department-to-one-person. It is a multi-person staffing model in which a department contains positions and role assignments.
+
+Administrators should be able to divide operational responsibility between staff while preserving least-privilege access.
+
+## 16. Mandatory/statutory committee architecture
+
+Secret Sharz should implement a Committee Registry + Applicability Engine rather than treating every committee as mandatory for every legal entity.
+
+The registry should track:
+- legal entity / workplace
+- jurisdiction
+- employee/worker count
+- committee type
+- legal basis
+- applicability status
+- constitution date
+- chair/presiding officer
+- members
+- member terms and expiry
+- required training
+- meeting schedule
+- minutes/evidence
+- complaints/cases where applicable
+- annual reporting requirements where applicable
+- public/internal notice requirements
+- approval history
+- replacement/reconstitution events
+
+### Workforce / workplace committees
+
+**POSH Internal Committee (IC)**  
+Under the Sexual Harassment of Women at Workplace Act, a workplace with 10 or more employees must constitute an Internal Committee. Where the workplace has fewer than 10 employees, or where the complaint is against the employer, the statutory Local Committee mechanism applies. The Government of India reiterated this framework in 2026. citeturn349556search0turn349556search2
+
+The platform should therefore support:
+- statutory Internal Committee configuration
+- prescribed member roles/composition
+- confidentiality controls
+- complaint intake and case handling
+- term/constitution tracking
+- required awareness/training evidence
+- escalation to the statutory Local Committee path when applicable
+
+**Grievance Redressal Committee (GRC) — applicability controlled**  
+The Industrial Relations Code, 2020 is in force from 21 November 2025. It provides for a Grievance Redressal Committee in an industrial establishment employing 20 or more workers. Whether Secret Sharz is legally classified as an establishment to which this provision applies must be determined from its legal/operational status; the product must not assume universal applicability. citeturn475747search0turn280819search72
+
+**Works Committee — applicability controlled**  
+The Industrial Relations Code provides for a Works Committee in an industrial establishment in which 100 or more workers are employed, subject to the statutory trigger/mechanism. This should also be handled through applicability rules rather than created automatically for every Secret Sharz entity. citeturn280819search72turn280819search74
+
+### CBSE school committee support
+
+For a CBSE-affiliated school, CBSE inspection/guidance materials identify the following committee structures as required/verified:
+- Sexual Harassment of Women at Workplace / Internal Committee
+- POCSO-related committee(s)
+- School Management Committee
+
+CBSE safety guidance has also directed schools to maintain separate grievance-redressal mechanisms for public, staff, parents and students. The exact composition and current state-specific requirements must be tied to the school's applicable CBSE/state rules. citeturn729295search17turn280819search75
+
+The Secret Sharz platform should support these as a school-governance committee set, not assume that school committees automatically govern the Secret Sharz corporate workplace.
+
+### Companies Act board committees — entity-dependent
+
+For companies, statutory board committees such as an Audit Committee and Nomination & Remuneration Committee apply only to specified classes of companies, including listed companies and certain prescribed public-company classes. A Stakeholders Relationship Committee applies to companies crossing the statutory security-holder threshold, and vigil-mechanism requirements apply to specified classes. These should therefore be activated only after the legal-entity applicability profile is known. citeturn329404search13turn329404search15
+
+### Compliance design rule
+
+HR may create and manage committee records operationally, but the platform should enforce the legal composition and approval rules for each committee type. HR must not be able to create a statutory committee configuration that contradicts a required statutory role, member qualification or composition rule.
+
+## 17. Committee governance workflow — working design
+
+Recommended starting workflow:
+
+Admin identifies applicable committee
+→ HR creates/reconstitutes committee record
+→ required composition checks
+→ authorised appointment/approval
+→ members accept/acknowledge
+→ training/evidence checks
+→ committee active
+→ meetings / cases / reports
+→ term expiry / reconstitution
+
+For highly sensitive committees such as POSH and safeguarding-related committees:
+- membership visibility must be restricted
+- case records must be segregated from ordinary HR data
+- committee members receive only the data required for their statutory/assigned function
+- audit logs must be immutable/append-only at the platform layer
+- no SuperAdmin title alone should silently expose confidential case content
