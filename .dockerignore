@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.github
+.env
+.env.*
+coverage
+reports
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
+.cache
+terraform.tfstate
+*.tfstate
+*.tfstate.*
