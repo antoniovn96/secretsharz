@@ -768,3 +768,237 @@ Committee existence alone is not enough. The system should track operation and e
 - notices/contact details where publication is required
 
 This is especially important for school safety and child-protection governance, where CBSE enforcement material has distinguished between merely listing committees and demonstrating that they actually function.
+
+
+## 19. Founder decision — global legal operating model
+
+Secret Sharz is intended to operate worldwide. The current recommendation is:
+
+**Start with one Indian Private Limited Company as the initial operating/legal entity, while building the platform as a multi-entity international system from day one.**
+
+Rationale:
+- A private company provides a standard corporate structure for ownership, hiring, contracts and future investment.
+- The Companies Act, 2013 permits formation of a private company by two or more persons, which fits the current two-founder leadership model. citeturn614337search39
+- A private company structure is more suitable than an informal/unregistered structure for a global commercial platform with employees, customers, professional services and institutional contracts.
+- Secret Sharz should not assume that incorporation in one country makes one set of privacy/employment/consumer rules sufficient worldwide. For example, the EU GDPR can apply to organisations outside the EU when their processing relates to offering goods/services to people in the EU or monitoring their behaviour there; the UK GDPR has a similar territorial approach. citeturn614337search5turn614337search40
+- The Indian DPDP Rules were notified in November 2025 with a phased commencement timeline, so the India operating entity must be built for Indian data-protection obligations from the outset. citeturn772729search0turn772729search7
+
+### Multi-entity architecture
+
+The software must therefore separate:
+
+Legal Entity
+→ Country / Jurisdiction
+→ Workplace / Establishment
+→ Department
+→ Position
+→ Role
+→ Permission
+→ Data / Service Domain
+
+Future international expansion may add subsidiaries, branches, or other locally appropriate entities without redesigning the identity model.
+
+The platform must never assume that:
+- one employee works for every Secret Sharz entity;
+- one committee applies globally;
+- one employment law applies globally;
+- one privacy notice applies to every jurisdiction;
+- one data-retention rule applies globally.
+
+The exact incorporation jurisdiction, tax structure and future international entity strategy must be confirmed with qualified legal/tax advisers before registration.
+
+## 20. Global identifier and code architecture
+
+Secret Sharz will use one consistent identifier family across countries and user types.
+
+The key principle is:
+
+**Person identity is permanent; organisational/service relationships receive their own codes.**
+
+Example structure:
+
+- SS-PER-XXXXXXXX — canonical Person code
+- SS-EMP-XXXXXXXX — employment/employee assignment code
+- SS-CUS-XXXXXXXX — customer code
+- SS-PRO-XXXXXXXX — professional code
+- SS-STU-XXXXXXXX — student relationship code
+- SS-PAR-XXXXXXXX — parent/guardian relationship code
+- SS-INS-XXXXXXXX — institution code
+- SS-ORG-XXXXXXXX — legal/operating entity code
+- SS-CASE-XXXXXXXX — case code
+- SS-TKT-XXXXXXXX — support/request ticket code
+- SS-COM-XXXXXXXX — committee code
+
+These are **opaque, globally unique identifiers**, not sequential public numbers.
+
+The code must not reveal:
+- country
+- date of birth
+- age
+- department
+- diagnosis
+- safeguarding status
+- salary
+- seniority
+- case severity
+- any other sensitive attribute
+
+Internal database identifiers should be separate from human-facing display codes.
+
+A single person may therefore have:
+
+SS-PER-...
++
+SS-EMP-...
++
+SS-PRO-...
+
+without creating three Secret Sharz identities.
+
+## 21. Case interface model — no universal Cases tab
+
+The common Case Engine is a platform capability, not a universal navigation item.
+
+Only roles/departments that legitimately handle case-based work should receive a Cases workspace.
+
+Examples:
+
+**Student**
+- Requests
+- Appointments
+- Messages
+- My Journey
+- My assessments/services where applicable
+- No generic internal Cases tab
+
+**Parent/Guardian**
+- Requests
+- Appointments
+- Family/service matters where authorised
+- No access to internal HR, professional or safeguarding case records
+
+**HR**
+- Employee Matters
+- HR Complaints
+- Workforce Cases
+- Committee Governance
+
+**Accounts**
+- Transactions
+- Invoices
+- Payments
+- Refunds/disputes
+- Financial requests/issues where applicable
+- No specialist counselling/safeguarding case access
+
+**Professional**
+- Assigned Caseload / Service Work
+- Relevant service cases only
+
+**Institution**
+- Requests
+- Programmes
+- Agreements
+- Reports
+- Institutional support matters
+- No internal employee/safeguarding case workspace by default
+
+**Executive Leadership**
+- Governance Overview
+- Assigned Reviews / Approvals
+- authorised case summaries/details
+- no automatic unrestricted specialist-case access
+
+**SuperAdmin**
+- Organisational Governance
+- Cross-domain case administration where authorised
+- protected escalation handling
+- audit and escalation control
+
+**Safeguarding**
+- Restricted Safeguarding Cases
+
+This prevents a universal case tab from becoming a back-door route to sensitive information.
+
+## 22. Anonymous and confidential reporting
+
+Secret Sharz should support three intake modes where legally and operationally appropriate:
+
+1. **Identified** — the organisation knows the submitter.
+2. **Confidential** — identity is known to an authorised restricted handler but not exposed to ordinary users.
+3. **Anonymous** — the organisation does not receive identifying information.
+
+The system must not assume that anonymous reporting is legally sufficient for a formal statutory process.
+
+For example, India's POSH Act provides a formal written complaint mechanism for an aggrieved woman, and allows specified representatives to assist/file in circumstances such as incapacity or death. The law also restricts disclosure of the complaint contents and identities of the parties and witnesses. citeturn659088search24turn659088search25
+
+Therefore the Secret Sharz design should distinguish:
+
+Anonymous report
+→ risk/intelligence/intake assessment
+→ determine whether a formal statutory complaint can be initiated
+
+from:
+
+Formal statutory complaint
+→ required statutory information/identity
+→ statutory process
+
+The exact workflow must be jurisdiction-specific.
+
+## 23. Protected Leadership Escalation
+
+A protected escalation route is mandatory.
+
+A complaint or case involving:
+- SuperAdmin
+- Executive Leadership
+- Academic Leadership
+- a committee approver
+- a senior departmental authority
+- the person currently assigned to the case
+
+must be capable of being removed from that person's normal escalation chain.
+
+The system should prevent the subject of the complaint from:
+- changing the escalation destination
+- closing the case
+- reassigning it to themselves
+- deleting evidence
+- suppressing notifications
+- altering the original submission
+- changing the immutable case identifier
+
+A restricted independent authority path should handle these cases according to the applicable jurisdiction and governance configuration.
+
+## 24. SuperAdmin continuity and emergency succession
+
+The Founder has established an emergency continuity rule.
+
+If a SuperAdmin becomes unable to perform their duties because of medical incapacity or death:
+
+**Executive Leadership + Academic Leadership** temporarily assume governance responsibility for a maximum period of **two months**.
+
+During the emergency period they must:
+- preserve platform continuity;
+- maintain required organisational operations;
+- protect access to sensitive systems;
+- prevent unauthorised leadership changes;
+- review the leadership succession requirement;
+- determine whether to appoint/hire a new SuperAdmin or divide the responsibilities between appropriate leaders;
+- record the decision and its approval trail.
+
+The emergency authority is temporary and expires automatically at the end of the two-month maximum unless a formally governed successor arrangement is completed.
+
+The software should therefore have an **Emergency SuperAdmin Succession Mode** with:
+- activation reason
+- activating authorities
+- start date/time
+- automatic expiry date/time
+- restricted elevated permissions
+- mandatory audit
+- succession decision workflow
+- handover record
+- automatic expiry/review warning
+
+Medical information itself should not be collected unnecessarily; the system should record the governance fact that emergency succession criteria have been validated by the authorised leadership process.
