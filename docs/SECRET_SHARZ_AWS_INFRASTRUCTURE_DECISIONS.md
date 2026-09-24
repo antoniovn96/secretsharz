@@ -51,3 +51,33 @@ is not the same as:
 `Secret Sharz Person -> Account -> Assurance -> Relationships -> Consent -> Authorisation`
 
 The application must not use AWS administrative identities as Secret Sharz user identities.
+
+
+## Approved implementation sequencing
+
+### Application-first AWS migration
+
+The first AWS runtime milestone will run the existing Next.js application on ECS/Fargate while Firebase remains a temporary migration dependency.
+
+This preserves the existing application and allows infrastructure/runtime migration to proceed without forcing database, identity and UX migration into one destructive release.
+
+### Production resilience baseline
+
+For production sensitive workloads, the initial architecture will use:
+- multi-AZ application placement;
+- an RDS PostgreSQL production configuration with Multi-AZ resilience;
+- encrypted automated backups;
+- S3 object storage;
+- CloudFront + WAF + ALB;
+- ECS/Fargate.
+
+The non-production Sydney environment remains intentionally lighter and cost-conscious.
+
+### Public routing
+
+VidyaVantage is part of Secret Sharz and will use:
+
+secretsharz.com/vidyavantage
+
+A separate public API hostname is not required for the first AWS application milestone. Same-origin application/API routes may be retained until an explicit architecture decision requires a separate API edge.
+
