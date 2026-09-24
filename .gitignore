@@ -14,3 +14,9 @@ reports/claim-migration-dry-run.json
 reports/production-claim-migration-inventory.json
 .vercel
 .env*
+
+# Terraform local state and working files
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/.terraform.lock.hcl
