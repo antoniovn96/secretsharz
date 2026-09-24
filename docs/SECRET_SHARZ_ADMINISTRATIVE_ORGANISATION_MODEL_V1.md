@@ -428,12 +428,60 @@ The following remain open and must not be silently implemented:
 - exact Academic Leadership authority
 - exact Intake/Operations scope
 - final compliance ownership
+- Recommended structure: Community & Trust & Safety is the wider operational area, with Safeguarding as a restricted function/team inside it. Safeguarding keeps its own permissions, restricted records, purpose-bound access and break-glass controls; it is not equivalent to ordinary Community administration.
 - whether Safeguarding is a separate department or a restricted function
+- Recommended structure recorded: Safeguarding = restricted function/team within Community & Trust & Safety, not a blanket-access department.
 - whether Professional Verification is an independent department or HR/Quality function
+- Founder decision: Professional Verification is jointly owned by HR and a dedicated Professional Quality/Verification function. Required verification must pass both sides before governed activation.
 - exact Accounts approval hierarchy
+- Accounts/HR employee e-ID issuance requires both HR approval and Accounts approval.
 - exact employee multi-role approval workflow
+- Founder-selected model: Department → Position → Role → Permissions. Multiple active department/position/role assignments may belong to the same canonical Person/Account.
 - exact departmental reporting structure
 - final job titles and reporting lines
 - final country-specific professional verification rules
 - exact legal/compliance applicability and wording
 
+
+
+## 13. Founder-confirmed administrative decisions — 24 September 2026
+
+### Executive leadership and SuperAdmin
+- Antonio Vian Noronha is the initial SuperAdmin.
+- Grace Noronha is an Executive Leadership role, not the SuperAdmin role.
+- The SuperAdmin control plane should prominently display Grace Noronha's Executive Leadership identity at the top of the organisational hierarchy while preserving separate authority models.
+
+### Intake
+- Intake & Operations is confirmed as an organisational department.
+
+### Community / Trust & Safety / Safeguarding
+- Recommended working structure: Community & Trust & Safety is the broader operational area.
+- Safeguarding is a restricted team/function within that area.
+- Safeguarding has separate permissions, protected data, purpose-bound access and break-glass controls.
+- Ordinary Community/Trust & Safety staff do not receive unrestricted Safeguarding access.
+
+### Professional verification
+- HR and Professional Quality/Verification jointly own professional verification.
+- Required professional verification must pass both governance/administrative sides before governed professional activation.
+
+### HR access boundary
+HR may manage employment-related and administrative people information, including employee lifecycle, HR complaints, workforce records, department assignments, leave/work status and related support workflows.
+HR should receive administrative directory access to students/parents only where needed for an HR-defined operational purpose.
+HR does not automatically receive counselling notes, psychological records, SEN records, private career records, safeguarding case details or unrelated specialist service data.
+
+### Employee access revocation
+- Recommended: authorised HR staff can immediately revoke an employee's organisational access when an access-containment event occurs.
+- The revocation itself must be independently auditable and should invalidate relevant department/position/role assignments and session access according to the authentication/session architecture.
+- Termination/firing decisions and the technical access-revocation action are represented as separate governed actions so the security containment action does not have to wait for a secondary approver.
+- Consequential employment decisions may still require configured separation-of-duties/approval rules when later defined.
+
+### Employee e-ID
+- E-ID issuance requires HR approval AND Accounts approval.
+- Revocation rules and replacement-card workflow remain to be defined.
+
+### Permission model
+The organisational permission hierarchy is:
+
+Person → Account → Department Membership → Position → Role → Permissions → authorised actions
+
+This is organisational context, not a bypass of the canonical Secret Sharz authorisation model.
