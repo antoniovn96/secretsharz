@@ -492,6 +492,7 @@ This is organisational context, not a bypass of the canonical Secret Sharz autho
 - Grace Noronha receives an organisational dashboard covering the same broad department/module landscape as the SuperAdmin control plane.
 - Her dashboard is governed by SuperAdmin-controlled permissions and does not inherit SuperAdmin authority simply because she is Executive Leadership.
 - The interface should present Grace Noronha's Executive Leadership identity prominently at the top of the organisational hierarchy.
+- Grace is the initial front-end/product-experience lead alongside her Executive Leadership responsibilities.
 - Executive Leadership should focus on high-level organisational visibility and non-technical oversight such as:
   - blogs and public-content overview
   - organisational notes
@@ -504,7 +505,7 @@ This is organisational context, not a bypass of the canonical Secret Sharz autho
 
 ### Antonio Vian Noronha — SuperAdmin
 - Antonio Vian Noronha is the initial SuperAdmin.
-- Antonio is the initial backend/platform technical authority and may use controlled context switching from his own dashboard.
+- Antonio is the initial backend/platform technical authority and backend engineering lead, and may use controlled context switching from his own dashboard.
 - Context switching must not create fake employment records or bypass authorisation. It changes the effective administrative context while preserving the real actor identity.
 - Every context-sensitive action must remain auditable.
 
