@@ -21,7 +21,7 @@ Primary domain: `secretsharz.com`
 - Public website and product application are both part of the new website program.
 - Blogs: preserved as a first-class public content system, initially sourced from GitHub and later migrated to a controlled publishing workflow.
 - Blog administration: SuperAdmin first; admin-approved editors later.
-- VidyaVantage: a separate brand/product experience from Secret Sharz.
+- VidyaVantage is part of Secret Sharz and uses the public path `secretsharz.com/vidyavantage`, while retaining a distinct visual/product experience within the Secret Sharz ecosystem.
 - UX direction: child-friendly, approachable, modern, accessible, image-rich and safe.
 
 ## 2. Target production architecture
@@ -112,7 +112,36 @@ Legacy Firebase:
 
 Sensitive domains receive separate migration treatment.
 
-## 6. Execution phases
+## 6. Migration execution principles
+
+The first AWS deployment will containerise and run the existing Next.js application on AWS while Firebase remains temporarily behind the application as a migration bridge. This is an A → B migration strategy, not an endorsement of Firebase as the target architecture.
+
+The application will therefore be migrated in layers:
+
+```
+Existing Next.js application
+        ↓
+ECS/Fargate
+        ↓
+AWS edge/runtime
+        ↓
+temporary Firebase dependency where not yet migrated
+        ↓
+domain-by-domain canonical migration
+        ↓
+Firebase retirement
+```
+
+The first production baseline will favour resilience for sensitive workloads:
+- ECS/Fargate service distributed across availability zones.
+- Production PostgreSQL on RDS with Multi-AZ resilience and encrypted automated backups.
+- S3 for controlled object storage.
+- CloudFront + WAF + ALB at the edge.
+- Non-production remains cost-conscious and isolated in the existing Sydney account.
+
+A public split API hostname is not required at the start. Same-origin Next.js/API routes can be used until a separate API boundary is justified by the implementation and recorded through ADR.
+
+## 7. Execution phases
 
 ### Phase 0 — AWS + domain bootstrap
 Founder actions:
@@ -241,7 +270,7 @@ Each domain must attach to the shared platform foundation instead of creating it
 - rollback plan
 - staged release
 
-## 7. First implementation rule
+## 8. First implementation rule
 
 Do not add a major specialist feature until the shared foundation exists.
 
