@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import { RIASEC_V1, scoreRiasecV1 } from '../career/riasecInterestExplorerV1.js';
 import { buildRiasecReportPayload } from '../career/riasecReportPayloadV1.js';
 import { buildRiasecAssessmentResultV1 } from '../career/riasecAssessmentResultV1.js';
-import { appendAssessmentAuditEvent, createAssessmentReport } from './assessmentResultRecord.js';
+import { appendAssessmentAuditEvent, createAssessmentReport, transitionAssessmentResult } from './assessmentResultRecord.js';
 import { persistAssessmentResult, getLatestAssessmentResultForPerson, getAssessmentResultById } from './assessmentResultPostgresRepository.js';
 
 export async function submitRiasecAssessmentV1({
@@ -136,6 +136,8 @@ export async function submitRiasecAssessmentV1({
       scoringVersion: score.scoringVersion,
     },
   });
+
+  result = transitionAssessmentResult(result, 'reported');
 
   const persisted = await persistAssessmentResult({
     pool,
