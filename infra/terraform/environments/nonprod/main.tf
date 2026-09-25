@@ -28,9 +28,11 @@ locals {
 module "network" {
   source = "../../modules/application-network"
 
-  name     = "secretsharz-nonprod"
-  vpc_cidr = var.vpc_cidr
-  az_count = 2
+  name             = "secretsharz-nonprod"
+  vpc_cidr         = var.vpc_cidr
+  az_count         = 2
+  nat_gateway_count = 1
+  enable_nat       = true
 }
 
 module "postgres" {
