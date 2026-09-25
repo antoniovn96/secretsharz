@@ -93,7 +93,7 @@ CREATE INDEX IF NOT EXISTS idx_assessment_results_status_dates
 CREATE OR REPLACE FUNCTION validate_assessment_status_transition()
 RETURNS trigger
 LANGUAGE plpgsql
-AS $
+AS $$
 BEGIN
   IF NEW.status = OLD.status THEN
     RETURN NEW;
@@ -111,7 +111,7 @@ BEGIN
 
   RAISE EXCEPTION 'Invalid assessment status transition: % -> %', OLD.status, NEW.status;
 END;
-$;
+$$;
 
 DROP TRIGGER IF EXISTS trg_assessment_status_transition ON assessment_results;
 CREATE TRIGGER trg_assessment_status_transition
