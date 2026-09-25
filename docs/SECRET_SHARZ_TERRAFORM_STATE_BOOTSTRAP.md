@@ -61,8 +61,36 @@ Do not introduce an automated Terraform apply workflow until:
 
 The deployment role should receive only the S3 state permissions and workload permissions required for its environment.
 
+## Repository backend declaration
+
+Both workload environments now declare the empty S3 backend in source:
+
+```hcl
+terraform {
+  backend "s3" {
+    use_lockfile = true
+  }
+}
+```
+
+Validation continues to use `terraform init -backend=false`, so CI does not require AWS credentials or remote-state access.
+
+After the non-production state bucket and OIDC deployment role exist, initialize the non-production environment with backend configuration supplied outside source control:
+
+```bash
+terraform -chdir=infra/terraform/environments/nonprod init   -backend-config="bucket=<NONPROD_STATE_BUCKET>"   -backend-config="key=secretsharz/nonprod/terraform.tfstate"   -backend-config="region=ap-southeast-2"
+```
+
+Then verify the state object and lockfile behavior before any apply.
+
+The production environment should use a different bucket and key:
+
+```bash
+terraform -chdir=infra/terraform/environments/production init   -backend-config="bucket=<PRODUCTION_STATE_BUCKET>"   -backend-config="key=secretsharz/production/terraform.tfstate"   -backend-config="region=ap-south-1"
+```
+
 ## Current repository status
 
-The Terraform environments still use local initialization with `-backend=false` in validation.
+The repository has the remote backend declaration but CI still validates with `-backend=false`.
 
-This is intentional. No automated infrastructure mutation should run until remote state and the OIDC deployment role are provisioned.
+This is intentional. No automated infrastructure mutation should run until the non-production state bucket, locking, and OIDC deployment role are provisioned and verified.
