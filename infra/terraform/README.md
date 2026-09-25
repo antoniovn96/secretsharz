@@ -28,7 +28,7 @@ infra/terraform/
 
 The long-term backend will use Amazon S3. HashiCorp's current S3 backend supports state locking with `use_lockfile = true`; DynamoDB-based locking is deprecated. State buckets should have versioning enabled for recovery. See the official Terraform S3 backend documentation before bootstrap. 
 
-Remote-state configuration is intentionally not active yet because the backend bucket and cross-account Terraform roles have not been provisioned.
+Remote-state configuration is intentionally not active yet because the backend buckets and cross-account Terraform roles have not been provisioned. See `docs/SECRET_SHARZ_TERRAFORM_STATE_BOOTSTRAP.md` for the one-time state bootstrap.
 
 ## Deployment path
 
