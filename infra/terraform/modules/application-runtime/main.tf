@@ -69,7 +69,7 @@ resource "aws_iam_policy" "task_execution_secrets" {
 }
 
 resource "aws_iam_role_policy_attachment" "task_execution_secrets" {
-  count = local.enabled_count && length(var.secret_arns) > 0 ? 1 : 0
+  count = local.enabled && length(var.secret_arns) > 0 ? 1 : 0
 
   role       = aws_iam_role.task_execution[0].name
   policy_arn = aws_iam_policy.task_execution_secrets[0].arn
