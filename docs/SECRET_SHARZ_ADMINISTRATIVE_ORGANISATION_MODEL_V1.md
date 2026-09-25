@@ -1573,3 +1573,99 @@ Secret Sharz may provide general parenting-book recommendations and links to ext
 - Secret Sharz should clearly disclose that the purchase occurs on the external retailer.
 - Product recommendations should not be generated from confidential counselling, SEN, safeguarding or other sensitive records unless a lawful, explicit and separately governed commercial recommendation consent exists.
 - General recommendations may be based on explicit parent-selected interests and non-sensitive preferences.
+
+
+## 34. Founder decisions — institutional pricing and family commerce — 25 September 2026
+
+### Recommended institutional pricing model
+Current public 2026 India school-software pricing references commonly describe per-student annual pricing in roughly the ₹100–₹500 range, with significant variation by product scope and vendor; published vendor guides also show low-cost flat plans for smaller institutions. These figures are market reference points rather than an independent price index. citeturn922469search1turn922469search2turn922469search9
+
+For the first India price book, the recommended model is **progressive annual per-student pricing** rather than a single rate applied to the entire enrolment.
+
+Recommended India price book, before applicable taxes:
+
+| Student band | Marginal annual price per student |
+| --- | ---: |
+| 1–250 | ₹150 |
+| 251–500 | ₹125 |
+| 501–1,000 | ₹100 |
+| 1,001–2,000 | ₹80 |
+| 2,001–5,000 | ₹60 |
+| 5,001+ | Custom enterprise pricing |
+
+This is progressive, so the first 250 students are priced at ₹150, the next 250 at ₹125, and so on.
+
+At 563 students, the annual subscription crosses ₹75,000. This creates a clear medium-institution threshold for the Founder-defined premium entitlement without creating a sudden price cliff at a band boundary.
+
+### Billing recommendation
+- Default commercial term: annual.
+- Monthly payment option: allowed, but calculated from the annual entitlement and may include a modest payment-plan premium.
+- Student count should be based on active enrolled students for the billing period.
+- Institutions should have a transparent usage/student-count view.
+- The exact definition of active student, mid-year changes and pro-rating remain billing-policy decisions.
+
+### Premium threshold
+- The premium timetable tier is automatically included when the institution's annual subscription value **exceeds ₹75,000** under the applicable price book.
+- Premium entitlement is based on contract/subscription value, not on a user's individual role.
+- The system must show the institution exactly why premium is active and which capabilities are included.
+
+### International pricing
+- India pricing is the first concrete price book.
+- Other countries should use country/region-specific price books rather than blindly converting INR using daily exchange rates.
+- Each price book can define local currency, student bands, taxes, payment methods and equivalent premium-entitlement threshold.
+- Product entitlements remain consistent unless a jurisdiction requires a different product or legal treatment.
+
+### Institution trial
+- Verified institutions receive a 30-day trial recommendation before paid activation.
+- Trial limits and conversion rules remain to be defined.
+- Trial access must not bypass institution verification or data-isolation controls.
+
+### Institution hierarchy
+The institution ecosystem supports:
+Organisation → Institution → Campus → Department/Program → Grade/Year → Class/Section
+
+Large institutions may share configured teachers, rooms, labs, equipment or other resources across campuses only when explicitly enabled.
+
+### Institution administration
+An institution can have:
+- Primary Institution Administrator
+- Additional Institution Administrators
+- Temporary/Delegated Institution Administrators
+
+Each assignment is explicit, scoped and auditable.
+
+### Institution marketplace
+The Institution ecosystem may later include a dedicated marketplace for optional services/providers such as counselling, career professionals, SEN professionals and educational/training services.
+Marketplace experiences remain separate from core timetable navigation and are non-intrusive.
+
+### Parent commerce model
+Parent purchases support:
+- Self
+- Child
+- Family
+
+The purchaser's payment information is not exposed to the child. The child receives only the purchased resource entitlement.
+
+### Book recommendation model
+Secret Sharz should store book metadata and editorial recommendations while sending parents to external retailers such as Amazon for purchase.
+
+The stored metadata may include:
+- title
+- author
+- language
+- age/stage
+- themes
+- description
+- editorial rationale
+- external retailer link
+- territory/retailer mapping
+
+Secret Sharz is not the merchant for those third-party purchases unless a later Founder decision establishes a separate commerce model.
+
+### Parent recommendation safeguards
+Book/resource recommendations are based on:
+- explicit parent-selected interests;
+- general non-sensitive family/age-stage preferences;
+- editorial curation.
+
+They must not silently derive from counselling, SEN, safeguarding, professional, psychological or other sensitive records.
