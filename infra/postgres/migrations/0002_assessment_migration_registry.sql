@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS assessment_migration_registry (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-  UNIQUE (source_system, source_record_key),
   UNIQUE (source_system, source_record_key)
 );
 
