@@ -27,18 +27,40 @@ function buildSslConfig() {
   };
 }
 
+function buildConnectionString() {
+  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+
+  const host = process.env.DATABASE_HOST;
+  const port = process.env.DATABASE_PORT || '5432';
+  const database = process.env.DATABASE_NAME;
+  const username = process.env.DATABASE_USER;
+  const password = process.env.DATABASE_PASSWORD;
+
+  if (!host || !database || !username || !password) {
+    throw new Error(
+      'DATABASE_URL or DATABASE_HOST, DATABASE_NAME, DATABASE_USER, and DATABASE_PASSWORD are required for PostgreSQL access.',
+    );
+  }
+
+  const user = encodeURIComponent(username);
+  const encodedPassword = encodeURIComponent(password);
+  const encodedDatabase = encodeURIComponent(database);
+
+  return `postgresql://${user}:${encodedPassword}@${host}:${port}/${encodedDatabase}`;
+}
+
 export function createPostgresPool(overrides = {}) {
   if (!process.env.DATABASE_URL && !overrides.connectionString) {
-    throw new Error('DATABASE_URL is required for PostgreSQL access.');
+    buildConnectionString();
   }
 
   return new Pool({
-    connectionString: overrides.connectionString || process.env.DATABASE_URL,
+    ...overrides,
+    connectionString: overrides.connectionString || buildConnectionString(),
     max: Number(process.env.DATABASE_POOL_MAX || 10),
     idleTimeoutMillis: Number(process.env.DATABASE_IDLE_TIMEOUT_MS || 30000),
     connectionTimeoutMillis: Number(process.env.DATABASE_CONNECTION_TIMEOUT_MS || 10000),
     ssl: overrides.ssl ?? buildSslConfig(),
-    ...overrides,
   });
 }
 
