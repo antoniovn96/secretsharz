@@ -17,6 +17,7 @@ on:
       - "package-lock.json"
       - ".github/workflows/career-assessment.yml"
       - "test/platform/infrastructureContract.test.mjs"
+      - "test/platform/awsBootstrapContract.test.mjs"
   push:
     branches:
       - main
@@ -84,3 +85,6 @@ jobs:
 
       - name: Run infrastructure contract tests
         run: npm run test:infrastructure-contract
+
+      - name: Run AWS bootstrap contract tests
+        run: npm run test:aws-bootstrap
