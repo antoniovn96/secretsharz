@@ -14,7 +14,7 @@ test('institution contract reads the persisted careerAssessmentV2 shape', () => 
   const byId = Object.fromEntries(result.map(section => [section.id, section]));
   assert.equal(byId.developmental_context.available, true);
   assert.equal(byId.riasec_profile.available, true);
-  assert.equal(byId.career_directions.available, true);
+  assert.equal(byId.top_career_directions.available, false);
   assert.equal(byId.action_roadmap.available, true);
   assert.equal(byId.personality_profile.available, false);
   assert.equal(byId.education_roadmap.available, false);
