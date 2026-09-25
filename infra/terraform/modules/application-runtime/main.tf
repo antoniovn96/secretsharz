@@ -203,7 +203,16 @@ resource "aws_ecs_task_definition" "this" {
       protocol      = "tcp"
     }]
 
-    environment = var.environment_variables
+    environment = concat([
+      {
+        name  = "DATABASE_SSL"
+        value = "true"
+      },
+      {
+        name  = "DATABASE_SSL_REJECT_UNAUTHORIZED"
+        value = "true"
+      }
+    ], var.environment_variables)
 
     secrets = [
       for item in var.secret_environment_variables : {
