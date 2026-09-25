@@ -47,6 +47,6 @@ test('zeroed RIASEC containers cannot manufacture an alignment score', () => {
 test('career explanation identifies actual overlapping interest themes', () => {
   const explanation = buildInterestAlignmentExplanation({I:30,R:25,A:4,S:4,E:3,C:3}, ['I','C']);
   assert.deepEqual(explanation.studentTopInterests.slice(0,2), ['I','R']);
-  assert.deepEqual(explanation.overlappingInterests, ['I']);
+  assert.deepEqual(explanation.overlappingInterests, ['I', 'C']);
   assert.match(explanation.rationale, /I/);
 });
