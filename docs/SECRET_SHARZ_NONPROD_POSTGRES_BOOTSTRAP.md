@@ -83,7 +83,7 @@ Then run the assessment tests.
 
 The current non-production network intentionally creates private subnets only. This keeps the database non-public and avoids introducing a NAT gateway before the ECS application network is defined.
 
-The later ECS/Fargate foundation will need its own controlled egress design for image pulls, Secrets Manager access and other outbound services.
+The current ECS/Fargate network foundation includes private-subnet egress through a controlled NAT gateway. The database remains private, and the ALB is the intended public application entry point.
 
 ## Safety
 
