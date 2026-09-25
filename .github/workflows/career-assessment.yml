@@ -6,6 +6,7 @@ on:
       - "src/career/**"
       - "src/platform/assessment*"
       - "src/platform/riasecAssessmentService.js"
+      - "src/platform/legacyAssessmentMigration.js"
       - "src/platform/postgres.js"
       - "pages/api/career/assessment/**"
       - "infra/postgres/migrations/**"
