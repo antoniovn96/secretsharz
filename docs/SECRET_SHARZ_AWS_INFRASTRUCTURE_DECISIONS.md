@@ -81,3 +81,26 @@ secretsharz.com/vidyavantage
 
 A separate public API hostname is not required for the first AWS application milestone. Same-origin application/API routes may be retained until an explicit architecture decision requires a separate API edge.
 
+
+
+## PostgreSQL foundation implementation
+
+The rebuild branch now contains a reusable private-network and PostgreSQL RDS Terraform foundation.
+
+Non-production:
+- Sydney `ap-southeast-2`
+- two private subnets
+- private PostgreSQL RDS
+- RDS-managed master credential in Secrets Manager
+- encrypted storage
+- limited backup retention for development/staging
+
+Production definition:
+- Mumbai `ap-south-1`
+- three private subnets
+- Multi-AZ PostgreSQL RDS baseline
+- seven-day backup retention
+- deletion protection
+- final snapshot protection
+
+These Terraform resources are implementation definitions only until an approved AWS operator applies them. The application migration remains blocked on actual RDS connectivity until the non-production environment is provisioned.
