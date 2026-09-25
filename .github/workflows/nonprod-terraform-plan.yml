@@ -36,6 +36,7 @@ jobs:
       - name: Verify remote state configuration
         run: |
           set -euo pipefail
+
           if [ -z "$TERRAFORM_STATE_BUCKET" ]; then
             echo "::error::Missing nonprod Environment variable TERRAFORM_STATE_BUCKET."
             exit 1
