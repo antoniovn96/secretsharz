@@ -1,0 +1,38 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+
+const source = fs.readFileSync(
+  'infra/aws-bootstrap/nonprod-github-oidc-state.yml',
+  'utf8',
+);
+
+test('nonprod AWS bootstrap has the expected state protections', () => {
+  assert.match(source, /DeletionPolicy: Retain/);
+  assert.match(source, /UpdateReplacePolicy: Retain/);
+  assert.match(source, /BlockPublicAcls: true/);
+  assert.match(source, /BlockPublicPolicy: true/);
+  assert.match(source, /IgnorePublicAcls: true/);
+  assert.match(source, /RestrictPublicBuckets: true/);
+  assert.match(source, /VersioningConfiguration:/);
+  assert.match(source, /Status: Enabled/);
+  assert.match(source, /aws:SecureTransport: "false"/);
+});
+
+test('nonprod AWS bootstrap restricts GitHub OIDC trust to the rebuild branch', () => {
+  assert.match(source, /token\.actions\.githubusercontent\.com:aud: sts\.amazonaws\.com/);
+  assert.match(
+    source,
+    /token\.actions\.githubusercontent\.com:sub: repo:antoniovn96\/secretsharz:ref:refs\/heads\/rebuild\/platform-foundation-v1/,
+  );
+  assert.match(source, /StringEquals:/);
+  assert.doesNotMatch(source, /AdministratorAccess/);
+  assert.doesNotMatch(source, /PowerUserAccess/);
+});
+
+test('nonprod AWS bootstrap scopes Terraform state and lock-file access', () => {
+  assert.match(source, /secretsharz\/nonprod\/terraform\.tfstate/);
+  assert.match(source, /secretsharz\/nonprod\/terraform\.tfstate\.tflock/);
+  assert.match(source, /s3:DeleteObject/);
+  assert.match(source, /s3:ListBucket/);
+});
