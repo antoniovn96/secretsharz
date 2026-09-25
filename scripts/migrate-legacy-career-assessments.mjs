@@ -9,16 +9,16 @@
 // Required runtime:
 //   DATABASE_URL
 //   Firebase Admin credentials/emulator configuration
-//
-// Imported legacy assessments are explicitly marked as limited-reproducibility evidence
-// when raw item responses are unavailable.
 
 import { getAdminFirestore } from '../src/security/firebaseAdmin.js';
 import { getPostgresPool } from '../src/platform/postgres.js';
-import { buildLegacyAssessmentResult, hashLegacyPayload, pickLegacyAssessmentSource, LEGACY_ASSESSMENT_MIGRATION_VERSION } from '../src/platform/legacyAssessmentMigration.js';
+import {
+  buildLegacyAssessmentResult,
+  hashLegacyPayload,
+  pickLegacyAssessmentSource,
+  LEGACY_ASSESSMENT_MIGRATION_VERSION,
+} from '../src/platform/legacyAssessmentMigration.js';
 import { persistAssessmentResult } from '../src/platform/assessmentResultPostgresRepository.js';
-
-const MIGRATION_VERSION = 'legacy-career-assessments-v1';
 
 function parseArgs(argv) {
   const args = { limit: 100, uid: null, write: false, confirm: false };
@@ -56,7 +56,16 @@ async function recordRegistry(client, {
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
     ON CONFLICT (source_system, source_record_key)
     DO UPDATE SET status = EXCLUDED.status, metadata = EXCLUDED.metadata, updated_at = now()`,
-    [sourceSystem, sourceRecordKey, sourcePersonId, assessmentResultId, sourceHash, MIGRATION_VERSION, status, JSON.stringify(metadata)],
+    [
+      sourceSystem,
+      sourceRecordKey,
+      sourcePersonId,
+      assessmentResultId,
+      sourceHash,
+      LEGACY_ASSESSMENT_MIGRATION_VERSION,
+      status,
+      JSON.stringify(metadata),
+    ],
   );
 }
 
@@ -66,15 +75,17 @@ async function loadUsers(db, args) {
     return snapshot.exists ? [snapshot] : [];
   }
 
-  const rows = [];
-  let query = db.collection('users').orderBy('__name__').limit(args.limit);
-  const snapshot = await query.get();
-  rows.push(...snapshot.docs);
-  return rows;
+  const snapshot = await db.collection('users')
+    .orderBy('__name__')
+    .limit(args.limit)
+    .get();
+
+  return snapshot.docs;
 }
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+
   if (args.write && !args.confirm) {
     throw new Error('Refusing write mode without --confirm.');
   }
@@ -91,20 +102,20 @@ async function main() {
 
     for (const snap of docs) {
       const data = snap.data() || {};
-      const source = pickSource(data);
+      const source = pickLegacyAssessmentSource(data);
       if (!source) continue;
 
       candidates += 1;
-      const sourceHash = hash(source.payload);
-      const existing = await registryRow(client, source.sourceSystem, source.sourceRecordKey + ':' + snap.id);
 
-      if (existing || sourceHash === '') {
+      const sourceRecordKey = source.sourceRecordKey + ':' + snap.id;
+      const sourceHash = hashLegacyPayload(source.payload);
+      const existing = await registryRow(client, source.sourceSystem, sourceRecordKey);
+
+      if (existing) {
         skipped += 1;
         continue;
       }
 
-      const sourceRecordKey = source.sourceRecordKey + ':' + snap.id;
-      const sourceHash = hashLegacyPayload(source.payload);
       const canonical = buildLegacyAssessmentResult({
         personId: snap.id,
         sourceSystem: source.sourceSystem,
@@ -139,18 +150,27 @@ async function main() {
 
       await recordRegistry(client, {
         sourceSystem: source.sourceSystem,
-        sourceRecordKey: source.sourceRecordKey + ':' + snap.id,
+        sourceRecordKey,
         sourcePersonId: snap.id,
         assessmentResultId: persisted.id,
         sourceHash,
         status: 'imported',
-        metadata: { rawResponsesAvailable: false },
+        metadata: {
+          rawResponsesAvailable: false,
+          reproducibility: 'limited',
+        },
       });
 
       imported += 1;
     }
 
-    console.log(JSON.stringify({ mode: args.write ? 'write' : 'dry_run', candidates, imported, skipped, migrationVersion: LEGACY_ASSESSMENT_MIGRATION_VERSION }));
+    console.log(JSON.stringify({
+      mode: args.write ? 'write' : 'dry_run',
+      candidates,
+      imported,
+      skipped,
+      migrationVersion: LEGACY_ASSESSMENT_MIGRATION_VERSION,
+    }));
   } finally {
     client.release();
     await pool.end();
