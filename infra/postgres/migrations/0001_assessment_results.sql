@@ -90,6 +90,34 @@ CREATE INDEX IF NOT EXISTS idx_assessment_results_institution_relationship
 CREATE INDEX IF NOT EXISTS idx_assessment_results_status_dates
   ON assessment_results (status, submitted_at DESC, scored_at DESC);
 
+CREATE OR REPLACE FUNCTION validate_assessment_status_transition()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $
+BEGIN
+  IF NEW.status = OLD.status THEN
+    RETURN NEW;
+  END IF;
+
+  IF (
+    (OLD.status = 'created' AND NEW.status IN ('started', 'abandoned', 'invalidated')) OR
+    (OLD.status = 'started' AND NEW.status IN ('submitted', 'abandoned', 'invalidated')) OR
+    (OLD.status = 'submitted' AND NEW.status IN ('scored', 'invalidated', 'superseded')) OR
+    (OLD.status = 'scored' AND NEW.status IN ('reported', 'invalidated', 'superseded')) OR
+    (OLD.status = 'reported' AND NEW.status = 'superseded')
+  ) THEN
+    RETURN NEW;
+  END IF;
+
+  RAISE EXCEPTION 'Invalid assessment status transition: % -> %', OLD.status, NEW.status;
+END;
+$;
+
+DROP TRIGGER IF EXISTS trg_assessment_status_transition ON assessment_results;
+CREATE TRIGGER trg_assessment_status_transition
+BEFORE UPDATE OF status ON assessment_results
+FOR EACH ROW EXECUTE FUNCTION validate_assessment_status_transition();
+
 CREATE TABLE IF NOT EXISTS assessment_responses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   assessment_result_id UUID NOT NULL REFERENCES assessment_results(id) ON DELETE RESTRICT,
