@@ -109,3 +109,30 @@ For the non-production key `secretsharz/nonprod/terraform.tfstate`, scope the ba
 Terraform's current S3 backend uses `use_lockfile` for S3-native locking; DynamoDB-based locking is deprecated.
 
 The application infrastructure role still needs its separate workload permissions; do not broaden the state policy to provide unrelated AWS access.
+
+
+## Non-production apply workflow
+
+Once the state bucket and GitHub OIDC role are verified, the repository includes a manual apply workflow:
+
+```
+.github/workflows/nonprod-terraform-apply.yml
+```
+
+The workflow:
+
+1. assumes the non-production OIDC role
+2. initializes the declared S3 backend
+3. creates a fresh Terraform plan
+4. applies exactly that plan
+5. prints Terraform outputs
+
+It requires the workflow-dispatch input:
+
+```
+APPLY_NONPROD
+```
+
+The job also runs in the GitHub `nonprod` Environment, so environment protection rules can provide a second approval gate before infrastructure mutation.
+
+Do not configure the production environment to reuse this workflow. Production should have its own separately reviewed apply path.
