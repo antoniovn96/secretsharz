@@ -47,6 +47,14 @@ variable "secret_environment_variables" {
   default = []
 }
 
+variable "environment_variables" {
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  default = []
+}
+
 variable "command" {
   type    = list(string)
   default = ["node", "scripts/run-postgres-migrations.mjs"]
