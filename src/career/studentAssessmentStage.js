@@ -62,7 +62,7 @@ export const STUDENT_ASSESSMENT_STAGE_META = Object.freeze({
   }),
   grade_12: Object.freeze({
     label: 'Career & Higher-Education Decision Support',
-    purpose: 'Connect the student's current pathway with courses, eligibility, alternatives and next actions.',
+    purpose: "Connect the student's current pathway with courses, eligibility, alternatives and next actions.",
     formalCareerDecision: true,
     collectMarks: true,
     collectSubjectEnjoyment: true,
