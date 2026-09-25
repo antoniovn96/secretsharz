@@ -142,12 +142,6 @@ Resources:
               - s3:ListBucket
             Resource:
               - !GetAtt TerraformStateBucket.Arn
-            Condition:
-              StringLike:
-                s3:prefix:
-                  - secretsharz/nonprod/terraform.tfstate
-                  - secretsharz/nonprod/terraform.tfstate.tflock
-                  - secretsharz/nonprod/*
           - Sid: TerraformStateObject
             Effect: Allow
             Action:
