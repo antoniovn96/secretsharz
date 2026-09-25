@@ -51,6 +51,10 @@ function makeFakePool() {
         };
       }
 
+      if (String(text).includes('SELECT * FROM assessment_results WHERE id = $1')) {
+        return { rows: insertedRow ? [insertedRow] : [] };
+      }
+
       if (String(text) === 'BEGIN' || String(text) === 'COMMIT' || String(text) === 'ROLLBACK') {
         return { rows: [] };
       }
