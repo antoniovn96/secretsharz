@@ -38,7 +38,7 @@ jobs:
 
       - name: Terraform format check
         working-directory: infra/terraform
-        run: terraform fmt -check -recursive
+        run: terraform fmt -check -diff -recursive
 
       - name: Terraform init
         working-directory: infra/terraform/environments/${{ matrix.environment }}
