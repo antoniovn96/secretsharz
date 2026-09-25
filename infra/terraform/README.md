@@ -52,3 +52,12 @@ The GitHub repository trust policy must restrict the `sub` claim to this reposit
 - Application infrastructure: not provisioned
 
 This scaffold is intentionally safe to review without changing AWS resources.
+
+
+## PostgreSQL foundation
+
+The non-production environment now defines a private VPC and an RDS PostgreSQL instance. The production environment defines the corresponding multi-AZ production baseline, but production application is still blocked by the pending dedicated AWS account.
+
+Database credentials are not hard-coded. RDS manages the master password through AWS Secrets Manager.
+
+See `docs/SECRET_SHARZ_NONPROD_POSTGRES_BOOTSTRAP.md` for the controlled bootstrap sequence.
