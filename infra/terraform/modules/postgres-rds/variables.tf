@@ -63,3 +63,10 @@ variable "apply_immediately" {
   type    = bool
   default = true
 }
+
+
+variable "final_snapshot_identifier" {
+  type    = string
+  default = null
+  nullable = true
+}
