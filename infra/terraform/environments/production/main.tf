@@ -93,7 +93,7 @@ module "application_runtime" {
   public_subnet_ids             = module.network.public_subnet_ids
   private_subnet_ids            = module.network.private_subnet_ids
   application_security_group_id = module.network.application_security_group_id
-  image_uri = var.ecs_image_uri
+  image_uri                     = var.ecs_image_uri
 
   secret_arns = concat(
     var.ecs_secret_arns,
@@ -105,11 +105,11 @@ module "application_runtime" {
     [
       {
         name       = "DATABASE_USER"
-        value_from  = "${module.postgres.master_user_secret_arn}:username::"
+        value_from = "${module.postgres.master_user_secret_arn}:username::"
       },
       {
         name       = "DATABASE_PASSWORD"
-        value_from  = "${module.postgres.master_user_secret_arn}:password::"
+        value_from = "${module.postgres.master_user_secret_arn}:password::"
       }
     ],
   )
@@ -158,7 +158,7 @@ module "assessment_migration_runner" {
   vpc_id                        = module.network.vpc_id
   private_subnet_ids            = module.network.private_subnet_ids
   application_security_group_id = module.network.application_security_group_id
-  image_uri = var.assessment_migration_runner_image_uri
+  image_uri                     = var.assessment_migration_runner_image_uri
 
   secret_arns = concat(
     var.assessment_migration_runner_secret_arns,
@@ -169,11 +169,11 @@ module "assessment_migration_runner" {
     var.assessment_migration_runner_secret_environment_variables,
     [
       {
-        name      = "DATABASE_USER"
+        name       = "DATABASE_USER"
         value_from = "${module.postgres.master_user_secret_arn}:username::"
       },
       {
-        name      = "DATABASE_PASSWORD"
+        name       = "DATABASE_PASSWORD"
         value_from = "${module.postgres.master_user_secret_arn}:password::"
       }
     ],
