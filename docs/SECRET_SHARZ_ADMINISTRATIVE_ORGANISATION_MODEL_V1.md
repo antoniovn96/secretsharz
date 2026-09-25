@@ -1495,3 +1495,81 @@ Every external assignment requires:
 - audit trail.
 
 External access must default to least privilege and should expire automatically unless renewed.
+
+
+## 33. Founder decisions — institution ecosystem and commercial model — 25 September 2026
+
+### Institution ecosystem
+- Institution is a major Secret Sharz ecosystem alongside Counselling, SEN, Career/VidyaVantage, Professional, Community and Knowledge.
+- Institution tenancy is a hard data boundary before staff permission evaluation.
+- Institution staff and Secret Sharz staff access only institution data permitted by explicit role, relationship, purpose and scope.
+- The institution ecosystem will use the canonical Person, Relationship, Consent, Authorisation, Case and Audit foundations.
+
+### Institutional subscription model
+- Access to the full institutional dashboard is a paid institution service.
+- Institutional pricing is tied to the number of students served/managed by the institution.
+- A commercial threshold of ₹75,000 has been established by the Founder for premium entitlement.
+- Once the institution crosses the ₹75,000 threshold under the final billing rule, the institution receives the premium timetable tier without an additional premium charge.
+- The exact billing period, whether the ₹75,000 threshold is cumulative or per-term/per-year, student counting method and invoice mechanics remain open.
+- Premium entitlement is an institutional commercial entitlement and does not change student, parent or staff authorisation to sensitive records.
+
+### Premium timetable capabilities
+Premium timetable entitlement should include:
+- timetable download;
+- structured export;
+- institution logo/branding;
+- enhanced publication/printing options;
+- additional institutional configuration where later specified.
+
+The premium entitlement should not remove the core scheduling capabilities defined as part of the free/core timetable engine.
+
+### Institution onboarding
+Institution onboarding should follow:
+Institution application → institution verification → Institution Administrator creation → institution setup → subscription/entitlement activation.
+
+### Institution types
+The institution model supports:
+- schools;
+- colleges;
+- universities;
+- training institutes;
+- NGOs;
+- employers;
+- coaching/learning centres;
+- other education/service institutions.
+
+### Institution visibility and publishing
+Institution Administrators control what timetable information is published to:
+- teachers;
+- students;
+- parents/guardians;
+- relevant institutional staff.
+
+### Timetable access
+Published institutional schedules must support:
+- student timetable;
+- class timetable;
+- exam timetable;
+- room/resource changes;
+- substitution information;
+- daily schedule;
+subject to institution publication rules and user relationship/permissions.
+
+### Parent and child resources
+Parent/guardian dashboards may contain paid resources and optional purchases for themselves and for their authorised children, including:
+- positive parenting resources;
+- parenting guides;
+- parenting books;
+- children's educational resources;
+- age/stage activity packs;
+- family routine tools;
+- child timetable/routine tools;
+- optional child-focused learning or development resources.
+
+Commercial access remains separate from the child's sensitive service records.
+
+### Parenting recommendations
+Secret Sharz may provide general parenting-book recommendations and links to external retailers such as Amazon.
+- Secret Sharz should clearly disclose that the purchase occurs on the external retailer.
+- Product recommendations should not be generated from confidential counselling, SEN, safeguarding or other sensitive records unless a lawful, explicit and separately governed commercial recommendation consent exists.
+- General recommendations may be based on explicit parent-selected interests and non-sensitive preferences.
