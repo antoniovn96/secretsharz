@@ -1880,3 +1880,40 @@ Institution trial access uses a generated, institution-specific, single-use link
 - The timer is server-authoritative.
 - The link cannot be reused.
 - Trial issuance, activation, expiry and institution/prospect association are audited.
+
+## 37. Founder decisions — institution service engine and career assessment catalogue — 25 September 2026
+
+### Institutional service calculation
+- Service pricing is calculated from student count, hours, frequency, duration, format, topic/scope and assigned capacity.
+- Secret Sharz calculates required professional capacity before confirming a service engagement.
+
+### Counselling service modes
+Institutions may purchase individual student counselling, group counselling, class/grade counselling, teacher/staff counselling, parent counselling and whole-school programmes.
+
+### Career service catalogue
+Career services may be mixed and matched: career assessment, career guidance session, career counselling, college/course guidance, career workshops, parent career sessions and teacher career-guidance training.
+
+### SEN service catalogue
+SEN services may include screening, assessment, individual intervention, small-group intervention, teacher consultation, parent consultation, support-plan/IEP assistance, classroom observation and SEN educator placement.
+
+### Shared service scheduling
+Institutional Secret Sharz services use a shared scheduling/capacity foundation so timetable events, counselling sessions, career sessions, SEN services, workshops and teacher training can be checked for conflicts where the same professional or resource is involved.
+
+### Professional capacity
+A Secret Sharz professional profile should include working hours, availability, maximum service capacity, current caseload/workload, active institution assignments, delivery mode, onsite availability and geographic/travel constraints where applicable.
+
+### Offline service geography
+Offline services should capture country, region/state/province, city, service radius and onsite availability. Travel fees may be added to offline service quotations where applicable.
+
+### Service quotation and agreement
+Institution service procurement follows: Service selection → capacity check → quotation → digital acceptance → Service Agreement/Statement of Work → scheduling → delivery → reporting → completion/renewal.
+
+Service agreements should capture service, student count/cohort, dates, hours, delivery mode, assigned professional/team, deliverables, reports, fees, responsibilities, cancellation rules and privacy/confidentiality requirements.
+
+### Career assessment architecture
+Secret Sharz will support a modular career assessment catalogue containing: Career Interest Explorer / RIASEC; Career Aptitude Core; Career Skills Profile; Work Values Profile; Work Style / Big Five; Career Decision Self-Efficacy; Career Adaptability; Career Readiness / Decision Maturity; Vocational Identity & Clarity; Career Exploration Knowledge; Subject & Academic Alignment; Work Environment Preferences; Motivation & Career Drivers; Entrepreneurial Orientation; Resilience & Persistence; Career Barriers & Support Needs; Career Outcome Expectations; Situational Judgement; Career Work Samples/Simulations; Portfolio & Experience Profile; Career Goals & Preferences.
+
+Assessment packages must be mix-and-match and age/stage appropriate.
+
+### Assessment governance
+Assessment results are decision-support, not deterministic career assignment. Third-party instruments require appropriate licensing and validation. Original Secret Sharz assessments must undergo documented construct, reliability, validity, accessibility, language and cultural review before production use.
