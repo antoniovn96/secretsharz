@@ -1165,3 +1165,333 @@ The architecture must keep these concepts separate:
 - relationship
 
 Holding one role must not silently grant another.
+
+## 27. Founder decisions — positions, roles, lifecycle and participant model — 25 September 2026
+
+### Department and position governance
+- SuperAdmin creates and retires departments.
+- Executive Leadership may propose a new department.
+- A Department Head may propose new positions within an existing department.
+- HR validates workforce necessity, employment classification and lifecycle implications for a position.
+- SuperAdmin activates the position in the governed organisational catalogue.
+- Positions are organisational jobs, not permission bundles.
+
+### Role governance
+- Roles are centrally governed platform/security objects.
+- Department Heads may request or recommend roles needed for their work.
+- SuperAdmin or an authorised Platform/Security governance function creates or changes permission-bearing roles.
+- Department Heads cannot freely invent new permission bundles.
+- A role may be reused across departments where the permission meaning is genuinely the same; otherwise separate role definitions are preferred.
+- Permissions remain fine-grained and domain-specific.
+
+### Multiple department assignments
+- A Person may hold multiple simultaneous department memberships.
+- Each department membership has its own position, role assignment, effective dates and permission context.
+- Removing one assignment must not silently remove unrelated assignments.
+
+### Acting Department Head
+The department leadership lifecycle supports:
+Current Head → Acting Head → Permanent Head.
+
+An Acting Head assignment:
+- is explicit;
+- has an effective date;
+- has an expiry/review date;
+- receives only the delegated permissions;
+- does not automatically become the permanent Head.
+
+### Employee lifecycle
+Recommended employee lifecycle:
+
+Candidate → Applicant → Selected → Offer → Pre-boarding → Active → Leave → Suspended → Offboarding → Exited
+
+The platform separates:
+- HR/employment status;
+- platform access status;
+- departmental membership;
+- professional activation status.
+
+A change in one does not silently overwrite the others.
+
+### Suspension model
+When an employee is suspended:
+- the employment/suspension record is preserved;
+- platform access may be revoked or restricted immediately based on the configured event;
+- specialist and departmental access is re-evaluated;
+- HR retains only the access necessary for the employment process;
+- audit evidence remains preserved;
+- restoration requires explicit reactivation.
+
+### Professional verification lifecycle
+Recommended professional lifecycle:
+
+Application
+→ Identity verification
+→ Qualification verification
+→ Licence/registration verification
+→ Experience verification
+→ Background checks where applicable
+→ Professional Quality review
+→ HR review
+→ Activation
+→ Renewal
+→ Restriction/Suspension
+→ Revocation
+
+Professional activation requires the required HR and Professional Quality/Verification checks to pass.
+
+### Expiry state machine
+For expiring professional credentials and similar governed requirements:
+
+Current → Warning → Restricted → Suspended
+
+- Warning gives advance notice.
+- Restricted limits selected professional functions.
+- Suspended removes professional service functionality where required.
+- Reinstatement requires successful re-verification according to the governing rule.
+- The system should show the reason and effective date for each transition.
+
+### Person and participant model
+A single canonical Person may simultaneously have:
+- Employee
+- Customer
+- Client
+- Member
+- Service Recipient
+- Professional
+- Institution Contact
+- Partner
+- Vendor
+- Student
+- Parent/Guardian
+
+Each is a separate relationship/participant context, not a separate human identity.
+
+### Institution model
+Each Institution receives a dedicated institution identity/account context.
+
+Multiple people can be linked to an Institution through explicit relationships, for example:
+- Principal/Executive contact
+- Academic contact
+- Counselling contact
+- HR contact
+- Accounts contact
+- Operations contact
+- Administrator
+
+Each institutional contact has an independently permissioned relationship. One contact does not inherit another contact's authority.
+
+### Parent/guardian relationship
+A parent/guardian may be connected to multiple children, and a child may have multiple authorised guardians where legally and operationally appropriate.
+
+Each guardian-child relationship records:
+- authority type;
+- scope;
+- start/end;
+- consent status;
+- jurisdiction;
+- verification status where required;
+- service-specific permissions.
+
+## 28. Founder requirement — free Institution Timetable Management Software
+
+Secret Sharz will include a free Institution Timetable Management Software module.
+
+It is an institution-facing product capability and is not limited to any single institution.
+
+The initial product name may be **Secret Sharz Institution Timetable Manager**.
+
+### Core scheduling
+The module must include:
+- automatic timetable generation;
+- constraint-based scheduling;
+- teacher conflict detection;
+- student-group conflict detection;
+- room/classroom conflict detection;
+- rule-based constraints;
+- subject sequencing;
+- double-period configuration;
+- laboratory/special-room rules;
+- teacher workload balancing;
+- capacity and availability constraints.
+
+### Daily operations
+The module must include:
+- substitution/proxy management;
+- absence-aware teacher reassignment;
+- exam timetable generation;
+- exam room allocation;
+- seating-plan generation;
+- room/resource booking;
+- shared-resource conflict prevention;
+- attendance linkage;
+- lesson-topic/register linkage.
+
+### Access
+Institution staff receive role-based access for:
+- Timetable Administrator
+- Institution Administrator
+- Academic Leadership
+- Department/Grade Coordinator
+- Teacher
+- Student
+- Parent/Guardian
+
+Users only see the scheduling information permitted by their institution relationship and role.
+
+### Notifications
+The module should support:
+- timetable publication;
+- timetable changes;
+- substitute assignment;
+- room changes;
+- exam schedule publication;
+- relevant reminders.
+
+Channels should be configurable for email, SMS, push notifications and in-platform notifications where enabled.
+
+### Integration
+The module should support:
+- REST/API integration;
+- CSV import/export;
+- calendar export;
+- Google Calendar integration where authorised;
+- Microsoft 365/Outlook calendar integration where authorised;
+- SIS/LMS integration through controlled connectors.
+
+### Scheduling engine
+The timetable generator should model:
+- hard constraints that must never be broken;
+- soft constraints that the optimiser should satisfy where possible;
+- weighted preferences;
+- teacher availability;
+- room availability;
+- student group availability;
+- subject periods per week;
+- maximum consecutive teaching periods;
+- required breaks;
+- room/resource requirements;
+- fixed periods;
+- double periods;
+- sequencing rules;
+- department/grade-specific rules.
+
+The generator must produce an explanation of unresolved constraints rather than silently generating an invalid timetable.
+
+### Workload management
+For each teacher, the system should calculate:
+- assigned periods;
+- free periods;
+- consecutive periods;
+- subject distribution;
+- room/resource use;
+- substitution load;
+- workload against configured capacity.
+
+### Versioning
+Timetables must be versioned:
+- Draft
+- Review
+- Approved
+- Published
+- Archived
+
+Published timetables must remain auditable. Changes create a new version rather than destroying the previous published schedule.
+
+### Free product principle
+The base timetable management capability is intended to be free for institutions.
+
+Paid services, where later introduced, must be separate optional services and must not make the core timetable generation unavailable merely because an institution does not purchase additional products.
+
+## 29. Parent paid content ecosystem
+
+Parent/guardian dashboards may include a separate paid content area containing:
+- positive parenting guides;
+- age/stage parenting resources;
+- parenting books;
+- recommended reading;
+- family routine tools;
+- child timetable/household routine tools;
+- parent education resources.
+
+The paid content catalogue is separate from a child's private service records.
+
+Purchasing a parenting resource does not grant additional authority over:
+- counselling records;
+- SEN records;
+- safeguarding records;
+- professional records;
+- unrelated child data.
+
+Access to paid content is a commercial entitlement, while access to a child is an authorisation/relationship decision.
+
+## 30. Minor-protection architecture
+
+Secret Sharz will implement a jurisdiction-aware child/minor protection engine.
+
+The engine evaluates at minimum:
+- age;
+- country/jurisdiction;
+- service type;
+- legal basis;
+- parental/guardian authority;
+- consent requirements;
+- age-assurance requirements;
+- safeguarding state;
+- data sensitivity;
+- cross-border transfer requirements.
+
+The product will not use one universal minor rule worldwide.
+
+Examples of requirements that must be represented in the engine include:
+- EU GDPR child-consent rules, where applicable;
+- UK Children's Code / Age Appropriate Design requirements;
+- US COPPA requirements, where applicable;
+- India's DPDP child-data requirements;
+- Australia's Children's Online Privacy Code and related privacy obligations as applicable.
+
+The system should default to the more protective configuration where applicability is uncertain, then require governance review before reducing protection.
+
+For example:
+- EU GDPR Article 8 sets a default 16-year threshold for consent to certain information-society processing, subject to member-state lowering to not below 13, with parental-authority consent below the applicable age. citeturn949872search1
+- UK ICO Children's Code applies to online services likely to be accessed by children and emphasises children's best interests and DPIAs. citeturn949872search0turn949872search5
+- US COPPA generally requires verifiable parental consent before collecting personal information from children under 13 when covered by the rule, with specific exceptions. citeturn949872search4turn949872search13
+- India's 2025 DPDP Rules include verifiable parental-consent mechanisms for processing children's personal data, subject to the Act and applicable rules/exemptions. citeturn754391search5turn754391search7
+- Australia's Children's Online Privacy Code is being developed for covered online services likely to be accessed by children, with the final Code required by 10 December 2026; its scope and timing must therefore be tracked as a versioned jurisdictional rule rather than hard-coded as current final law today. citeturn825118search0turn825118search8
+
+The child/minor engine must be policy-driven and versioned because laws and regulatory requirements change.
+
+## 31. International localisation
+The platform treats these as separate dimensions:
+- language;
+- country;
+- currency;
+- timezone;
+- date/number format;
+- legal jurisdiction;
+- data residency;
+- communication preferences.
+
+Changing one does not automatically change the others.
+
+A person may live in one country, use another language, have a different nationality/identity context, receive services in another jurisdiction and have data stored in a permitted regional environment. The system must model these independently.
+
+## 32. External/Vendor Access
+Vendors, contractors, auditors and external service providers may receive controlled access through a dedicated External/Vendor Access model.
+
+Vendor accounts are not employee accounts.
+
+Every external assignment requires:
+- organisation/vendor relationship;
+- named human or service identity;
+- purpose;
+- scope;
+- start date;
+- expiry/review date;
+- approved data domains;
+- access restrictions;
+- sponsor/owner;
+- contract/agreement reference where applicable;
+- audit trail.
+
+External access must default to least privilege and should expire automatically unless renewed.
