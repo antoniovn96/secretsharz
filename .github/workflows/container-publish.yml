@@ -1,0 +1,93 @@
+name: Secret Sharz Container Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "AWS environment to publish to"
+        required: true
+        type: choice
+        options:
+          - nonprod
+          - production
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-container-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish container (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      AWS_REGION: ${{ inputs.environment == 'production' && 'ap-south-1' || 'ap-southeast-2' }}
+      ECR_REPOSITORY: secretsharz-${{ inputs.environment }}
+      IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Verify required public Firebase build configuration
+        env:
+          FIREBASE_API_KEY: ${{ vars.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ vars.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ vars.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_APP_ID }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in FIREBASE_API_KEY FIREBASE_AUTH_DOMAIN FIREBASE_PROJECT_ID FIREBASE_STORAGE_BUCKET FIREBASE_MESSAGING_SENDER_ID FIREBASE_APP_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing GitHub Environment variable ${name#FIREBASE_/NEXT_PUBLIC_} (NEXT_PUBLIC_*)."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Authenticate to Amazon ECR
+        run: |
+          aws ecr get-login-password --region "$AWS_REGION" |
+            docker login --username AWS --password-stdin "$(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_REGION.amazonaws.com"
+
+      - name: Resolve ECR registry
+        id: registry
+        run: |
+          echo "registry=$(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_REGION.amazonaws.com" >> "$GITHUB_OUTPUT"
+
+      - name: Verify ECR repository
+        run: aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" --region "$AWS_REGION"
+
+      - name: Build image
+        run: |
+          docker build             --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ vars.NEXT_PUBLIC_FIREBASE_API_KEY }}"             --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ vars.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}"             --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}"             --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="${{ vars.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}"             --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="${{ vars.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}"             --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="${{ vars.NEXT_PUBLIC_FIREBASE_APP_ID }}"             --tag "${{ steps.registry.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG"             --tag "${{ steps.registry.outputs.registry }}/$ECR_REPOSITORY:latest"             .
+
+      - name: Push immutable image
+        run: |
+          docker push "${{ steps.registry.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push "${{ steps.registry.outputs.registry }}/$ECR_REPOSITORY:latest"
+
+      - name: Record image URI
+        run: |
+          echo "### Container published" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Environment: `$ECR_REPOSITORY`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Region: `$AWS_REGION`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Immutable image: `${{ steps.registry.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG`" >> "$GITHUB_STEP_SUMMARY"
