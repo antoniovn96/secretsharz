@@ -237,6 +237,7 @@ Resources:
               - ecr:InitiateLayerUpload
               - ecr:ListImages
               - ecr:PutImage
+              - ecr:TagResource
               - ecr:UploadLayerPart
             Resource: "*"
           - Sid: ContainerRuntime
@@ -255,11 +256,13 @@ Resources:
               - ecs:RegisterTaskDefinition
               - ecs:RunTask
               - ecs:StopTask
+              - ecs:TagResource
               - ecs:UpdateService
               - logs:CreateLogGroup
               - logs:DeleteLogGroup
               - logs:DescribeLogGroups
               - logs:PutRetentionPolicy
+              - logs:TagResource
             Resource: "*"
           - Sid: IamForEcs
             Effect: Allow
@@ -276,6 +279,8 @@ Resources:
               - iam:ListAttachedRolePolicies
               - iam:ListRolePolicies
               - iam:PassRole
+              - iam:TagPolicy
+              - iam:TagRole
             Resource: "*"
           - Sid: TerraformProviderReads
             Effect: Allow
