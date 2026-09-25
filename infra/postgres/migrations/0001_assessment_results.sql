@@ -1,5 +1,5 @@
 -- Secret Sharz — Assessment Result PostgreSQL Model V1
--- Draft migration only.
+-- Versioned migration executed by scripts/run-postgres-migrations.mjs.
 -- Provider-independent application contract; no application authorization is performed here.
 -- Canonical Person/Account tables are intentionally referenced as opaque TEXT until the
 -- broader platform identity migration establishes concrete PostgreSQL foreign keys.
