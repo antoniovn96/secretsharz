@@ -14,6 +14,10 @@ on:
       - ".github/workflows/terraform.yml"
 
 
+concurrency:
+  group: secretsharz-terraform-validation-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   terraform:
     runs-on: ubuntu-latest
