@@ -35,3 +35,9 @@ test('status transitions preserve the same result identity',()=>{
   assert.ok(submitted.attempt.startedAt);
   assert.ok(submitted.attempt.submittedAt);
 });
+
+test('rejects assessment status regression',()=>{
+  const result=createAssessmentResultRecord({id:'assessment-result-1',personId:'person-1',instrumentId:'CAREER-INTEREST-RIASEC',instrumentVersion:'1.0.0-draft',itemBankVersion:'1.0.0',scoringVersion:'1.0.0-draft'});
+  const started=transitionAssessmentResult(result,'started');
+  assert.throws(()=>transitionAssessmentResult(started,'created'),/Invalid assessment status transition/);
+});
