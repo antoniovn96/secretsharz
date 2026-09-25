@@ -36,6 +36,23 @@ on:
 jobs:
   career-assessment:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: secretsharz
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d secretsharz"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/secretsharz
+      DATABASE_SSL: "false"
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -48,6 +65,12 @@ jobs:
 
       - name: Install
         run: npm ci
+
+      - name: Run PostgreSQL migrations
+        run: npm run db:migrate
+
+      - name: Verify PostgreSQL assessment schema
+        run: node scripts/verify-assessment-schema.mjs
 
       - name: Run career assessment tests
         run: npm run test:career-assessment
