@@ -83,10 +83,10 @@ resource "aws_ecs_task_definition" "this" {
   execution_role_arn       = aws_iam_role.task_execution[0].arn
 
   container_definitions = jsonencode([{
-    name        = var.name
-    image       = var.image_uri
-    essential   = true
-    command     = var.command
+    name      = var.name
+    image     = var.image_uri
+    essential = true
+    command   = var.command
     environment = [
       {
         name  = "DATABASE_SSL"
