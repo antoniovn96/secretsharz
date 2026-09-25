@@ -24,7 +24,23 @@ Initialize the workload state only after the bucket and role exist:
 
 Then verify the state object and lockfile behavior before any apply.
 
-## 2. GitHub OIDC role
+## 2. Verify the AWS bootstrap
+
+After the CloudFormation bootstrap stack is deployed and the GitHub `nonprod` Environment contains `AWS_ROLE_ARN` and `TERRAFORM_STATE_BUCKET`, run:
+
+    .github/workflows/nonprod-bootstrap-preflight.yml
+
+The preflight verifies:
+
+- the bootstrap CloudFormation stack is complete
+- the Terraform state bucket has versioning, encryption and S3 Block Public Access
+- the GitHub Actions OIDC role exists
+- the role trusts only `antoniovn96/secretsharz` on `rebuild/platform-foundation-v1`
+- no workload Terraform or database mutation occurs
+
+Do not proceed to the first workload Terraform plan until this preflight passes.
+
+## 4. GitHub OIDC role
 
 The GitHub deployment role must trust the repository workflow identity and be restricted to the intended repository/ref/environment.
 
@@ -60,7 +76,7 @@ Keep these runtime flags disabled on the first infrastructure-only apply:
 
 This allows the network, database and registry foundation to exist before introducing application tasks.
 
-## 4. Publish the first immutable image
+## 5. Publish the first immutable image
 
 Run the manual container publish workflow for nonprod.
 
@@ -70,7 +86,7 @@ The workflow must report the AWS identity, ECR repository and immutable image UR
 
 Do not use latest as the deployment identifier.
 
-## 5. Enable the migration runner
+## 6. Enable the migration runner
 
 After the image exists, configure the non-production environment with:
 
@@ -81,7 +97,7 @@ The environment automatically wires the RDS-managed username/password secret int
 
 The runner uses DATABASE_HOST, DATABASE_PORT, DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD, DATABASE_SSL=true and DATABASE_SSL_REJECT_UNAUTHORIZED=true.
 
-## 6. Run migrations
+## 7. Run migrations
 
 Populate the GitHub nonprod Environment variables used by the manual migration workflow:
 
@@ -102,7 +118,7 @@ The expected sequence is:
       -> verify-assessment-schema.mjs
       -> exit 0
 
-## 7. Application runtime
+## 8. Application runtime
 
 Only after the migration succeeds should the application runtime be enabled:
 
@@ -111,7 +127,7 @@ Only after the migration succeeds should the application runtime be enabled:
 
 The application task uses the same RDS-managed credentials and TLS settings.
 
-## 8. Real RIASEC verification
+## 9. Real RIASEC verification
 
 The first real end-to-end test is not complete until all of these have been demonstrated against the AWS RDS database:
 
@@ -127,7 +143,7 @@ The first real end-to-end test is not complete until all of these have been demo
 
 This is the point at which the earlier CI/fake-database verification becomes a real AWS integration result.
 
-## 9. Production remains untouched
+## 10. Production remains untouched
 
 Do not enable the production ECS runtime or migration runner during this first exercise.
 
