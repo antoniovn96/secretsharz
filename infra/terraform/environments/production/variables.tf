@@ -57,3 +57,30 @@ variable "ecs_secret_environment_variables" {
   }))
   default = []
 }
+
+variable "assessment_migration_runner_enabled" {
+  description = "Enable the one-off ECS task definition and cluster used to run database migrations."
+  type        = bool
+  default     = false
+}
+
+variable "assessment_migration_runner_image_uri" {
+  description = "Immutable application image used by the migration runner."
+  type        = string
+  default     = ""
+}
+
+variable "assessment_migration_runner_secret_arns" {
+  description = "Secrets Manager ARNs the migration task execution role may read."
+  type        = list(string)
+  default     = []
+}
+
+variable "assessment_migration_runner_secret_environment_variables" {
+  description = "Secret environment variable mappings for the migration runner."
+  type = list(object({
+    name       = string
+    value_from = string
+  }))
+  default = []
+}
