@@ -690,3 +690,83 @@ The timetable product does not include:
 - general emergency alerting.
 
 It may include timetable-related announcements and notifications only.
+
+## 25. Founder decisions — institutional services, reports and trial links — 25 September 2026
+
+### Career assessment service
+Career assessments are offered by grade/stage-specific entitlements.
+The institutional dashboard receives the assessment report appropriate to the chosen assessment.
+The principal/authorised institutional leader can access the authorised report.
+Teachers do not automatically receive individual assessment reports.
+An assigned Secret Sharz counsellor/coach may receive the access required for the service.
+Student/parent access remains separately governed.
+
+### Counselling service packages
+Counselling is an institution-paid service separate from the base platform subscription.
+
+The service catalogue supports:
+- one-month programmes;
+- three-month programmes;
+- six-month programmes;
+- one-year programmes;
+- online delivery;
+- offline delivery;
+- defined session frequencies such as one session per month, three sessions per month and other configured frequencies.
+
+Pricing is based on configured:
+- hours;
+- number of students;
+- duration;
+- frequency;
+- topic/scope;
+- delivery mode;
+- assigned team/professional;
+- other agreed service factors.
+
+### Workshops and school programmes
+The institution catalogue may include programmes such as:
+- WHO 10 Life Skills;
+- 21st Century Skills;
+- teacher training.
+
+Working Founder reference prices:
+- full day: approximately ₹8,000 for about 100 students over 8 hours;
+- half day: approximately ₹4,000.
+
+These are working reference figures and not yet a universal fixed tariff.
+
+### SEN support
+Secret Sharz SEN educators/tutors may provide institutional support as a separate service entitlement.
+Working service pattern:
+- two days per week;
+- approximately 9:00 a.m. to 4:00 p.m. school-day coverage;
+- configured student coverage and staffing;
+- configured commercial terms.
+
+### Institutional service entitlement architecture
+The platform separates:
+- Institution Dashboard subscription;
+- career assessment entitlement;
+- counselling entitlement;
+- SEN entitlement;
+- workshop/training entitlement;
+- other human service entitlements.
+
+Each has its own:
+- quantity;
+- scope;
+- duration;
+- delivery mode;
+- schedule;
+- assigned provider/team;
+- status;
+- reporting requirements.
+
+### Career guidance teacher accounts
+Basic career guidance includes a maximum of two teacher accounts.
+The account entitlement is separate from the institution's student count.
+
+### Trial access
+Marketing/HR can create an institution-specific, single-use trial link through the backend.
+The two-hour trial begins when the recipient opens the authorised link and successfully enters the dashboard.
+The timer is server-authoritative and cannot be restarted by refresh or reuse of the link.
