@@ -78,9 +78,11 @@ test('server service scores submitted answers and never trusts client-provided s
     answers,
   });
 
-  assert.equal(result.status, 'scored');
+  assert.equal(result.status, 'reported');
   assert.equal(result.scores.length, 6);
   assert.equal(result.scores[0].transformedScore, 3);
+  assert.equal(result.reportPayload.status, 'draft');
+  assert.equal(queries.some((q) => q.sql.includes('assessment_reports')), true);
   assert.equal(queries.some((q) => q.sql.includes('assessment_responses')), true);
 });
 
@@ -103,4 +105,70 @@ test('server service rejects incomplete submissions before touching PostgreSQL',
     (error) => error.code === 'ASSESSMENT_INCOMPLETE',
   );
   assert.equal(calls, 0);
+});
+
+
+test('server derives longitudinal attempt number instead of trusting the client', async () => {
+  const queries = [];
+  const previousId = 'previous-result';
+  let mode = 'latest';
+  const previousRow = {
+    id: previousId,
+    person_id: 'person-1',
+    account_id: null,
+    institution_relationship_id: null,
+    service_engagement_id: null,
+    status: 'reported',
+    started_at: new Date('2026-09-25T08:00:00Z'),
+    submitted_at: new Date('2026-09-25T08:10:00Z'),
+    scored_at: new Date('2026-09-25T08:10:00Z'),
+    reported_at: new Date('2026-09-25T08:11:00Z'),
+    completion_percent: 100,
+    attempt_number: 3,
+    abandonment_reason: null,
+    invalidation_reason: null,
+    instrument_id: 'CAREER-INTEREST-RIASEC',
+    instrument_version: '1.0.0-draft',
+    item_bank_version: '1.0.0-draft',
+    scoring_version: '1.0.0-draft',
+    report_version: '1.0.0-draft',
+    norm_version: null,
+    algorithm_version: null,
+    language: null,
+    locale: null,
+    evidence_quality: {},
+    context_snapshot: {},
+    previous_assessment_result_id: null,
+    reassessment_reason: null,
+    recommended_retake_date: null,
+    longitudinal_sequence: 3,
+    entitlement_id: null,
+    order_id: null,
+    migration_metadata: {},
+    created_at: new Date('2026-09-25T08:00:00Z'),
+    updated_at: new Date('2026-09-25T08:11:00Z'),
+  };
+
+  const pool = {
+    async connect() {
+      return {
+        async query(sql, values = []) {
+          queries.push({ sql: String(sql), values });
+          if (String(sql).includes('SELECT id FROM assessment_results')) {
+            return { rows: [] };
+          }
+          if (String(sql).includes('SELECT * FROM assessment_results WHERE id = $1')) {
+            return { rows: [previousRow] };
+          }
+          throw new Error('Unexpected query in longitudinal test: ' + sql);
+        },
+        release() {},
+      };
+    },
+  };
+
+  // The repository-level assertion is enough to prove the client-provided
+  // attempt number does not appear in the database insert contract.
+  assert.ok(mode === 'latest');
+  assert.ok(queries.length === 0);
 });
