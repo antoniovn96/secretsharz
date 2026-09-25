@@ -356,6 +356,49 @@ export async function persistAssessmentResult({ pool, result, authorizationConte
   }
 }
 
+export async function getLatestAssessmentResultForPerson({
+  pool,
+  personId,
+  instrumentId = null,
+  authorizationContext,
+}) {
+  if (!pool || typeof pool.connect !== 'function') {
+    throw new Error('A PostgreSQL pool is required.');
+  }
+  assertAuthorizedAssessmentContext(authorizationContext, personId);
+
+  const client = await pool.connect();
+  try {
+    const clauses = ['person_id = $1'];
+    const values = [personId];
+
+    if (instrumentId) {
+      values.push(instrumentId);
+      clauses.push(`instrument_id = ${values.length}`);
+    }
+
+    const resultQuery = await client.query(
+      `SELECT id FROM assessment_results
+       WHERE ${clauses.join(' AND ')}
+         AND status NOT IN ('abandoned', 'invalidated')
+       ORDER BY COALESCE(reported_at, scored_at, submitted_at, created_at) DESC, created_at DESC
+       LIMIT 1`,
+      values,
+    );
+
+    if (!resultQuery.rows[0]) return null;
+    const assessmentResultId = resultQuery.rows[0].id;
+
+    return await getAssessmentResultById({
+      pool,
+      assessmentResultId,
+      authorizationContext,
+    });
+  } finally {
+    client.release();
+  }
+}
+
 export async function getAssessmentResultById({ pool, assessmentResultId, authorizationContext }) {
   if (!pool || typeof pool.connect !== 'function') {
     throw new Error('A PostgreSQL pool is required.');
@@ -431,4 +474,5 @@ export async function getAssessmentResultById({ pool, assessmentResultId, author
 export default {
   persistAssessmentResult,
   getAssessmentResultById,
+  getLatestAssessmentResultForPerson,
 };
