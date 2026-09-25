@@ -134,6 +134,7 @@ Resources:
           - Sid: TerraformStateBucket
             Effect: Allow
             Action:
+              - s3:GetBucketLocation
               - s3:ListBucket
             Resource:
               - !GetAtt TerraformStateBucket.Arn
@@ -263,35 +264,49 @@ Resources:
               - logs:PutRetentionPolicy
               - logs:TagResource
             Resource: "*"
-          - Sid: IamForEcs
+          - Sid: IamRoles
             Effect: Allow
             Action:
               - iam:AttachRolePolicy
-              - iam:CreatePolicy
-              - iam:CreatePolicyVersion
               - iam:CreateRole
-              - iam:CreateServiceLinkedRole
-              - iam:DeletePolicy
-              - iam:DeletePolicyVersion
               - iam:DeleteRole
               - iam:DetachRolePolicy
-              - iam:GetPolicy
               - iam:GetRole
-              - iam:ListPolicyVersions
-              - iam:ListPolicyTags
-              - iam:ListRoleTags
               - iam:ListAttachedRolePolicies
               - iam:ListRolePolicies
+              - iam:ListRoleTags
               - iam:PassRole
-              - iam:SetDefaultPolicyVersion
-              - iam:TagPolicy
               - iam:TagRole
-              - iam:UntagPolicy
               - iam:UntagRole
               - iam:UpdateAssumeRolePolicy
             Resource:
               - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/secretsharz-nonprod-*"
+          - Sid: IamManagedPolicies
+            Effect: Allow
+            Action:
+              - iam:CreatePolicy
+              - iam:CreatePolicyVersion
+              - iam:DeletePolicy
+              - iam:DeletePolicyVersion
+              - iam:GetPolicy
+              - iam:ListPolicyTags
+              - iam:ListPolicyVersions
+              - iam:SetDefaultPolicyVersion
+              - iam:TagPolicy
+              - iam:UntagPolicy
+            Resource:
               - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/secretsharz-nonprod-*"
+          - Sid: IamServiceLinkedRole
+            Effect: Allow
+            Action:
+              - iam:CreateServiceLinkedRole
+            Resource: "*"
+            Condition:
+              StringEquals:
+                iam:AWSServiceName:
+                  - ecs.amazonaws.com
+                  - elasticloadbalancing.amazonaws.com
+                  - rds.amazonaws.com
           - Sid: TerraformProviderReads
             Effect: Allow
             Action:
