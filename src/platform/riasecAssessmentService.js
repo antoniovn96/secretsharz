@@ -52,6 +52,8 @@ export async function submitRiasecAssessmentV1({
     purpose: 'career_assessment_submission',
   };
 
+  let resolvedAttemptNumber = 1;
+
   if (previousAssessmentResultId) {
     const previous = await getAssessmentResultById({
       pool,
@@ -66,6 +68,18 @@ export async function submitRiasecAssessmentV1({
       error.code = 'INVALID_PREVIOUS_ASSESSMENT_RESULT';
       throw error;
     }
+    resolvedAttemptNumber = Math.max(1, Number(previous.attempt?.attemptNumber || 1) + 1);
+  } else {
+    const latest = await getLatestAssessmentResultForPerson({
+      pool,
+      personId,
+      instrumentId: RIASEC_V1.instrumentId,
+      authorizationContext: {
+        ...authorizationContext,
+        purpose: 'career_assessment_attempt_number',
+      },
+    });
+    resolvedAttemptNumber = Math.max(1, Number(latest?.attempt?.attemptNumber || 0) + 1);
   }
 
   const reportPayload = buildRiasecReportPayload(score, {
@@ -86,7 +100,7 @@ export async function submitRiasecAssessmentV1({
     orderId,
     contextSnapshot,
     previousAssessmentResultId,
-    attemptNumber,
+    attemptNumber: resolvedAttemptNumber,
   });
 
   result.id = id;
