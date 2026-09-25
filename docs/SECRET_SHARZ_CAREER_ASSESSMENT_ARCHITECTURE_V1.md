@@ -543,3 +543,92 @@ Explore
 → Reassess
 
 The same person can retake selected modules over time without creating a second career identity.
+
+## 13. Founder decisions — assessment retakes, quality and longitudinal reporting — 25 September 2026
+
+### Retake recommendations
+Assessment retake timing should depend on the construct:
+- Interest: 6–12 months
+- Aptitude: approximately 12 months
+- Work Values: 6–12 months
+- Work Style/Big Five: approximately 12 months
+- Career readiness/decision modules: approximately 6 months
+
+Retake policies must be configurable by instrument, age/stage, jurisdiction and validated test-retest guidance.
+
+### Result visibility
+Students should receive their interpretable results/report rather than unrestricted access to raw scoring keys or sensitive internal scoring data.
+Authorised counsellors may access deeper response/scoring information when required for their service.
+
+### Confidence and data-quality indicator
+Every integrated career profile should show a confidence/data-completeness indicator that reflects the amount, quality and recency of available evidence.
+
+The indicator must not be presented as the probability that a career recommendation will be correct.
+
+Example factors:
+- number of assessment families completed;
+- assessment recency;
+- response quality/validity indicators where supported;
+- academic/context evidence availability;
+- experience/portfolio evidence;
+- contradictions or missing modules.
+
+### Contradiction-aware interpretation
+The recommendation engine must identify meaningful mixed signals rather than smoothing them away.
+
+Example:
+- strong interest in healthcare;
+- lower investigative/subject alignment;
+- strong social/helping values.
+
+The report should explain that the signals are mixed and suggest exploration or counselling questions rather than forcing a single conclusion.
+
+### Counsellor annotation
+Authorised counsellors/coaches may add a professional interpretation to an assessment result.
+The platform must preserve:
+- original automated result;
+- counsellor annotation;
+- author;
+- timestamp;
+- version;
+- purpose/context.
+
+A counsellor annotation cannot rewrite the historical raw assessment result.
+
+### Longitudinal Career Journey
+Assessment results are stored as versioned observations over time.
+
+The journey should show:
+- baseline profile;
+- later reassessments;
+- changed interests;
+- changed values;
+- new skills;
+- changed goals;
+- changing career readiness;
+- actions completed;
+- counselling milestones.
+
+A later assessment does not erase the historical record.
+
+## 14. Founder requirement — TAMANNA/MCA-informed improvement target
+
+The public TAMANNA material confirms a strong baseline in structured aptitude assessment: TAMANNA targets Classes IX–X, measures seven aptitude dimensions, has a technical manual, teacher/parent guidance, norms and interpretation guidance, and was piloted/standardised across large school samples. The public TAMANNA site explicitly says it is intended to provide information about student strengths, has no pass/fail outcome, and should not be used to impose subjects on students. citeturn166453view0turn526528search25turn526528search0
+
+The public My Career Advisor material confirms a broader digital experience: interactive questionnaires covering aptitude, interests and values; tailored job-role recommendations; a large career catalogue; saved/favourite roles; comparison; detailed career profiles; passion mapping; preparation guidance; shareable reports; bilingual/mobile-first access; videos/voiceovers; and AI-powered guidance. citeturn502563search1turn725590search0turn725590search20
+
+Secret Sharz must therefore improve on the baseline through **depth of individualisation**, not by merely adding more questions.
+
+The design target is:
+- one assessment engine with many validated modules;
+- one longitudinal Student Career Journey;
+- personalised narratives grounded in actual evidence;
+- explicit contradictions and uncertainty;
+- actionable pathways rather than a static career list;
+- human counsellor annotations;
+- institution, parent and student views with different permissions;
+- progress and reassessment over time;
+- personalised next actions;
+- career exploration connected to education pathways, skills and experiences.
+
+The platform should not reproduce another platform's questions, scoring keys, report text or proprietary content. Secret Sharz instruments and reports must be independently authored/validated or appropriately licensed.
