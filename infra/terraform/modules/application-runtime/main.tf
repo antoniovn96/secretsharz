@@ -1,9 +1,10 @@
 locals {
-  enabled = var.enabled ? 1 : 0
+  enabled       = var.enabled
+  enabled_count = var.enabled ? 1 : 0
 }
 
 resource "aws_cloudwatch_log_group" "this" {
-  count = local.enabled
+  count = local.enabled_count
 
   name              = "/ecs/${var.name}"
   retention_in_days = 30
@@ -14,7 +15,7 @@ resource "aws_cloudwatch_log_group" "this" {
 }
 
 resource "aws_ecs_cluster" "this" {
-  count = local.enabled
+  count = local.enabled_count
 
   name = var.name
 
@@ -29,7 +30,7 @@ resource "aws_ecs_cluster" "this" {
 }
 
 resource "aws_iam_role" "task_execution" {
-  count = local.enabled
+  count = local.enabled_count
 
   name = "${var.name}-task-execution"
 
@@ -46,14 +47,14 @@ resource "aws_iam_role" "task_execution" {
 }
 
 resource "aws_iam_role_policy_attachment" "task_execution_base" {
-  count = local.enabled
+  count = local.enabled_count
 
   role       = aws_iam_role.task_execution[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 resource "aws_iam_policy" "task_execution_secrets" {
-  count = local.enabled && length(var.secret_arns) > 0 ? 1 : 0
+  count = local.enabled_count && length(var.secret_arns) > 0 ? 1 : 0
 
   name = "${var.name}-task-secrets"
 
@@ -68,14 +69,14 @@ resource "aws_iam_policy" "task_execution_secrets" {
 }
 
 resource "aws_iam_role_policy_attachment" "task_execution_secrets" {
-  count = local.enabled && length(var.secret_arns) > 0 ? 1 : 0
+  count = local.enabled_count && length(var.secret_arns) > 0 ? 1 : 0
 
   role       = aws_iam_role.task_execution[0].name
   policy_arn = aws_iam_policy.task_execution_secrets[0].arn
 }
 
 resource "aws_iam_role" "task" {
-  count = local.enabled
+  count = local.enabled_count
 
   name = "${var.name}-task"
 
@@ -92,7 +93,7 @@ resource "aws_iam_role" "task" {
 }
 
 resource "aws_security_group" "load_balancer" {
-  count = local.enabled
+  count = local.enabled_count
 
   name        = "${var.name}-alb"
   description = "Public ALB security group for Secret Sharz."
@@ -116,7 +117,7 @@ resource "aws_security_group" "load_balancer" {
 }
 
 resource "aws_security_group_rule" "application_from_alb" {
-  count = local.enabled
+  count = local.enabled_count
 
   type                     = "ingress"
   security_group_id        = var.application_security_group_id
@@ -128,7 +129,7 @@ resource "aws_security_group_rule" "application_from_alb" {
 }
 
 resource "aws_lb" "this" {
-  count = local.enabled
+  count = local.enabled_count
 
   name               = substr(var.name, 0, 32)
   internal           = false
@@ -144,7 +145,7 @@ resource "aws_lb" "this" {
 }
 
 resource "aws_lb_target_group" "this" {
-  count = local.enabled
+  count = local.enabled_count
 
   name        = substr("${var.name}-tg", 0, 32)
   port        = var.container_port
@@ -168,7 +169,7 @@ resource "aws_lb_target_group" "this" {
 }
 
 resource "aws_lb_listener" "http" {
-  count = local.enabled
+  count = local.enabled_count
 
   load_balancer_arn = aws_lb.this[0].arn
   port              = 80
@@ -181,7 +182,7 @@ resource "aws_lb_listener" "http" {
 }
 
 resource "aws_ecs_task_definition" "this" {
-  count = local.enabled
+  count = local.enabled_count
 
   family                   = var.name
   network_mode             = "awsvpc"
@@ -223,7 +224,7 @@ resource "aws_ecs_task_definition" "this" {
       logDriver = "awslogs"
       options = {
         awslogs-group         = aws_cloudwatch_log_group.this[0].name
-        awslogs-region        = data.aws_region.current.name
+        awslogs-region        = data.aws_region.current.region
         awslogs-stream-prefix = "ecs"
       }
     }
@@ -237,7 +238,7 @@ resource "aws_ecs_task_definition" "this" {
 data "aws_region" "current" {}
 
 resource "aws_ecs_service" "this" {
-  count = local.enabled
+  count = local.enabled_count
 
   name            = var.name
   cluster         = aws_ecs_cluster.this[0].id
