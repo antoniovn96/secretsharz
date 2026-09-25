@@ -238,14 +238,18 @@ export async function persistAssessmentResult({ pool, result }) {
       );
     }
 
+    const persistedReports = [];
     for (const report of result.reports) {
+      const reportId = report.reportId || randomUUID();
+      persistedReports.push({ ...report, reportId });
+
       await client.query(
         `INSERT INTO assessment_reports (
           id, assessment_result_id, report_version, report_type, audience,
           generated_at, source_snapshot, content_hash, generation_source
         ) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9)`,
         [
-          report.reportId || randomUUID(),
+          reportId,
           resultId,
           report.reportVersion,
           report.reportType,
@@ -258,14 +262,18 @@ export async function persistAssessmentResult({ pool, result }) {
       );
     }
 
+    const persistedAudit = [];
     for (const [index, event] of result.audit.entries()) {
+      const eventId = event.eventId || randomUUID();
+      persistedAudit.push({ ...event, eventId });
+
       await client.query(
         `INSERT INTO assessment_audit_events (
           id, assessment_result_id, sequence, action, actor_person_id,
           actor_account_id, purpose, outcome, metadata, occurred_at
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10)`,
         [
-          event.eventId || randomUUID(),
+          eventId,
           resultId,
           index + 1,
           event.action,
@@ -299,8 +307,8 @@ export async function persistAssessmentResult({ pool, result }) {
       normative_reference: s.normativeReference,
       subscale: s.subscale,
       construct: s.construct,
-    })), result.reports.map((r) => ({
-      id: r.reportId || randomUUID(),
+    })), persistedReports.map((r) => ({
+      id: r.reportId,
       assessment_result_id: resultRow.id,
       report_version: r.reportVersion,
       report_type: r.reportType,
@@ -309,8 +317,8 @@ export async function persistAssessmentResult({ pool, result }) {
       source_snapshot: r.dataSnapshot || r.sourceSnapshot || {},
       content_hash: r.contentHash || null,
       generation_source: r.generationSource || null,
-    })), result.audit.map((e, index) => ({
-      id: e.eventId || String(index + 1),
+    })), persistedAudit.map((e) => ({
+      id: e.eventId,
       action: e.action,
       actor_person_id: e.actorPersonId || null,
       actor_account_id: e.actorAccountId || null,
