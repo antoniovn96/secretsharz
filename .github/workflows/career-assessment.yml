@@ -18,6 +18,7 @@ on:
   push:
     branches:
       - main
+      - rebuild/platform-foundation-v1
     paths:
       - "src/career/**"
       - "src/platform/assessment*"
