@@ -77,3 +77,32 @@ module "container_registry" {
 output "container_registry_url" {
   value = module.container_registry.repository_url
 }
+
+
+module "application_runtime" {
+  source = "../../modules/application-runtime"
+
+  name                          = "secretsharz-nonprod"
+  enabled                       = var.ecs_enabled
+  vpc_id                        = module.network.vpc_id
+  public_subnet_ids             = module.network.public_subnet_ids
+  private_subnet_ids            = module.network.private_subnet_ids
+  application_security_group_id  = module.network.application_security_group_id
+  image_uri                     = var.ecs_image_uri
+  secret_arns                   = var.ecs_secret_arns
+  secret_environment_variables  = var.ecs_secret_environment_variables
+  environment_variables = [
+    {
+      name  = "NODE_ENV"
+      value = "production"
+    },
+    {
+      name  = "PORT"
+      value = "3000"
+    }
+  ]
+}
+
+output "application_load_balancer_dns_name" {
+  value = module.application_runtime.load_balancer_dns_name
+}
