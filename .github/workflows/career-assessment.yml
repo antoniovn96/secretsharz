@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "src/career/**"
+      - "infra/aws-bootstrap/**"
       - "src/platform/assessment*"
       - "src/platform/riasecAssessmentService.js"
       - "src/platform/legacyAssessmentMigration.js"
