@@ -82,3 +82,22 @@ The production ECS service should remain disabled until:
 - secrets are present
 - HTTPS edge is ready
 - application migration/read-path validation is complete
+
+
+## PostgreSQL connection wiring
+
+The RDS module uses the AWS-managed master-user secret rather than creating a second database password secret in application Terraform.
+
+For ECS, the runtime receives:
+
+- `DATABASE_HOST` from the RDS endpoint
+- `DATABASE_PORT=5432`
+- `DATABASE_NAME=secretsharz`
+- `DATABASE_USER` from the RDS secret `username` JSON key
+- `DATABASE_PASSWORD` from the RDS secret `password` JSON key
+- `DATABASE_SSL=true`
+- `DATABASE_SSL_REJECT_UNAUTHORIZED=true`
+
+The application PostgreSQL boundary accepts either the existing `DATABASE_URL` form or these discrete ECS variables. The migration runner uses the same contract.
+
+This keeps the database credential in Secrets Manager and avoids placing the password in Docker build arguments or a Terraform-generated connection-string secret.
