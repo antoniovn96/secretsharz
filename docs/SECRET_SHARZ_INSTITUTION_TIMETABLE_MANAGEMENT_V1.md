@@ -770,3 +770,24 @@ The account entitlement is separate from the institution's student count.
 Marketing/HR can create an institution-specific, single-use trial link through the backend.
 The two-hour trial begins when the recipient opens the authorised link and successfully enters the dashboard.
 The timer is server-authoritative and cannot be restarted by refresh or reuse of the link.
+
+## 26. Founder decisions — institutional service marketplace and assessment integration — 25 September 2026
+
+### Institution service marketplace
+The Institution dashboard can connect institutions to Secret Sharz counsellors, Secret Sharz career guidance coaches, Secret Sharz SEN educators and approved external verified professionals where enabled.
+
+Provider profiles must show verification status, qualifications, scope, professional category, languages, availability, institution-service experience and applicable engagement terms.
+
+### Shared scheduling
+Institution timetable scheduling and Secret Sharz professional service scheduling should share a common scheduling/capacity layer where appropriate, preventing conflicts across an assigned professional's institutional commitments.
+
+### Capacity-aware quoting
+The service engine should determine required professional count, hours, sessions, student coverage, available professional capacity and onsite/online feasibility before a final quote is produced.
+
+### Service lifecycle
+Institution service lifecycle: Request → Capacity Check → Quotation → Acceptance → Agreement/SOW → Assignment → Scheduling → Delivery → Reporting → Completion → Renewal/Closure.
+
+### Assessment integration
+Career assessments are selectable service components and can be bundled: assessment only; assessment + report; assessment + counsellor review; assessment + student session; assessment + parent session; assessment + workshop; assessment + longer-term programme.
+
+The institution receives only the report/data defined by the purchased assessment and authorised institutional sharing policy.
