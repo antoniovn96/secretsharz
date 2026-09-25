@@ -45,6 +45,7 @@ export function createAssessmentResultRecord(input = {}) {
     reports:Array.isArray(input.reports)?clone(input.reports):[],
     longitudinal:{previousAssessmentResultId:asNullableString(input.previousAssessmentResultId),reassessmentReason:asNullableString(input.reassessmentReason),recommendedRetakeDate:asIsoOrNull(input.recommendedRetakeDate),sequence:Number.isInteger(input.longitudinalSequence)?input.longitudinalSequence:1},
     entitlement:{entitlementId:asNullableString(input.entitlementId),orderId:asNullableString(input.orderId)},
+    migration:isPlainObject(input.migration)?clone(input.migration):{},
     audit:Array.isArray(input.audit)?clone(input.audit):[],
     createdAt:now,updatedAt:asIsoOrNull(input.updatedAt)||now,
   };
@@ -64,6 +65,7 @@ export function validateAssessmentResultRecord(record){
   if(!Array.isArray(record?.responses)) errors.push('responses must be an array');
   if(!Array.isArray(record?.scores)) errors.push('scores must be an array');
   if(!Array.isArray(record?.reports)) errors.push('reports must be an array');
+  if(record?.migration != null && !isPlainObject(record.migration)) errors.push('migration must be an object');
   return {valid:errors.length===0,errors};
 }
 
