@@ -23,3 +23,9 @@ variable "production_account_id" {
     error_message = "production_account_id must be a 12-digit AWS account ID when supplied."
   }
 }
+
+variable "vpc_cidr" {
+  description = "Primary production VPC CIDR."
+  type        = string
+  default     = "10.50.0.0/16"
+}
