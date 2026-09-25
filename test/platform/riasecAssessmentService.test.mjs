@@ -5,6 +5,7 @@ import { RIASEC_V1 } from '../../src/career/riasecInterestExplorerV1.js';
 
 test('server service scores submitted answers and never trusts client-provided scores', async () => {
   const queries = [];
+  let insertedRow = null;
   const fakePool = {
     async connect() {
       const client = {
@@ -12,8 +13,7 @@ test('server service scores submitted answers and never trusts client-provided s
           queries.push({ sql: String(sql), values });
           if (String(sql).includes('INSERT INTO assessment_results')) {
             const id = values[0];
-            return {
-              rows: [{
+            insertedRow = {
                 id,
                 person_id: values[1],
                 account_id: values[2],
@@ -47,9 +47,14 @@ test('server service scores submitted answers and never trusts client-provided s
                 order_id: values[30],
                 created_at: new Date(values[31]),
                 updated_at: new Date(values[32]),
-              }],
-            };
+              };
+            return { rows: [insertedRow] };
           }
+
+          if (String(sql).includes('SELECT * FROM assessment_results WHERE id = $1')) {
+            return { rows: insertedRow ? [insertedRow] : [] };
+          }
+
           return { rows: [] };
         },
         release() {},
