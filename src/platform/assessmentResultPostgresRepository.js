@@ -4,6 +4,21 @@
 import { randomUUID } from 'node:crypto';
 import { validateAssessmentResultRecord } from './assessmentResultRecord.js';
 
+function assertAuthorizedAssessmentContext(authorizationContext, expectedSubjectPersonId) {
+  if (!authorizationContext?.allowed) {
+    throw new Error('Assessment authorization is required before PostgreSQL access.');
+  }
+  if (authorizationContext.dataDomain !== 'assessments') {
+    throw new Error('Assessment repository requires the assessments data domain.');
+  }
+  if (!authorizationContext.purpose) {
+    throw new Error('Assessment repository requires an access purpose.');
+  }
+  if (!authorizationContext.subjectPersonId || authorizationContext.subjectPersonId !== expectedSubjectPersonId) {
+    throw new Error('Assessment authorization subject does not match the assessment person.');
+  }
+}
+
 function jsonOrNull(value) {
   if (value === undefined) return null;
   return JSON.stringify(value);
@@ -179,10 +194,12 @@ async function insertAssessmentResultRow(client, result) {
   return rows[0];
 }
 
-export async function persistAssessmentResult({ pool, result }) {
+export async function persistAssessmentResult({ pool, result, authorizationContext }) {
   if (!pool || typeof pool.connect !== 'function') {
     throw new Error('A PostgreSQL pool is required.');
   }
+
+  assertAuthorizedAssessmentContext(authorizationContext, result?.personId);
 
   const validation = validateAssessmentResultRecord(result);
   if (!validation.valid) {
@@ -339,19 +356,31 @@ export async function persistAssessmentResult({ pool, result }) {
   }
 }
 
-export async function getAssessmentResultById({ pool, assessmentResultId }) {
+export async function getAssessmentResultById({ pool, assessmentResultId, authorizationContext }) {
   if (!pool || typeof pool.connect !== 'function') {
     throw new Error('A PostgreSQL pool is required.');
   }
   if (!assessmentResultId) throw new Error('assessmentResultId is required.');
+  if (!authorizationContext?.allowed) {
+    throw new Error('Assessment authorization is required before PostgreSQL access.');
+  }
+  if (authorizationContext.dataDomain !== 'assessments') {
+    throw new Error('Assessment repository requires the assessments data domain.');
+  }
+  if (!authorizationContext.purpose) {
+    throw new Error('Assessment repository requires an access purpose.');
+  }
+  if (!authorizationContext.subjectPersonId) {
+    throw new Error('Assessment authorization requires a subject person.');
+  }
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     const resultQuery = await client.query(
-      'SELECT * FROM assessment_results WHERE id = $1',
-      [assessmentResultId],
+      'SELECT * FROM assessment_results WHERE id = $1 AND person_id = $2',
+      [assessmentResultId, authorizationContext.subjectPersonId],
     );
 
     if (!resultQuery.rows[0]) {
