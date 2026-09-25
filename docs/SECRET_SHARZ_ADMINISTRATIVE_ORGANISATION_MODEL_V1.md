@@ -1064,3 +1064,104 @@ HR manages operational review and checklist work. SuperAdmin controls authoritat
 - Executive Leadership may provide final approval.
 - SuperAdmin may provide final approval.
 - Either Executive Leadership or SuperAdmin is sufficient for final committee approval unless a later duty-separation rule requires more.
+
+## 26. Founder decisions — leadership, protected governance, department heads and global identity — 25 September 2026
+
+### Executive Leadership
+- Multiple Executive Leaders may exist simultaneously.
+- Executive Leadership appointments are explicit and independently permissioned.
+- While the organisation remains pre-registration, appointment/removal of an Executive Leader requires:
+  - Primary SuperAdmin approval
+  - existing Executive Leadership approval
+- Once the legal entity is established, formal corporate governance rules supersede the temporary pre-registration workflow.
+
+### Academic Leadership
+- Academic Leadership is a top-level leadership function.
+- Multiple Academic Leaders may exist.
+- The model should support a Head of Academic Leadership with additional Academic Leaders underneath.
+- Academic appointments are explicit and independently permissioned.
+
+### Emergency Governance Council composition
+- If the active Primary SuperAdmin is unavailable, the Emergency Governance Council is formed from designated Emergency Executive Lead and Emergency Academic Lead.
+- Each has a designated alternate.
+- The Council is temporary and operates for a maximum of two months.
+- The Council does not become the permanent SuperAdmin.
+- High-risk emergency actions require two-person approval.
+
+### SuperAdmin delegation and protected actions
+SuperAdmin access supports full and delegated forms, but even a SuperAdmin cannot unilaterally perform protected governance actions.
+
+Protected governance actions should include:
+- changing/removing the Primary SuperAdmin;
+- appointing or removing the successor to the Primary SuperAdmin;
+- permanent alteration of the ownership/governance structure recorded in the platform;
+- disabling or materially weakening safeguarding controls;
+- deleting, purging or irreversibly altering protected audit evidence;
+- permanently deleting or destroying protected case records;
+- overriding mandatory statutory committee composition/eligibility controls;
+- disabling legal/governance applicability controls;
+- granting themselves broader protected governance authority;
+- bypassing a required duty-separation approval;
+- activating or disabling Emergency Governance Mode outside the defined succession workflow.
+
+The exact legal/corporate authority for these actions must eventually align with the registered entity's constitutional documents, shareholder/board governance and applicable law.
+
+### Department Head authority
+- A Department Head manages department operations.
+- A Department Head cannot independently alter:
+  - canonical organisational identity;
+  - employment status;
+  - salary/payroll terms;
+  - platform/system permissions;
+  - financial authority limits.
+- Department Heads may receive operational authority for staff assignment, work queues, departmental reporting, task management and other explicitly delegated functions.
+- Department Heads may exist across multiple departments for the same person, but every appointment is explicit and separately permissioned.
+
+### Case architecture
+- Case Type and Sensitivity are independent dimensions.
+- Examples of Case Type include HR, Financial, Professional, Counselling, Career, SEN, Community, Safeguarding, POSH, Institution, Compliance, Legal, Security and Other.
+- Sensitivity is determined separately and can elevate any case type.
+- This prevents a supposedly general case from being treated as low-risk merely because its category is general.
+
+### Global identity/participant model
+Secret Sharz will distinguish:
+- Person
+- Account
+- Party/participant type
+- Relationship
+- Service role
+- Employment assignment
+- Institution relationship
+- Professional relationship
+- Customer relationship
+- Student relationship
+- Parent/guardian relationship
+- Partner relationship
+- Vendor relationship
+
+These distinctions must not create duplicate human identities.
+
+A person remains one canonical Secret Sharz Person while holding multiple explicit relationships, assignments and service roles.
+
+### Global data-residency architecture
+- The platform must support jurisdiction-aware data residency.
+- Future deployment may place eligible data in region-specific infrastructure such as India, EU and other designated regions.
+- Data residency must be determined by legal entity, jurisdiction, person/service context, data domain and applicable policy rather than simply by the user's login country.
+- The canonical identity model must remain globally coherent even when some data is regionally stored.
+- Sensitive domains may require stricter residency/transfer controls than ordinary public or low-sensitivity platform data.
+- Cross-region access must use explicit authorised data-transfer and access policies.
+
+### Governance separation principle
+The architecture must keep these concepts separate:
+- ownership
+- legal directorship/officership
+- Executive Leadership
+- Academic Leadership
+- SuperAdmin
+- Backend/Platform technical leadership
+- Department Head
+- functional role
+- permission
+- relationship
+
+Holding one role must not silently grant another.
