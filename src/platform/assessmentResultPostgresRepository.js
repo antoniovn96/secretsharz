@@ -128,8 +128,52 @@ function hydrateResult(resultRow, responseRows, scoreRows, reportRows, auditRows
   return record;
 }
 
+function stagingStatusForPersistence(status) {
+  if (['submitted', 'scored', 'reported'].includes(status)) return 'started';
+  return status;
+}
+
+async function finalizeAssessmentResult(client, resultId, result) {
+  const target = result.status;
+  if (target === 'started' || target === 'created' || target === 'abandoned' || target === 'invalidated') {
+    return;
+  }
+
+  await client.query(
+    `UPDATE assessment_results
+     SET status = 'submitted',
+         submitted_at = $2,
+         updated_at = $3
+     WHERE id = $1`,
+    [resultId, result.attempt.submittedAt, new Date().toISOString()],
+  );
+
+  if (target === 'submitted') return;
+
+  await client.query(
+    `UPDATE assessment_results
+     SET status = 'scored',
+         scored_at = $2,
+         updated_at = $3
+     WHERE id = $1`,
+    [resultId, result.attempt.scoredAt, new Date().toISOString()],
+  );
+
+  if (target === 'scored') return;
+
+  await client.query(
+    `UPDATE assessment_results
+     SET status = 'reported',
+         reported_at = $2,
+         updated_at = $3
+     WHERE id = $1`,
+    [resultId, result.attempt.reportedAt, new Date().toISOString()],
+  );
+}
+
 async function insertAssessmentResultRow(client, result) {
   const id = result.id || randomUUID();
+  const persistenceResult = { ...result, status: stagingStatusForPersistence(result.status) };
   const query = `
     INSERT INTO assessment_results (
       id, person_id, account_id, institution_relationship_id, service_engagement_id,
@@ -160,8 +204,8 @@ async function insertAssessmentResultRow(client, result) {
     result.accountId,
     result.institutionRelationshipId,
     result.serviceEngagementId,
-    result.status,
-    result.attempt.startedAt,
+    persistenceResult.status,
+    persistenceResult.attempt.startedAt,
     result.attempt.submittedAt,
     result.attempt.scoredAt,
     result.attempt.reportedAt,
@@ -304,8 +348,16 @@ export async function persistAssessmentResult({ pool, result, authorizationConte
       );
     }
 
+    await finalizeAssessmentResult(client, resultId, result);
+
+    const finalResultQuery = await client.query(
+      'SELECT * FROM assessment_results WHERE id = $1',
+      [resultId],
+    );
+    const finalResultRow = finalResultQuery.rows[0];
+
     await client.query('COMMIT');
-    return hydrateResult(resultRow, result.responses.map((r) => ({
+    return hydrateResult(finalResultRow, result.responses.map((r) => ({
       ...r,
       response_value: r.responseValue,
       response_timestamp: r.responseTimestamp,
