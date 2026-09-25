@@ -43,3 +43,15 @@ test('nonprod AWS bootstrap scopes Terraform state and lock-file access', () => 
   assert.match(source, /iam:DeletePolicyVersion/);
   assert.match(source, /secretsharz-nonprod-\*/);
 });
+
+
+test("nonprod bootstrap preflight validates the deployed trust boundary", () => {
+  const workflow = readFileSync(resolve(".github/workflows/nonprod-bootstrap-preflight.yml"), "utf8");
+  assert.match(workflow, /Secret Sharz Nonprod Bootstrap Preflight/);
+  assert.match(workflow, /aws s3api get-bucket-versioning/);
+  assert.match(workflow, /aws s3api get-public-access-block/);
+  assert.match(workflow, /aws iam get-role/);
+  assert.match(workflow, /SecretSharz-GitHubActions-NonProd/);
+  assert.match(workflow, /rebuild\/platform-foundation-v1/);
+  assert.doesNotMatch(workflow, /terraform apply/);
+});
