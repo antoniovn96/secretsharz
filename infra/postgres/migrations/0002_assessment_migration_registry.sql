@@ -18,8 +18,11 @@ CREATE TABLE IF NOT EXISTS assessment_migration_registry (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
   UNIQUE (source_system, source_record_key),
-  UNIQUE (source_system, source_hash)
+  UNIQUE (source_system, source_record_key)
 );
+
+CREATE INDEX IF NOT EXISTS idx_assessment_migration_hash
+  ON assessment_migration_registry (source_system, source_hash);
 
 CREATE INDEX IF NOT EXISTS idx_assessment_migration_person
   ON assessment_migration_registry (source_person_id, created_at DESC);
