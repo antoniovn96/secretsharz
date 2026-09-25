@@ -11,7 +11,7 @@ const nextConfig = {
       // filesystem/API routes such as /healthz to resolve first.
       fallback: [
         {
-          source: '/:path*',
+          source: '/:path((?!api(?:/|$)).*)',
           destination: '/',
         },
       ],
