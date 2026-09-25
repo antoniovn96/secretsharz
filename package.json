@@ -16,7 +16,8 @@
     "test": "npm run test:server && npm run test:institution && npm run test:integration && npm run test:rules",
     "dry-run:migration": "node scripts/dry-run-claim-migration.mjs",
     "inventory:production": "node scripts/production-claim-inventory.mjs",
-    "db:migrate": "node scripts/run-postgres-migrations.mjs"
+    "db:migrate": "node scripts/run-postgres-migrations.mjs",
+    "test:career-assessment": "node --test test/career/*.test.mjs test/platform/assessmentResultRecord.test.mjs test/platform/assessmentResultPostgresRepository.test.mjs test/platform/riasecAssessmentService.test.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.1",
