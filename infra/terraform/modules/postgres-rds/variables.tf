@@ -66,7 +66,7 @@ variable "apply_immediately" {
 
 
 variable "final_snapshot_identifier" {
-  type    = string
-  default = null
+  type     = string
+  default  = null
   nullable = true
 }

@@ -28,11 +28,11 @@ locals {
 module "network" {
   source = "../../modules/application-network"
 
-  name             = "secretsharz-nonprod"
-  vpc_cidr         = var.vpc_cidr
-  az_count         = 2
+  name              = "secretsharz-nonprod"
+  vpc_cidr          = var.vpc_cidr
+  az_count          = 2
   nat_gateway_count = 1
-  enable_nat       = true
+  enable_nat        = true
 }
 
 module "postgres" {
@@ -87,7 +87,7 @@ module "application_runtime" {
   vpc_id                        = module.network.vpc_id
   public_subnet_ids             = module.network.public_subnet_ids
   private_subnet_ids            = module.network.private_subnet_ids
-  application_security_group_id  = module.network.application_security_group_id
+  application_security_group_id = module.network.application_security_group_id
   image_uri                     = var.ecs_image_uri
   secret_arns                   = var.ecs_secret_arns
   secret_environment_variables  = var.ecs_secret_environment_variables
