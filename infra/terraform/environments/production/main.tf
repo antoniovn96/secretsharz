@@ -48,8 +48,9 @@ module "postgres" {
   multi_az                = true
   backup_retention_period = 7
   deletion_protection     = true
-  skip_final_snapshot     = false
-  apply_immediately       = false
+  skip_final_snapshot       = false
+  final_snapshot_identifier = "secretsharz-production-postgres-final"
+  apply_immediately          = false
 }
 
 output "postgres_endpoint" {
