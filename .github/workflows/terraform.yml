@@ -49,9 +49,16 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add infra/terraform
             git commit -m "ci: format Terraform"
-            git fetch origin rebuild/platform-foundation-v1
-            git rebase origin/rebuild/platform-foundation-v1
-            git push origin HEAD:rebuild/platform-foundation-v1
+            for attempt in 1 2 3 4 5; do
+              git fetch origin rebuild/platform-foundation-v1
+              git rebase origin/rebuild/platform-foundation-v1
+              if git push origin HEAD:rebuild/platform-foundation-v1; then
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "::error::Unable to publish Terraform formatting after five attempts."
+            exit 1
           fi
 
       - name: Terraform format check
@@ -78,9 +85,16 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add "$lock_file"
             git commit -m "ci: record Terraform provider lock"
-            git fetch origin rebuild/platform-foundation-v1
-            git rebase origin/rebuild/platform-foundation-v1
-            git push origin HEAD:rebuild/platform-foundation-v1
+            for attempt in 1 2 3 4 5; do
+              git fetch origin rebuild/platform-foundation-v1
+              git rebase origin/rebuild/platform-foundation-v1
+              if git push origin HEAD:rebuild/platform-foundation-v1; then
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "::error::Unable to publish Terraform provider lock after five attempts."
+            exit 1
           fi
 
       - name: Terraform validate
