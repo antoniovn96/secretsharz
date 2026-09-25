@@ -6,6 +6,7 @@ import { persistAssessmentResult } from '../../src/platform/assessmentResultPost
 
 function makeFakePool() {
   const queries = [];
+  let insertedRow = null;
   const client = {
     async query(text, values = []) {
       queries.push({ text: String(text).replace(/\\s+/g, ' ').trim(), values });
@@ -47,8 +48,8 @@ function makeFakePool() {
             migration_metadata: JSON.parse(values[31] || '{}'),
             created_at: new Date(values[32]),
             updated_at: new Date(values[33]),
-          }],
-        };
+          };
+        return { rows: [insertedRow] };
       }
 
       if (String(text).includes('SELECT * FROM assessment_results WHERE id = $1')) {
