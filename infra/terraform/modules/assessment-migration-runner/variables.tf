@@ -3,7 +3,7 @@ variable "name" {
 }
 
 variable "enabled" {
-  type = bool
+  type    = bool
   default = false
 }
 
@@ -20,22 +20,22 @@ variable "application_security_group_id" {
 }
 
 variable "image_uri" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "cpu" {
-  type = number
+  type    = number
   default = 512
 }
 
 variable "memory" {
-  type = number
+  type    = number
   default = 1024
 }
 
 variable "secret_arns" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 
@@ -48,11 +48,11 @@ variable "secret_environment_variables" {
 }
 
 variable "command" {
-  type = list(string)
+  type    = list(string)
   default = ["node", "scripts/run-postgres-migrations.mjs"]
 }
 
 variable "log_retention_in_days" {
-  type = number
+  type    = number
   default = 30
 }
