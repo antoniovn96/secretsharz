@@ -1,0 +1,98 @@
+name: Secret Sharz Nonprod Bootstrap Preflight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-nonprod-bootstrap-preflight
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify nonprod AWS bootstrap
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      STACK_NAME: secretsharz-nonprod-bootstrap
+      TERRAFORM_STATE_BUCKET: ${{ vars.TERRAFORM_STATE_BUCKET }}
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify required bootstrap configuration
+        run: |
+          set -euo pipefail
+          test -n "$TERRAFORM_STATE_BUCKET" || {
+            echo "::error::Missing nonprod Environment variable TERRAFORM_STATE_BUCKET."
+            exit 1
+          }
+          if [ -z "${{ secrets.AWS_ROLE_ARN }}" ]; then
+            echo "::error::Missing nonprod Environment secret AWS_ROLE_ARN."
+            exit 1
+          fi
+
+      - name: Verify CloudFormation bootstrap stack
+        run: |
+          set -euo pipefail
+          STATUS=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$AWS_REGION" --query 'Stacks[0].StackStatus' --output text)
+          echo "Bootstrap stack status: $STATUS"
+          case "$STATUS" in
+            CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE) ;;
+            *) echo "::error::Bootstrap stack is not in a usable complete state."; exit 1 ;;
+          esac
+
+      - name: Verify state bucket protections
+        run: |
+          set -euo pipefail
+          VERSIONING=$(aws s3api get-bucket-versioning --bucket "$TERRAFORM_STATE_BUCKET" --query 'Status' --output text)
+          test "$VERSIONING" = "Enabled"
+          aws s3api get-public-access-block --bucket "$TERRAFORM_STATE_BUCKET" --query 'PublicAccessBlockConfiguration' --output json > public-access.json
+          python - <<'PY'
+          import json
+          with open("public-access.json", encoding="utf-8") as f:
+              cfg = json.load(f)
+          expected = {"BlockPublicAcls": True, "BlockPublicPolicy": True, "IgnorePublicAcls": True, "RestrictPublicBuckets": True}
+          if cfg != expected:
+              raise SystemExit(f"Unexpected public access block: {cfg!r}")
+          PY
+          aws s3api get-bucket-encryption --bucket "$TERRAFORM_STATE_BUCKET" --query 'ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm' --output text | grep -qx AES256
+          echo "State bucket protections verified."
+
+      - name: Verify deployed GitHub OIDC role trust
+        run: |
+          set -euo pipefail
+          POLICY=$(aws iam get-role --role-name SecretSharz-GitHubActions-NonProd --query 'Role.AssumeRolePolicyDocument' --output json)
+          python - "$POLICY" <<'PY'
+          import json, sys
+          policy = json.loads(sys.argv[1])
+          statements = policy.get("Statement", [])
+          matching = [s for s in statements if s.get("Effect") == "Allow" and "sts:AssumeRoleWithWebIdentity" in s.get("Action", [])]
+          if len(matching) != 1:
+              raise SystemExit(f"Unexpected OIDC trust statements: {matching!r}")
+          condition = matching[0].get("Condition", {})
+          equals = condition.get("StringEquals", {})
+          expected = {"token.actions.githubusercontent.com:aud": "sts.amazonaws.com", "token.actions.githubusercontent.com:sub": "repo:antoniovn96/secretsharz:ref:refs/heads/rebuild/platform-foundation-v1"}
+          for key, value in expected.items():
+              if equals.get(key) != value:
+                  raise SystemExit(f"OIDC trust mismatch for {key}: {equals.get(key)!r}")
+          print("GitHub OIDC trust boundary verified.")
+          PY
+
+      - name: Summary
+        run: |
+          {
+            echo "### Non-production AWS bootstrap preflight"
+            echo "- Region: $AWS_REGION"
+            echo "- CloudFormation bootstrap: verified"
+            echo "- State bucket protections: verified"
+            echo "- GitHub OIDC trust: verified"
+            echo "- No workload Terraform or database mutation was performed."
+          } >> "$GITHUB_STEP_SUMMARY"
