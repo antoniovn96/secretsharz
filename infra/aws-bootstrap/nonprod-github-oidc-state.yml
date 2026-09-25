@@ -188,6 +188,7 @@ Resources:
               - ec2:DeleteVpc
               - ec2:DescribeAddresses
               - ec2:Describe*
+              - ec2:ModifyVpcAttribute
               - ec2:DescribeNatGateways
               - ec2:DescribeRouteTables
               - ec2:DescribeSecurityGroups
@@ -238,6 +239,9 @@ Resources:
               - ecr:DescribeRepositories
               - ecr:GetAuthorizationToken
               - ecr:GetRepositoryPolicy
+              - ecr:GetLifecyclePolicy
+              - ecr:PutLifecyclePolicy
+              - ecr:DeleteLifecyclePolicy
               - ecr:InitiateLayerUpload
               - ecr:ListImages
               - ecr:PutImage
