@@ -202,3 +202,8 @@ output "assessment_migration_runner_cluster_name" {
 output "assessment_migration_runner_task_definition_arn" {
   value = module.assessment_migration_runner.task_definition_arn
 }
+
+
+output "assessment_migration_runner_container_name" {
+  value = "secretsharz-production-assessment-migrations"
+}
