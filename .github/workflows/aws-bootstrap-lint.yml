@@ -1,0 +1,33 @@
+name: Secret Sharz AWS Bootstrap Lint
+
+on:
+  pull_request:
+    paths:
+      - "infra/aws-bootstrap/**"
+      - ".github/workflows/aws-bootstrap-lint.yml"
+  push:
+    branches:
+      - main
+      - rebuild/platform-foundation-v1
+    paths:
+      - "infra/aws-bootstrap/**"
+      - ".github/workflows/aws-bootstrap-lint.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  cfn-lint:
+    name: Lint CloudFormation bootstrap
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install CloudFormation linter
+        uses: scottbrenner/cfn-lint-action@v2.7.0
+
+      - name: Lint bootstrap templates
+        run: |
+          cfn-lint --version
+          cfn-lint -t infra/aws-bootstrap/nonprod-github-oidc-state.yml
