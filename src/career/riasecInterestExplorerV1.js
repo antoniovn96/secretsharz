@@ -163,6 +163,7 @@ export function scoreRiasecV1(answers = {}, metadata = {}) {
   return {
     instrumentId: RIASEC_V1.instrumentId,
     assessmentVersion: RIASEC_V1.version,
+    itemBankVersion: RIASEC_V1.version,
     scoringVersion: '1.0.0-draft',
     submissionId: metadata.submissionId || null,
     startedAt: metadata.startedAt || null,
@@ -171,6 +172,7 @@ export function scoreRiasecV1(answers = {}, metadata = {}) {
     answered,
     total,
     completionPercent,
+    rawResponses: valid,
     rawScores: profileAvailable ? rawScores : null,
     meanScores: profileAvailable ? meanScores : null,
     displayIndex: profileAvailable ? displayIndex : null,
