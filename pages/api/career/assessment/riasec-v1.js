@@ -78,7 +78,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ result });
   } catch (error) {
     if (error?.code === 'ASSESSMENT_INCOMPLETE') {
-      return jsonError(res, 400, error.message, error.details);
+      return res.status(400).json({ error: error.message, code: error.code, details: error.details });
     }
 
     console.error('[riasec-v1] assessment operation failed:', error);
