@@ -55,7 +55,7 @@ jobs:
           missing=0
           for name in FIREBASE_API_KEY FIREBASE_AUTH_DOMAIN FIREBASE_PROJECT_ID FIREBASE_STORAGE_BUCKET FIREBASE_MESSAGING_SENDER_ID FIREBASE_APP_ID; do
             if [ -z "${!name}" ]; then
-              echo "::error::Missing GitHub Environment variable ${name#FIREBASE_/NEXT_PUBLIC_} (NEXT_PUBLIC_*)."
+              echo "::error::Missing GitHub Environment variable for ${name}."
               missing=1
             fi
           done
@@ -83,11 +83,12 @@ jobs:
       - name: Push immutable image
         run: |
           docker push "${{ steps.registry.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG"
-          docker push "${{ steps.registry.outputs.registry }}/$ECR_REPOSITORY:latest"
 
-      - name: Record image URI
+      - name: Record immutable image URI
         run: |
           echo "### Container published" >> "$GITHUB_STEP_SUMMARY"
           echo "- Environment: `$ECR_REPOSITORY`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Region: `$AWS_REGION`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Immutable image: `${{ steps.registry.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ECS remains unchanged; this workflow only publishes the image." >> "$GITHUB_STEP_SUMMARY"
+
