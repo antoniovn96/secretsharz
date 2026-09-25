@@ -475,7 +475,7 @@ The institution product should be structured as:
 The entitlement engine should be configurable so the commercial rules can later change without rewriting the timetable engine.
 
 
-## 23. Founder decisions — timetable pricing and institution platform — 25 September 2026
+## 23. Founder decisions and proposed timetable pricing — 25 September 2026
 
 ### Institution dashboard
 The institution dashboard is a paid institutional service.
