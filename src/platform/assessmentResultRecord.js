@@ -82,7 +82,7 @@ export function appendAssessmentAuditEvent(record,event={}){
   requireField(event.action,'audit.action');
   const next=clone(record);
   next.audit=Array.isArray(next.audit)?next.audit:[];
-  next.audit.push({eventId:asNullableString(event.eventId),action:String(event.action),actorPersonId:asNullableString(event.actorPersonId),actorAccountId:asNullableString(event.actorAccountId),occurredAt:asIsoOrNull(event.occurredAt)||new Date().toISOString(),purpose:asNullableString(event.purpose),outcome:asNullableString(event.outcome)});
+  next.audit.push({eventId:asNullableString(event.eventId),action:String(event.action),actorPersonId:asNullableString(event.actorPersonId),actorAccountId:asNullableString(event.actorAccountId),occurredAt:asIsoOrNull(event.occurredAt)||new Date().toISOString(),purpose:asNullableString(event.purpose),outcome:asNullableString(event.outcome),metadata:isPlainObject(event.metadata)?clone(event.metadata):{}});
   next.updatedAt=new Date().toISOString();
   return next;
 }
