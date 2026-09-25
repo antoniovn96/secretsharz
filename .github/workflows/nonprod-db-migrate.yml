@@ -1,0 +1,100 @@
+name: Secret Sharz Nonprod Database Migration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-nonprod-db-migration
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Run PostgreSQL migrations in nonprod ECS
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      MIGRATION_CLUSTER_NAME: ${{ vars.MIGRATION_CLUSTER_NAME }}
+      MIGRATION_TASK_DEFINITION: ${{ vars.MIGRATION_TASK_DEFINITION }}
+      MIGRATION_SUBNET_IDS: ${{ vars.MIGRATION_SUBNET_IDS }}
+      MIGRATION_SECURITY_GROUP_ID: ${{ vars.MIGRATION_SECURITY_GROUP_ID }}
+      MIGRATION_CONTAINER_NAME: ${{ vars.MIGRATION_CONTAINER_NAME }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify required migration runtime configuration
+        run: |
+          set -euo pipefail
+          for name in MIGRATION_CLUSTER_NAME MIGRATION_TASK_DEFINITION MIGRATION_SUBNET_IDS MIGRATION_SECURITY_GROUP_ID MIGRATION_CONTAINER_NAME; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing GitHub Environment variable: $name"
+              exit 1
+            fi
+          done
+
+      - name: Verify ECS migration task definition
+        run: |
+          set -euo pipefail
+          aws ecs describe-task-definition             --task-definition "$MIGRATION_TASK_DEFINITION"             --region "$AWS_REGION" >/dev/null
+
+      - name: Run migration task
+        id: run_task
+        run: |
+          set -euo pipefail
+
+          SUBNET_JSON=$(printf '%s' "$MIGRATION_SUBNET_IDS" | awk -F',' '{
+            printf "["
+            for (i=1; i<=NF; i++) {
+              if (i>1) printf ","
+              printf "\"%s\"", $i
+            }
+            printf "]"
+          }')
+
+          OVERRIDES=$(printf '{"containerOverrides":[{"name":"%s","command":["node","scripts/run-postgres-migrations.mjs","--verify"]}]}' "$MIGRATION_CONTAINER_NAME")
+
+          TASK_ARN=$(aws ecs run-task             --cluster "$MIGRATION_CLUSTER_NAME"             --task-definition "$MIGRATION_TASK_DEFINITION"             --launch-type FARGATE             --network-configuration "awsvpcConfiguration={subnets=$SUBNET_JSON,securityGroups=[\"$MIGRATION_SECURITY_GROUP_ID\"],assignPublicIp=DISABLED}"             --overrides "$OVERRIDES"             --query 'tasks[0].taskArn'             --output text             --region "$AWS_REGION")
+
+          if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" = "None" ]; then
+            echo "::error::ECS did not return a migration task ARN."
+            exit 1
+          fi
+
+          echo "task_arn=$TASK_ARN" >> "$GITHUB_OUTPUT"
+          echo "task_arn=$TASK_ARN" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Wait for migration task
+        env:
+          TASK_ARN: ${{ steps.run_task.outputs.task_arn }}
+        run: |
+          set -euo pipefail
+          aws ecs wait tasks-stopped             --cluster "$MIGRATION_CLUSTER_NAME"             --tasks "$TASK_ARN"             --region "$AWS_REGION"
+
+      - name: Verify migration task exit code
+        env:
+          TASK_ARN: ${{ steps.run_task.outputs.task_arn }}
+        run: |
+          set -euo pipefail
+
+          EXIT_CODE=$(aws ecs describe-tasks             --cluster "$MIGRATION_CLUSTER_NAME"             --tasks "$TASK_ARN"             --region "$AWS_REGION"             --query 'tasks[0].containers[0].exitCode'             --output text)
+
+          STOP_REASON=$(aws ecs describe-tasks             --cluster "$MIGRATION_CLUSTER_NAME"             --tasks "$TASK_ARN"             --region "$AWS_REGION"             --query 'tasks[0].stoppedReason'             --output text)
+
+          echo "Migration task exit code: $EXIT_CODE"
+          echo "Migration task stopped reason: $STOP_REASON"
+
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "::error::PostgreSQL migration task failed with exit code $EXIT_CODE."
+            exit 1
+          fi
+
+          echo "PostgreSQL migration task completed successfully."
