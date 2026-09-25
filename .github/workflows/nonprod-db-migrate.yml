@@ -51,18 +51,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          SUBNET_JSON=$(printf '%s' "$MIGRATION_SUBNET_IDS" | awk -F',' '{
-            printf "["
-            for (i=1; i<=NF; i++) {
-              if (i>1) printf ","
-              printf "\"%s\"", $i
-            }
-            printf "]"
-          }')
-
           OVERRIDES=$(printf '{"containerOverrides":[{"name":"%s","command":["sh","-lc","node scripts/run-postgres-migrations.mjs && node scripts/verify-assessment-schema.mjs"]}]}' "$MIGRATION_CONTAINER_NAME")
 
-          TASK_ARN=$(aws ecs run-task             --cluster "$MIGRATION_CLUSTER_NAME"             --task-definition "$MIGRATION_TASK_DEFINITION"             --launch-type FARGATE             --network-configuration "awsvpcConfiguration={subnets=$SUBNET_JSON,securityGroups=[\"$MIGRATION_SECURITY_GROUP_ID\"],assignPublicIp=DISABLED}"             --overrides "$OVERRIDES"             --query 'tasks[0].taskArn'             --output text             --region "$AWS_REGION")
+          TASK_ARN=$(aws ecs run-task             --cluster "$MIGRATION_CLUSTER_NAME"             --task-definition "$MIGRATION_TASK_DEFINITION"             --launch-type FARGATE             --network-configuration "awsvpcConfiguration={subnets=$MIGRATION_SUBNET_IDS,securityGroups=$MIGRATION_SECURITY_GROUP_ID,assignPublicIp=DISABLED}"             --overrides "$OVERRIDES"             --query 'tasks[0].taskArn'             --output text             --region "$AWS_REGION")
 
           if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" = "None" ]; then
             echo "::error::ECS did not return a migration task ARN."
