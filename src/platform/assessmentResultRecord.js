@@ -74,6 +74,24 @@ export function createAssessmentResponse(input={}){
   return {itemId:String(input.itemId),itemVersion:asNullableString(input.itemVersion),responseValue:clone(input.responseValue),responseType:asNullableString(input.responseType),responseTimestamp:asIsoOrNull(input.responseTimestamp),responseDurationMs:Number.isFinite(Number(input.responseDurationMs))?Number(input.responseDurationMs):null,presentationOrder:Number.isInteger(input.presentationOrder)?input.presentationOrder:null};
 }
 
+export function createAssessmentReport(input={}) {
+  requireField(input.reportVersion,'report.reportVersion');
+  requireField(input.reportType,'report.reportType');
+  if(!ASSESSMENT_RESULT_AUDIENCES.includes(input.audience)) {
+    throw new Error('report.audience is invalid');
+  }
+  return {
+    reportId:asNullableString(input.reportId),
+    reportVersion:String(input.reportVersion),
+    reportType:String(input.reportType),
+    audience:String(input.audience),
+    generatedAt:asIsoOrNull(input.generatedAt)||new Date().toISOString(),
+    dataSnapshot:clone(input.dataSnapshot ?? {}),
+    contentHash:asNullableString(input.contentHash),
+    generationSource:asNullableString(input.generationSource),
+  };
+}
+
 export function createAssessmentScore(input={}){
   requireField(input.construct,'score.construct');
   return {construct:String(input.construct),subscale:asNullableString(input.subscale),rawScore:input.rawScore??null,transformedScore:input.transformedScore??null,displayScore:input.displayScore??null,scoringVersion:asNullableString(input.scoringVersion),interpretationStatus:asNullableString(input.interpretationStatus),normativeReference:isPlainObject(input.normativeReference)?clone(input.normativeReference):null};
@@ -106,4 +124,4 @@ export function transitionAssessmentResult(record,nextStatus,metadata={}){
   return next;
 }
 
-export default {createAssessmentResultRecord,validateAssessmentResultRecord,createAssessmentResponse,createAssessmentScore,appendAssessmentAuditEvent,transitionAssessmentResult};
+export default {createAssessmentResultRecord,validateAssessmentResultRecord,createAssessmentResponse,createAssessmentScore,createAssessmentReport,appendAssessmentAuditEvent,transitionAssessmentResult};
