@@ -49,6 +49,29 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add infra/terraform
             git commit -m "ci: format Terraform"
+            git fetch origin rebuild/platform-foundation-v1
+            git rebase origin/rebuild/platform-foundation-v1
+            git push origin HEAD:rebuild/platform-foundation-v1
+          fi
+
+      - name: Persist Terraform provider lock
+        if: github.ref == 'refs/heads/rebuild/platform-foundation-v1'
+        run: |
+          set -euo pipefail
+          lock_file="infra/terraform/environments/${{ matrix.environment }}/.terraform.lock.hcl"
+          if [ ! -f "$lock_file" ]; then
+            echo "::error::Terraform provider lock file was not generated: $lock_file"
+            exit 1
+          fi
+          if git diff --quiet -- "$lock_file"; then
+            echo "Provider lock file is already committed."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add "$lock_file"
+            git commit -m "ci: record Terraform provider lock"
+            git fetch origin rebuild/platform-foundation-v1
+            git rebase origin/rebuild/platform-foundation-v1
             git push origin HEAD:rebuild/platform-foundation-v1
           fi
 
