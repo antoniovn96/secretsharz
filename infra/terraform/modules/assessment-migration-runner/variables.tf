@@ -40,7 +40,7 @@ variable "secret_arns" {
 }
 
 variable "secret_environment_variables" {
-  type = list(object({)
+  type = list(object({
     name       = string
     value_from = string
   }))
