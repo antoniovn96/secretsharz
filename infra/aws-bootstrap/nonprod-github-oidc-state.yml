@@ -113,7 +113,6 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-              StringEquals:
                 token.actions.githubusercontent.com:sub: repo:antoniovn96/secretsharz:ref:refs/heads/rebuild/platform-foundation-v1
       Tags:
         - Key: Application
