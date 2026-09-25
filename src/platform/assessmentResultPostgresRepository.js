@@ -113,6 +113,7 @@ function hydrateResult(resultRow, responseRows, scoreRows, reportRows, auditRows
       entitlementId: resultRow.entitlement_id,
       orderId: resultRow.order_id,
     },
+    migration: resultRow.migration_metadata || {},
     audit: auditRows.map(rowToAudit),
     createdAt: resultRow.created_at?.toISOString?.() || resultRow.created_at,
     updatedAt: resultRow.updated_at?.toISOString?.() || resultRow.updated_at,
@@ -183,7 +184,7 @@ async function insertAssessmentResultRow(client, result) {
       report_version, norm_version, algorithm_version, language, locale,
       evidence_quality, context_snapshot, previous_assessment_result_id,
       reassessment_reason, recommended_retake_date, longitudinal_sequence,
-      entitlement_id, order_id, created_at, updated_at
+      entitlement_id, order_id, migration_metadata, created_at, updated_at
     )
     VALUES (
       $1, $2, $3, $4, $5,
@@ -193,7 +194,7 @@ async function insertAssessmentResultRow(client, result) {
       $19, $20, $21, $22, $23,
       $24::jsonb, $25::jsonb, $26,
       $27, $28, $29,
-      $30, $31, $32, $33
+      $30, $31, $32::jsonb, $33, $34
     )
     RETURNING *;
   `;
@@ -230,6 +231,7 @@ async function insertAssessmentResultRow(client, result) {
     result.longitudinal.sequence,
     result.entitlement.entitlementId,
     result.entitlement.orderId,
+    jsonOrNull(result.migration),
     result.createdAt,
     result.updatedAt,
   ];
