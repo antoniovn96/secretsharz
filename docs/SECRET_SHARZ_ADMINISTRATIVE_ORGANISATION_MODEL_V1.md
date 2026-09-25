@@ -1002,3 +1002,65 @@ The software should therefore have an **Emergency SuperAdmin Succession Mode** w
 - automatic expiry/review warning
 
 Medical information itself should not be collected unnecessarily; the system should record the governance fact that emergency succession criteria have been validated by the authorised leadership process.
+
+## 25. Founder decisions — governance and succession — 25 September 2026
+
+### Ownership and company formation
+- Founder ownership has not yet been finalised.
+- Antonio Vian Noronha is explicitly not the intended owner by default.
+- Recommended initial legal structure: Indian Private Limited Company, subject to final legal/tax advice and Founder confirmation.
+- The platform must support multiple legal entities and jurisdictions from the beginning.
+- Ownership/shareholding is separate from platform roles such as SuperAdmin, Executive Leadership, Backend Lead and Academic Leadership.
+
+### Technical leadership
+- Antonio Vian Noronha is the initial Backend/Platform technical lead.
+- Technical leadership does not determine company ownership or directorship.
+- Other director/officer positions remain open.
+
+### Executive and Academic Leadership
+- Executive Leadership is a temporary organisational assignment and may contain multiple people.
+- Academic Leadership is a top-level leadership function alongside Executive Leadership and may contain multiple people.
+- Exact appointment, tenure and normal authority remain open.
+
+### Emergency Governance Council
+If the active SuperAdmin becomes unable to perform duties:
+1. Executive Leadership + Academic Leadership jointly activate Emergency Governance Mode.
+2. They form a temporary Emergency Governance Council for a maximum of two months.
+3. Emergency Governance is time-limited and is not automatically a permanent SuperAdmin appointment.
+4. Routine continuity can be delegated within the emergency authority.
+5. High-risk identity, permission, financial, sensitive-data, legal and leadership actions require two-person approval.
+6. The Council decides whether to appoint/hire a replacement SuperAdmin or divide the responsibilities among qualified leaders.
+7. The succession decision must be recorded with scope, dates, handover and audit evidence.
+8. Emergency Governance expires automatically at the two-month maximum unless a governed successor arrangement has been completed.
+9. Emergency authority cannot be used to permanently expand a person's own authority without the required succession decision.
+
+### SuperAdmin model
+Secret Sharz supports:
+- Primary SuperAdmin
+- Additional Permanent SuperAdmin
+- Temporary/Delegated SuperAdmin
+
+Temporary/Delegated SuperAdmin access requires a grantor, scope, reason, start time, expiry time and audit history.
+
+### Recommended SuperAdmin removal rule
+- Temporary/Delegated SuperAdmin access can be revoked through normal governed administration.
+- Additional Permanent SuperAdmin removal follows the configured governance and duty-separation process.
+- Primary SuperAdmin removal/succession is not a unilateral action available to an ordinary additional SuperAdmin.
+- Primary SuperAdmin succession uses the Executive Leadership + Academic Leadership route or the formal ownership/board mechanism once established.
+- Emergency succession remains available when the Primary SuperAdmin is unavailable.
+
+### External request to internal case conversion
+The platform supports external-to-internal case conversion for appropriate requests from students, parents, customers, institutions and professionals.
+The external user sees only their permitted request/status information. Internal Case Engine records remain governed by sensitivity, purpose and authorisation.
+
+### Global legal/governance library
+The library is structured:
+Country → State/Province/Region → Legal domain → Law/Regulation/Official guidance → Effective date/version → Applicability rules → Review checklist → Evidence → Review status → Next review date.
+
+HR manages operational review and checklist work. SuperAdmin controls authoritative activation of governance rules.
+
+### Committee approval model
+- HR prepares, researches, completes the legal checklist and recommends.
+- Executive Leadership may provide final approval.
+- SuperAdmin may provide final approval.
+- Either Executive Leadership or SuperAdmin is sufficient for final committee approval unless a later duty-separation rule requires more.
