@@ -106,3 +106,24 @@ module "application_runtime" {
 output "application_load_balancer_dns_name" {
   value = module.application_runtime.load_balancer_dns_name
 }
+
+module "assessment_migration_runner" {
+  source = "../../modules/assessment-migration-runner"
+
+  name                          = "secretsharz-nonprod-assessment-migrations"
+  enabled                       = var.assessment_migration_runner_enabled
+  vpc_id                        = module.network.vpc_id
+  private_subnet_ids            = module.network.private_subnet_ids
+  application_security_group_id = module.network.application_security_group_id
+  image_uri                     = var.assessment_migration_runner_image_uri
+  secret_arns                   = var.assessment_migration_runner_secret_arns
+  secret_environment_variables  = var.assessment_migration_runner_secret_environment_variables
+}
+
+output "assessment_migration_runner_cluster_name" {
+  value = module.assessment_migration_runner.cluster_name
+}
+
+output "assessment_migration_runner_task_definition_arn" {
+  value = module.assessment_migration_runner.task_definition_arn
+}
