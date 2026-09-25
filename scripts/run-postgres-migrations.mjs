@@ -52,7 +52,7 @@ async function main() {
     await client.query("SELECT pg_advisory_lock(hashtext('secretsharz:postgres:migrations'))");
 
     const entries = (await fs.readdir(MIGRATIONS_DIR))
-      .filter((name) => /^\\d+_.+\\.sql$/i.test(name))
+      .filter((name) => /^\d+_.+\.sql$/i.test(name))
       .sort();
 
     for (const filename of entries) {
