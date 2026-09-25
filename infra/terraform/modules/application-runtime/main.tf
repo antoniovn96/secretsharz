@@ -54,7 +54,7 @@ resource "aws_iam_role_policy_attachment" "task_execution_base" {
 }
 
 resource "aws_iam_policy" "task_execution_secrets" {
-  count = local.enabled_count && length(var.secret_arns) > 0 ? 1 : 0
+  count = local.enabled && length(var.secret_arns) > 0 ? 1 : 0
 
   name = "${var.name}-task-secrets"
 
