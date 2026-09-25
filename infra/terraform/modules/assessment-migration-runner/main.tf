@@ -87,7 +87,16 @@ resource "aws_ecs_task_definition" "this" {
     image       = var.image_uri
     essential   = true
     command     = var.command
-    environment = []
+    environment = [
+      {
+        name  = "DATABASE_SSL"
+        value = "true"
+      },
+      {
+        name  = "DATABASE_SSL_REJECT_UNAUTHORIZED"
+        value = "true"
+      }
+    ]
 
     secrets = [
       for item in var.secret_environment_variables : {
