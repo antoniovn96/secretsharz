@@ -5,8 +5,8 @@ import crypto from 'node:crypto';
 import { RIASEC_V1, scoreRiasecV1 } from '../career/riasecInterestExplorerV1.js';
 import { buildRiasecReportPayload } from '../career/riasecReportPayloadV1.js';
 import { buildRiasecAssessmentResultV1 } from '../career/riasecAssessmentResultV1.js';
-import { appendAssessmentAuditEvent } from './assessmentResultRecord.js';
-import { persistAssessmentResult, getLatestAssessmentResultForPerson } from './assessmentResultPostgresRepository.js';
+import { appendAssessmentAuditEvent, createAssessmentReport } from './assessmentResultRecord.js';
+import { persistAssessmentResult, getLatestAssessmentResultForPerson, getAssessmentResultById } from './assessmentResultPostgresRepository.js';
 
 export async function submitRiasecAssessmentV1({
   pool,
@@ -44,6 +44,37 @@ export async function submitRiasecAssessmentV1({
     throw error;
   }
 
+  const authorizationContext = {
+    allowed: true,
+    actorPersonId,
+    subjectPersonId: personId,
+    dataDomain: 'assessments',
+    purpose: 'career_assessment_submission',
+  };
+
+  if (previousAssessmentResultId) {
+    const previous = await getAssessmentResultById({
+      pool,
+      assessmentResultId: previousAssessmentResultId,
+      authorizationContext: {
+        ...authorizationContext,
+        purpose: 'career_assessment_longitudinal_link',
+      },
+    });
+    if (!previous) {
+      const error = new Error('Previous assessment result was not found for this person.');
+      error.code = 'INVALID_PREVIOUS_ASSESSMENT_RESULT';
+      throw error;
+    }
+  }
+
+  const reportPayload = buildRiasecReportPayload(score, {
+    audience: 'student',
+    studentStage: contextSnapshot.studentStage || null,
+    recommendedNextAssessment: 'career_aptitude_core',
+  });
+
+  const reportVersion = reportPayload.reportVersion || '1.0.0-draft';
   const id = crypto.randomUUID();
   let result = buildRiasecAssessmentResultV1({
     score,
@@ -59,6 +90,16 @@ export async function submitRiasecAssessmentV1({
   });
 
   result.id = id;
+  result.instrument.reportVersion = reportVersion;
+  result.reports = [createAssessmentReport({
+    reportId: crypto.randomUUID(),
+    reportVersion,
+    reportType: 'career_interest_riasec',
+    audience: 'student',
+    generatedAt: score.completedAt || new Date().toISOString(),
+    dataSnapshot: reportPayload,
+    generationSource: 'riasec_v1_server',
+  })];
   result = appendAssessmentAuditEvent(result, {
     action: 'assessment_submitted',
     actorPersonId,
@@ -85,19 +126,7 @@ export async function submitRiasecAssessmentV1({
   const persisted = await persistAssessmentResult({
     pool,
     result,
-    authorizationContext: {
-      allowed: true,
-      actorPersonId,
-      subjectPersonId: personId,
-      dataDomain: 'assessments',
-      purpose: 'career_assessment_submission',
-    },
-  });
-
-  const reportPayload = buildRiasecReportPayload(score, {
-    audience: 'student',
-    studentStage: contextSnapshot.studentStage || null,
-    recommendedNextAssessment: 'career_aptitude_core',
+    authorizationContext,
   });
 
   return {
