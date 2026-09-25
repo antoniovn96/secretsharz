@@ -1,6 +1,6 @@
 # Secret Sharz — Assessment Result PostgreSQL Model V1
 
-**Status:** Draft persistence model — database/provider boundary defined; driver and migration runner intentionally not selected yet  
+**Status:** Approved persistence implementation — PostgreSQL via node-postgres (pg) with explicit SQL migrations  
 **Branch:** `rebuild/platform-foundation-v1`
 
 ## 1. Purpose
@@ -225,15 +225,25 @@ Phase 3:
 Phase 4:
 - retire legacy assessment storage after governance, retention and reconciliation sign-off
 
-## 11. Deliberately unresolved implementation choice
+## 11. Approved implementation choice
 
-The schema is intentionally independent of the Node PostgreSQL client and migration runner.
+The PostgreSQL implementation standard is:
 
-**Working recommendation for the next implementation step:** `node-postgres (pg)` with explicit SQL migrations.
+- Node.js PostgreSQL client: `pg`
+- Migration format: explicit versioned SQL files under `infra/postgres/migrations/`
+- Migration runner: `scripts/run-postgres-migrations.mjs`
+- Application persistence boundary: `src/platform/assessmentResultPostgresRepository.js`
+- Runtime connection boundary: `src/platform/postgres.js`
 
-That choice should be treated as a Founder/architecture decision before adding dependencies or wiring the runtime repository.
+The application uses parameterized SQL and transactions for assessment persistence. Authorization remains outside the repository boundary.
 
-## 12. Production gate
+## 12. Current migration status
+
+The first assessment persistence migration and repository have been added to the rebuild branch. Legacy Firebase assessment storage remains read-only and is not silently overwritten by this migration.
+
+The next deployment step is to provision/configure the target RDS connection, run `npm run db:migrate`, and then wire an authorized server service to the repository. A public assessment API is intentionally not exposed until the canonical authentication/authorization boundary is ready.
+
+## 13. Production gate
 
 Before the assessment service is considered production-ready:
 
