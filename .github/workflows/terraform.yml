@@ -13,8 +13,6 @@ on:
       - "infra/terraform/**"
       - ".github/workflows/terraform.yml"
 
-permissions:
-  contents: write
 
 jobs:
   terraform:
@@ -34,33 +32,6 @@ jobs:
         with:
           terraform_version: "1.10.0"
 
-      - name: Format Terraform
-        working-directory: infra/terraform
-        run: terraform fmt -recursive
-
-      - name: Persist Terraform formatting
-        if: github.ref == 'refs/heads/rebuild/platform-foundation-v1' && matrix.environment == 'nonprod'
-        run: |
-          set -euo pipefail
-          if git diff --quiet -- infra/terraform; then
-            echo "Terraform formatting is already clean."
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add infra/terraform
-            git commit -m "ci: format Terraform"
-            for attempt in 1 2 3 4 5; do
-              git fetch origin rebuild/platform-foundation-v1
-              git rebase origin/rebuild/platform-foundation-v1
-              if git push origin HEAD:rebuild/platform-foundation-v1; then
-                exit 0
-              fi
-              sleep 2
-            done
-            echo "::error::Unable to publish Terraform formatting after five attempts."
-            exit 1
-          fi
-
       - name: Terraform format check
         working-directory: infra/terraform
         run: terraform fmt -check -recursive
@@ -68,34 +39,6 @@ jobs:
       - name: Terraform init
         working-directory: infra/terraform/environments/${{ matrix.environment }}
         run: terraform init -backend=false
-
-      - name: Persist Terraform provider lock
-        if: github.ref == 'refs/heads/rebuild/platform-foundation-v1'
-        run: |
-          set -euo pipefail
-          lock_file="infra/terraform/environments/${{ matrix.environment }}/.terraform.lock.hcl"
-          if [ ! -f "$lock_file" ]; then
-            echo "::error::Terraform provider lock file was not generated: $lock_file"
-            exit 1
-          fi
-          if git ls-files --error-unmatch "$lock_file" >/dev/null 2>&1; then
-            echo "Provider lock file is already tracked."
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add "$lock_file"
-            git commit -m "ci: record Terraform provider lock"
-            for attempt in 1 2 3 4 5; do
-              git fetch origin rebuild/platform-foundation-v1
-              git rebase origin/rebuild/platform-foundation-v1
-              if git push origin HEAD:rebuild/platform-foundation-v1; then
-                exit 0
-              fi
-              sleep 2
-            done
-            echo "::error::Unable to publish Terraform provider lock after five attempts."
-            exit 1
-          fi
 
       - name: Terraform validate
         working-directory: infra/terraform/environments/${{ matrix.environment }}
