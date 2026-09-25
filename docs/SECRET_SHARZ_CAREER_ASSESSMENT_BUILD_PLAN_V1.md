@@ -158,3 +158,22 @@ Deliverables:
 - initial report interpretation map;
 - pilot/validation checklist.
 
+
+## 11. Milestone status — RIASEC vertical slice
+
+Draft foundation completed:
+- Career Assessment Build Plan
+- Career Assessment Item Schema
+- Career Interest Explorer RIASEC draft item bank
+- RIASEC Scoring Specification
+- RIASEC Personalised Report Logic
+
+Next implementation step:
+- assessment result data model;
+- scoring service;
+- RIASEC assessment UI;
+- report-generation payload;
+- test profiles;
+- QA and pilot preparation.
+
+Production validation remains a separate gate.
