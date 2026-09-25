@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - main
+      - rebuild/platform-foundation-v1
     paths:
       - "infra/terraform/**"
       - ".github/workflows/terraform.yml"
