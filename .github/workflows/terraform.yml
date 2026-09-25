@@ -54,6 +54,14 @@ jobs:
             git push origin HEAD:rebuild/platform-foundation-v1
           fi
 
+      - name: Terraform format check
+        working-directory: infra/terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        working-directory: infra/terraform/environments/${{ matrix.environment }}
+        run: terraform init -backend=false
+
       - name: Persist Terraform provider lock
         if: github.ref == 'refs/heads/rebuild/platform-foundation-v1'
         run: |
@@ -74,14 +82,6 @@ jobs:
             git rebase origin/rebuild/platform-foundation-v1
             git push origin HEAD:rebuild/platform-foundation-v1
           fi
-
-      - name: Terraform format check
-        working-directory: infra/terraform
-        run: terraform fmt -check -recursive
-
-      - name: Terraform init
-        working-directory: infra/terraform/environments/${{ matrix.environment }}
-        run: terraform init -backend=false
 
       - name: Terraform validate
         working-directory: infra/terraform/environments/${{ matrix.environment }}
