@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import AssessmentAccessibilityShell from './AssessmentAccessibilityShell';
 import { RIASEC_V1, scoreRiasecV1 } from './riasecInterestExplorerV1';
 import { buildRiasecReportPayload } from './riasecReportPayloadV1';
+import { buildRiasecAssessmentResultV1 } from './riasecAssessmentResultV1';
 
 const styles = {
   page: { minHeight:'100vh', background:'#f8fafc', color:'#0f172a', padding:'24px 16px 48px' },
@@ -18,7 +19,7 @@ export default function RiasecInterestExplorerV1({ onComplete, initialAnswers = 
   const [startedAt] = useState(() => new Date().toISOString());
   const item = RIASEC_V1.items[currentIndex];
   const currentValue = answers[item.id] ?? null;
-  const progress = Math.round((currentIndex / RIASEC_V1.items.length) * 100);
+  const progress = Math.round(((currentIndex + (currentValue != null ? 1 : 0)) / RIASEC_V1.items.length) * 100);
   const liveResult = useMemo(() => scoreRiasecV1(answers, { startedAt }), [answers, startedAt]);
   const liveReport = useMemo(() => buildRiasecReportPayload(liveResult, {
     audience: context.audience || 'student',
@@ -30,7 +31,18 @@ export default function RiasecInterestExplorerV1({ onComplete, initialAnswers = 
     if (typeof onComplete !== 'function') return;
     if (currentIndex !== RIASEC_V1.items.length - 1) return;
     if (Object.keys(answers).length !== RIASEC_V1.items.length) return;
-    onComplete({ answers, result: liveResult, reportPayload: liveReport });
+    onComplete({ answers, result: liveResult, reportPayload: liveReport, assessmentResult: buildRiasecAssessmentResultV1({
+      score: liveResult,
+      personId: context.personId,
+      accountId: context.accountId,
+      institutionRelationshipId: context.institutionRelationshipId,
+      serviceEngagementId: context.serviceEngagementId,
+      entitlementId: context.entitlementId,
+      orderId: context.orderId,
+      contextSnapshot: context.contextSnapshot || {},
+      previousAssessmentResultId: context.previousAssessmentResultId,
+      attemptNumber: context.attemptNumber || 1,
+    }) });
   }, [answers, currentIndex, liveResult, liveReport, onComplete]);
 
   const choose = (value) => setAnswers((previous) => ({ ...previous, [item.id]: value }));
