@@ -383,3 +383,93 @@ The Institution Timetable Management Software is:
 - automatic and constraint-driven;
 - connected to substitution, exams, rooms, attendance and notifications;
 - suitable for later SIS/LMS/calendar integration.
+
+
+## 21. Founder decisions — institutional pricing, premium timetable tier and family resources — 25 September 2026
+
+### Institutional commercial model
+The Institution Timetable Manager remains a core capability within the institution ecosystem, but the **institutional dashboard itself is a paid service**.
+
+Commercial logic:
+- pricing is based on institution student count;
+- the Founder has set a premium-entitlement threshold of **₹75,000**;
+- once the institution crosses that threshold under the final billing calculation, premium timetable capabilities become included at no additional premium charge;
+- the exact billing period/threshold calculation is still open.
+
+The product must therefore separate:
+1. institutional subscription entitlement;
+2. core timetable capability;
+3. premium timetable entitlement.
+
+### Premium timetable capabilities
+Premium entitlement includes:
+- download timetable;
+- structured export;
+- school/institution logo and branding;
+- enhanced printing/publication features;
+- future premium timetable capabilities added through the entitlement registry.
+
+Premium entitlement must not remove the core scheduler, conflict detection or ordinary viewing capabilities.
+
+### Institution onboarding
+Institution onboarding:
+Institution application
+→ institution verification
+→ Institution Administrator creation
+→ institution setup
+→ subscription activation
+→ timetable configuration
+→ publish/use.
+
+### Timetable publication
+Institution Administrators control what is published to teachers, students and parents/guardians.
+
+Published user experiences include:
+- personal student timetable;
+- class timetable;
+- exam timetable;
+- room/resource changes;
+- substitution information;
+- daily schedule.
+
+### Import and migration
+The timetable product must include:
+- Excel/CSV import;
+- existing timetable ingestion;
+- conflict detection against imported timetables;
+- structured conversion;
+- optimisation/re-generation after conversion.
+
+### Parent/child commercial content
+The family dashboard may offer paid:
+- parenting guides;
+- parenting books;
+- positive parenting resources;
+- age/stage activity packs;
+- child educational resources;
+- family routine planners;
+- child timetable/routine tools;
+- other optional child-focused resources.
+
+Purchasing any resource does not grant additional access to a child's private service records.
+
+### External book purchasing
+Secret Sharz may recommend third-party parenting books and send the user to an external retailer such as Amazon for purchase.
+
+Recommendations should be based on:
+- explicit parent-selected interests;
+- general non-sensitive family/age-stage preferences;
+- editorial curation.
+
+Recommendations must not silently derive from confidential counselling, SEN, safeguarding, professional or other sensitive records.
+
+## 22. Recommended commercial/product direction
+
+The institution product should be structured as:
+- **Institution Dashboard subscription** — paid, student-count based.
+- **Core timetable engine** — included in the institutional service.
+- **Premium timetable tier** — automatically included once the ₹75,000 Founder-defined commercial threshold is crossed under the final billing rule.
+- **Parent/family resources** — separately purchased by parents/guardians.
+- **Third-party book recommendations** — external retailer purchase.
+
+The entitlement engine should be configurable so the commercial rules can later change without rewriting the timetable engine.
