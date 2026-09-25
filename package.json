@@ -17,7 +17,7 @@
     "dry-run:migration": "node scripts/dry-run-claim-migration.mjs",
     "inventory:production": "node scripts/production-claim-inventory.mjs",
     "db:migrate": "node scripts/run-postgres-migrations.mjs",
-    "test:career-assessment": "node --test test/career/*.test.mjs test/platform/assessmentResultRecord.test.mjs test/platform/assessmentResultPostgresRepository.test.mjs test/platform/riasecAssessmentService.test.mjs test/platform/legacyAssessmentMigration.test.mjs",
+    "test:career-assessment": "node --test test/career/*.test.mjs test/platform/assessmentResultRecord.test.mjs test/platform/assessmentResultPostgresRepository.test.mjs test/platform/riasecAssessmentService.test.mjs test/platform/legacyAssessmentMigration.test.mjs test/platform/postgresMigrationContract.test.mjs",
     "db:verify": "node scripts/verify-assessment-schema.mjs",
     "db:reconcile-legacy-assessments": "node scripts/reconcile-legacy-career-assessments.mjs"
   },
