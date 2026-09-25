@@ -177,3 +177,24 @@ Next implementation step:
 - QA and pilot preparation.
 
 Production validation remains a separate gate.
+
+## 12. Implementation status — RIASEC V1
+
+The first vertical-slice implementation is now isolated from the legacy/current career assessment code.
+
+Added:
+- src/career/riasecInterestExplorerV1.js
+- src/career/riasecReportPayloadV1.js
+- src/career/RiasecInterestExplorerV1.jsx
+- test/career/riasecInterestExplorerV1.test.mjs
+
+The current repository already contains an older VidyaVantage assessment implementation and scoring stack. The new RIASEC V1 must therefore remain versioned and isolated until the new assessment is reviewed, piloted and approved for replacement/integration.
+
+The new V1 does not silently replace the existing 36-item RIASEC bank or existing scoring schema.
+
+Next:
+1. verify the new V1 implementation with repository CI/test tooling;
+2. connect the structured result to the canonical assessment-result persistence model;
+3. integrate the new assessment into the assessment library behind an explicit version/feature flag;
+4. build test profiles for personalised-report QA;
+5. pilot before production scoring claims.
