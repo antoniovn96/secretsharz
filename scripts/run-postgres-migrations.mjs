@@ -10,7 +10,6 @@ const { Pool } = pg;
 
 const MIGRATIONS_DIR = path.resolve('infra/postgres/migrations');
 function bool(value, fallback = false) {
-
   if (value == null || value === '') return fallback;
   return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase());
 }
