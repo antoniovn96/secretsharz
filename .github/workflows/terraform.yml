@@ -78,8 +78,8 @@ jobs:
             echo "::error::Terraform provider lock file was not generated: $lock_file"
             exit 1
           fi
-          if git diff --quiet -- "$lock_file"; then
-            echo "Provider lock file is already committed."
+          if git ls-files --error-unmatch "$lock_file" >/dev/null 2>&1; then
+            echo "Provider lock file is already tracked."
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
