@@ -13,6 +13,7 @@ test('maps a completed RIASEC result to the canonical assessment record',()=>{
  assert.equal(record.responses.length,60);
  assert.equal(record.scores.length,6);
  assert.equal(record.scores[0].transformedScore,3);
+ assert.ok(record.attempt.scoredAt);
 });
 
 test('incomplete RIASEC result remains non-final in the canonical record',()=>{
