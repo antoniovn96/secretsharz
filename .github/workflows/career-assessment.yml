@@ -16,6 +16,7 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/career-assessment.yml"
+      - "test/platform/infrastructureContract.test.mjs"
   push:
     branches:
       - main
@@ -80,3 +81,6 @@ jobs:
 
       - name: Run career assessment tests
         run: npm run test:career-assessment
+
+      - name: Run infrastructure contract tests
+        run: npm run test:infrastructure-contract
