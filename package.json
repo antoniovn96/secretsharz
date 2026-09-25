@@ -20,7 +20,8 @@
     "test:career-assessment": "node --test test/career/*.test.mjs test/platform/assessmentResultRecord.test.mjs test/platform/assessmentResultPostgresRepository.test.mjs test/platform/riasecAssessmentService.test.mjs test/platform/legacyAssessmentMigration.test.mjs test/platform/postgresMigrationContract.test.mjs test/platform/nextConfigRouting.test.mjs test/platform/riasecApiContract.test.mjs test/platform/postgresConfig.test.mjs",
     "db:verify": "node scripts/verify-assessment-schema.mjs",
     "db:reconcile-legacy-assessments": "node scripts/reconcile-legacy-career-assessments.mjs",
-    "test:infrastructure-contract": "node --test test/platform/infrastructureContract.test.mjs"
+    "test:infrastructure-contract": "node --test test/platform/infrastructureContract.test.mjs",
+    "test:aws-bootstrap": "node --test test/platform/awsBootstrapContract.test.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.1",
