@@ -15,7 +15,8 @@
     "test:integration": "firebase emulators:exec --project secretsharz-emulator-test --only auth,firestore \"node --test test/integration/*.integration.test.mjs\"",
     "test": "npm run test:server && npm run test:institution && npm run test:integration && npm run test:rules",
     "dry-run:migration": "node scripts/dry-run-claim-migration.mjs",
-    "inventory:production": "node scripts/production-claim-inventory.mjs"
+    "inventory:production": "node scripts/production-claim-inventory.mjs",
+    "db:migrate": "node scripts/run-postgres-migrations.mjs"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.1",
