@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import AssessmentAccessibilityShell from './AssessmentAccessibilityShell';
 import { RIASEC_V1, scoreRiasecV1 } from './riasecInterestExplorerV1';
 import { buildRiasecReportPayload } from './riasecReportPayloadV1';
@@ -17,6 +17,7 @@ export default function RiasecInterestExplorerV1({ onComplete, initialAnswers = 
   const [answers, setAnswers] = useState(initialAnswers);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [startedAt] = useState(() => new Date().toISOString());
+  const completionSent = useRef(false);
   const item = RIASEC_V1.items[currentIndex];
   const currentValue = answers[item.id] ?? null;
   const progress = Math.round(((currentIndex + (currentValue != null ? 1 : 0)) / RIASEC_V1.items.length) * 100);
@@ -31,6 +32,8 @@ export default function RiasecInterestExplorerV1({ onComplete, initialAnswers = 
     if (typeof onComplete !== 'function') return;
     if (currentIndex !== RIASEC_V1.items.length - 1) return;
     if (Object.keys(answers).length !== RIASEC_V1.items.length) return;
+    if (completionSent.current) return;
+    completionSent.current = true;
     onComplete({ answers, result: liveResult, reportPayload: liveReport, assessmentResult: buildRiasecAssessmentResultV1({
       score: liveResult,
       personId: context.personId,
