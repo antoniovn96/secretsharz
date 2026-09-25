@@ -1575,7 +1575,7 @@ Secret Sharz may provide general parenting-book recommendations and links to ext
 - General recommendations may be based on explicit parent-selected interests and non-sensitive preferences.
 
 
-## 34. Founder decisions — institutional pricing and family commerce — 25 September 2026
+## 34. Founder decisions and proposed institutional pricing — 25 September 2026
 
 ### Recommended institutional pricing model
 Current public 2026 India school-software pricing references commonly describe per-student annual pricing in roughly the ₹100–₹500 range, with significant variation by product scope and vendor; published vendor guides also show low-cost flat plans for smaller institutions. These figures are market reference points rather than an independent price index. citeturn922469search1turn922469search2turn922469search9
