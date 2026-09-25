@@ -211,3 +211,7 @@ output "assessment_migration_runner_task_definition_arn" {
 output "assessment_migration_runner_container_name" {
   value = "secretsharz-production-assessment-migrations"
 }
+
+output "assessment_migration_runner_task_execution_role_arn" {
+  value = module.assessment_migration_runner.task_execution_role_arn
+}
