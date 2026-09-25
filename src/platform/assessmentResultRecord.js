@@ -4,6 +4,16 @@
 export const ASSESSMENT_RESULT_SCHEMA_VERSION = '1.0.0';
 export const ATTEMPT_STATUSES = Object.freeze(['created','started','submitted','scored','reported','abandoned','invalidated','superseded']);
 export const ASSESSMENT_RESULT_AUDIENCES = Object.freeze(['student','parent_guardian','institution','teacher','counsellor_coach','administrator']);
+export const ASSESSMENT_STATUS_TRANSITIONS = Object.freeze({
+  created: Object.freeze(['started','abandoned','invalidated']),
+  started: Object.freeze(['submitted','abandoned','invalidated']),
+  submitted: Object.freeze(['scored','invalidated','superseded']),
+  scored: Object.freeze(['reported','invalidated','superseded']),
+  reported: Object.freeze(['superseded']),
+  abandoned: Object.freeze([]),
+  invalidated: Object.freeze([]),
+  superseded: Object.freeze([]),
+});
 
 function isPlainObject(value){ return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
 function asNullableString(value){ return value == null || value === '' ? null : String(value); }
@@ -79,6 +89,10 @@ export function appendAssessmentAuditEvent(record,event={}){
 
 export function transitionAssessmentResult(record,nextStatus,metadata={}){
   if(!ATTEMPT_STATUSES.includes(nextStatus)) throw new Error('Unknown assessment attempt status: '+nextStatus);
+  const currentStatus=record?.status||'created';
+  if(nextStatus !== currentStatus && !ASSESSMENT_STATUS_TRANSITIONS[currentStatus]?.includes(nextStatus)) {
+    throw new Error('Invalid assessment status transition: '+currentStatus+' -> '+nextStatus);
+  }
   const next=clone(record);
   next.status=nextStatus;
   if(nextStatus==='started') next.attempt.startedAt=next.attempt.startedAt||new Date().toISOString();
