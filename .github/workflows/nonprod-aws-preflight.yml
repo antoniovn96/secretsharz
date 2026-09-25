@@ -1,0 +1,96 @@
+name: Secret Sharz Nonprod AWS Preflight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-nonprod-aws-preflight
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Verify nonprod AWS prerequisites
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      ECR_REPOSITORY: secretsharz-nonprod
+      MIGRATION_CLUSTER_NAME: ${{ vars.MIGRATION_CLUSTER_NAME }}
+      MIGRATION_TASK_DEFINITION: ${{ vars.MIGRATION_TASK_DEFINITION }}
+      MIGRATION_CONTAINER_NAME: ${{ vars.MIGRATION_CONTAINER_NAME }}
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Show AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Verify ECR repository
+        run: |
+          set -euo pipefail
+          aws ecr describe-repositories \
+            --repository-names "$ECR_REPOSITORY" \
+            --region "$AWS_REGION" >/dev/null
+
+      - name: Verify RDS instance
+        run: |
+          set -euo pipefail
+          STATUS=$(aws rds describe-db-instances \
+            --db-instance-identifier secretsharz-nonprod-postgres \
+            --region "$AWS_REGION" \
+            --query 'DBInstances[0].DBInstanceStatus' \
+            --output text)
+          echo "RDS status: $STATUS"
+          test "$STATUS" = "available"
+
+      - name: Verify RDS master secret reference
+        run: |
+          set -euo pipefail
+          ARN=$(aws rds describe-db-instances \
+            --db-instance-identifier secretsharz-nonprod-postgres \
+            --region "$AWS_REGION" \
+            --query 'DBInstances[0].MasterUserSecret.SecretArn' \
+            --output text)
+          test -n "$ARN"
+          test "$ARN" != "None"
+          echo "RDS master secret is configured."
+
+      - name: Verify migration task configuration
+        run: |
+          set -euo pipefail
+          for name in MIGRATION_CLUSTER_NAME MIGRATION_TASK_DEFINITION MIGRATION_CONTAINER_NAME; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing GitHub Environment variable: $name"
+              exit 1
+            fi
+          done
+
+          aws ecs describe-clusters \
+            --clusters "$MIGRATION_CLUSTER_NAME" \
+            --region "$AWS_REGION" \
+            --query 'clusters[0].status' \
+            --output text | grep -qx ACTIVE
+
+          aws ecs describe-task-definition \
+            --task-definition "$MIGRATION_TASK_DEFINITION" \
+            --region "$AWS_REGION" >/dev/null
+
+      - name: Preflight summary
+        run: |
+          {
+            echo "### Non-production AWS preflight"
+            echo "- Region: $AWS_REGION"
+            echo "- ECR: $ECR_REPOSITORY verified"
+            echo "- RDS: secretsharz-nonprod-postgres available"
+            echo "- RDS managed master secret: present"
+            echo "- ECS migration cluster/task definition: verified"
+            echo ""
+            echo "No infrastructure or database mutation was performed."
+          } >> "$GITHUB_STEP_SUMMARY"
