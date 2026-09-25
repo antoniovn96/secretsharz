@@ -42,6 +42,9 @@ test('nonprod AWS bootstrap scopes Terraform state and lock-file access', () => 
   assert.match(source, /iam:CreatePolicyVersion/);
   assert.match(source, /iam:DeletePolicyVersion/);
   assert.match(source, /secretsharz-nonprod-\*/);
+  assert.match(source, /ec2:ModifyVpcAttribute/);
+  assert.match(source, /ecr:PutLifecyclePolicy/);
+  assert.match(source, /ecr:DeleteLifecyclePolicy/);
 });
 
 
