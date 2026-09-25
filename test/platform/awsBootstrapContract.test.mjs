@@ -20,8 +20,10 @@ test('nonprod AWS bootstrap has the expected state protections', () => {
 });
 
 test('nonprod AWS bootstrap restricts GitHub OIDC trust to the rebuild branch', () => {
-  assert.equal((source.match(/^\s+StringEquals:\s*$/gm) ?? []).length, 1);
-  assert.match(source, /token\.actions\.githubusercontent\.com:aud: sts\.amazonaws\.com/);
+  assert.match(
+    source,
+    /Condition:\s*\n\s+StringEquals:\s*\n\s+token\.actions\.githubusercontent\.com:aud: sts\.amazonaws\.com\s*\n\s+token\.actions\.githubusercontent\.com:sub: repo:antoniovn96\/secretsharz:ref:refs\/heads\/rebuild\/platform-foundation-v1/,
+  );
   assert.match(
     source,
     /token\.actions\.githubusercontent\.com:sub: repo:antoniovn96\/secretsharz:ref:refs\/heads\/rebuild\/platform-foundation-v1/,
