@@ -162,13 +162,14 @@ async function finalizeAssessmentResult(client, resultId, result) {
 
   if (target === 'scored') return;
 
+  const reportedAt = result.attempt.reportedAt || new Date().toISOString();
   await client.query(
     `UPDATE assessment_results
      SET status = 'reported',
          reported_at = $2,
          updated_at = $3
      WHERE id = $1`,
-    [resultId, result.attempt.reportedAt, new Date().toISOString()],
+    [resultId, reportedAt, new Date().toISOString()],
   );
 }
 
