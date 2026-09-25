@@ -67,3 +67,14 @@ output "postgres_master_user_secret_arn" {
 output "application_security_group_id" {
   value = module.network.application_security_group_id
 }
+
+
+module "container_registry" {
+  source = "../../modules/container-registry"
+
+  name = "secretsharz-production"
+}
+
+output "container_registry_url" {
+  value = module.container_registry.repository_url
+}
