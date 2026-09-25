@@ -4,8 +4,6 @@
 -- Canonical Person/Account tables are intentionally referenced as opaque TEXT until the
 -- broader platform identity migration establishes concrete PostgreSQL foreign keys.
 
-BEGIN;
-
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS assessment_results (
@@ -232,4 +230,3 @@ CREATE TRIGGER trg_assessment_audit_no_update
 BEFORE UPDATE OR DELETE ON assessment_audit_events
 FOR EACH ROW EXECUTE FUNCTION reject_assessment_audit_mutation();
 
-COMMIT;
