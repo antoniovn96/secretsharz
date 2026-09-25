@@ -45,18 +45,21 @@ resource "aws_iam_role" "task_execution" {
 
 resource "aws_iam_role_policy_attachment" "task_execution_base" {
   count = local.enabled_count
-  role = aws_iam_role.task_execution[0].name
+
+  role       = aws_iam_role.task_execution[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 resource "aws_iam_policy" "task_execution_secrets" {
   count = local.enabled && length(var.secret_arns) > 0 ? 1 : 0
+
   name = "${var.name}-secrets"
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
-      Action = ["secretsmanager:GetSecretValue"]
+      Effect   = "Allow"
+      Action   = ["secretsmanager:GetSecretValue"]
       Resource = var.secret_arns
     }]
   })
@@ -64,7 +67,8 @@ resource "aws_iam_policy" "task_execution_secrets" {
 
 resource "aws_iam_role_policy_attachment" "task_execution_secrets" {
   count = local.enabled && length(var.secret_arns) > 0 ? 1 : 0
-  role = aws_iam_role.task_execution[0].name
+
+  role       = aws_iam_role.task_execution[0].name
   policy_arn = aws_iam_policy.task_execution_secrets[0].arn
 }
 
@@ -79,10 +83,10 @@ resource "aws_ecs_task_definition" "this" {
   execution_role_arn       = aws_iam_role.task_execution[0].arn
 
   container_definitions = jsonencode([{
-    name      = var.name
-    image     = var.image_uri
-    essential = true
-    command   = var.command
+    name        = var.name
+    image       = var.image_uri
+    essential   = true
+    command     = var.command
     environment = []
 
     secrets = [
