@@ -94,3 +94,18 @@ terraform -chdir=infra/terraform/environments/production init   -backend-config=
 The repository has the remote backend declaration but CI still validates with `-backend=false`.
 
 This is intentional. No automated infrastructure mutation should run until the non-production state bucket, locking, and OIDC deployment role are provisioned and verified.
+
+
+## Minimum Terraform state-role permissions
+
+For the S3 backend configured with `use_lockfile = true`, the deployment role needs access to the state object and its lock object.
+
+For the non-production key `secretsharz/nonprod/terraform.tfstate`, scope the backend permissions to:
+
+- `s3:ListBucket` on the state bucket, restricted to the non-production state prefix
+- `s3:GetObject` and `s3:PutObject` on `secretsharz/nonprod/terraform.tfstate`
+- `s3:GetObject`, `s3:PutObject`, and `s3:DeleteObject` on `secretsharz/nonprod/terraform.tfstate.tflock`
+
+Terraform's current S3 backend documents `use_lockfile` as the S3-native locking mechanism and notes that DynamoDB locking is deprecated. citeturn344023search0
+
+The application infrastructure role still needs its separate workload permissions; do not broaden the state policy to provide unrelated AWS access.
