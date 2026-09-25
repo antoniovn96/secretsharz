@@ -45,8 +45,9 @@ test('server service scores submitted answers and never trusts client-provided s
                 longitudinal_sequence: values[28],
                 entitlement_id: values[29],
                 order_id: values[30],
-                created_at: new Date(values[31]),
-                updated_at: new Date(values[32]),
+                migration_metadata: JSON.parse(values[31] || '{}'),
+                created_at: new Date(values[32]),
+                updated_at: new Date(values[33]),
               };
             return { rows: [insertedRow] };
           }
