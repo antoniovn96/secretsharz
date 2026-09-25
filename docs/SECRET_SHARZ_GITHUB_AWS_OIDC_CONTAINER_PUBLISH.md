@@ -8,7 +8,7 @@ Workflow:
 .github/workflows/container-publish.yml
 ```
 
-It accepts `nonprod` or `production`, authenticates to AWS using GitHub OIDC, verifies the ECR repository, builds the application image with the environment's public Firebase configuration, and pushes an immutable commit-SHA tag.
+It accepts `nonprod` or `production`, authenticates to AWS using GitHub OIDC, verifies the ECR repository, builds the application image with the environment's public Firebase configuration, and pushes an immutable commit-SHA tag. It does not push a mutable `latest` tag because the ECR repositories are configured as immutable.
 
 The workflow does **not** deploy ECS and does **not** apply Terraform.
 
