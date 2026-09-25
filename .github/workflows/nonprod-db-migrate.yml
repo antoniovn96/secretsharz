@@ -60,7 +60,7 @@ jobs:
             printf "]"
           }')
 
-          OVERRIDES=$(printf '{"containerOverrides":[{"name":"%s","command":["node","scripts/run-postgres-migrations.mjs","--verify"]}]}' "$MIGRATION_CONTAINER_NAME")
+          OVERRIDES=$(printf '{"containerOverrides":[{"name":"%s","command":["sh","-lc","node scripts/run-postgres-migrations.mjs && node scripts/verify-assessment-schema.mjs"]}]}' "$MIGRATION_CONTAINER_NAME")
 
           TASK_ARN=$(aws ecs run-task             --cluster "$MIGRATION_CLUSTER_NAME"             --task-definition "$MIGRATION_TASK_DEFINITION"             --launch-type FARGATE             --network-configuration "awsvpcConfiguration={subnets=$SUBNET_JSON,securityGroups=[\"$MIGRATION_SECURITY_GROUP_ID\"],assignPublicIp=DISABLED}"             --overrides "$OVERRIDES"             --query 'tasks[0].taskArn'             --output text             --region "$AWS_REGION")
 
