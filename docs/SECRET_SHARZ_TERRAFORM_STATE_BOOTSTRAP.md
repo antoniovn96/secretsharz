@@ -106,6 +106,6 @@ For the non-production key `secretsharz/nonprod/terraform.tfstate`, scope the ba
 - `s3:GetObject` and `s3:PutObject` on `secretsharz/nonprod/terraform.tfstate`
 - `s3:GetObject`, `s3:PutObject`, and `s3:DeleteObject` on `secretsharz/nonprod/terraform.tfstate.tflock`
 
-Terraform's current S3 backend documents `use_lockfile` as the S3-native locking mechanism and notes that DynamoDB locking is deprecated. citeturn344023search0
+Terraform's current S3 backend uses `use_lockfile` for S3-native locking; DynamoDB-based locking is deprecated.
 
 The application infrastructure role still needs its separate workload permissions; do not broaden the state policy to provide unrelated AWS access.
