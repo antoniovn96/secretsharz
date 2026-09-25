@@ -473,3 +473,112 @@ The institution product should be structured as:
 - **Third-party book recommendations** — external retailer purchase.
 
 The entitlement engine should be configurable so the commercial rules can later change without rewriting the timetable engine.
+
+
+## 23. Founder decisions — timetable pricing and institution platform — 25 September 2026
+
+### Institution dashboard
+The institution dashboard is a paid institutional service.
+
+Institution subscription → Institution Dashboard → institution services
+
+The institution must have an active subscription before its institution-hosted timetable is available through Secret Sharz.
+
+### Progressive India pricing
+Recommended India price book, before applicable taxes:
+
+| Student band | Marginal annual price per student |
+| --- | ---: |
+| 1–250 | ₹150 |
+| 251–500 | ₹125 |
+| 501–1,000 | ₹100 |
+| 1,001–2,000 | ₹80 |
+| 2,001–5,000 | ₹60 |
+| 5,001+ | Custom |
+
+At 563 active students, the annual value crosses ₹75,000.
+
+The product should display a live billing calculation so the institution administrator can see:
+- active students counted;
+- current annual value;
+- amount to premium threshold;
+- premium status;
+- next band impact.
+
+### Premium entitlement
+Once annual subscription value exceeds ₹75,000, premium timetable capabilities are automatically included:
+- timetable download;
+- structured export;
+- institution logo/branding;
+- enhanced print/publication features;
+- future premium timetable capabilities defined in the entitlement registry.
+
+### Pricing mechanics
+- Annual is the default billing term.
+- Monthly payment may be offered using the annual entitlement calculation plus an explicit payment-plan premium.
+- Student counts use the defined active-enrolment rule.
+- Price books are versioned.
+- Existing contracts retain their agreed price until renewal unless contract terms say otherwise.
+
+### Trial
+Verified institutions receive a 30-day trial recommendation.
+The trial is isolated from other institutions and cannot bypass identity, verification or data-residency controls.
+
+### Institution hierarchy
+The timetable service supports:
+Organisation → Institution → Campus → Department/Program → Grade/Year → Class/Section.
+
+Shared resources across campuses require explicit configuration.
+
+### Timetable user experience
+Teachers, students and parents can receive published:
+- personal timetable;
+- class timetable;
+- exam timetable;
+- room/resource changes;
+- substitution information;
+- daily schedule.
+
+The institution controls what is published.
+
+### Import/migration
+Core timetable onboarding includes:
+- Excel/CSV import wizard;
+- existing timetable ingestion;
+- column mapping;
+- validation;
+- conflict detection;
+- structured conversion;
+- optimisation/re-generation.
+
+### Timetable generation
+The scheduler exposes:
+- simple Generate Best Timetable mode;
+- advanced configuration mode;
+- hard constraints;
+- soft constraints;
+- weighted preferences;
+- explanation of unsatisfied constraints.
+
+AI may explain, suggest and compare timetable changes, but the authoritative scheduler remains constraint-validated and deterministic at the decision point.
+
+### Free vs premium boundary
+Core scheduling remains part of the institutional service. Premium entitlement does not unlock the scheduler itself; it unlocks additional operational/export/branding capabilities.
+
+### Institution operating system
+The Institution ecosystem is intended to grow beyond timetables into a broader institution operating system:
+
+People → Admissions/Intake → Students → Parents → Staff → Classes → Timetable → Attendance → Exams → Learning → Counselling → SEN → Career → Fees → Communication → Documents → Requests → Governance → Reports.
+
+Timetable Management is the first major institution product capability, not the entire institution platform.
+
+### Configurable terminology
+Institution terminology must be configurable so the same platform can use local structures such as:
+- Grade / Class / Section;
+- Year / Form / Stream;
+- Program / Cohort / Group;
+without changing the underlying canonical data model.
+
+### Localised retailer links
+Book/resource recommendations can map to territory-specific retailer links, such as Amazon.in, Amazon.co.uk or Amazon.com where available.
+If a territory does not have an appropriate retailer link, the platform can use an author/publisher/official source link.
