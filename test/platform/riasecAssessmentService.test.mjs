@@ -51,6 +51,13 @@ test('server service scores submitted answers and never trusts client-provided s
             return { rows: [insertedRow] };
           }
 
+          if (String(sql).includes('UPDATE assessment_results') && insertedRow) {
+            if (String(sql).includes("status = 'submitted'")) insertedRow.status = 'submitted';
+            if (String(sql).includes("status = 'scored'")) insertedRow.status = 'scored';
+            if (String(sql).includes("status = 'reported'")) insertedRow.status = 'reported';
+            return { rows: [] };
+          }
+
           if (String(sql).includes('SELECT * FROM assessment_results WHERE id = $1')) {
             return { rows: insertedRow ? [insertedRow] : [] };
           }
