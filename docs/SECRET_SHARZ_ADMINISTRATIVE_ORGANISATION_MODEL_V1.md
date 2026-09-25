@@ -1771,3 +1771,112 @@ The Institution product includes a Governance & Compliance area for institution-
 - review dates.
 
 This is distinct from institutional finance, payroll and admissions.
+
+## 36. Founder decisions — institutional service entitlements and school reporting — 25 September 2026
+
+### Career assessment
+- Career assessment is available through defined grade/stage entitlements rather than being automatically included for every student at every level.
+- The school receives an assessment-generated institutional report in its authorised dashboard.
+- The report type and content depend on the career assessment selected.
+- The principal may access authorised institutional career-assessment reports.
+- Teachers do not automatically receive access to individual career-assessment reports.
+- Where the institution has an authorised Secret Sharz counsellor, the relevant counsellor may access the reports required for the assigned service.
+- Student/parent access and authorisation remain separately governed.
+
+### Counselling service commercial model
+Institution-funded counselling is represented as a service entitlement with:
+- service duration options;
+- online or offline delivery;
+- student count;
+- session frequency;
+- scheduled hours;
+- service scope/topic;
+- assigned professional/team;
+- start/end dates.
+
+Examples of service duration offerings:
+- one month;
+- three months;
+- six months;
+- one year.
+
+Session-frequency offerings may include configurations such as:
+- one session per month;
+- three sessions per month;
+- other explicitly defined frequencies;
+- multi-month or one-year programmes.
+
+The commercial engine must calculate the final service price from the configured service dimensions rather than treating every institution contract as one flat counselling fee.
+
+### School workshops and group programmes
+The institution service catalogue may include school-wide or cohort-based sessions such as:
+- WHO 10 Life Skills;
+- 21st Century Skills;
+- teacher training;
+- other approved workshops/programmes.
+
+Founder-provided working reference prices:
+- approximately ₹8,000 for a full-day (8-hour) session for about 100 students;
+- approximately ₹4,000 for a half-day session.
+
+The final quotation is calculated according to actual hours, student count, format, topic/programme and other configured service factors.
+
+These figures are working Founder inputs, not a universal tariff yet.
+
+### SEN educator/tutor service
+Institutional SEN support may be provided as a scheduled service engagement.
+Working Founder model:
+- Secret Sharz SEN educator/tutor attends the institution twice per week;
+- service hours can cover the institution's normal school day, approximately 9:00 a.m. to 4:00 p.m.;
+- exact frequency, staffing ratio, student coverage and commercial terms are configured per institution/service agreement.
+
+The institutional service does not transfer unrestricted access to all SEN records. The professional receives only the records needed for the assigned service.
+
+### Service entitlement model
+Institutional service packages should distinguish:
+- platform subscription;
+- career-assessment entitlement;
+- counselling entitlement;
+- SEN service entitlement;
+- workshops/training entitlement;
+- other human-delivered service entitlement.
+
+Each entitlement has its own scope, quantity, period, delivery mode and assigned team/provider.
+
+### Access to school reports
+Institutional reports must use explicit role-based visibility.
+For individual career-assessment reporting:
+- Principal/authorised institutional leader: permitted report access according to the purchased assessment/report type;
+- Teachers: no individual report access by default;
+- Secret Sharz assigned counsellor/coach: permitted where required for the assigned service;
+- Students/parents: governed by their own service/assessment access and consent model.
+
+Institution reports may provide aggregate/appropriate insights according to the assessment configuration without exposing individual sensitive detail beyond the authorised audience.
+
+### Institutional service procurement
+The institution selects:
+- service;
+- cohort/student count;
+- duration;
+- frequency;
+- online/offline mode;
+- hours;
+- topic/programme;
+- preferred dates;
+- assigned professional/team, where applicable.
+
+Secret Sharz then produces the authorised service engagement/quotation.
+
+### Career guidance account allowance
+The basic career guidance institutional entitlement includes a maximum of two authorised teacher accounts.
+Additional teacher access requires a higher entitlement or separately approved configuration.
+
+### Trial links
+Institution trial access uses a generated, institution-specific, single-use link.
+- The backend generates the link.
+- Marketing/HR authorises and sends it.
+- The trial becomes active when the recipient opens the link and successfully enters the institution trial dashboard.
+- The trial duration is two hours.
+- The timer is server-authoritative.
+- The link cannot be reused.
+- Trial issuance, activation, expiry and institution/prospect association are audited.
