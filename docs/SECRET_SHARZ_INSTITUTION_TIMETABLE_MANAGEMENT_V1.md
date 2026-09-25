@@ -582,3 +582,111 @@ without changing the underlying canonical data model.
 ### Localised retailer links
 Book/resource recommendations can map to territory-specific retailer links, such as Amazon.in, Amazon.co.uk or Amazon.com where available.
 If a territory does not have an appropriate retailer link, the platform can use an author/publisher/official source link.
+
+## 24. Founder decisions — timetable product scope, trial and institutional services — 25 September 2026
+
+### Pricing review
+The earlier proposed ₹150–₹60/student/year price book is considered too low for the intended Institution ecosystem because the product is no longer just a timetable utility. It is also the access layer for Secret Sharz institutional services and, where configured, career/counselling/SEN offerings.
+
+Current public 2026 benchmarks show basic school ERP pricing commonly around ₹100–₹500 per student/year, while some published career-assessment products charge around ₹599–₹799 per student for an institution assessment, and school career-guidance packages can be materially higher when human counselling is included. These are market reference points, not a required Secret Sharz price. citeturn440291search0turn440291search10turn353191search1turn353191search3turn353191search4
+
+### Proposed revised India platform price book
+The revised recommendation is:
+
+| Active student band | Marginal annual platform price per student |
+| --- | ---: |
+| 1–250 | ₹499 |
+| 251–500 | ₹449 |
+| 501–1,000 | ₹399 |
+| 1,001–2,000 | ₹349 |
+| 2,001–5,000 | ₹299 |
+| 5,001+ | Custom enterprise pricing |
+
+This is still progressive, so larger institutions receive lower marginal pricing.
+
+This price book is proposed, not Founder-approved.
+
+### Important commercial separation
+The institutional platform subscription should pay for the digital platform and included institutional functionality.
+
+Human professional services should not be silently unlimited under the platform fee.
+
+The following should be represented as separate service entitlements/engagements:
+- counselling sessions;
+- career counselling/coaching sessions;
+- SEN educator support;
+- workshops;
+- assessments with material third-party/licensing costs;
+- other staff-delivered services.
+
+The commercial engine should therefore support:
+Institution Subscription + Service Entitlements
+
+rather than pretending that all human professional work has zero marginal cost.
+
+### Founder-defined ₹75,000 threshold
+The ₹75,000 threshold remains a Founder commercial rule for premium timetable entitlement.
+
+Because the revised platform price is higher, many institutions will cross this threshold. That is acceptable only if the premium tier is treated as a value bonus rather than a core product gate.
+
+The exact premium economics should therefore be reviewed once the service/assessment inclusions are fully costed.
+
+### 2-hour institution trial
+The institution can receive a single-use timed trial code.
+
+Workflow:
+- Marketing or HR generates a trial code from the authorised backend;
+- the code has a single-use state;
+- before redemption it may have a validity/expiration window;
+- when the institution enters the code and successfully enters the trial dashboard, the two-hour countdown starts;
+- the timer continues against server time and does not depend on browser refresh;
+- the code cannot be reused after activation;
+- the backend records code generation, issuer, redemption time, expiry time, institution/prospect context and trial completion.
+
+The trial exposes the complete institution dashboard for two hours.
+
+### Institution onboarding
+Recommended onboarding:
+Institution applies → verification → trial code/activation → two-hour full-dashboard trial → subscription decision → institution activation.
+
+### Institution administration
+Support:
+- Primary Institution Administrator;
+- Additional Institution Administrators;
+- Temporary/Delegated Institution Administrators;
+- Campus Administrators.
+
+Campus administrators see only their campus unless broader institutional authority is explicitly granted.
+
+### Campus shared resources
+Shared teachers, rooms, labs, buses, equipment or facilities can be shared across campuses only through explicit configuration and conflict validation.
+
+### Student code
+The institution may retain its local roll number, while Secret Sharz provides a structured institutional student code.
+
+Default proposed pattern:
+YY-DD-II-RRR
+
+The final segment lengths are configurable by institution, but fixed-width segments are recommended for reliable parsing and display.
+
+### Parent relationship
+Parent/guardian access is not self-service by name search.
+
+A parent must contact the institution or Secret Sharz Support and provide proof of relationship/authority. Once verified, the guardian relationship is created with the required scope and consent/authority.
+
+### Institutional service access
+Institutions can outsource relevant services to Secret Sharz, including:
+- counselling;
+- career guidance/coaching;
+- SEN education/support.
+
+Service ordering, assignment and reporting remain separate from timetable permissions and from the professionals' confidential underlying records.
+
+### Institution scope boundary
+The timetable product does not include:
+- institutional finance;
+- payroll;
+- admissions;
+- general emergency alerting.
+
+It may include timetable-related announcements and notifications only.
