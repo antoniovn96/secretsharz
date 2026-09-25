@@ -68,6 +68,10 @@ output "application_security_group_id" {
   value = module.network.application_security_group_id
 }
 
+output "private_subnet_ids" {
+  value = module.network.private_subnet_ids
+}
+
 
 module "container_registry" {
   source = "../../modules/container-registry"
@@ -89,9 +93,27 @@ module "application_runtime" {
   public_subnet_ids             = module.network.public_subnet_ids
   private_subnet_ids            = module.network.private_subnet_ids
   application_security_group_id = module.network.application_security_group_id
-  image_uri                     = var.ecs_image_uri
-  secret_arns                   = var.ecs_secret_arns
-  secret_environment_variables  = var.ecs_secret_environment_variables
+  image_uri = var.ecs_image_uri
+
+  secret_arns = concat(
+    var.ecs_secret_arns,
+    [module.postgres.master_user_secret_arn],
+  )
+
+  secret_environment_variables = concat(
+    var.ecs_secret_environment_variables,
+    [
+      {
+        name       = "DATABASE_USER"
+        value_from  = "${module.postgres.master_user_secret_arn}:username::"
+      },
+      {
+        name       = "DATABASE_PASSWORD"
+        value_from  = "${module.postgres.master_user_secret_arn}:password::"
+      }
+    ],
+  )
+
   environment_variables = [
     {
       name  = "NODE_ENV"
@@ -100,6 +122,18 @@ module "application_runtime" {
     {
       name  = "PORT"
       value = "3000"
+    },
+    {
+      name  = "DATABASE_HOST"
+      value = module.postgres.db_endpoint
+    },
+    {
+      name  = "DATABASE_PORT"
+      value = "5432"
+    },
+    {
+      name  = "DATABASE_NAME"
+      value = "secretsharz"
     },
     {
       name  = "DATABASE_SSL"
@@ -124,9 +158,41 @@ module "assessment_migration_runner" {
   vpc_id                        = module.network.vpc_id
   private_subnet_ids            = module.network.private_subnet_ids
   application_security_group_id = module.network.application_security_group_id
-  image_uri                     = var.assessment_migration_runner_image_uri
-  secret_arns                   = var.assessment_migration_runner_secret_arns
-  secret_environment_variables  = var.assessment_migration_runner_secret_environment_variables
+  image_uri = var.assessment_migration_runner_image_uri
+
+  secret_arns = concat(
+    var.assessment_migration_runner_secret_arns,
+    [module.postgres.master_user_secret_arn],
+  )
+
+  secret_environment_variables = concat(
+    var.assessment_migration_runner_secret_environment_variables,
+    [
+      {
+        name      = "DATABASE_USER"
+        value_from = "${module.postgres.master_user_secret_arn}:username::"
+      },
+      {
+        name      = "DATABASE_PASSWORD"
+        value_from = "${module.postgres.master_user_secret_arn}:password::"
+      }
+    ],
+  )
+
+  environment_variables = [
+    {
+      name  = "DATABASE_HOST"
+      value = module.postgres.db_endpoint
+    },
+    {
+      name  = "DATABASE_PORT"
+      value = "5432"
+    },
+    {
+      name  = "DATABASE_NAME"
+      value = "secretsharz"
+    }
+  ]
 }
 
 output "assessment_migration_runner_cluster_name" {
