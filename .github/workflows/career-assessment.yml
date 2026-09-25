@@ -34,6 +34,9 @@ on:
       - "package-lock.json"
       - ".github/workflows/career-assessment.yml"
 
+permissions:
+  contents: write
+
 jobs:
   career-assessment:
     runs-on: ubuntu-latest
@@ -63,6 +66,24 @@ jobs:
         with:
           node-version: "22.x"
           cache: npm
+
+      - name: Synchronize npm lockfile during rebuild branch migration
+        if: github.ref == 'refs/heads/rebuild/platform-foundation-v1'
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Persist synchronized npm lockfile
+        if: github.ref == 'refs/heads/rebuild/platform-foundation-v1'
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- package-lock.json; then
+            echo "package-lock.json is already synchronized."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "ci: synchronize package lock"
+            git push origin HEAD:rebuild/platform-foundation-v1
+          fi
 
       - name: Install
         run: npm ci
