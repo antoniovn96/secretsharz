@@ -1,0 +1,77 @@
+name: Secret Sharz Nonprod Terraform Plan
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-nonprod-terraform-plan
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Plan nonprod with remote state
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      TERRAFORM_STATE_BUCKET: ${{ vars.TERRAFORM_STATE_BUCKET }}
+      TERRAFORM_STATE_KEY: secretsharz/nonprod/terraform.tfstate
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify remote state configuration
+        run: |
+          set -euo pipefail
+          if [ -z "$TERRAFORM_STATE_BUCKET" ]; then
+            echo "::error::Missing nonprod Environment variable TERRAFORM_STATE_BUCKET."
+            exit 1
+          fi
+
+          aws s3api head-bucket             --bucket "$TERRAFORM_STATE_BUCKET"             --region "$AWS_REGION"
+
+          echo "Remote state bucket is reachable."
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.0"
+
+      - name: Terraform init with remote state
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          terraform init             -reconfigure             -input=false             -backend-config="bucket=$TERRAFORM_STATE_BUCKET"             -backend-config="key=$TERRAFORM_STATE_KEY"             -backend-config="region=$AWS_REGION"
+
+      - name: Terraform plan
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          terraform plan             -input=false             -lock-timeout=5m             -out=nonprod.tfplan
+
+      - name: Plan summary
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          terraform show -no-color nonprod.tfplan > nonprod-plan.txt
+
+          {
+            echo "### Non-production Terraform plan"
+            echo "- Remote state: `$TERRAFORM_STATE_BUCKET/$TERRAFORM_STATE_KEY`"
+            echo "- Region: `$AWS_REGION`"
+            echo "- This workflow performs plan only; it does not apply infrastructure."
+            echo ""
+            echo "Plan detail is intentionally kept in the runner workspace and is not uploaded as an artifact."
+            echo "- Plan file: `infra/terraform/environments/nonprod/nonprod.tfplan`"
+            echo "- Human-readable plan: `infra/terraform/environments/nonprod/nonprod-plan.txt`"
+          } >> "$GITHUB_STEP_SUMMARY"
