@@ -29,6 +29,7 @@ export function buildRiasecAssessmentResultV1({ score, personId, accountId = nul
     status: score.completionStatus === 'complete' ? 'scored' : 'started',
     startedAt: score.startedAt,
     submittedAt: score.completedAt,
+    scoredAt: score.completionStatus === 'complete' ? score.completedAt : null,
     completionPercent: score.completionPercent,
     attemptNumber,
     instrumentId: score.instrumentId,
