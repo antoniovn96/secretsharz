@@ -99,6 +99,14 @@ module "application_runtime" {
     {
       name  = "PORT"
       value = "3000"
+    },
+    {
+      name  = "DATABASE_SSL"
+      value = "true"
+    },
+    {
+      name  = "DATABASE_SSL_REJECT_UNAUTHORIZED"
+      value = "true"
     }
   ]
 }
