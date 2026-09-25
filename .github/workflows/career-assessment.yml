@@ -1,0 +1,52 @@
+name: Secret Sharz Career Assessment Tests
+
+on:
+  pull_request:
+    paths:
+      - "src/career/**"
+      - "src/platform/assessment*"
+      - "src/platform/riasecAssessmentService.js"
+      - "src/platform/postgres.js"
+      - "pages/api/career/assessment/**"
+      - "infra/postgres/migrations/**"
+      - "scripts/run-postgres-migrations.mjs"
+      - "test/career/**"
+      - "test/platform/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/career-assessment.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "src/career/**"
+      - "src/platform/assessment*"
+      - "src/platform/riasecAssessmentService.js"
+      - "src/platform/postgres.js"
+      - "pages/api/career/assessment/**"
+      - "infra/postgres/migrations/**"
+      - "scripts/run-postgres-migrations.mjs"
+      - "test/career/**"
+      - "test/platform/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/career-assessment.yml"
+
+jobs:
+  career-assessment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22.x"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Run career assessment tests
+        run: npm run test:career-assessment
