@@ -6,6 +6,9 @@ on:
       - "infra/terraform/**"
       - ".github/workflows/terraform.yml"
       - ".github/workflows/nonprod-terraform-plan.yml"
+      - ".github/workflows/nonprod-terraform-apply.yml"
+      - ".github/workflows/nonprod-terraform-plan.yml"
+      - ".github/workflows/nonprod-terraform-apply.yml"
       - ".github/workflows/nonprod-terraform-plan.yml"
   push:
     branches:
