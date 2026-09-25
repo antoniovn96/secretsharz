@@ -78,7 +78,17 @@ test('persists canonical assessment result atomically through repository boundar
   });
 
   const pool = makeFakePool();
-  const persisted = await persistAssessmentResult({ pool, result });
+  const persisted = await persistAssessmentResult({
+    pool,
+    result,
+    authorizationContext: {
+      allowed: true,
+      actorPersonId: 'person-1',
+      subjectPersonId: 'person-1',
+      dataDomain: 'assessments',
+      purpose: 'student_assessment_submission',
+    },
+  });
 
   assert.equal(persisted.personId, 'person-1');
   assert.equal(persisted.instrument.instrumentId, 'CAREER-INTEREST-RIASEC');
@@ -108,6 +118,30 @@ test('rolls back when a child insert fails', async () => {
     },
   };
 
-  await assert.rejects(() => persistAssessmentResult({ pool, result }), /child insert failed/);
+  await assert.rejects(() => persistAssessmentResult({
+    pool,
+    result,
+    authorizationContext: {
+      allowed: true,
+      actorPersonId: 'person-1',
+      subjectPersonId: 'person-1',
+      dataDomain: 'assessments',
+      purpose: 'student_assessment_submission',
+    },
+  }), /child insert failed/);
   assert.equal(basePool.queries.some((item) => item.text === 'ROLLBACK'), true);
+});
+
+
+test('refuses persistence without an authorized assessment context', async () => {
+  const answers = Object.fromEntries(RIASEC_V1.items.map((item) => [item.id, 3]));
+  const score = scoreRiasecV1(answers);
+  const result = buildRiasecAssessmentResultV1({ score, personId: 'person-1' });
+  const pool = makeFakePool();
+
+  await assert.rejects(
+    () => persistAssessmentResult({ pool, result }),
+    /Assessment authorization is required/
+  );
+  assert.equal(pool.queries.length, 0);
 });
