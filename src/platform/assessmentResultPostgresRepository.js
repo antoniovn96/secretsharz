@@ -423,6 +423,7 @@ export async function getLatestAssessmentResultForPerson({
   assertAuthorizedAssessmentContext(authorizationContext, personId);
 
   const client = await pool.connect();
+  let clientReleased = false;
   try {
     const clauses = ['person_id = $1'];
     const values = [personId];
@@ -443,6 +444,8 @@ export async function getLatestAssessmentResultForPerson({
 
     if (!resultQuery.rows[0]) return null;
     const assessmentResultId = resultQuery.rows[0].id;
+    client.release();
+    clientReleased = true;
 
     return await getAssessmentResultById({
       pool,
@@ -450,7 +453,7 @@ export async function getLatestAssessmentResultForPerson({
       authorizationContext,
     });
   } finally {
-    client.release();
+    if (!clientReleased) client.release();
   }
 }
 
