@@ -87,7 +87,7 @@ resource "aws_ecs_task_definition" "this" {
     image     = var.image_uri
     essential = true
     command   = var.command
-    environment = [
+    environment = concat([
       {
         name  = "DATABASE_SSL"
         value = "true"
@@ -96,7 +96,7 @@ resource "aws_ecs_task_definition" "this" {
         name  = "DATABASE_SSL_REJECT_UNAUTHORIZED"
         value = "true"
       }
-    ]
+    ], var.environment_variables)
 
     secrets = [
       for item in var.secret_environment_variables : {
