@@ -58,6 +58,14 @@ function cleanScores(value) {
   );
 }
 
+function firstNonEmptyObject(...values) {
+  for (const value of values) {
+    const scores = cleanScores(value);
+    if (Object.keys(scores).length) return scores;
+  }
+  return {};
+}
+
 function pickSource(data) {
   if (data?.careerAssessmentV2 && typeof data.careerAssessmentV2 === 'object') {
     return { sourceSystem: 'firebase:careerAssessmentV2', sourceRecordKey: 'careerAssessmentV2', payload: data.careerAssessmentV2 };
@@ -84,10 +92,11 @@ function pickSource(data) {
 function buildImportedResult({ personId, sourceSystem, sourceRecordKey, payload }) {
   const completedAt = asDateString(payload.completedAt || payload.assessmentCompletedAt);
   const version = String(payload.version || payload.assessmentVersion || 'legacy-unknown');
-  const scores =
-    cleanScores(payload.riasecScores) ||
-    cleanScores(payload.scores?.riasecScores) ||
-    cleanScores(payload.scores?.riasec);
+  const scores = firstNonEmptyObject(
+    payload.riasecScores,
+    payload.scores?.riasecScores,
+    payload.scores?.riasec,
+  );
 
   const scoreRows = Object.entries(scores).map(([subscale, displayScore]) =>
     createAssessmentScore({
