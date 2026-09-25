@@ -34,6 +34,10 @@ test('nonprod AWS bootstrap restricts GitHub OIDC trust to the rebuild branch', 
 test('nonprod AWS bootstrap scopes Terraform state and lock-file access', () => {
   assert.match(source, /secretsharz\/nonprod\/terraform\.tfstate/);
   assert.match(source, /secretsharz\/nonprod\/terraform\.tfstate\.tflock/);
+  assert.match(source, /s3:GetBucketLocation/);
   assert.match(source, /s3:DeleteObject/);
   assert.match(source, /s3:ListBucket/);
+  assert.match(source, /iam:CreatePolicyVersion/);
+  assert.match(source, /iam:DeletePolicyVersion/);
+  assert.match(source, /secretsharz-nonprod-\*/);
 });
