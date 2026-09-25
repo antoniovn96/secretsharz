@@ -62,7 +62,6 @@ export default async function handler(req, res) {
           studentStage: typeof body.studentStage === 'string' ? body.studentStage : null,
         },
         previousAssessmentResultId: body.previousAssessmentResultId || null,
-        attemptNumber: Number.isInteger(body.attemptNumber) && body.attemptNumber > 0 ? body.attemptNumber : 1,
         actorPersonId: personId,
       });
 
@@ -77,7 +76,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ result });
   } catch (error) {
-    if (error?.code === 'ASSESSMENT_INCOMPLETE') {
+    if (['ASSESSMENT_INCOMPLETE', 'INVALID_PREVIOUS_ASSESSMENT_RESULT'].includes(error?.code)) {
       return res.status(400).json({ error: error.message, code: error.code, details: error.details });
     }
 
