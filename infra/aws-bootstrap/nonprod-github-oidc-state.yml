@@ -3,6 +3,10 @@ Description: >-
   Secret Sharz non-production bootstrap for GitHub Actions OIDC and
   Terraform S3 remote state in ap-southeast-2.
 
+Metadata:
+  Purpose: "Bootstrap remote Terraform state and GitHub Actions OIDC for non-production."
+  Repository: "antoniovn96/secretsharz"
+
 Parameters:
   StateBucketName:
     Type: String
