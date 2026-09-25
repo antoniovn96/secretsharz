@@ -131,3 +131,8 @@ output "cluster_arn" {
 output "task_definition_arn" {
   value = try(aws_ecs_task_definition.this[0].arn, null)
 }
+
+
+output "task_execution_role_arn" {
+  value = try(aws_iam_role.task_execution[0].arn, null)
+}
