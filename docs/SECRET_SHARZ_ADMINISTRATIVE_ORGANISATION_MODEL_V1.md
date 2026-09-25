@@ -1669,3 +1669,105 @@ Book/resource recommendations are based on:
 - editorial curation.
 
 They must not silently derive from counselling, SEN, safeguarding, professional, psychological or other sensitive records.
+
+## 35. Founder decisions — institution scope, pricing review and services — 25 September 2026
+
+### Institution scope clarified
+The Institution ecosystem is a major Secret Sharz ecosystem, but it is not intended to become a general-purpose school ERP.
+
+Initial institution scope centres on:
+- timetable management;
+- timetable publication;
+- class/teacher/room scheduling;
+- examinations and seating;
+- substitutions;
+- related timetable notifications;
+- institution governance/compliance relevant to the product;
+- access to Secret Sharz service ecosystems such as Counselling, Career/VidyaVantage and SEN;
+- outsourced professional services supplied by Secret Sharz's own authorised service teams.
+
+Institutional finance is separate from Secret Sharz's Institution product.
+Institution payroll is separate and remains under HR/Accounts.
+Student admissions are not part of the initial Institution product.
+Emergency/general school alerts are not part of the product.
+
+### Institution timetable communication
+Institution communication is limited to timetable/service-operational communication such as:
+- timetable publication;
+- timetable changes;
+- room/resource changes;
+- substitute changes;
+- exam schedule changes;
+- relevant timetable reminders.
+
+The module is not a general school-wide emergency communications system.
+
+### Secret Sharz service outsourcing
+Institutions may purchase or request services from Secret Sharz's governed internal service teams, including:
+- counsellors;
+- career guidance coaches;
+- SEN educators.
+
+These are service engagements, not unrestricted access to the institution's or student's sensitive data.
+
+The institution may receive service outcomes/authorised reports according to the engagement, consent and institution-service rules. Sensitive professional records remain protected within their specialist domain.
+
+### Professional service marketplace
+The Institution ecosystem may later expose a governed marketplace containing:
+- verified professionals;
+- Secret Sharz internal service teams;
+- external partner professionals where approved.
+
+Professional profiles should show relevant:
+- verification status;
+- qualification(s);
+- scope of practice/service;
+- professional category;
+- languages;
+- availability;
+- institution-service experience;
+- service pricing/engagement terms where applicable.
+
+The platform must not present an unverified professional as an approved Secret Sharz provider.
+
+### Student institutional code
+Secret Sharz will generate a canonical student relationship code while allowing an institution's local roll/admission number to coexist separately.
+
+The institution student-number format should be configurable but follow the Founder principle:
+Year + Department code + Institution/School ID ending + student roll sequence.
+
+A default implementation should use fixed segment lengths to avoid ambiguity, with the exact segment widths configured per institution.
+
+Example pattern: YY-DD-II-RRR
+
+where:
+- YY = academic/admission year representation;
+- DD = department/stream/program code;
+- II = last two digits of institution identifier;
+- RRR = student roll sequence.
+
+The display code may be rendered without separators where the institution requires a compact number.
+
+### Parent relationship verification
+Parents/guardians cannot self-link to a child simply by entering the child's name.
+
+Parent-child access requires:
+- contact with the institution or Secret Sharz Support;
+- proof of relationship/authority;
+- verification;
+- creation/confirmation of the guardian relationship;
+- applicable consent/authority checks.
+
+After verification, access remains limited to what that guardian relationship permits.
+
+### Institution governance
+The Institution product includes a Governance & Compliance area for institution-relevant:
+- committees;
+- policies;
+- legal checklists;
+- safety/protection controls;
+- grievances;
+- inspections/evidence;
+- review dates.
+
+This is distinct from institutional finance, payroll and admissions.
