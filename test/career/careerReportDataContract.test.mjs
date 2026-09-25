@@ -17,7 +17,7 @@ test('admin contract does not infer unsupported premium sections from context or
  assert.equal(rows.riasec_profile.available,true);
  assert.equal(rows.personality_profile.available,true);
  assert.equal(rows.career_values.available,true);
- assert.equal(rows.career_directions.available,true);
+ assert.equal(rows.top_career_directions.available,false);
  assert.equal(rows.top_career_directions.available,false);
  assert.equal(rows.alternative_careers.available,false);
  assert.equal(rows.stream_analysis.available,false);
