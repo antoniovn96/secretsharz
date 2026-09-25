@@ -29,3 +29,31 @@ variable "vpc_cidr" {
   type        = string
   default     = "10.50.0.0/16"
 }
+
+
+variable "ecs_enabled" {
+  description = "Enable the ECS/Fargate service only after the ECR image and runtime secrets are ready."
+  type        = bool
+  default     = false
+}
+
+variable "ecs_image_uri" {
+  description = "Immutable container image URI for the Secret Sharz runtime."
+  type        = string
+  default     = ""
+}
+
+variable "ecs_secret_arns" {
+  description = "Secrets Manager ARNs readable by the ECS task execution role."
+  type        = list(string)
+  default     = []
+}
+
+variable "ecs_secret_environment_variables" {
+  description = "Environment variable to Secrets Manager mapping for ECS."
+  type = list(object({
+    name       = string
+    value_from = string
+  }))
+  default = []
+}
