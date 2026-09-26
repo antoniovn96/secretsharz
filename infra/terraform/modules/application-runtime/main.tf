@@ -213,7 +213,7 @@ resource "aws_ecs_task_definition" "this" {
     ]
 
     healthCheck = {
-      command     = ["CMD-SHELL", "wget -q -O - http://127.0.0.1:${var.container_port}${var.health_check_path} >/dev/null || exit 1"]
+      command     = ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:${var.container_port}${var.health_check_path}').then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))\""]
       interval    = 30
       timeout     = 5
       retries     = 3
