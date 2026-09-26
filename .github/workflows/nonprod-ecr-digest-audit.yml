@@ -1,0 +1,32 @@
+name: Secret Sharz Nonprod ECR Digest Audit
+
+on:
+  push:
+    branches:
+      - rebuild/platform-foundation-v1
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  audit:
+    if: github.event.head_commit.message == 'chore(nonprod): audit ECR digest'
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      ECR_REPOSITORY: secretsharz-nonprod
+      IMAGE_TAG: c216bb1831ce3ea27fb4b57d4c42b6f089f28b4e
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Show ECR image digest
+        run: |
+          set -euo pipefail
+          aws ecr describe-images             --repository-name "$ECR_REPOSITORY"             --image-ids imageTag="$IMAGE_TAG"             --region "$AWS_REGION"             --query 'imageDetails[0].{digest:imageDigest,tag:imageTags,imagePushedAt:imagePushedAt}'             --output json
