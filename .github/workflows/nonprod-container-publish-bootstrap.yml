@@ -1,0 +1,91 @@
+name: Secret Sharz Nonprod Container Publish Bootstrap
+
+on:
+  push:
+    branches:
+      - rebuild/platform-foundation-v1
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-container-nonprod-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Authorized nonprod container publish
+    if: github.event.head_commit.message == '[PUBLISH_NONPROD]'
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      ECR_REPOSITORY: secretsharz-nonprod
+      IMAGE_TAG: ${{ github.sha }}
+      FIREBASE_API_KEY: ${{ vars.NEXT_PUBLIC_FIREBASE_API_KEY }}
+      FIREBASE_AUTH_DOMAIN: ${{ vars.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+      FIREBASE_PROJECT_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+      FIREBASE_STORAGE_BUCKET: ${{ vars.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+      FIREBASE_MESSAGING_SENDER_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+      FIREBASE_APP_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_APP_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Verify required Firebase build configuration
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in FIREBASE_API_KEY FIREBASE_AUTH_DOMAIN FIREBASE_PROJECT_ID FIREBASE_STORAGE_BUCKET FIREBASE_MESSAGING_SENDER_ID FIREBASE_APP_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing GitHub Environment variable for ${name}."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Authenticate to Amazon ECR
+        run: |
+          set -euo pipefail
+          REGISTRY="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_REGION.amazonaws.com"
+          aws ecr get-login-password --region "$AWS_REGION" |
+            docker login --username AWS --password-stdin "$REGISTRY"
+          echo "REGISTRY=$REGISTRY" >> "$GITHUB_ENV"
+
+      - name: Verify ECR repository
+        run: |
+          set -euo pipefail
+          aws ecr describe-repositories             --repository-names "$ECR_REPOSITORY"             --region "$AWS_REGION" >/dev/null
+
+      - name: Build image
+        run: |
+          set -euo pipefail
+          docker build             --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="$FIREBASE_API_KEY"             --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="$FIREBASE_AUTH_DOMAIN"             --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="$FIREBASE_PROJECT_ID"             --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="$FIREBASE_STORAGE_BUCKET"             --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="$FIREBASE_MESSAGING_SENDER_ID"             --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="$FIREBASE_APP_ID"             --tag "$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"             .
+
+      - name: Push immutable image
+        run: |
+          set -euo pipefail
+          docker push "$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - name: Publish summary
+        run: |
+          {
+            echo "### Non-production container published"
+            echo "- Region: `$AWS_REGION`"
+            echo "- Repository: `$ECR_REPOSITORY`"
+            echo "- Image: `$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG`"
+            echo "- ECS remains disabled; this workflow only publishes the image."
+          } >> "$GITHUB_STEP_SUMMARY"
