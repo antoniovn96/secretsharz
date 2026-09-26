@@ -150,14 +150,6 @@ module "application_runtime" {
       value = "secretsharz"
     },
     {
-      name  = "DATABASE_SSL"
-      value = "true"
-    },
-    {
-      name  = "DATABASE_SSL_REJECT_UNAUTHORIZED"
-      value = "true"
-    },
-    {
       name  = "DATABASE_SSL_CA_PATH"
       value = "/app/certs/rds-ca-bundle.pem"
     }
