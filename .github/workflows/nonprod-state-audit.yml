@@ -81,6 +81,98 @@ jobs:
           echo "### NAT gateways"
           aws ec2 describe-nat-gateways             --filter "Name=vpc-id,Values=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=secretsharz-nonprod" --query 'Vpcs[0].VpcId' --output text)"             --region "$AWS_REGION"             --query 'NatGateways[*].{id:NatGatewayId,state:State,subnet:SubnetId}'             --output json 2>&1 || true
 
+      - name: Diagnose PostgreSQL connectivity
+        run: |
+          set -euo pipefail
+
+          PRIVATE_SUBNETS="$(aws ec2 describe-subnets             --filters "Name=tag:Name,Values=secretsharz-nonprod-private-*"             --region "$AWS_REGION"             --query 'Subnets[*].SubnetId'             --output text | tr '\t' ',' | sed 's/^/[/; s/$/]/')"
+
+          VPC_ID="$(aws ec2 describe-vpcs             --filters "Name=tag:Name,Values=secretsharz-nonprod"             --region "$AWS_REGION"             --query 'Vpcs[0].VpcId'             --output text)"
+
+          APPLICATION_SG="$(aws ec2 describe-security-groups             --filters "Name=group-name,Values=secretsharz-nonprod-application" "Name=vpc-id,Values=$VPC_ID"             --region "$AWS_REGION"             --query 'SecurityGroups[0].GroupId'             --output text)"
+
+          TASK_DEFINITION="arn:aws:ecs:ap-southeast-2:078809710022:task-definition/secretsharz-nonprod-assessment-migrations:2"
+
+          DIAG_SCRIPT="$(cat <<'NODE'
+          const dns = require('node:dns').promises;
+          const net = require('node:net');
+          const { Client } = require('pg');
+
+          (async () => {
+            const required = ['DATABASE_HOST','DATABASE_PORT','DATABASE_NAME','DATABASE_USER','DATABASE_PASSWORD'];
+            if (required.some((k) => !process.env[k])) process.exit(11);
+
+            try {
+              await dns.lookup(process.env.DATABASE_HOST);
+            } catch (_) {
+              process.exit(12);
+            }
+
+            await new Promise((resolve) => {
+              const s = net.createConnection(
+                { host: process.env.DATABASE_HOST, port: Number(process.env.DATABASE_PORT || 5432) },
+                () => { s.destroy(); resolve(); }
+              );
+              s.setTimeout(8000, () => { s.destroy(); process.exit(13); });
+              s.on('error', () => { s.destroy(); process.exit(13); });
+            });
+
+            const client = new Client({
+              host: process.env.DATABASE_HOST,
+              port: Number(process.env.DATABASE_PORT || 5432),
+              database: process.env.DATABASE_NAME,
+              user: process.env.DATABASE_USER,
+              password: process.env.DATABASE_PASSWORD,
+              ssl: { rejectUnauthorized: true }
+            });
+
+            try {
+              await client.connect();
+              await client.query('SELECT 1');
+              await client.end();
+              process.exit(0);
+            } catch (e) {
+              const m = String(e && e.message || e);
+              if (/password authentication failed|28P01/i.test(m)) process.exit(20);
+              if (/certificate|self-signed|unable to verify|unable to get local issuer/i.test(m)) process.exit(40);
+              if (/timeout|ECONNREFUSED|ECONNRESET|ENETUNREACH/i.test(m)) process.exit(13);
+              process.exit(21);
+            }
+          })().catch(() => process.exit(21));
+          NODE
+          )"
+
+          OVERRIDES="$(jq -n             --arg name "secretsharz-nonprod-assessment-migrations"             --arg script "$DIAG_SCRIPT"             '{containerOverrides:[{name:$name,command:["node","-e",$script]}]}')"
+
+          TASK_ARN="$(aws ecs run-task             --cluster secretsharz-nonprod-assessment-migrations             --task-definition "$TASK_DEFINITION"             --launch-type FARGATE             --overrides "$OVERRIDES"             --network-configuration "awsvpcConfiguration={subnets=$PRIVATE_SUBNETS,securityGroups=[$APPLICATION_SG],assignPublicIp=DISABLED}"             --region "$AWS_REGION"             --query 'tasks[0].taskArn'             --output text)"
+
+          echo "Diagnostic task: $TASK_ARN"
+
+          for attempt in $(seq 1 40); do
+            STATUS="$(aws ecs describe-tasks               --cluster secretsharz-nonprod-assessment-migrations               --tasks "$TASK_ARN"               --region "$AWS_REGION"               --query 'tasks[0].lastStatus'               --output text)"
+
+            if [ "$STATUS" = "STOPPED" ]; then
+              EXIT_CODE="$(aws ecs describe-tasks                 --cluster secretsharz-nonprod-assessment-migrations                 --tasks "$TASK_ARN"                 --region "$AWS_REGION"                 --query 'tasks[0].containers[0].exitCode'                 --output text)"
+
+              case "$EXIT_CODE" in
+                0) echo "DATABASE_CONNECTION_OK" ;;
+                11) echo "MISSING_DATABASE_ENVIRONMENT" ;;
+                12) echo "DATABASE_DNS_FAILURE" ;;
+                13) echo "DATABASE_TCP_FAILURE" ;;
+                20) echo "DATABASE_AUTHENTICATION_FAILURE" ;;
+                40) echo "DATABASE_SSL_CERTIFICATE_FAILURE" ;;
+                21) echo "DATABASE_CLIENT_ERROR" ;;
+                *) echo "UNKNOWN_DIAGNOSTIC_RESULT_$EXIT_CODE" ;;
+              esac
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "DIAGNOSTIC_TIMEOUT"
+          exit 1
+
       - name: Diagnose failed DB migration task
         run: |
           set -euo pipefail
