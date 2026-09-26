@@ -187,18 +187,3 @@ jobs:
           }
           NODE
 
-      - name: Load Firebase service-account secret
-        id: firebase_secret
-        run: |
-          set -euo pipefail
-          SECRET_JSON="$(aws secretsmanager get-secret-value \
-            --secret-id secretsharz/nonprod/firebase-service-account \
-            --region "$AWS_REGION" \
-            --query SecretString \
-            --output text)"
-          test -n "$SECRET_JSON"
-          {
-            echo 'secret<<EOF'
-            echo "$SECRET_JSON"
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
