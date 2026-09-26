@@ -205,6 +205,7 @@ Resources:
               - elasticloadbalancing:DeleteTargetGroup
               - elasticloadbalancing:Describe*
               - elasticloadbalancing:ModifyListener
+              - elasticloadbalancing:ModifyLoadBalancerAttributes
               - elasticloadbalancing:ModifyTargetGroup
               - elasticloadbalancing:ModifyTargetGroupAttributes
               - elasticloadbalancing:RemoveTags
