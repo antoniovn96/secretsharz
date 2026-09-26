@@ -15,13 +15,12 @@ concurrency:
 
 jobs:
   diagnose:
-    name: Diagnose failed DB migration task
-    if: github.event.head_commit.message == 'chore(nonprod): diagnose DB migration'
+    name: Diagnose latest failed DB migration task
+    if: github.event.head_commit.message == 'chore(nonprod): diagnose latest DB migration'
     runs-on: ubuntu-latest
     environment: nonprod
     env:
       AWS_REGION: ap-southeast-2
-      TASK_ARN: arn:aws:ecs:ap-southeast-2:078809710022:task/secretsharz-nonprod-assessment-migrations/8a526712a6b24e63bb268b7d0376691c
       CLUSTER_NAME: secretsharz-nonprod-assessment-migrations
       LOG_GROUP: /ecs/secretsharz-nonprod-assessment-migrations
 
@@ -32,20 +31,26 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Describe migration task
+      - name: Discover latest stopped migration task
+        id: task
+        shell: bash
         run: |
           set -euo pipefail
-          aws ecs describe-tasks             --cluster "$CLUSTER_NAME"             --tasks "$TASK_ARN"             --region "$AWS_REGION"             --query 'tasks[0].{lastStatus:lastStatus,desiredStatus:desiredStatus,stopCode:stopCode,stoppedReason:stoppedReason,stoppedAt:stoppedAt,taskDefinition:taskDefinition,containers:containers[*].{name:name,lastStatus:lastStatus,exitCode:exitCode,reason:reason,lastStatusReason:lastStatusReason}}'             --output json
+          TASK_ARN="$(aws ecs list-tasks             --cluster "$CLUSTER_NAME"             --desired-status STOPPED             --region "$AWS_REGION"             --query 'taskArns[0]'             --output text)"
+          test "$TASK_ARN" != "None"
+          echo "task_arn=$TASK_ARN" >> "$GITHUB_OUTPUT"
+          echo "Migration task: $TASK_ARN"
 
-      - name: Show migration container logs
+      - name: Describe latest migration task
         run: |
           set -euo pipefail
+          TASK_ARN="${{ steps.task.outputs.task_arn }}"
+          aws ecs describe-tasks             --cluster "$CLUSTER_NAME"             --tasks "$TASK_ARN"             --region "$AWS_REGION"             --query 'tasks[0].{lastStatus:lastStatus,stopCode:stopCode,stoppedReason:stoppedReason,taskDefinition:taskDefinition,containers:containers[*].{name:name,lastStatus:lastStatus,exitCode:exitCode,reason:reason,lastStatusReason:lastStatusReason}}'             --output json
 
-          STREAMS="$(aws logs describe-log-streams             --log-group-name "$LOG_GROUP"             --region "$AWS_REGION"             --order-by LastEventTime             --descending             --max-items 10             --query 'logStreams[*].logStreamName'             --output text || true)"
-
-          echo "Streams: $STREAMS"
-
-          for stream in $STREAMS; do
-            echo "### $stream"
-            aws logs get-log-events               --log-group-name "$LOG_GROUP"               --log-stream-name "$stream"               --region "$AWS_REGION"               --limit 200               --query 'events[*].message'               --output text || true
-          done
+      - name: Show latest migration log stream
+        run: |
+          set -euo pipefail
+          STREAM="$(aws logs describe-log-streams             --log-group-name "$LOG_GROUP"             --region "$AWS_REGION"             --order-by LastEventTime             --descending             --max-items 1             --query 'logStreams[0].logStreamName'             --output text)"
+          test "$STREAM" != "None"
+          echo "Log stream: $STREAM"
+          aws logs get-log-events             --log-group-name "$LOG_GROUP"             --log-stream-name "$STREAM"             --region "$AWS_REGION"             --limit 200             --query 'events[*].message'             --output text
