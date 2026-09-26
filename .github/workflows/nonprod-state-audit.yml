@@ -325,6 +325,11 @@ jobs:
 
           aws elbv2 describe-target-health             --target-group-arn "$TG_ARN"             --region "$AWS_REGION"             --query 'TargetHealthDescriptions[*].{id:Target.Id,port:Target.Port,state:TargetHealth.State,reason:TargetHealth.Reason}'             --output json
 
+          echo "### RIASEC API authentication boundary"
+          RIASEC_STATUS="$(curl --silent --show-error --max-time 10             -o /tmp/riasec-response.json             -w '%{http_code}'             "http://$DNS/api/career/assessment/riasec-v1")"
+          echo "RIASEC unauthenticated status: $RIASEC_STATUS"
+          test "$RIASEC_STATUS" = "401"
+
           echo "### HTTP health endpoint"
           DNS="$(aws elbv2 describe-load-balancers             --names secretsharz-nonprod             --region "$AWS_REGION"             --query 'LoadBalancers[0].DNSName'             --output text)"
           echo "http://$DNS/healthz"
