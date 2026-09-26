@@ -66,6 +66,9 @@ jobs:
           echo "### ECR repository"
           aws ecr describe-repositories             --repository-names secretsharz-nonprod             --region "$AWS_REGION" 2>&1 || true
 
+          echo "### Published ECR image digests"
+          aws ecr describe-images             --repository-name secretsharz-nonprod             --region "$AWS_REGION"             --query 'sort_by(imageDetails,&imagePushedAt)[-10:].{digest:imageDigest,tags:imageTags,pushed:imagePushedAt}'             --output json || true
+
           echo "### ECR images"
           aws ecr describe-images             --repository-name secretsharz-nonprod             --region "$AWS_REGION"             --query 'imageDetails[*].{digest:imageDigest,tags:imageTags,size:imageSizeInBytes}'             --output json 2>&1 || true
 
