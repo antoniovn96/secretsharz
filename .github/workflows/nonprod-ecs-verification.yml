@@ -1,0 +1,68 @@
+name: Secret Sharz Nonprod ECS Verification
+
+on:
+  push:
+    branches:
+      - rebuild/platform-foundation-v1
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-nonprod-ecs-verification
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify nonprod ECS application
+    if: github.event.head_commit.message == 'chore(nonprod): verify ECS'
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      CLUSTER_NAME: secretsharz-nonprod
+      SERVICE_NAME: secretsharz-nonprod
+      ALB_NAME: secretsharz-nonprod
+      TARGET_GROUP_NAME: secretsharz-nonprod-tg
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify ECS service
+        run: |
+          set -euo pipefail
+          aws ecs describe-services             --cluster "$CLUSTER_NAME"             --services "$SERVICE_NAME"             --region "$AWS_REGION"             --query 'services[0].{status:status,desired:desiredCount,running:runningCount,pending:pendingCount,taskDefinition:taskDefinition}'             --output json
+
+      - name: Verify task health
+        run: |
+          set -euo pipefail
+          TASKS="$(aws ecs list-tasks             --cluster "$CLUSTER_NAME"             --service-name "$SERVICE_NAME"             --region "$AWS_REGION"             --desired-status RUNNING             --query 'taskArns'             --output text)"
+          test -n "$TASKS"
+          aws ecs describe-tasks             --cluster "$CLUSTER_NAME"             --tasks $TASKS             --region "$AWS_REGION"             --query 'tasks[*].{lastStatus:lastStatus,health:healthStatus,taskDefinition:taskDefinition,stoppedReason:stoppedReason}'             --output json
+
+      - name: Verify ALB target health
+        run: |
+          set -euo pipefail
+          TG_ARN="$(aws elbv2 describe-target-groups             --names "$TARGET_GROUP_NAME"             --region "$AWS_REGION"             --query 'TargetGroups[0].TargetGroupArn'             --output text)"
+          aws elbv2 describe-target-health             --target-group-arn "$TG_ARN"             --region "$AWS_REGION"             --query 'TargetHealthDescriptions[*].{id:Target.Id,port:Target.Port,state:TargetHealth.State,reason:TargetHealth.Reason,description:TargetHealth.Description}'             --output json
+
+      - name: Verify ALB HTTP health endpoint
+        run: |
+          set -euo pipefail
+          DNS="$(aws elbv2 describe-load-balancers             --names "$ALB_NAME"             --region "$AWS_REGION"             --query 'LoadBalancers[0].DNSName'             --output text)"
+          echo "ALB: http://$DNS"
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error --max-time 10 "http://$DNS/healthz" >/tmp/healthz.json; then
+              cat /tmp/healthz.json
+              exit 0
+            fi
+            echo "Health check attempt $attempt failed; waiting 15s..."
+            sleep 15
+          done
+          echo "ALB /healthz did not return HTTP 2xx within the verification window."
+          exit 1
