@@ -1,0 +1,82 @@
+name: Secret Sharz Nonprod State Audit
+
+on:
+  push:
+    branches:
+      - rebuild/platform-foundation-v1
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-nonprod-state-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Audit partial nonprod apply state
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      TERRAFORM_STATE_BUCKET: ${{ vars.TERRAFORM_STATE_BUCKET }}
+      TERRAFORM_STATE_KEY: secretsharz/nonprod/terraform.tfstate
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.0"
+
+      - name: Terraform init
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          set -euo pipefail
+          terraform init             -reconfigure             -input=false             -backend-config="bucket=$TERRAFORM_STATE_BUCKET"             -backend-config="key=$TERRAFORM_STATE_KEY"             -backend-config="region=$AWS_REGION"
+
+      - name: Audit Terraform state
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          set -euo pipefail
+          echo "### Terraform state list"
+          terraform state list
+
+          echo "### Problem resources"
+          for resource in             module.container_registry.aws_ecr_repository.this             module.network.aws_subnet.public[0]             module.network.aws_subnet.public[1]             module.network.aws_eip.nat[0]             module.network.aws_vpc.this             module.network.aws_internet_gateway.this             module.postgres.aws_db_instance.this; do
+            echo "--- $resource ---"
+            terraform state show "$resource" 2>&1 || true
+          done
+
+      - name: Audit AWS resources
+        run: |
+          set -euo pipefail
+
+          echo "### ECR repository"
+          aws ecr describe-repositories             --repository-names secretsharz-nonprod             --region "$AWS_REGION" 2>&1 || true
+
+          echo "### ECR images"
+          aws ecr describe-images             --repository-name secretsharz-nonprod             --region "$AWS_REGION"             --query 'imageDetails[*].{digest:imageDigest,tags:imageTags,size:imageSizeInBytes}'             --output json 2>&1 || true
+
+          echo "### RDS"
+          aws rds describe-db-instances             --db-instance-identifier secretsharz-nonprod-postgres             --region "$AWS_REGION"             --query 'DBInstances[*].{id:DBInstanceIdentifier,status:DBInstanceStatus,arn:DBInstanceArn}'             --output json 2>&1 || true
+
+          echo "### VPC"
+          aws ec2 describe-vpcs             --filters "Name=tag:Name,Values=secretsharz-nonprod"             --region "$AWS_REGION"             --query 'Vpcs[*].{id:VpcId,state:State,cidr:CidrBlock}'             --output json
+
+          echo "### Subnets"
+          aws ec2 describe-subnets             --filters "Name=tag:Name,Values=secretsharz-nonprod-public-*"             --region "$AWS_REGION"             --query 'Subnets[*].{id:SubnetId,state:State,cidr:CidrBlock,publicIpOnLaunch:MapPublicIpOnLaunch,vpc:VpcId}'             --output json 2>&1 || true
+
+          echo "### NAT gateways"
+          aws ec2 describe-nat-gateways             --filter "Name=vpc-id,Values=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=secretsharz-nonprod" --query 'Vpcs[0].VpcId' --output text)"             --region "$AWS_REGION"             --query 'NatGateways[*].{id:NatGatewayId,state:State,subnet:SubnetId}'             --output json 2>&1 || true
