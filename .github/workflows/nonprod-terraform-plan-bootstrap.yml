@@ -21,6 +21,10 @@ jobs:
       TERRAFORM_STATE_KEY: secretsharz/nonprod/terraform.tfstate
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
+      TF_VAR_ecs_enabled: "true"
+      TF_VAR_ecs_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod:c216bb1831ce3ea27fb4b57d4c42b6f089f28b4e"
+      TF_VAR_assessment_migration_runner_enabled: "true"
+      TF_VAR_assessment_migration_runner_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod:c216bb1831ce3ea27fb4b57d4c42b6f089f28b4e"
 
     steps:
       - name: Checkout
