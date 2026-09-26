@@ -272,6 +272,7 @@ Resources:
               - logs:DeleteLogGroup
               - logs:DescribeLogGroups
               - logs:DescribeLogStreams
+              - logs:FilterLogEvents
               - logs:GetLogEvents
               - logs:ListTagsForResource
               - logs:PutRetentionPolicy
