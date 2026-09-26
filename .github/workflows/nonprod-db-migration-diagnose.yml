@@ -9,19 +9,15 @@ permissions:
   contents: read
   id-token: write
 
-concurrency:
-  group: secretsharz-nonprod-db-migration-diagnose
-  cancel-in-progress: false
-
 jobs:
   diagnose:
-    name: Diagnose latest failed DB migration task
-    if: github.event.head_commit.message == 'chore(nonprod): diagnose latest DB migration'
+    if: github.event.head_commit.message == 'chore(nonprod): inspect latest migration task'
     runs-on: ubuntu-latest
     environment: nonprod
     env:
       AWS_REGION: ap-southeast-2
       CLUSTER_NAME: secretsharz-nonprod-assessment-migrations
+      TASK_ARN: arn:aws:ecs:ap-southeast-2:078809710022:task/secretsharz-nonprod-assessment-migrations/72d3c29b41744b3686e4f3caab787edf
       LOG_GROUP: /ecs/secretsharz-nonprod-assessment-migrations
 
     steps:
@@ -31,26 +27,20 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Discover latest stopped migration task
-        id: task
-        shell: bash
+      - name: Inspect stopped task
         run: |
           set -euo pipefail
-          TASK_ARN="$(aws ecs list-tasks             --cluster "$CLUSTER_NAME"             --desired-status STOPPED             --region "$AWS_REGION"             --query 'taskArns[0]'             --output text)"
-          test "$TASK_ARN" != "None"
-          echo "task_arn=$TASK_ARN" >> "$GITHUB_OUTPUT"
-          echo "Migration task: $TASK_ARN"
+          aws ecs describe-tasks             --cluster "$CLUSTER_NAME"             --tasks "$TASK_ARN"             --region "$AWS_REGION"             --query 'tasks[0].{taskArn:taskArn,lastStatus:lastStatus,desiredStatus:desiredStatus,stopCode:stopCode,stoppedReason:stoppedReason,stoppedAt:stoppedAt,taskDefinition:taskDefinition,launchType:launchType,connectivity:connectivity,connectivityAt:connectivityAt,containers:containers[*].{name:name,lastStatus:lastStatus,exitCode:exitCode,reason:reason,healthStatus:healthStatus,runtimeId:runtimeId,lastStatusReason:lastStatusReason}}'             --output json
 
-      - name: Describe latest migration task
+      - name: Inspect migration task definition
         run: |
           set -euo pipefail
-          TASK_ARN="${{ steps.task.outputs.task_arn }}"
-          aws ecs describe-tasks             --cluster "$CLUSTER_NAME"             --tasks "$TASK_ARN"             --region "$AWS_REGION"             --query 'tasks[0].{lastStatus:lastStatus,stopCode:stopCode,stoppedReason:stoppedReason,taskDefinition:taskDefinition,containers:containers[*].{name:name,lastStatus:lastStatus,exitCode:exitCode,reason:reason,lastStatusReason:lastStatusReason}}'             --output json
+          aws ecs describe-task-definition             --task-definition secretsharz-nonprod-assessment-migrations             --region "$AWS_REGION"             --query 'taskDefinition.{family:family,revision:revision,status:status,image:containerDefinitions[0].image,command:containerDefinitions[0].command,entryPoint:containerDefinitions[0].entryPoint,environment:containerDefinitions[0].environment,secrets:containerDefinitions[0].secrets,logConfiguration:containerDefinitions[0].logConfiguration}'             --output json
 
-      - name: Show latest migration log stream
+      - name: Inspect migration log group
         run: |
           set -euo pipefail
-          STREAM="$(aws logs describe-log-streams             --log-group-name "$LOG_GROUP"             --region "$AWS_REGION"             --order-by LastEventTime             --descending             --max-items 1             --query 'logStreams[0].logStreamName'             --output text)"
-          test "$STREAM" != "None"
-          echo "Log stream: $STREAM"
-          aws logs get-log-events             --log-group-name "$LOG_GROUP"             --log-stream-name "$STREAM"             --region "$AWS_REGION"             --limit 200             --query 'events[*].message'             --output text
+          aws logs describe-log-groups             --log-group-name-prefix "$LOG_GROUP"             --region "$AWS_REGION"             --query 'logGroups[*].{name:logGroupName,retention:retentionInDays,storedBytes:storedBytes}'             --output json
+
+          echo "### FilterLogEvents sample"
+          aws logs filter-log-events             --log-group-name "$LOG_GROUP"             --region "$AWS_REGION"             --limit 50             --output json || true
