@@ -29,6 +29,10 @@ locals {
   environment = "nonprod"
 }
 
+data "aws_secretsmanager_secret" "firebase_service_account" {
+  name = "secretsharz/nonprod/firebase-service-account"
+}
+
 module "network" {
   source = "../../modules/application-network"
 
@@ -100,7 +104,10 @@ module "application_runtime" {
 
   secret_arns = concat(
     var.ecs_secret_arns,
-    [module.postgres.master_user_secret_arn],
+    [
+      module.postgres.master_user_secret_arn,
+      data.aws_secretsmanager_secret.firebase_service_account.arn,
+    ],
   )
 
   secret_environment_variables = concat(
@@ -113,6 +120,10 @@ module "application_runtime" {
       {
         name       = "DATABASE_PASSWORD"
         value_from = "${module.postgres.master_user_secret_arn}:password::"
+      },
+      {
+        name       = "FIREBASE_SERVICE_ACCOUNT"
+        value_from = data.aws_secretsmanager_secret.firebase_service_account.arn
       }
     ],
   )
