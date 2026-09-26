@@ -1,0 +1,61 @@
+name: Secret Sharz Nonprod ECS Diagnose
+
+on:
+  push:
+    branches:
+      - rebuild/platform-foundation-v1
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-nonprod-ecs-diagnose
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    name: Diagnose nonprod ECS
+    if: github.event.head_commit.message == 'chore(nonprod): diagnose ECS'
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      CLUSTER_NAME: secretsharz-nonprod
+      SERVICE_NAME: secretsharz-nonprod
+      LOG_GROUP: /ecs/secretsharz-nonprod
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Diagnose ECS service and tasks
+        run: |
+          set -euo pipefail
+
+          echo "### ECS service"
+          aws ecs describe-services             --cluster "$CLUSTER_NAME"             --services "$SERVICE_NAME"             --region "$AWS_REGION"             --query 'services[0].{status:status,desired:desiredCount,running:runningCount,pending:pendingCount,taskDefinition:taskDefinition,events:events[0:12]}'             --output json
+
+          echo "### Recent stopped tasks"
+          STOPPED="$(aws ecs list-tasks             --cluster "$CLUSTER_NAME"             --service-name "$SERVICE_NAME"             --region "$AWS_REGION"             --desired-status STOPPED             --query 'taskArns[0:10]'             --output text)"
+          if [ -n "$STOPPED" ]; then
+            aws ecs describe-tasks               --cluster "$CLUSTER_NAME"               --tasks $STOPPED               --region "$AWS_REGION"               --query 'tasks[*].{taskArn:taskArn,lastStatus:lastStatus,health:healthStatus,stopCode:stopCode,stoppedReason:stoppedReason,stoppedAt:stoppedAt,containers:containers[*].{name:name,lastStatus:lastStatus,reason:reason,exitCode:exitCode,health:healthStatus,healthDetails:healthStatus}}'               --output json
+          fi
+
+          echo "### Current task definition"
+          aws ecs describe-task-definition             --task-definition "$CLUSTER_NAME"             --region "$AWS_REGION"             --query 'taskDefinition.{family:family,revision:revision,image:containerDefinitions[0].image,command:containerDefinitions[0].healthCheck.command,secrets:containerDefinitions[0].secrets}'             --output json
+
+      - name: Inspect recent application logs
+        run: |
+          set -euo pipefail
+          START_MS=$(( ($(date +%s) - 900) * 1000 ))
+
+          STREAMS="$(aws logs describe-log-streams             --log-group-name "$LOG_GROUP"             --region "$AWS_REGION"             --order-by LastEventTime             --descending             --max-items 5             --query 'logStreams[*].logStreamName'             --output text || true)"
+
+          for stream in $STREAMS; do
+            echo "### Log stream: $stream"
+            aws logs get-log-events               --log-group-name "$LOG_GROUP"               --log-stream-name "$stream"               --region "$AWS_REGION"               --start-time "$START_MS"               --limit 50               --query 'events[*].message'               --output text || true
+          done
