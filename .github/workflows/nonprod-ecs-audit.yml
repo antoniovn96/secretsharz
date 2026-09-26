@@ -1,0 +1,73 @@
+name: Secret Sharz Nonprod ECS Audit
+
+on:
+  push:
+    branches:
+      - rebuild/platform-foundation-v1
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-nonprod-ecs-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Audit nonprod ECS resources
+    if: github.event.head_commit.message == 'chore(nonprod): audit ECS partial apply'
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      CLUSTER_NAME: secretsharz-nonprod
+      SERVICE_NAME: secretsharz-nonprod
+      LOG_GROUP: /ecs/secretsharz-nonprod
+      ALB_NAME: secretsharz-nonprod
+      TARGET_GROUP_NAME: secretsharz-nonprod-tg
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Audit ECS
+        run: |
+          set -euo pipefail
+          echo "### ECS clusters"
+          aws ecs describe-clusters             --clusters "$CLUSTER_NAME"             --region "$AWS_REGION"             --query 'clusters[*].{arn:clusterArn,status:status,activeServices:activeServicesCount,running:runningTasksCount,pending:pendingTasksCount}'             --output json || true
+
+          echo "### ECS services"
+          aws ecs describe-services             --cluster "$CLUSTER_NAME"             --services "$SERVICE_NAME"             --region "$AWS_REGION"             --query 'services[*].{arn:serviceArn,status:status,desired:desiredCount,running:runningCount,pending:pendingCount,taskDefinition:taskDefinition}'             --output json || true
+
+          echo "### ECS task definitions"
+          aws ecs describe-task-definition             --task-definition "$CLUSTER_NAME"             --region "$AWS_REGION"             --query 'taskDefinition.{family:family,revision:revision,status:status,image:containerDefinitions[0].image}'             --output json || true
+
+      - name: Audit Load Balancer
+        run: |
+          set -euo pipefail
+          echo "### ALB"
+          aws elbv2 describe-load-balancers             --names "$ALB_NAME"             --region "$AWS_REGION"             --query 'LoadBalancers[*].{arn:LoadBalancerArn,state:State.Code,dns:DNSName}'             --output json || true
+
+          echo "### Target groups"
+          aws elbv2 describe-target-groups             --names "$TARGET_GROUP_NAME"             --region "$AWS_REGION"             --query 'TargetGroups[*].{arn:TargetGroupArn,port:Port,health:HealthCheckPath}'             --output json || true
+
+      - name: Audit CloudWatch Logs
+        run: |
+          set -euo pipefail
+          echo "### Log group"
+          aws logs describe-log-groups             --log-group-name-prefix "$LOG_GROUP"             --region "$AWS_REGION"             --query 'logGroups[*].{name:logGroupName,retention:retentionInDays}'             --output json || true
+
+      - name: Audit IAM roles
+        run: |
+          set -euo pipefail
+          for role in secretsharz-nonprod-task secretsharz-nonprod-task-execution; do
+            echo "### IAM role: $role"
+            aws iam get-role               --role-name "$role"               --query 'Role.{arn:Arn,roleName:RoleName}'               --output json || true
+          done
