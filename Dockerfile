@@ -38,7 +38,11 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
 
-RUN addgroup --system --gid 1001 nodejs \
+RUN apk add --no-cache ca-certificates wget \
+    && mkdir -p /app/certs \
+    && wget -q -O /app/certs/rds-ca-bundle.pem https://truststore.pki.rds.amazonaws.com/ap-southeast-2/ap-southeast-2-bundle.pem \
+    && test -s /app/certs/rds-ca-bundle.pem \
+    && addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
