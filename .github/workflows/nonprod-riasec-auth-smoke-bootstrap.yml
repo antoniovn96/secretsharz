@@ -72,28 +72,18 @@ jobs:
           test -n "$ALB_DNS"
           echo "base_url=http://$ALB_DNS" >> "$GITHUB_OUTPUT"
 
-      - name: Load Firebase service-account secret
-        id: firebase_secret
+      - name: Run authenticated RIASEC smoke test
+        env:
+          RIASEC_BASE_URL: ${{ steps.tf.outputs.base_url }}
         run: |
           set -euo pipefail
-          SECRET_JSON="$(aws secretsmanager get-secret-value \
+          FIREBASE_SERVICE_ACCOUNT="$(aws secretsmanager get-secret-value \
             --secret-id secretsharz/nonprod/firebase-service-account \
             --region "$AWS_REGION" \
             --query SecretString \
             --output text)"
-          test -n "$SECRET_JSON"
-          {
-            echo 'secret<<EOF'
-            echo "$SECRET_JSON"
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Run authenticated RIASEC smoke test
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ steps.firebase_secret.outputs.secret }}
-          RIASEC_BASE_URL: ${{ steps.tf.outputs.base_url }}
-        run: |
-          set -euo pipefail
+          test -n "$FIREBASE_SERVICE_ACCOUNT"
+          export FIREBASE_SERVICE_ACCOUNT
 
           node --input-type=module <<'NODE'
           import crypto from 'node:crypto';
