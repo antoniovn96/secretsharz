@@ -40,6 +40,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
+# Keep the one-off PostgreSQL migration runner and versioned SQL migrations
+# available in the same immutable image used by the non-production runner.
+COPY --from=builder /app/scripts/run-postgres-migrations.mjs ./scripts/run-postgres-migrations.mjs
+COPY --from=builder /app/infra/postgres/migrations ./infra/postgres/migrations
+
 USER nextjs
 EXPOSE 3000
 
