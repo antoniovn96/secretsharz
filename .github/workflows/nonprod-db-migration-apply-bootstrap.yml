@@ -97,6 +97,9 @@ jobs:
 
               echo "### PostgreSQL migration task failed" >> "$GITHUB_STEP_SUMMARY"
 
+              echo "### Migration task container details"
+              aws ecs describe-tasks                 --cluster "$CLUSTER"                 --tasks "$TASK_ARN"                 --region "$AWS_REGION"                 --query 'tasks[0].{lastStatus:lastStatus,stopCode:stopCode,stoppedReason:stoppedReason,containers:containers[*].{name:name,lastStatus:lastStatus,exitCode:exitCode,reason:reason,lastStatusReason:lastStatusReason,runtimeId:runtimeId,healthStatus:healthStatus}}'                 --output json || true
+
               echo "### Migration container logs" >> "$GITHUB_STEP_SUMMARY"
 
               echo "Attempting log-group filter retrieval..."
