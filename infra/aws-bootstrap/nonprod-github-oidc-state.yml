@@ -274,7 +274,6 @@ Resources:
             Effect: Allow
             Action:
               - kms:CreateGrant
-              - kms:DescribeKey
             Resource: "*"
             Condition:
               Bool:
@@ -283,6 +282,11 @@ Resources:
                 kms:ViaService:
                   - rds.ap-southeast-2.amazonaws.com
                   - secretsmanager.ap-southeast-2.amazonaws.com
+          - Sid: RdsEncryptionAndSecretsKmsDescribe
+            Effect: Allow
+            Action:
+              - kms:DescribeKey
+            Resource: "*"
           - Sid: IamRoles
             Effect: Allow
             Action:
