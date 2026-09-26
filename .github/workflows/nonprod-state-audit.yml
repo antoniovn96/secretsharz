@@ -315,7 +315,18 @@ jobs:
           aws ecs describe-services             --cluster secretsharz-nonprod             --services secretsharz-nonprod             --region "$AWS_REGION"             --query 'services[0].{status:status,desired:desiredCount,running:runningCount,pending:pendingCount,taskDefinition:taskDefinition}'             --output json
 
           echo "### Running tasks"
-          TASKS="$(aws ecs list-tasks             --cluster secretsharz-nonprod             --service-name secretsharz-nonprod             --region "$AWS_REGION"             --desired-status RUNNING             --query 'taskArns'             --output text)"
+          TASKS=""
+          for attempt in $(seq 1 18); do
+            TASKS="$(aws ecs list-tasks               --cluster secretsharz-nonprod               --service-name secretsharz-nonprod               --region "$AWS_REGION"               --desired-status RUNNING               --query 'taskArns'               --output text)"
+
+            if [ -n "$TASKS" ]; then
+              break
+            fi
+
+            echo "No running task yet; waiting 10s (attempt $attempt/18)..."
+            sleep 10
+          done
+
           test -n "$TASKS"
 
           aws ecs describe-tasks             --cluster secretsharz-nonprod             --tasks $TASKS             --region "$AWS_REGION"             --query 'tasks[*].{lastStatus:lastStatus,health:healthStatus,taskDefinition:taskDefinition}'             --output json
