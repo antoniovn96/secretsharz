@@ -1,0 +1,160 @@
+name: Secret Sharz Nonprod Platform Verification
+
+on:
+  push:
+    branches:
+      - rebuild/platform-foundation-v1
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  verify:
+    if: github.event.head_commit.message == 'chore(nonprod): verify AWS platform'
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify main ECS service
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws ecs describe-services             --cluster secretsharz-nonprod             --services secretsharz-nonprod             --region "$AWS_REGION"             --query 'services[0].{status:status,desired:desiredCount,running:runningCount,pending:pendingCount,taskDefinition:taskDefinition}'             --output json
+
+          TASKS="$(aws ecs list-tasks             --cluster secretsharz-nonprod             --service-name secretsharz-nonprod             --desired-status RUNNING             --region "$AWS_REGION"             --query 'taskArns'             --output text)"
+          test -n "$TASKS"
+
+          aws ecs describe-tasks             --cluster secretsharz-nonprod             --tasks $TASKS             --region "$AWS_REGION"             --query 'tasks[*].{lastStatus:lastStatus,health:healthStatus,taskDefinition:taskDefinition}'             --output json
+
+      - name: Verify ALB target and HTTP health
+        shell: bash
+        run: |
+          set -euo pipefail
+          TG_ARN="$(aws elbv2 describe-target-groups             --names secretsharz-nonprod-tg             --region "$AWS_REGION"             --query 'TargetGroups[0].TargetGroupArn'             --output text)"
+
+          aws elbv2 describe-target-health             --target-group-arn "$TG_ARN"             --region "$AWS_REGION"             --query 'TargetHealthDescriptions[*].{id:Target.Id,port:Target.Port,state:TargetHealth.State,reason:TargetHealth.Reason}'             --output json
+
+          DNS="$(aws elbv2 describe-load-balancers             --names secretsharz-nonprod             --region "$AWS_REGION"             --query 'LoadBalancers[0].DNSName'             --output text)"
+
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error --max-time 10 "http://$DNS/healthz" >/tmp/healthz.json; then
+              echo "ALB: http://$DNS"
+              cat /tmp/healthz.json
+              exit 0
+            fi
+            sleep 10
+          done
+
+          echo "ALB /healthz did not return HTTP 2xx."
+          exit 1
+
+      - name: Verify PostgreSQL schema
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          PRIVATE_SUBNETS="$(aws ec2 describe-subnets             --filters "Name=tag:Name,Values=secretsharz-nonprod-private-*"             --region "$AWS_REGION"             --query 'Subnets[*].SubnetId'             --output text | tr '\t' ',' | sed 's/^/[/; s/$/]/')"
+
+          VPC_ID="$(aws ec2 describe-vpcs             --filters "Name=tag:Name,Values=secretsharz-nonprod"             --region "$AWS_REGION"             --query 'Vpcs[0].VpcId'             --output text)"
+
+          APPLICATION_SG="$(aws ec2 describe-security-groups             --filters "Name=group-name,Values=secretsharz-nonprod-application" "Name=vpc-id,Values=$VPC_ID"             --region "$AWS_REGION"             --query 'SecurityGroups[0].GroupId'             --output text)"
+
+          DIAG_SCRIPT="$(cat <<'NODE'
+          const fs = require('node:fs');
+          const { Client } = require('pg');
+
+          (async () => {
+            const client = new Client({
+              host: process.env.DATABASE_HOST,
+              port: Number(process.env.DATABASE_PORT || 5432),
+              database: process.env.DATABASE_NAME,
+              user: process.env.DATABASE_USER,
+              password: process.env.DATABASE_PASSWORD,
+              ssl: {
+                rejectUnauthorized: true,
+                ca: fs.readFileSync(process.env.DATABASE_SSL_CA_PATH, 'utf8')
+              }
+            });
+
+            await client.connect();
+
+            const migrations = await client.query(
+              'SELECT version, checksum FROM schema_migrations ORDER BY version'
+            );
+
+            const tables = await client.query(
+              `SELECT table_name
+                 FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name IN (
+                    'assessment_results',
+                    'assessment_responses',
+                    'assessment_scores',
+                    'assessment_reports',
+                    'assessment_audit_events',
+                    'assessment_migration_registry',
+                    'schema_migrations'
+                  )
+                ORDER BY table_name`
+            );
+
+            const triggers = await client.query(
+              `SELECT event_object_table, trigger_name
+                 FROM information_schema.triggers
+                WHERE trigger_schema = 'public'
+                  AND (
+                    event_object_table IN (
+                      'assessment_results',
+                      'assessment_responses',
+                      'assessment_scores',
+                      'assessment_audit_events'
+                    )
+                  )
+                ORDER BY event_object_table, trigger_name`
+            );
+
+            console.log(JSON.stringify({
+              schemaMigrations: migrations.rows,
+              tables: tables.rows.map((r) => r.table_name),
+              triggers: triggers.rows
+            }, null, 2));
+
+            await client.end();
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+          )"
+
+          OVERRIDES="$(jq -n             --arg name "secretsharz-nonprod-assessment-migrations"             --arg script "$DIAG_SCRIPT"             '{containerOverrides:[{name:$name,command:["node","-e",$script]}]}')"
+
+          TASK_ARN="$(aws ecs run-task             --cluster secretsharz-nonprod-assessment-migrations             --task-definition secretsharz-nonprod-assessment-migrations             --launch-type FARGATE             --overrides "$OVERRIDES"             --network-configuration "awsvpcConfiguration={subnets=$PRIVATE_SUBNETS,securityGroups=[$APPLICATION_SG],assignPublicIp=DISABLED}"             --region "$AWS_REGION"             --query 'tasks[0].taskArn'             --output text)"
+
+          test -n "$TASK_ARN"
+          echo "Schema verification task: $TASK_ARN"
+
+          for attempt in $(seq 1 40); do
+            STATUS="$(aws ecs describe-tasks               --cluster secretsharz-nonprod-assessment-migrations               --tasks "$TASK_ARN"               --region "$AWS_REGION"               --query 'tasks[0].lastStatus'               --output text)"
+
+            if [ "$STATUS" = "STOPPED" ]; then
+              EXIT_CODE="$(aws ecs describe-tasks                 --cluster secretsharz-nonprod-assessment-migrations                 --tasks "$TASK_ARN"                 --region "$AWS_REGION"                 --query 'tasks[0].containers[0].exitCode'                 --output text)"
+              echo "Schema verification exit code: $EXIT_CODE"
+              test "$EXIT_CODE" = "0"
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "Schema verification timed out."
+          exit 1
