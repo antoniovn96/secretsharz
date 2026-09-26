@@ -96,6 +96,15 @@ jobs:
               fi
 
               echo "### PostgreSQL migration task failed" >> "$GITHUB_STEP_SUMMARY"
+
+              STREAM="$(aws logs describe-log-streams                 --log-group-name "/ecs/secretsharz-nonprod-assessment-migrations"                 --region "$AWS_REGION"                 --order-by LastEventTime                 --descending                 --max-items 1                 --query 'logStreams[0].logStreamName'                 --output text || true)"
+
+              echo "Migration log stream: $STREAM"
+              if [ -n "$STREAM" ] && [ "$STREAM" != "None" ]; then
+                echo "### Migration container logs" >> "$GITHUB_STEP_SUMMARY"
+                aws logs get-log-events                   --log-group-name "/ecs/secretsharz-nonprod-assessment-migrations"                   --log-stream-name "$STREAM"                   --region "$AWS_REGION"                   --limit 200                   --query 'events[*].message'                   --output text | tail -n 200 || true
+              fi
+
               exit 1
             fi
 
