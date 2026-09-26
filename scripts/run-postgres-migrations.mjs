@@ -2,6 +2,7 @@
 // Usage: npm run db:migrate
 
 import fs from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import pg from 'pg';
@@ -34,9 +35,12 @@ function buildConnectionString() {
 
 function sslConfig() {
   if (!bool(process.env.DATABASE_SSL, false)) return undefined;
-  const ca = process.env.DATABASE_SSL_CA
+  const caFromEnv = process.env.DATABASE_SSL_CA
     ? process.env.DATABASE_SSL_CA.replace(/\\n/g, '\n')
     : undefined;
+  const caPath = process.env.DATABASE_SSL_CA_PATH;
+  const caFromPath = caPath ? readFileSync(caPath, 'utf8') : undefined;
+  const ca = caFromEnv || caFromPath;
   return {
     rejectUnauthorized: bool(process.env.DATABASE_SSL_REJECT_UNAUTHORIZED, true),
     ...(ca ? { ca } : {}),
