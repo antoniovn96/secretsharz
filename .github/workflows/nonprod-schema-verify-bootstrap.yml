@@ -1,0 +1,164 @@
+name: Secret Sharz Nonprod Schema Verify Bootstrap
+
+on:
+  push:
+    branches:
+      - rebuild/platform-foundation-v1
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-nonprod-schema-verify
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify nonprod PostgreSQL assessment schema
+    if: github.event.head_commit.message == '[VERIFY_SCHEMA_NONPROD]'
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      TERRAFORM_STATE_BUCKET: ${{ vars.TERRAFORM_STATE_BUCKET }}
+      TERRAFORM_STATE_KEY: secretsharz/nonprod/terraform.tfstate
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      TF_VAR_ecs_enabled: "true"
+      TF_VAR_ecs_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod:c216bb1831ce3ea27fb4b57d4c42b6f089f28b4e"
+      TF_VAR_assessment_migration_runner_enabled: "true"
+      TF_VAR_assessment_migration_runner_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod:c216bb1831ce3ea27fb4b57d4c42b6f089f28b4e"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.0"
+
+      - name: Terraform init
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          set -euo pipefail
+          terraform init \
+            -reconfigure \
+            -input=false \
+            -backend-config="bucket=$TERRAFORM_STATE_BUCKET" \
+            -backend-config="key=$TERRAFORM_STATE_KEY" \
+            -backend-config="region=$AWS_REGION"
+
+      - name: Read nonprod network and migration outputs
+        id: tf
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          set -euo pipefail
+          echo "private_subnets=$(terraform output -json private_subnet_ids | jq -r 'join(",")')" >> "$GITHUB_OUTPUT"
+          echo "application_sg=$(terraform output -raw application_security_group_id)" >> "$GITHUB_OUTPUT"
+          echo "cluster=$(terraform output -raw assessment_migration_runner_cluster_name)" >> "$GITHUB_OUTPUT"
+          echo "task_definition=$(terraform output -raw assessment_migration_runner_task_definition_arn)" >> "$GITHUB_OUTPUT"
+
+      - name: Run schema verification task
+        id: run
+        run: |
+          set -euo pipefail
+
+          VERIFY_SCRIPT='const fs=require("fs"); const {Client}=require("pg"); const requiredTables=["schema_migrations","assessment_results","assessment_responses","assessment_scores","assessment_reports","assessment_audit_events","assessment_migration_registry"]; const requiredColumns={assessment_results:["person_id","status","instrument_id","migration_metadata"],assessment_responses:["assessment_result_id","item_id","response_value"],assessment_scores:["assessment_result_id","construct","display_score"],assessment_reports:["assessment_result_id","audience","source_snapshot"],assessment_audit_events:["assessment_result_id","sequence","action"],assessment_migration_registry:["source_system","source_record_key","source_hash","assessment_result_id"]}; (async()=>{const c=new Client({host:process.env.DATABASE_HOST,port:Number(process.env.DATABASE_PORT||5432),database:process.env.DATABASE_NAME,user:process.env.DATABASE_USER,password:process.env.DATABASE_PASSWORD,ssl:{rejectUnauthorized:true,ca:fs.readFileSync(process.env.DATABASE_SSL_CA_PATH,"utf8")}}); await c.connect(); try {const t=await c.query("SELECT table_name FROM information_schema.tables WHERE table_schema=$1 AND table_name=ANY($2::text[]) ORDER BY table_name",["public",requiredTables]); const actualTables=t.rows.map(r=>r.table_name); const missingTables=requiredTables.filter(x=>!actualTables.includes(x)); if(missingTables.length) throw new Error("Missing PostgreSQL tables: "+missingTables.join(", ")); const columnReport={}; for(const [table,cols] of Object.entries(requiredColumns)){const q=await c.query("SELECT column_name FROM information_schema.columns WHERE table_schema=$1 AND table_name=$2 AND column_name=ANY($3::text[]) ORDER BY column_name",["public",table,cols]); columnReport[table]=q.rows.map(r=>r.column_name); const missing=cols.filter(x=>!columnReport[table].includes(x)); if(missing.length) throw new Error("Missing columns on "+table+": "+missing.join(", "));} const m=await c.query("SELECT version,applied_at FROM schema_migrations ORDER BY version"); const counts=await c.query("SELECT (SELECT count(*) FROM assessment_results) AS assessment_results,(SELECT count(*) FROM assessment_responses) AS assessment_responses,(SELECT count(*) FROM assessment_scores) AS assessment_scores,(SELECT count(*) FROM assessment_reports) AS assessment_reports,(SELECT count(*) FROM assessment_audit_events) AS assessment_audit_events,(SELECT count(*) FROM assessment_migration_registry) AS assessment_migration_registry"); console.log(JSON.stringify({ok:true,tables:actualTables,migrations:m.rows,columns:columnReport,counts:counts.rows[0]},null,2)); } finally {await c.end();}})().catch(e=>{console.error(e);process.exit(1)})';
+
+          OVERRIDE_JSON="$(jq -n --arg cmd "$VERIFY_SCRIPT" '{containerOverrides:[{name:"secretsharz-nonprod-assessment-migrations",command:["node","-e",$cmd]}]}')"
+
+          TASK_ARN="$(aws ecs run-task \
+            --cluster "${{ steps.tf.outputs.cluster }}" \
+            --task-definition "${{ steps.tf.outputs.task_definition }}" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ steps.tf.outputs.private_subnets }}],securityGroups=[${{ steps.tf.outputs.application_sg }}],assignPublicIp=DISABLED}" \
+            --overrides "$OVERRIDE_JSON" \
+            --region "$AWS_REGION" \
+            --query 'tasks[0].taskArn' \
+            --output text)"
+
+          test -n "$TASK_ARN"
+          echo "Schema verification task: $TASK_ARN"
+          echo "task_arn=$TASK_ARN" >> "$GITHUB_OUTPUT"
+
+          for attempt in $(seq 1 40); do
+            STATUS="$(aws ecs describe-tasks \
+              --cluster "${{ steps.tf.outputs.cluster }}" \
+              --tasks "$TASK_ARN" \
+              --region "$AWS_REGION" \
+              --query 'tasks[0].lastStatus' \
+              --output text)"
+
+            echo "Schema verification task status: $STATUS"
+
+            if [ "$STATUS" = "STOPPED" ]; then
+              EXIT_CODE="$(aws ecs describe-tasks \
+                --cluster "${{ steps.tf.outputs.cluster }}" \
+                --tasks "$TASK_ARN" \
+                --region "$AWS_REGION" \
+                --query 'tasks[0].containers[0].exitCode' \
+                --output text)"
+              STOPPED_REASON="$(aws ecs describe-tasks \
+                --cluster "${{ steps.tf.outputs.cluster }}" \
+                --tasks "$TASK_ARN" \
+                --region "$AWS_REGION" \
+                --query 'tasks[0].stoppedReason' \
+                --output text)"
+
+              echo "Schema verification exit code: $EXIT_CODE"
+              echo "Schema verification stopped reason: $STOPPED_REASON"
+
+              if [ "$EXIT_CODE" = "0" ]; then
+                exit 0
+              fi
+
+              exit 1
+            fi
+
+            sleep 15
+          done
+
+          echo "Schema verification task did not stop within the expected window."
+          exit 1
+
+      - name: Read schema verification logs
+        if: always()
+        run: |
+          set -euo pipefail
+
+          TASK_ID="${{ steps.run.outputs.task_arn }}"
+          TASK_ID="${TASK_ID##*/}"
+
+          for attempt in $(seq 1 12); do
+            STREAM="$(aws logs describe-log-streams \
+              --log-group-name "/ecs/secretsharz-nonprod-assessment-migrations" \
+              --region "$AWS_REGION" \
+              --order-by LastEventTime \
+              --descending \
+              --max-items 20 \
+              --query "logStreams[?contains(logStreamName, '$TASK_ID')].logStreamName | [0]" \
+              --output text 2>/dev/null || true)"
+
+            if [ -n "$STREAM" ] && [ "$STREAM" != "None" ]; then
+              aws logs get-log-events \
+                --log-group-name "/ecs/secretsharz-nonprod-assessment-migrations" \
+                --log-stream-name "$STREAM" \
+                --region "$AWS_REGION" \
+                --limit 200 \
+                --query 'events[*].message' \
+                --output text || true
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "No schema verification log stream was available."
