@@ -183,6 +183,7 @@ Resources:
               - ec2:DescribeAddresses
               - ec2:Describe*
               - ec2:ModifyVpcAttribute
+              - ec2:ModifySubnetAttribute
               - ec2:DescribeNatGateways
               - ec2:DescribeRouteTables
               - ec2:DescribeSecurityGroups
@@ -220,8 +221,10 @@ Resources:
               - rds:ListTagsForResource
               - rds:ModifyDBInstance
               - rds:ModifyDBSubnetGroup
+              - secretsmanager:CreateSecret
               - secretsmanager:DescribeSecret
               - secretsmanager:GetSecretValue
+              - secretsmanager:TagResource
             Resource: "*"
           - Sid: ContainerRegistry
             Effect: Allow
@@ -238,6 +241,7 @@ Resources:
               - ecr:DeleteLifecyclePolicy
               - ecr:InitiateLayerUpload
               - ecr:ListImages
+              - ecr:ListTagsForResource
               - ecr:PutImage
               - ecr:TagResource
               - ecr:UploadLayerPart
@@ -266,6 +270,19 @@ Resources:
               - logs:PutRetentionPolicy
               - logs:TagResource
             Resource: "*"
+          - Sid: RdsEncryptionAndSecretsKms
+            Effect: Allow
+            Action:
+              - kms:CreateGrant
+              - kms:DescribeKey
+            Resource: "*"
+            Condition:
+              Bool:
+                kms:GrantIsForAWSResource: "true"
+              ForAnyValue:StringEquals:
+                kms:ViaService:
+                  - rds.ap-southeast-2.amazonaws.com
+                  - secretsmanager.ap-southeast-2.amazonaws.com
           - Sid: IamRoles
             Effect: Allow
             Action:
