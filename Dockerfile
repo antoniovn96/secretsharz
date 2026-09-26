@@ -5,6 +5,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
+FROM node:22-alpine AS prod-deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --no-audit --no-fund
+
 FROM node:22-alpine AS builder
 WORKDIR /app
 ARG NEXT_PUBLIC_FIREBASE_API_KEY
@@ -39,6 +44,8 @@ RUN addgroup --system --gid 1001 nodejs \
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+# Provide production dependencies to the one-off migration runner as well as the Next.js server.
+COPY --from=prod-deps /app/node_modules ./node_modules
 
 # Keep the one-off PostgreSQL migration runner and versioned SQL migrations
 # available in the same immutable image used by the non-production runner.
