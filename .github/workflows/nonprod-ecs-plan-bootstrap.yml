@@ -26,7 +26,7 @@ jobs:
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
       TF_VAR_ecs_enabled: "true"
-      TF_VAR_ecs_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod@sha256:f3e29a07aa2ca6b3cf6ef4b70daa6dd7c0e0595c6cad83fd59789a0369e719cb"
+      TF_VAR_ecs_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod@sha256:e9c521555c87fbd42709ab0591769e906328e24163b7caec37f91c4601f516e"
 
     steps:
       - name: Checkout
