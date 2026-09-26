@@ -80,3 +80,37 @@ jobs:
 
           echo "### NAT gateways"
           aws ec2 describe-nat-gateways             --filter "Name=vpc-id,Values=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=secretsharz-nonprod" --query 'Vpcs[0].VpcId' --output text)"             --region "$AWS_REGION"             --query 'NatGateways[*].{id:NatGatewayId,state:State,subnet:SubnetId}'             --output json 2>&1 || true
+
+      - name: Verify ECS application
+        run: |
+          set -euo pipefail
+
+          echo "### ECS service"
+          aws ecs describe-services             --cluster secretsharz-nonprod             --services secretsharz-nonprod             --region "$AWS_REGION"             --query 'services[0].{status:status,desired:desiredCount,running:runningCount,pending:pendingCount,taskDefinition:taskDefinition}'             --output json
+
+          echo "### Running tasks"
+          TASKS="$(aws ecs list-tasks             --cluster secretsharz-nonprod             --service-name secretsharz-nonprod             --region "$AWS_REGION"             --desired-status RUNNING             --query 'taskArns'             --output text)"
+          test -n "$TASKS"
+
+          aws ecs describe-tasks             --cluster secretsharz-nonprod             --tasks $TASKS             --region "$AWS_REGION"             --query 'tasks[*].{lastStatus:lastStatus,health:healthStatus,taskDefinition:taskDefinition}'             --output json
+
+          echo "### Target health"
+          TG_ARN="$(aws elbv2 describe-target-groups             --names secretsharz-nonprod-tg             --region "$AWS_REGION"             --query 'TargetGroups[0].TargetGroupArn'             --output text)"
+
+          aws elbv2 describe-target-health             --target-group-arn "$TG_ARN"             --region "$AWS_REGION"             --query 'TargetHealthDescriptions[*].{id:Target.Id,port:Target.Port,state:TargetHealth.State,reason:TargetHealth.Reason}'             --output json
+
+          echo "### HTTP health endpoint"
+          DNS="$(aws elbv2 describe-load-balancers             --names secretsharz-nonprod             --region "$AWS_REGION"             --query 'LoadBalancers[0].DNSName'             --output text)"
+          echo "http://$DNS/healthz"
+
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error --max-time 10 "http://$DNS/healthz" >/tmp/healthz.json; then
+              cat /tmp/healthz.json
+              exit 0
+            fi
+            echo "Health check attempt $attempt failed; waiting 15s..."
+            sleep 15
+          done
+
+          echo "ECS /healthz verification failed."
+          exit 1
