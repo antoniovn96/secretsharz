@@ -1,0 +1,134 @@
+name: Secret Sharz Nonprod DB Connectivity Diagnostic
+
+on:
+  push:
+    branches:
+      - rebuild/platform-foundation-v1
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  diagnose:
+    if: github.event.head_commit.message == 'chore(nonprod): run DB connectivity diagnostic'
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      TERRAFORM_STATE_BUCKET: ${{ vars.TERRAFORM_STATE_BUCKET }}
+      TERRAFORM_STATE_KEY: secretsharz/nonprod/terraform.tfstate
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      TF_VAR_ecs_enabled: "true"
+      TF_VAR_ecs_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod@sha256:f3e29a07aa2ca6b3cf6ef4b70daa6dd7c0e0595c6cad83fd59789a0369e719cb"
+      TF_VAR_assessment_migration_runner_enabled: "true"
+      TF_VAR_assessment_migration_runner_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod@sha256:5b004457104a219302cd65057e9aa9fc14f905ea558564205c9412d902a7f319"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.0"
+
+      - name: Terraform init
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          set -euo pipefail
+          terraform init -reconfigure -input=false             -backend-config="bucket=$TERRAFORM_STATE_BUCKET"             -backend-config="key=$TERRAFORM_STATE_KEY"             -backend-config="region=$AWS_REGION"
+
+      - name: Run diagnostic ECS task
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          set -euo pipefail
+
+          PRIVATE_SUBNETS="$(terraform output -json private_subnet_ids | jq -r '.[]' | paste -sd, -)"
+          APPLICATION_SG="$(terraform output -raw application_security_group_id)"
+          CLUSTER="$(terraform output -raw assessment_migration_runner_cluster_name)"
+          TASK_DEFINITION="$(terraform output -raw assessment_migration_runner_task_definition_arn)"
+          CONTAINER="$(terraform output -raw assessment_migration_runner_container_name)"
+
+          DIAG='
+          const dns = require("node:dns").promises;
+          const net = require("node:net");
+          const fs = require("node:fs");
+          const { Client } = require("pg");
+
+          (async () => {
+            if (!process.env.DATABASE_HOST || !process.env.DATABASE_USER || !process.env.DATABASE_PASSWORD || !process.env.DATABASE_NAME) process.exit(11);
+            if (!fs.existsSync("scripts/run-postgres-migrations.mjs")) process.exit(15);
+
+            try {
+              await dns.lookup(process.env.DATABASE_HOST);
+            } catch (_) {
+              process.exit(12);
+            }
+
+            await new Promise((resolve) => {
+              const s = net.createConnection({host: process.env.DATABASE_HOST, port: Number(process.env.DATABASE_PORT || 5432)});
+              s.setTimeout(8000);
+              s.on("connect", () => { s.destroy(); resolve(); });
+              s.on("timeout", () => { s.destroy(); process.exit(13); });
+              s.on("error", () => { s.destroy(); process.exit(13); });
+            });
+
+            const client = new Client({
+              host: process.env.DATABASE_HOST,
+              port: Number(process.env.DATABASE_PORT || 5432),
+              database: process.env.DATABASE_NAME,
+              user: process.env.DATABASE_USER,
+              password: process.env.DATABASE_PASSWORD,
+              ssl: { rejectUnauthorized: true }
+            });
+
+            try {
+              await client.connect();
+              await client.query("SELECT 1");
+              await client.end();
+              process.exit(0);
+            } catch (e) {
+              try { await client.end(); } catch (_) {}
+              const m = String(e && e.message || e);
+              if (/password authentication failed|28P01/i.test(m)) process.exit(20);
+              if (/certificate|self-signed|unable to verify|unable to get local issuer/i.test(m)) process.exit(40);
+              process.exit(21);
+            }
+          })().catch(() => process.exit(21));
+          '
+
+          TASK_ARN="$(aws ecs run-task             --cluster "$CLUSTER"             --task-definition "$TASK_DEFINITION"             --launch-type FARGATE             --overrides "{"containerOverrides":[{"name":"$CONTAINER","command":["node","-e",$(printf '%s' "$DIAG" | jq -Rs . | sed 's/^"//;s/"$//')] }]}"             --network-configuration "awsvpcConfiguration={subnets=[$PRIVATE_SUBNETS],securityGroups=[$APPLICATION_SG],assignPublicIp=DISABLED}"             --region "$AWS_REGION"             --query 'tasks[0].taskArn'             --output text)"
+
+          echo "Diagnostic task: $TASK_ARN"
+
+          for attempt in $(seq 1 40); do
+            STATUS="$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$TASK_ARN" --region "$AWS_REGION" --query 'tasks[0].lastStatus' --output text)"
+            if [ "$STATUS" = "STOPPED" ]; then
+              EXIT_CODE="$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$TASK_ARN" --region "$AWS_REGION" --query 'tasks[0].containers[0].exitCode' --output text)"
+              echo "Diagnostic exit code: $EXIT_CODE"
+
+              case "$EXIT_CODE" in
+                0) echo "DATABASE_CONNECTION_OK"; exit 0 ;;
+                11) echo "MISSING_DATABASE_ENVIRONMENT"; exit 1 ;;
+                12) echo "DATABASE_DNS_FAILURE"; exit 1 ;;
+                13) echo "DATABASE_TCP_FAILURE"; exit 1 ;;
+                15) echo "MIGRATION_SCRIPT_MISSING"; exit 1 ;;
+                20) echo "DATABASE_AUTHENTICATION_FAILURE"; exit 1 ;;
+                40) echo "DATABASE_SSL_CERTIFICATE_FAILURE"; exit 1 ;;
+                21) echo "DATABASE_CLIENT_ERROR"; exit 1 ;;
+                *) echo "UNKNOWN_DIAGNOSTIC_RESULT"; exit 1 ;;
+              esac
+            fi
+            sleep 10
+          done
+
+          echo "DIAGNOSTIC_TIMEOUT"
+          exit 1
