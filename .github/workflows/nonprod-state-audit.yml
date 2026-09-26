@@ -94,7 +94,7 @@ jobs:
 
           APPLICATION_SG="$(aws ec2 describe-security-groups             --filters "Name=group-name,Values=secretsharz-nonprod-application" "Name=vpc-id,Values=$VPC_ID"             --region "$AWS_REGION"             --query 'SecurityGroups[0].GroupId'             --output text)"
 
-          TASK_DEFINITION="arn:aws:ecs:ap-southeast-2:078809710022:task-definition/secretsharz-nonprod-assessment-migrations:2"
+          TASK_DEFINITION="secretsharz-nonprod-assessment-migrations"
 
           DIAG_SCRIPT="$(cat <<'NODE'
           const dns = require('node:dns').promises;
@@ -126,7 +126,10 @@ jobs:
               database: process.env.DATABASE_NAME,
               user: process.env.DATABASE_USER,
               password: process.env.DATABASE_PASSWORD,
-              ssl: { rejectUnauthorized: true }
+              ssl: {
+                rejectUnauthorized: true,
+                ca: require('node:fs').readFileSync(process.env.DATABASE_SSL_CA_PATH, 'utf8')
+              }
             });
 
             try {
@@ -174,6 +177,126 @@ jobs:
           done
 
           echo "DIAGNOSTIC_TIMEOUT"
+          exit 1
+
+      - name: Verify PostgreSQL schema
+        run: |
+          set -euo pipefail
+
+          PRIVATE_SUBNETS="$(aws ec2 describe-subnets             --filters "Name=tag:Name,Values=secretsharz-nonprod-private-*"             --region "$AWS_REGION"             --query 'Subnets[*].SubnetId'             --output text | tr '\t' ',' | sed 's/^/[/; s/$/]/')"
+
+          VPC_ID="$(aws ec2 describe-vpcs             --filters "Name=tag:Name,Values=secretsharz-nonprod"             --region "$AWS_REGION"             --query 'Vpcs[0].VpcId'             --output text)"
+
+          APPLICATION_SG="$(aws ec2 describe-security-groups             --filters "Name=group-name,Values=secretsharz-nonprod-application" "Name=vpc-id,Values=$VPC_ID"             --region "$AWS_REGION"             --query 'SecurityGroups[0].GroupId'             --output text)"
+
+          SCHEMA_SCRIPT="$(cat <<'NODE'
+          const fs = require('node:fs');
+          const { Client } = require('pg');
+
+          (async () => {
+            const client = new Client({
+              host: process.env.DATABASE_HOST,
+              port: Number(process.env.DATABASE_PORT || 5432),
+              database: process.env.DATABASE_NAME,
+              user: process.env.DATABASE_USER,
+              password: process.env.DATABASE_PASSWORD,
+              ssl: {
+                rejectUnauthorized: true,
+                ca: fs.readFileSync(process.env.DATABASE_SSL_CA_PATH, 'utf8')
+              }
+            });
+
+            await client.connect();
+
+            const migrations = await client.query(
+              'SELECT version, checksum FROM schema_migrations ORDER BY version'
+            );
+
+            const tables = await client.query(
+              `SELECT table_name
+                 FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name IN (
+                    'assessment_results',
+                    'assessment_responses',
+                    'assessment_scores',
+                    'assessment_reports',
+                    'assessment_audit_events',
+                    'assessment_migration_registry',
+                    'schema_migrations'
+                  )
+                ORDER BY table_name`
+            );
+
+            const triggers = await client.query(
+              `SELECT event_object_table, trigger_name
+                 FROM information_schema.triggers
+                WHERE trigger_schema = 'public'
+                  AND event_object_table IN (
+                    'assessment_results',
+                    'assessment_responses',
+                    'assessment_scores',
+                    'assessment_audit_events'
+                  )
+                ORDER BY event_object_table, trigger_name`
+            );
+
+            console.log(JSON.stringify({
+              schemaMigrations: migrations.rows,
+              tables: tables.rows.map((row) => row.table_name),
+              triggers: triggers.rows
+            }, null, 2));
+
+            const versions = migrations.rows.map((row) => row.version);
+            if (versions.length < 2 || versions[0] !== '0001' || versions[1] !== '0002') {
+              throw new Error(`Unexpected schema_migrations versions: ${versions.join(',')}`);
+            }
+
+            const requiredTables = [
+              'assessment_results',
+              'assessment_responses',
+              'assessment_scores',
+              'assessment_reports',
+              'assessment_audit_events',
+              'assessment_migration_registry',
+              'schema_migrations'
+            ];
+
+            for (const table of requiredTables) {
+              if (!tables.rows.some((row) => row.table_name === table)) {
+                throw new Error(`Missing required table: ${table}`);
+              }
+            }
+
+            await client.end();
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+          )"
+
+          OVERRIDES="$(jq -n             --arg name "secretsharz-nonprod-assessment-migrations"             --arg script "$SCHEMA_SCRIPT"             '{containerOverrides:[{name:$name,command:["node","-e",$script]}]}')"
+
+          TASK_ARN="$(aws ecs run-task             --cluster secretsharz-nonprod-assessment-migrations             --task-definition secretsharz-nonprod-assessment-migrations             --launch-type FARGATE             --overrides "$OVERRIDES"             --network-configuration "awsvpcConfiguration={subnets=$PRIVATE_SUBNETS,securityGroups=[$APPLICATION_SG],assignPublicIp=DISABLED}"             --region "$AWS_REGION"             --query 'tasks[0].taskArn'             --output text)"
+
+          test -n "$TASK_ARN"
+          echo "Schema verification task: $TASK_ARN"
+
+          for attempt in $(seq 1 40); do
+            STATUS="$(aws ecs describe-tasks               --cluster secretsharz-nonprod-assessment-migrations               --tasks "$TASK_ARN"               --region "$AWS_REGION"               --query 'tasks[0].lastStatus'               --output text)"
+
+            if [ "$STATUS" = "STOPPED" ]; then
+              EXIT_CODE="$(aws ecs describe-tasks                 --cluster secretsharz-nonprod-assessment-migrations                 --tasks "$TASK_ARN"                 --region "$AWS_REGION"                 --query 'tasks[0].containers[0].exitCode'                 --output text)"
+              echo "Schema verification exit code: $EXIT_CODE"
+              test "$EXIT_CODE" = "0"
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "Schema verification timed out."
           exit 1
 
       - name: Diagnose failed DB migration task
