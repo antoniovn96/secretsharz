@@ -26,9 +26,9 @@ jobs:
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
       TF_VAR_ecs_enabled: "true"
-      TF_VAR_ecs_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod@sha256:e9c521555c87fbd42709ab0591769e906328e24163b7caec37f91c4601f516e"
+      TF_VAR_ecs_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod:c216bb1831ce3ea27fb4b57d4c42b6f089f28b4e"
       TF_VAR_assessment_migration_runner_enabled: "true"
-      TF_VAR_assessment_migration_runner_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod@sha256:e9c521555c87fbd42709ab0591769e906328e24163b7caec37f91c4601f516e"
+      TF_VAR_assessment_migration_runner_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod:c216bb1831ce3ea27fb4b57d4c42b6f089f28b4e"
 
     steps:
       - name: Checkout
