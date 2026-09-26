@@ -99,6 +99,9 @@ jobs:
 
               echo "### Migration container logs" >> "$GITHUB_STEP_SUMMARY"
 
+              echo "Attempting log-group filter retrieval..."
+              aws logs filter-log-events                 --log-group-name "/ecs/secretsharz-nonprod-assessment-migrations"                 --region "$AWS_REGION"                 --interleaved                 --limit 200                 --query 'events[*].message'                 --output text 2>&1 | tail -n 200 || true
+
               for log_attempt in $(seq 1 12); do
                 STREAM="$(aws logs describe-log-streams                 --log-group-name "/ecs/secretsharz-nonprod-assessment-migrations"                 --region "$AWS_REGION"                 --order-by LastEventTime                 --descending                 --max-items 1                 --query 'logStreams[0].logStreamName'                 --output text || true)"
 
