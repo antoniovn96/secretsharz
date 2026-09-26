@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   audit:
-    if: github.event.head_commit.message == 'chore(nonprod): audit ECR digest'
+    if: github.event.head_commit.message == 'chore(nonprod): trigger ECR digest audit'
     runs-on: ubuntu-latest
     environment: nonprod
     env:
