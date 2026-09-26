@@ -190,6 +190,7 @@ Resources:
               - ec2:DescribeSubnets
               - ec2:DescribeTags
               - ec2:DescribeVpcs
+              - ec2:GetSecurityGroupsForVpc
               - ec2:DetachInternetGateway
               - ec2:DisassociateRouteTable
               - ec2:ReleaseAddress
@@ -205,6 +206,7 @@ Resources:
               - elasticloadbalancing:Describe*
               - elasticloadbalancing:ModifyListener
               - elasticloadbalancing:ModifyTargetGroup
+              - elasticloadbalancing:ModifyTargetGroupAttributes
               - elasticloadbalancing:RemoveTags
             Resource: "*"
           - Sid: DatabaseAndSecrets
@@ -268,6 +270,7 @@ Resources:
               - logs:CreateLogGroup
               - logs:DeleteLogGroup
               - logs:DescribeLogGroups
+              - logs:ListTagsForResource
               - logs:PutRetentionPolicy
               - logs:TagResource
             Resource: "*"
@@ -313,6 +316,7 @@ Resources:
               - iam:DeletePolicy
               - iam:DeletePolicyVersion
               - iam:GetPolicy
+              - iam:GetPolicyVersion
               - iam:ListPolicyTags
               - iam:ListPolicyVersions
               - iam:SetDefaultPolicyVersion
