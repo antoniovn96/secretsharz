@@ -1,0 +1,198 @@
+name: Secret Sharz Nonprod RIASEC Auth Smoke Bootstrap
+
+on:
+  push:
+    branches:
+      - rebuild/platform-foundation-v1
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-nonprod-riasec-auth-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Verify Firebase auth + RIASEC API + PostgreSQL read path
+    if: github.event.head_commit.message == '[VERIFY_AUTH_NONPROD]'
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      TERRAFORM_STATE_BUCKET: ${{ vars.TERRAFORM_STATE_BUCKET }}
+      TERRAFORM_STATE_KEY: secretsharz/nonprod/terraform.tfstate
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      FIREBASE_API_KEY: ${{ vars.NEXT_PUBLIC_FIREBASE_API_KEY }}
+      FIREBASE_PROJECT_ID: ${{ vars.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.0"
+
+      - name: Install production dependencies
+        run: npm ci --omit=dev --no-audit --no-fund
+
+      - name: Terraform init
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          set -euo pipefail
+          terraform init \
+            -reconfigure \
+            -input=false \
+            -backend-config="bucket=$TERRAFORM_STATE_BUCKET" \
+            -backend-config="key=$TERRAFORM_STATE_KEY" \
+            -backend-config="region=$AWS_REGION"
+
+      - name: Resolve nonprod ALB
+        id: tf
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          set -euo pipefail
+          ALB_DNS="$(terraform output -raw application_load_balancer_dns_name)"
+          test -n "$ALB_DNS"
+          echo "base_url=http://$ALB_DNS" >> "$GITHUB_OUTPUT"
+
+      - name: Run authenticated RIASEC smoke test
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ steps.firebase_secret.outputs.secret }}
+          RIASEC_BASE_URL: ${{ steps.tf.outputs.base_url }}
+        run: |
+          set -euo pipefail
+
+          node --input-type=module <<'NODE'
+          import crypto from 'node:crypto';
+          import { initializeApp, cert, deleteApp } from 'firebase-admin/app';
+          import { getAuth } from 'firebase-admin/auth';
+
+          const baseUrl = process.env.RIASEC_BASE_URL;
+          const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+          const app = initializeApp({
+            credential: cert(serviceAccount),
+            projectId: process.env.FIREBASE_PROJECT_ID,
+          });
+          const adminAuth = getAuth(app);
+          const uid = `nonprod-riasec-smoke-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+          const email = `${uid}@example.invalid`;
+
+          async function request(path, options = {}) {
+            const response = await fetch(baseUrl + path, options);
+            const payload = await response.json().catch(() => ({}));
+            return { status: response.status, payload };
+          }
+
+          try {
+            await adminAuth.createUser({ uid, email });
+
+            const customToken = await adminAuth.createCustomToken(uid);
+            const tokenResponse = await fetch(
+              `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${encodeURIComponent(process.env.FIREBASE_API_KEY)}`,
+              {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                  token: customToken,
+                  returnSecureToken: true,
+                }),
+              },
+            );
+
+            const tokenPayload = await tokenResponse.json().catch(() => ({}));
+            if (!tokenResponse.ok || !tokenPayload.idToken) {
+              throw new Error(
+                `Firebase custom-token exchange failed with HTTP ${tokenResponse.status}.`,
+              );
+            }
+
+            const authHeader = {
+              Authorization: `Bearer ${tokenPayload.idToken}`,
+            };
+
+            const firstGet = await request('/api/career/assessment/riasec-v1', {
+              headers: authHeader,
+            });
+
+            if (firstGet.status !== 200 || firstGet.payload.result !== null) {
+              throw new Error(
+                `Authenticated GET failed: HTTP ${firstGet.status}.`,
+              );
+            }
+
+            const incompletePost = await request('/api/career/assessment/riasec-v1', {
+              method: 'POST',
+              headers: {
+                ...authHeader,
+                'content-type': 'application/json',
+              },
+              body: JSON.stringify({ answers: {} }),
+            });
+
+            if (
+              incompletePost.status !== 400 ||
+              incompletePost.payload.code !== 'ASSESSMENT_INCOMPLETE'
+            ) {
+              throw new Error(
+                `Incomplete POST contract failed: HTTP ${incompletePost.status}, code ${incompletePost.payload.code || 'missing'}.`,
+              );
+            }
+
+            const secondGet = await request('/api/career/assessment/riasec-v1', {
+              headers: authHeader,
+            });
+
+            if (secondGet.status !== 200 || secondGet.payload.result !== null) {
+              throw new Error(
+                `Authenticated GET-after-validation failed: HTTP ${secondGet.status}.`,
+              );
+            }
+
+            console.log(JSON.stringify({
+              ok: true,
+              checks: [
+                'Firebase custom-token -> ID-token exchange',
+                'Authenticated RIASEC GET against ECS',
+                'Authenticated RIASEC incomplete-submit validation',
+                'PostgreSQL read path returned no prior result for synthetic user',
+                'No assessment result was created by this smoke test',
+              ],
+            }, null, 2));
+          } finally {
+            await adminAuth.deleteUser(uid).catch(() => {});
+            await deleteApp(app);
+          }
+          NODE
+
+      - name: Load Firebase service-account secret
+        id: firebase_secret
+        run: |
+          set -euo pipefail
+          SECRET_JSON="$(aws secretsmanager get-secret-value \
+            --secret-id secretsharz/nonprod/firebase-service-account \
+            --region "$AWS_REGION" \
+            --query SecretString \
+            --output text)"
+          test -n "$SECRET_JSON"
+          {
+            echo 'secret<<EOF'
+            echo "$SECRET_JSON"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
