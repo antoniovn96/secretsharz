@@ -334,7 +334,22 @@ jobs:
           echo "### Target health"
           TG_ARN="$(aws elbv2 describe-target-groups             --names secretsharz-nonprod-tg             --region "$AWS_REGION"             --query 'TargetGroups[0].TargetGroupArn'             --output text)"
 
+          HEALTHY_TARGETS=""
+          for attempt in $(seq 1 18); do
+            HEALTHY_TARGETS="$(aws elbv2 describe-target-health               --target-group-arn "$TG_ARN"               --region "$AWS_REGION"               --query 'TargetHealthDescriptions[?TargetHealth.State==\`healthy\`].Target.Id'               --output text)"
+
+            if [ -n "$HEALTHY_TARGETS" ]; then
+              break
+            fi
+
+            echo "No healthy ALB target yet; waiting 10s (attempt $attempt/18)..."
+            aws ecs describe-services               --cluster secretsharz-nonprod               --services secretsharz-nonprod               --region "$AWS_REGION"               --query 'services[0].events[0:5].message'               --output text || true
+            sleep 10
+          done
+
           aws elbv2 describe-target-health             --target-group-arn "$TG_ARN"             --region "$AWS_REGION"             --query 'TargetHealthDescriptions[*].{id:Target.Id,port:Target.Port,state:TargetHealth.State,reason:TargetHealth.Reason}'             --output json
+
+          test -n "$HEALTHY_TARGETS"
 
           echo "### RIASEC API authentication boundary"
           DNS="$(aws elbv2 describe-load-balancers             --names secretsharz-nonprod             --region "$AWS_REGION"             --query 'LoadBalancers[0].DNSName'             --output text)"
