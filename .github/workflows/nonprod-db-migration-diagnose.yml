@@ -1,0 +1,51 @@
+name: Secret Sharz Nonprod DB Migration Diagnose
+
+on:
+  push:
+    branches:
+      - rebuild/platform-foundation-v1
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-nonprod-db-migration-diagnose
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    name: Diagnose failed DB migration task
+    if: github.event.head_commit.message == 'chore(nonprod): diagnose DB migration'
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      TASK_ARN: arn:aws:ecs:ap-southeast-2:078809710022:task/secretsharz-nonprod-assessment-migrations/8a526712a6b24e63bb268b7d0376691c
+      CLUSTER_NAME: secretsharz-nonprod-assessment-migrations
+      LOG_GROUP: /ecs/secretsharz-nonprod-assessment-migrations
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Describe migration task
+        run: |
+          set -euo pipefail
+          aws ecs describe-tasks             --cluster "$CLUSTER_NAME"             --tasks "$TASK_ARN"             --region "$AWS_REGION"             --query 'tasks[0].{lastStatus:lastStatus,desiredStatus:desiredStatus,stopCode:stopCode,stoppedReason:stoppedReason,stoppedAt:stoppedAt,taskDefinition:taskDefinition,containers:containers[*].{name:name,lastStatus:lastStatus,exitCode:exitCode,reason:reason,lastStatusReason:lastStatusReason}}'             --output json
+
+      - name: Show migration container logs
+        run: |
+          set -euo pipefail
+
+          STREAMS="$(aws logs describe-log-streams             --log-group-name "$LOG_GROUP"             --region "$AWS_REGION"             --order-by LastEventTime             --descending             --max-items 10             --query 'logStreams[*].logStreamName'             --output text || true)"
+
+          echo "Streams: $STREAMS"
+
+          for stream in $STREAMS; do
+            echo "### $stream"
+            aws logs get-log-events               --log-group-name "$LOG_GROUP"               --log-stream-name "$stream"               --region "$AWS_REGION"               --limit 200               --query 'events[*].message'               --output text || true
+          done
