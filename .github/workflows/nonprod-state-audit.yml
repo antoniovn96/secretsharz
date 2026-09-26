@@ -81,6 +81,14 @@ jobs:
           echo "### NAT gateways"
           aws ec2 describe-nat-gateways             --filter "Name=vpc-id,Values=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=secretsharz-nonprod" --query 'Vpcs[0].VpcId' --output text)"             --region "$AWS_REGION"             --query 'NatGateways[*].{id:NatGatewayId,state:State,subnet:SubnetId}'             --output json 2>&1 || true
 
+      - name: Diagnose failed DB migration task
+        run: |
+          set -euo pipefail
+
+          TASK_ARN="arn:aws:ecs:ap-southeast-2:078809710022:task/secretsharz-nonprod-assessment-migrations/8a526712a6b24e63bb268b7d0376691c"
+          echo "### Failed migration task"
+          aws ecs describe-tasks             --cluster secretsharz-nonprod-assessment-migrations             --tasks "$TASK_ARN"             --region "$AWS_REGION"             --query 'tasks[0].{lastStatus:lastStatus,stopCode:stopCode,stoppedReason:stoppedReason,taskDefinition:taskDefinition,containers:containers[*].{name:name,lastStatus:lastStatus,exitCode:exitCode,reason:reason,lastStatusReason:lastStatusReason}}'             --output json || true
+
       - name: Verify ECS application
         run: |
           set -euo pipefail
