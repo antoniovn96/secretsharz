@@ -1,0 +1,67 @@
+name: Secret Sharz Nonprod ECS Apply Bootstrap
+
+on:
+  push:
+    branches:
+      - rebuild/platform-foundation-v1
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secretsharz-nonprod-ecs-apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Authorized nonprod ECS apply
+    if: github.event.head_commit.message == '[APPLY_ECS_NONPROD]'
+    runs-on: ubuntu-latest
+    environment: nonprod
+    env:
+      AWS_REGION: ap-southeast-2
+      TERRAFORM_STATE_BUCKET: ${{ vars.TERRAFORM_STATE_BUCKET }}
+      TERRAFORM_STATE_KEY: secretsharz/nonprod/terraform.tfstate
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      TF_VAR_ecs_enabled: "true"
+      TF_VAR_ecs_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod@sha256:f3e29a07aa2ca6b3cf6ef4b70daa6dd7c0e0595c6cad83fd59789a0369e719cb"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.0"
+
+      - name: Terraform init
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          set -euo pipefail
+          terraform init             -reconfigure             -input=false             -backend-config="bucket=$TERRAFORM_STATE_BUCKET"             -backend-config="key=$TERRAFORM_STATE_KEY"             -backend-config="region=$AWS_REGION"
+
+      - name: Terraform plan
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          set -euo pipefail
+          terraform plan             -input=false             -lock-timeout=5m             -out=nonprod-ecs.tfplan
+
+      - name: Terraform apply reviewed ECS plan
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          set -euo pipefail
+          terraform apply             -input=false             -auto-approve             nonprod-ecs.tfplan
+
+      - name: Terraform outputs
+        working-directory: infra/terraform/environments/nonprod
+        run: |
+          terraform output
