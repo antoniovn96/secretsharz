@@ -20,7 +20,9 @@ test('every active assessment module is independently purchasable', () => {
         product.independentlyPurchasable &&
         product.bundleEligible &&
         product.assessmentModuleId &&
-        product.priceKey,
+        product.priceKey &&
+        product.pricingProfileKeys?.individual &&
+        product.pricingProfileKeys?.institution,
     ),
   );
 });
@@ -41,12 +43,19 @@ test('each assessment module maps to one distinct commercial product', () => {
   }
 });
 
-test('standalone pricing references are different from package pricing references', () => {
+test('standalone pricing references are separate from package pricing references', () => {
   for (const product of ASSESSMENT_PRODUCTS) {
     assert.ok(product.priceKey.startsWith('assessment_'));
+    assert.equal(
+      product.pricingProfileKeys.institution,
+      `institution_${product.priceKey}`,
+    );
   }
+
   for (const pkg of ASSESSMENT_PACKAGES) {
     assert.ok(pkg.priceKey.startsWith('package_'));
+    assert.ok(pkg.pricingProfileKeys.individual.startsWith('package_'));
+    assert.ok(pkg.pricingProfileKeys.institutionBulk.startsWith('institution_package_'));
     assert.ok(pkg.discountPolicyKey);
   }
 });
@@ -66,8 +75,25 @@ test('packages contain at least two independently purchasable modules', () => {
   }
 });
 
+test('Career Direction Trio is exactly RIASEC + Aptitude/Reasoning + Values', () => {
+  const pkg = getAssessmentPackage('package_career_direction_trio');
+  assert.ok(pkg);
+  assert.deepEqual(pkg.moduleIds, [
+    'career_interest_inventory',
+    'career_aptitude_sampler',
+    'work_values_assessment',
+  ]);
+  assert.equal(pkg.founderApproved, true);
+});
+
+test('Career Direction Trio does not include Decision Readiness', () => {
+  const pkg = getAssessmentPackage('package_career_direction_trio');
+  assert.ok(pkg);
+  assert.ok(!pkg.moduleIds.includes('career_decision_readiness'));
+});
+
 test('upgrading to a package does not require completed modules to be retaken', () => {
-  const pkg = getAssessmentPackage('package_career_direction');
+  const pkg = getAssessmentPackage('package_career_direction_trio');
   assert.ok(pkg);
 
   const completed = [
@@ -80,7 +106,7 @@ test('upgrading to a package does not require completed modules to be retaken', 
   assert.ok(!additional.includes('career_interest_inventory'));
   assert.ok(!additional.includes('work_values_assessment'));
   assert.ok(additional.includes('career_aptitude_sampler'));
-  assert.ok(additional.includes('career_decision_readiness'));
+  assert.equal(additional.length, 1);
 });
 
 test('invalid single-module commercial package definitions are rejected', () => {
