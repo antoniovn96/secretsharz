@@ -4,24 +4,23 @@ import {
 } from './assessmentLibrary.js';
 
 /**
- * Secret Sharz Assessment Commerce Catalogue V1
+ * Secret Sharz Assessment Commerce Catalogue
  *
- * Commercial identity is deliberately separate from assessment identity:
- * - an assessment module is the thing being assessed;
- * - an assessment product is the independently purchasable SKU for that module;
- * - a package is a composition of two or more products/modules.
+ * This is the canonical commercial identity layer for Career Guidance.
  *
- * Prices are not hard-coded here. priceKey values are stable commerce references
- * that can later resolve to live pricing, discounts, currency and institution terms.
+ * Assessment identity and commercial identity stay separate:
+ * - an assessment module is the thing being measured;
+ * - an assessment product is the independently purchasable SKU mapped to one module;
+ * - a package composes multiple module products without creating a new psychometric identity.
  *
- * A package never creates a new psychometric identity. It grants access to its
- * constituent assessment modules and may optionally produce an integrated report.
+ * Prices are deliberately referenced by stable price keys. Live prices, tax,
+ * discounts, currency and institutional terms belong to the commerce/pricing layer.
  */
 
-export const ASSESSMENT_COMMERCE_CATALOGUE_VERSION = '1.0.0';
+export const ASSESSMENT_COMMERCE_CATALOGUE_VERSION = '1.1.0';
 
-const purchasableModules = ASSESSMENT_MODULES.filter(
-  (module) => module.status !== 'catalogue',
+const purchasableModules = Object.freeze(
+  ASSESSMENT_MODULES.filter((module) => module.status !== 'catalogue'),
 );
 
 export const ASSESSMENT_PRODUCTS = Object.freeze(
@@ -32,6 +31,10 @@ export const ASSESSMENT_PRODUCTS = Object.freeze(
     shortTitle: module.shortTitle,
     assessmentModuleId: module.id,
     priceKey: module.individualPriceKey,
+    pricingProfileKeys: Object.freeze({
+      individual: module.individualPriceKey,
+      institution: `institution_${module.individualPriceKey}`,
+    }),
     pricingMode: 'standalone_configured_price',
     independentlyPurchasable: true,
     bundleEligible: true,
@@ -40,6 +43,15 @@ export const ASSESSMENT_PRODUCTS = Object.freeze(
   })),
 );
 
+/**
+ * Founder-approved packages.
+ *
+ * Career Direction Trio is deliberately:
+ *   RIASEC + Aptitude/Reasoning + Career Values
+ *
+ * Career Decision Readiness is not part of the trio. It remains an
+ * independently purchasable assessment and may contribute to broader packages.
+ */
 export const ASSESSMENT_PACKAGES = Object.freeze([
   {
     id: 'package_interest_and_values',
@@ -47,24 +59,32 @@ export const ASSESSMENT_PACKAGES = Object.freeze([
     title: 'Career Interests + Work Values',
     moduleIds: ['career_interest_inventory', 'work_values_assessment'],
     priceKey: 'package_interest_values',
+    pricingProfileKeys: Object.freeze({
+      individual: 'package_interest_values',
+      institutionBulk: 'institution_package_interest_values',
+    }),
     pricingMode: 'configured_bundle_price',
     discountPolicyKey: 'bundle_discount_standard',
     integratedReport: true,
   },
   {
-    id: 'package_career_direction',
-    sku: 'PACKAGE_CAREER_DIRECTION',
-    title: 'Career Direction',
+    id: 'package_career_direction_trio',
+    sku: 'PACKAGE_CAREER_DIRECTION_TRIO',
+    title: 'Career Direction Trio',
     moduleIds: [
       'career_interest_inventory',
       'career_aptitude_sampler',
       'work_values_assessment',
-      'career_decision_readiness',
     ],
-    priceKey: 'package_career_direction',
+    priceKey: 'package_career_direction_trio',
+    pricingProfileKeys: Object.freeze({
+      individual: 'package_career_direction_trio',
+      institutionBulk: 'institution_package_career_direction_trio',
+    }),
     pricingMode: 'configured_bundle_price',
     discountPolicyKey: 'bundle_discount_standard',
     integratedReport: true,
+    founderApproved: true,
   },
   {
     id: 'package_full_career_intelligence',
@@ -72,6 +92,10 @@ export const ASSESSMENT_PACKAGES = Object.freeze([
     title: 'Full Career Intelligence',
     moduleIds: purchasableModules.map((module) => module.id),
     priceKey: 'package_full_career_intelligence',
+    pricingProfileKeys: Object.freeze({
+      individual: 'package_full_career_intelligence',
+      institutionBulk: 'institution_package_full_career_intelligence',
+    }),
     pricingMode: 'configured_bundle_price',
     discountPolicyKey: 'bundle_discount_premium',
     integratedReport: true,
@@ -104,7 +128,10 @@ export function resolvePackageModules(packageIdOrSku) {
     .filter(Boolean);
 }
 
-export function getAdditionalModulesForPackage(packageIdOrSku, completedModuleIds = []) {
+export function getAdditionalModulesForPackage(
+  packageIdOrSku,
+  completedModuleIds = [],
+) {
   const pkg = getAssessmentPackage(packageIdOrSku);
   if (!pkg) return [];
 
@@ -156,6 +183,8 @@ export function getAssessmentCommerceSummary() {
     version: ASSESSMENT_COMMERCE_CATALOGUE_VERSION,
     standaloneProducts: ASSESSMENT_PRODUCTS.length,
     packages: ASSESSMENT_PACKAGES.length,
+    careerDirectionTrio:
+      getAssessmentPackage('package_career_direction_trio'),
     independentlyPurchasable: ASSESSMENT_PRODUCTS.every(
       (product) => product.independentlyPurchasable,
     ),
