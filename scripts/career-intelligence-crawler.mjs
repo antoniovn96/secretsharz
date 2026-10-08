@@ -141,7 +141,9 @@ async function fetchText(url, { timeoutMs = DEFAULT_TIMEOUT_MS, retries = DEFAUL
       };
     } catch (error) {
       lastError = error;
-      if (attempt < retries) await new Promise((resolve) => setTimeout(resolve, 750 * (attempt + 1)));
+      if (attempt < retries) {
+        await new Promise((resolve) => setTimeout(resolve, 750 * (attempt + 1)));
+      }
     } finally {
       clearTimeout(timer);
     }
@@ -149,13 +151,8 @@ async function fetchText(url, { timeoutMs = DEFAULT_TIMEOUT_MS, retries = DEFAUL
   throw lastError;
 }
 
-async function main() {
-  const sourceUrl = getArg('--url');
-  const outputPath = getArg('--out', 'crawler-out.json');
-
-  if (!sourceUrl) {
-    throw new Error('Usage: node scripts/career-intelligence-crawler.mjs --url <source-url> [--out <path>]');
-  }
+export async function crawl({ sourceUrl, outputPath = 'crawler-out.json' }) {
+  if (!sourceUrl) throw new Error('sourceUrl is required');
 
   const parsedUrl = new URL(sourceUrl);
   const fetched = await fetchText(parsedUrl.toString());
@@ -180,12 +177,31 @@ async function main() {
   };
 
   await fs.writeFile(outputPath, JSON.stringify(result, null, 2), 'utf8');
+  return result;
+}
+
+async function main() {
+  const sourceUrl = getArg('--url');
+  const outputPath = getArg('--out', 'crawler-out.json');
+
+  if (!sourceUrl) {
+    throw new Error(
+      'Usage: node scripts/career-intelligence-crawler.mjs --url <source-url> [--out <path>]'
+    );
+  }
+
+  const result = await crawl({ sourceUrl, outputPath });
   process.stdout.write(
-    `Crawler complete: ${records.length} staged records; productionWrite=false; output=${outputPath}\n`
+    `Crawler complete: ${result.records.length} staged records; productionWrite=false; output=${outputPath}\n`
   );
 }
 
-main().catch((error) => {
-  console.error(error?.stack || error);
-  process.exit(1);
-});
+const invokedDirectly =
+  process.argv[1] && new URL(import.meta.url).pathname === new URL(process.argv[1], 'file:').pathname;
+
+if (invokedDirectly) {
+  main().catch((error) => {
+    console.error(error?.stack || error);
+    process.exit(1);
+  });
+}
