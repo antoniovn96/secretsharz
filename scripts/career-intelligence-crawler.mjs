@@ -11,9 +11,11 @@
 import fs from 'node:fs/promises';
 import process from 'node:process';
 import { URL } from 'node:url';
+import { getSourceById, loadSourceRegistry } from './career-intelligence-source-registry.mjs';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_RETRIES = 2;
+const DEFAULT_REGISTRY_PATH = 'config/career-intelligence-crawler.sources.json';
 const USER_AGENT = 'SecretSharz-Career-Intelligence-Crawler/1.0 (+https://secretsharz.com)';
 
 function getArg(name, fallback = null) {
@@ -124,7 +126,7 @@ function looksLikeChoiceCode(value) {
   return /^\d{9}[A-Z]{0,3}$/i.test(normalizeWhitespace(value));
 }
 
-export function parseDteRows(rows, sourceUrl) {
+export function parseDteRows(rows, sourceUrl, source) {
   const staged = [];
   let currentInstitution = null;
 
@@ -147,13 +149,12 @@ export function parseDteRows(rows, sourceUrl) {
 
         staged.push({
           recordType: 'institution',
-          country: 'India',
-          state: null,
-          district: null,
-          sourceAuthority: 'Directorate of Technical Education, Maharashtra',
+          country: source.country,
+          jurisdiction: source.jurisdiction,
+          sourceAuthority: source.authority,
           sourceUrl,
           ...currentInstitution,
-          verificationState: 'FETCHED',
+          verificationState: 'PARSED',
         });
       }
       continue;
@@ -167,10 +168,9 @@ export function parseDteRows(rows, sourceUrl) {
 
       staged.push({
         recordType: 'programme',
-        country: 'India',
-        state: null,
-        district: null,
-        sourceAuthority: 'Directorate of Technical Education, Maharashtra',
+        country: source.country,
+        jurisdiction: source.jurisdiction,
+        sourceAuthority: source.authority,
         sourceUrl,
         sourceInstitutionCode: currentInstitution.sourceInstitutionCode,
         institutionDisplayName: currentInstitution.institutionDisplayName,
@@ -185,22 +185,40 @@ export function parseDteRows(rows, sourceUrl) {
         mediumOfInstruction: normalizeNullableSourceValue(cells[4]),
         sanctionedIntake: Number.isFinite(Number(cells[5])) ? Number(cells[5]) : null,
         sourceSerial: normalizeNullableSourceValue(cells[0]),
-        verificationState: 'FETCHED',
+        verificationState: 'PARSED',
       });
       continue;
     }
 
-    // Totals, headers and unrelated rows are retained without inference.
     staged.push({
       recordType: 'source_row',
-      sourceAuthority: 'Directorate of Technical Education, Maharashtra',
+      sourceAuthority: source.authority,
       sourceUrl,
       rawCells: cells,
-      verificationState: 'FETCHED',
+      verificationState: 'PARSED',
     });
   }
 
   return staged;
+}
+
+function buildRawSourceRecord({ source, requestedUrl, finalUrl, httpStatus, contentType, body }) {
+  return {
+    recordType: 'raw_source_snapshot',
+    country: source.country,
+    jurisdiction: source.jurisdiction,
+    sourceAuthority: source.authority,
+    sourceId: source.id,
+    sourceType: source.sourceType,
+    adapter: source.adapter,
+    sourceUrl: requestedUrl,
+    finalUrl,
+    fetchedAt: new Date().toISOString(),
+    httpStatus,
+    contentType,
+    rawBody: body,
+    verificationState: 'FETCHED',
+  };
 }
 
 async function fetchText(url, { timeoutMs = DEFAULT_TIMEOUT_MS, retries = DEFAULT_RETRIES } = {}) {
@@ -239,28 +257,50 @@ async function fetchText(url, { timeoutMs = DEFAULT_TIMEOUT_MS, retries = DEFAUL
   throw lastError;
 }
 
-export async function crawl({ sourceUrl, outputPath = 'crawler-out.json' }) {
-  if (!sourceUrl) throw new Error('sourceUrl is required');
+export async function crawlSource({ source, outputPath = 'crawler-out.json' }) {
+  if (!source?.entryPoint) throw new Error('source.entryPoint is required');
 
-  const parsedUrl = new URL(sourceUrl);
+  const parsedUrl = new URL(source.entryPoint);
   const fetched = await fetchText(parsedUrl.toString());
-  const rows = extractTableRows(fetched.body);
-  const records = parseDteRows(rows, fetched.finalUrl);
+
+  let records;
+  let parserStatus;
+  if (source.adapter === 'dte-maharashtra-v2') {
+    const rows = extractTableRows(fetched.body);
+    records = parseDteRows(rows, fetched.finalUrl, source);
+    parserStatus = 'PARSED';
+  } else {
+    records = [buildRawSourceRecord({
+      source,
+      requestedUrl: parsedUrl.toString(),
+      finalUrl: fetched.finalUrl,
+      httpStatus: fetched.status,
+      contentType: fetched.contentType,
+      body: fetched.body,
+    })];
+    parserStatus = 'RAW_FETCH_ONLY';
+  }
 
   const result = {
-    schemaVersion: 'career-intelligence-crawler-staging-v1',
+    schemaVersion: 'career-intelligence-crawler-staging-v2',
     fetchedAt: new Date().toISOString(),
+    sourceId: source.id,
+    sourceAuthority: source.authority,
+    sourceType: source.sourceType,
+    country: source.country,
+    jurisdiction: source.jurisdiction,
+    adapter: source.adapter,
     requestedUrl: parsedUrl.toString(),
     finalUrl: fetched.finalUrl,
     httpStatus: fetched.status,
     contentType: fetched.contentType,
-    parser: 'dte-maharashtra-v2',
+    parserStatus,
     records,
     counts: {
-      tableRows: rows.length,
       stagedRecords: records.length,
       institutionRecords: records.filter((r) => r.recordType === 'institution').length,
       programmeRecords: records.filter((r) => r.recordType === 'programme').length,
+      rawSourceRecords: records.filter((r) => r.recordType === 'raw_source_snapshot').length,
     },
     productionWrite: false,
   };
@@ -269,19 +309,59 @@ export async function crawl({ sourceUrl, outputPath = 'crawler-out.json' }) {
   return result;
 }
 
+export async function crawl({ sourceUrl, outputPath = 'crawler-out.json' }) {
+  return crawlSource({
+    source: {
+      id: 'ad-hoc-url',
+      country: null,
+      jurisdiction: null,
+      authority: 'UNREGISTERED_SOURCE',
+      sourceType: 'ad-hoc',
+      adapter: 'dte-maharashtra-v2',
+      entryPoint: sourceUrl,
+    },
+    outputPath,
+  });
+}
+
 async function main() {
+  const sourceId = getArg('--source-id');
   const sourceUrl = getArg('--url');
   const outputPath = getArg('--out', 'crawler-out.json');
+  const registryPath = getArg('--registry', DEFAULT_REGISTRY_PATH);
+  const listOnly = process.argv.includes('--list-sources');
 
-  if (!sourceUrl) {
+  const registry = await loadSourceRegistry(registryPath);
+
+  if (listOnly) {
+    for (const source of registry.sources) {
+      process.stdout.write(`${source.id}\t${source.adapter}\t${source.country}\t${source.jurisdiction}\n`);
+    }
+    return;
+  }
+
+  let source;
+  if (sourceId) {
+    source = getSourceById(registry, sourceId);
+  } else if (sourceUrl) {
+    source = {
+      id: 'ad-hoc-url',
+      country: null,
+      jurisdiction: null,
+      authority: 'UNREGISTERED_SOURCE',
+      sourceType: 'ad-hoc',
+      adapter: 'dte-maharashtra-v2',
+      entryPoint: sourceUrl,
+    };
+  } else {
     throw new Error(
-      'Usage: node scripts/career-intelligence-crawler.mjs --url <source-url> [--out <path>]'
+      'Usage: node scripts/career-intelligence-crawler.mjs --source-id <id> [--registry <path>] [--out <path>] | --url <url> [--out <path>] | --list-sources'
     );
   }
 
-  const result = await crawl({ sourceUrl, outputPath });
+  const result = await crawlSource({ source, outputPath });
   process.stdout.write(
-    `Crawler complete: ${result.records.length} staged records; productionWrite=false; output=${outputPath}\n`
+    `Crawler complete: source=${result.sourceId}; parser=${result.parserStatus}; records=${result.records.length}; productionWrite=false; output=${outputPath}\n`
   );
 }
 
