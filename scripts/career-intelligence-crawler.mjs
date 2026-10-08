@@ -48,7 +48,39 @@ export function splitSourceCodePrefix(value) {
   };
 }
 
+export function splitInstitutionStatus(value) {
+  const raw = normalizeWhitespace(value);
+  const match = raw.match(
+    /^(?<name>.*?)(?:\s*\(\s*(?<status>Government(?:\s*:\s*Autonomous)?|Government-Aided|Government\s*-\s*Autonomous|Un-Aided|Private|Aided|Autonomous)\s*\))$/i
+  );
+  if (!match?.groups) {
+    return { displayName: raw, providerStatus: null };
+  }
+  return {
+    displayName: normalizeWhitespace(match.groups.name),
+    providerStatus: normalizeWhitespace(match.groups.status),
+  };
+}
+
 export function normalizeInstitutionKey(value) {
+  return normalizeWhitespace(value)
+    .toLocaleLowerCase('en-IN')
+    .replace(/[^a-z0-9]+/g, '');
+}
+
+export function splitChoiceCodeVariant(value) {
+  const raw = normalizeWhitespace(value);
+  const match = raw.match(/^(?<base>\d{9})(?<variant>[A-Z]+)?$/i);
+  if (!match?.groups) {
+    return { baseChoiceCode: raw || null, choiceCodeVariant: null };
+  }
+  return {
+    baseChoiceCode: match.groups.base,
+    choiceCodeVariant: match.groups.variant ? match.groups.variant.toUpperCase() : null,
+  };
+}
+
+export function normalizeProgrammeKey(value) {
   return normalizeWhitespace(value)
     .toLocaleLowerCase('en-IN')
     .replace(/[^a-z0-9]+/g, '');
@@ -88,36 +120,77 @@ function looksLikeInstitutionCode(value) {
   return /^\d{3,}[A-Za-z0-9_-]*$/.test(normalizeWhitespace(value));
 }
 
-function parseDteRows(rows, sourceUrl) {
+function looksLikeChoiceCode(value) {
+  return /^\d{9}[A-Z]{0,3}$/i.test(normalizeWhitespace(value));
+}
+
+export function parseDteRows(rows, sourceUrl) {
   const staged = [];
+  let currentInstitution = null;
+
   for (const cells of rows) {
     if (!cells.length) continue;
 
-    // Some DTE pages expose rows as [code, institution, state, district, status].
-    if (cells.length >= 2 && looksLikeInstitutionCode(cells[0])) {
-      const { sourceCode, displayName } = splitSourceCodePrefix(
-        `${cells[0]}-${cells[1]}`
-      );
-      if (!sourceCode || !displayName) continue;
+    // Actual DTE 2024-25 structure uses a one-cell institute heading such as:
+    // "1006-Government Polytechnic, Murtijapur( Government )"
+    if (cells.length === 1 && looksLikeInstitutionCode(cells[0])) {
+      const { sourceCode, displayName: codeStrippedName } = splitSourceCodePrefix(cells[0]);
+      if (sourceCode) {
+        const statusSplit = splitInstitutionStatus(codeStrippedName);
+        currentInstitution = {
+          sourceInstitutionCode: sourceCode,
+          sourceInstitutionName: codeStrippedName,
+          institutionDisplayName: statusSplit.displayName,
+          institutionIdentityKey: normalizeInstitutionKey(statusSplit.displayName),
+          providerStatus: statusSplit.providerStatus,
+        };
+
+        staged.push({
+          recordType: 'institution',
+          country: 'India',
+          state: null,
+          district: null,
+          sourceAuthority: 'Directorate of Technical Education, Maharashtra',
+          sourceUrl,
+          ...currentInstitution,
+          verificationState: 'FETCHED',
+        });
+      }
+      continue;
+    }
+
+    // Course row structure:
+    // [serial, choiceCode, courseName, courseStatus, medium, sanctionedIntake]
+    if (cells.length >= 6 && looksLikeChoiceCode(cells[1]) && currentInstitution) {
+      const { baseChoiceCode, choiceCodeVariant } = splitChoiceCodeVariant(cells[1]);
+      const programmeDisplayName = normalizeWhitespace(cells[2]);
 
       staged.push({
-        recordType: 'institution',
+        recordType: 'programme',
         country: 'India',
-        state: normalizeNullableSourceValue(cells[2]),
-        district: normalizeNullableSourceValue(cells[3]),
+        state: null,
+        district: null,
         sourceAuthority: 'Directorate of Technical Education, Maharashtra',
         sourceUrl,
-        sourceInstitutionCode: sourceCode,
-        sourceInstitutionName: normalizeNullableSourceValue(cells[1]),
-        institutionDisplayName: displayName,
-        institutionIdentityKey: normalizeInstitutionKey(displayName),
-        operationalStatus: normalizeNullableSourceValue(cells[4]),
+        sourceInstitutionCode: currentInstitution.sourceInstitutionCode,
+        institutionDisplayName: currentInstitution.institutionDisplayName,
+        sourceInstitutionName: currentInstitution.sourceInstitutionName,
+        providerStatus: normalizeNullableSourceValue(currentInstitution.providerStatus),
+        sourceChoiceCode: cells[1],
+        baseChoiceCode,
+        choiceCodeVariant,
+        programmeDisplayName,
+        programmeIdentityKey: normalizeProgrammeKey(programmeDisplayName),
+        courseStatus: normalizeNullableSourceValue(cells[3]),
+        mediumOfInstruction: normalizeNullableSourceValue(cells[4]),
+        sanctionedIntake: Number.isFinite(Number(cells[5])) ? Number(cells[5]) : null,
+        sourceSerial: normalizeNullableSourceValue(cells[0]),
         verificationState: 'FETCHED',
       });
       continue;
     }
 
-    // Generic source-safe fallback: retain row, never infer identity.
+    // Totals, headers and unrelated rows are retained without inference.
     staged.push({
       recordType: 'source_row',
       sourceAuthority: 'Directorate of Technical Education, Maharashtra',
@@ -126,6 +199,7 @@ function parseDteRows(rows, sourceUrl) {
       verificationState: 'FETCHED',
     });
   }
+
   return staged;
 }
 
@@ -180,12 +254,13 @@ export async function crawl({ sourceUrl, outputPath = 'crawler-out.json' }) {
     finalUrl: fetched.finalUrl,
     httpStatus: fetched.status,
     contentType: fetched.contentType,
-    parser: 'dte-maharashtra-v1',
+    parser: 'dte-maharashtra-v2',
     records,
     counts: {
       tableRows: rows.length,
       stagedRecords: records.length,
       institutionRecords: records.filter((r) => r.recordType === 'institution').length,
+      programmeRecords: records.filter((r) => r.recordType === 'programme').length,
     },
     productionWrite: false,
   };
