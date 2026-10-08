@@ -1,0 +1,44 @@
+name: Career Intelligence Crawler Validation
+
+on:
+  pull_request:
+    paths:
+      - "scripts/career-intelligence-*.mjs"
+      - "config/career-intelligence-crawler.sources.json"
+      - "test/career/**"
+      - "package.json"
+      - "package-lock.json"
+  push:
+    branches:
+      - "career-intelligence/crawler-global-pathways-v1"
+    paths:
+      - "scripts/career-intelligence-*.mjs"
+      - "config/career-intelligence-crawler.sources.json"
+      - "test/career/**"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: read
+
+jobs:
+  crawler-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate crawler tests
+        run: npm run test:crawler
+
+      - name: Validate source registry
+        run: npm run crawl:career-intelligence:sources
