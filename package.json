@@ -21,7 +21,10 @@
     "db:verify": "node scripts/verify-assessment-schema.mjs",
     "db:reconcile-legacy-assessments": "node scripts/reconcile-legacy-career-assessments.mjs",
     "test:infrastructure-contract": "node --test test/platform/infrastructureContract.test.mjs",
-    "test:aws-bootstrap": "node --test test/platform/awsBootstrapContract.test.mjs"
+    "test:aws-bootstrap": "node --test test/platform/awsBootstrapContract.test.mjs",
+    "crawl:career-intelligence": "node scripts/career-intelligence-crawler.mjs",
+    "test:crawler": "node --test test/career/crawlerNormalization.test.mjs test/career/sourceRegistry.test.mjs",
+    "crawl:career-intelligence:sources": "node scripts/career-intelligence-crawler.mjs --list-sources"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.1",
