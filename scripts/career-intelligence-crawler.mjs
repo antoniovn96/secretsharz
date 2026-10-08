@@ -21,12 +21,19 @@ function getArg(name, fallback = null) {
   return idx >= 0 && process.argv[idx + 1] ? process.argv[idx + 1] : fallback;
 }
 
-function normalizeWhitespace(value) {
+export function normalizeWhitespace(value) {
   return String(value ?? '')
     .replace(/\u00a0/g, ' ')
     .replace(/[\t\r\n]+/g, ' ')
     .replace(/\s{2,}/g, ' ')
     .trim();
+}
+
+export function normalizeNullableSourceValue(value) {
+  const normalized = normalizeWhitespace(value);
+  if (!normalized) return null;
+  if (/^(not available|n\/a|na|none|null|-)$/i.test(normalized)) return null;
+  return normalized;
 }
 
 export function splitSourceCodePrefix(value) {
@@ -39,6 +46,12 @@ export function splitSourceCodePrefix(value) {
     sourceCode: match.groups.code,
     displayName: normalizeWhitespace(match.groups.name),
   };
+}
+
+export function normalizeInstitutionKey(value) {
+  return normalizeWhitespace(value)
+    .toLocaleLowerCase('en-IN')
+    .replace(/[^a-z0-9]+/g, '');
 }
 
 function stripTags(value) {
@@ -90,14 +103,15 @@ function parseDteRows(rows, sourceUrl) {
       staged.push({
         recordType: 'institution',
         country: 'India',
-        state: cells[2] || null,
-        district: cells[3] || null,
+        state: normalizeNullableSourceValue(cells[2]),
+        district: normalizeNullableSourceValue(cells[3]),
         sourceAuthority: 'Directorate of Technical Education, Maharashtra',
         sourceUrl,
         sourceInstitutionCode: sourceCode,
-        sourceInstitutionName: cells[1] || null,
+        sourceInstitutionName: normalizeNullableSourceValue(cells[1]),
         institutionDisplayName: displayName,
-        operationalStatus: cells[4] || null,
+        institutionIdentityKey: normalizeInstitutionKey(displayName),
+        operationalStatus: normalizeNullableSourceValue(cells[4]),
         verificationState: 'FETCHED',
       });
       continue;
