@@ -16,7 +16,8 @@
       "sourceType": "technical-education-admission-catalogue",
       "entryPoint": "https://poly24.dtemaharashtra.gov.in/diploma24/index.php/hp_controller/instcourses",
       "currentCycleRule": "Never infer current status from an older catalogue; require explicit academic-year evidence.",
-      "identifierRule": "Keep institution/programme choice codes separate from display names."
+      "identifierRule": "Keep institution/programme choice codes separate from display names.",
+      "adapter": "dte-maharashtra-v2"
     },
     {
       "id": "kenya-tveta-courses",
@@ -29,7 +30,8 @@
         "https://www.tveta.go.ke/",
         "https://www.tveta.go.ke/tvet-standards/"
       ],
-      "currentCycleRule": "Capture course level, exam body, institution availability and current accreditation/standards state."
+      "currentCycleRule": "Capture course level, exam body, institution availability and current accreditation/standards state.",
+      "adapter": "raw-source-v1"
     },
     {
       "id": "ghana-ctvet",
@@ -42,7 +44,8 @@
         "https://www.ctvet.gov.gh/resources/qualification-framework",
         "https://www.ctvet.gov.gh/about/what-we-do/registration"
       ],
-      "currentCycleRule": "Capture qualification framework tier, entry routes, provider registration/accreditation and implementation status."
+      "currentCycleRule": "Capture qualification framework tier, entry routes, provider registration/accreditation and implementation status.",
+      "adapter": "raw-source-v1"
     },
     {
       "id": "nigeria-nbte",
@@ -54,7 +57,8 @@
       "secondaryEntryPoints": [
         "https://nbte.gov.ng/"
       ],
-      "currentCycleRule": "Capture institution category, regulator status and current ND/HND/technical-college information."
+      "currentCycleRule": "Capture institution category, regulator status and current ND/HND/technical-college information.",
+      "adapter": "raw-source-v1"
     },
     {
       "id": "rwanda-rtb",
@@ -66,7 +70,8 @@
       "secondaryEntryPoints": [
         "https://www.rtb.gov.rw/1/about-rtb"
       ],
-      "currentCycleRule": "Capture TVET levels 1–5, curricula, training providers and current reform/dual-TVET status."
+      "currentCycleRule": "Capture TVET levels 1–5, curricula, training providers and current reform/dual-TVET status.",
+      "adapter": "raw-source-v1"
     },
     {
       "id": "uganda-uvtab",
@@ -75,7 +80,8 @@
       "authority": "Uganda Vocational and Technical Assessment Board",
       "sourceType": "tvet-assessment-and-certification-registry",
       "entryPoint": "https://uvtab.go.ug/assessment/timetable",
-      "currentCycleRule": "Capture assessment series, programme level, formal/technical/informal assessment and competence levels."
+      "currentCycleRule": "Capture assessment series, programme level, formal/technical/informal assessment and competence levels.",
+      "adapter": "raw-source-v1"
     },
     {
       "id": "tanzania-moe-guidelines",
@@ -84,7 +90,8 @@
       "authority": "Ministry of Education, Science and Technology",
       "sourceType": "education-policy-guidance-and-framework-registry",
       "entryPoint": "https://www.moe.go.tz/en/miongozo-nyaraka/miongozo",
-      "currentCycleRule": "Capture publication date, financial year, policy status and effective period; do not treat historical guidance as current automatically."
+      "currentCycleRule": "Capture publication date, financial year, policy status and effective period; do not treat historical guidance as current automatically.",
+      "adapter": "raw-source-v1"
     },
     {
       "id": "papua-new-guinea-education",
@@ -96,7 +103,8 @@
       "secondaryEntryPoints": [
         "https://education.gov.pg/admin/images/products/03_02_26%20_N_MPS_on%20GFEP_202695.pdf"
       ],
-      "currentCycleRule": "Capture current school structure, FODE/re-entry rules, curriculum and policy-year state."
+      "currentCycleRule": "Capture current school structure, FODE/re-entry rules, curriculum and policy-year state.",
+      "adapter": "raw-source-v1"
     },
     {
       "id": "eswatini-government-education",
@@ -105,7 +113,8 @@
       "authority": "Government of Eswatini",
       "sourceType": "national-education-policy-and-secondary-pathway-registry",
       "entryPoint": "https://www.gov.sz/images/FinanceDocuments/2026BudgetSpeech.pdf",
-      "currentCycleRule": "Capture 2026 policy and implementation state separately from established operational programmes."
+      "currentCycleRule": "Capture 2026 policy and implementation state separately from established operational programmes.",
+      "adapter": "raw-source-v1"
     },
     {
       "id": "sierra-leone-mbsse",
@@ -117,7 +126,8 @@
       "secondaryEntryPoints": [
         "https://mbsse.gov.sl/"
       ],
-      "currentCycleRule": "Capture technical/vocational curriculum addenda and distinguish operational curriculum from policy documents."
+      "currentCycleRule": "Capture technical/vocational curriculum addenda and distinguish operational curriculum from policy documents.",
+      "adapter": "raw-source-v1"
     },
     {
       "id": "zambia-teveta",
@@ -129,7 +139,8 @@
       "secondaryEntryPoints": [
         "https://www.teveta.org.zm/new/system/iec/"
       ],
-      "currentCycleRule": "Capture registered institutions, programme/trade levels, current curriculum guidance and legislation/policy status."
+      "currentCycleRule": "Capture registered institutions, programme/trade levels, current curriculum guidance and legislation/policy status.",
+      "adapter": "raw-source-v1"
     },
     {
       "id": "timor-leste-education",
@@ -138,7 +149,8 @@
       "authority": "Ministry of Education",
       "sourceType": "secondary-and-technical-vocational-pathway-registry",
       "entryPoint": "https://moe.gov.tl/",
-      "currentCycleRule": "Version pathway records by curriculum reform year; distinguish current operational pathways from 2026–28 reform development."
+      "currentCycleRule": "Version pathway records by curriculum reform year; distinguish current operational pathways from 2026–28 reform development.",
+      "adapter": "raw-source-v1"
     }
   ]
 }
