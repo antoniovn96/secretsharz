@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "career-intelligence-crawler-sources-v1",
+  "sources": [
+    {
+      "id": "india-dte-maharashtra-polytechnic",
+      "country": "India",
+      "jurisdiction": "Maharashtra",
+      "authority": "Directorate of Technical Education, Maharashtra",
+      "sourceType": "technical-education-admission-catalogue",
+      "entryPoint": "https://poly24.dtemaharashtra.gov.in/diploma24/index.php/hp_controller/instcourses",
+      "currentCycleRule": "Never infer current status from an older catalogue; require explicit academic-year evidence.",
+      "identifierRule": "Keep institution/programme choice codes separate from display names.",
+      "normalization": {
+        "stripLeadingInstitutionCode": true,
+        "retainSourceCodes": true,
+        "preserveRawSourceNames": true
+      }
+    }
+  ]
+}
