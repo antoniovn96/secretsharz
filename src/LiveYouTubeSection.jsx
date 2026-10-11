@@ -39,8 +39,8 @@ export default function LiveYouTubeSection({ navigate }) {
     <section className="ss-live-youtube" aria-labelledby="ss-live-youtube-title">
       <div className="ss-live-youtube__heading">
         <p>From Secret Sharz</p>
-        <h2 id="ss-live-youtube-title">Real people. Real conversations.</h2>
-        <span>Latest videos from the official Secret Sharz YouTube channel.</span>
+        <h2 id="ss-live-youtube-title">Watch from Secret Sharz</h2>
+        <span>Latest public videos from the official Secret Sharz YouTube channel.</span>
       </div>
 
       {loading && (
