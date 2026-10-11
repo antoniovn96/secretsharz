@@ -83,7 +83,7 @@ export default function PublicFeedbackSection() {
             <textarea name="message" required minLength={10} maxLength={1500} rows={5} value={form.message} onChange={change} placeholder="Tell us what worked well or what could be better…" />
           </label>
           <p className="spf-privacy">Please do not include diagnoses, private counselling details, identifying information about a child, or other sensitive personal information.</p>
-          <label className="spf-consent"><input type="checkbox" name="allowPublication" checked={form.allowPublication} onChange={change} /><span>I give permission for Secret Sharz to consider publishing this message after moderation. I understand publication is not automatic and my email will never be shown.</span></label>
+          <label className="spf-consent"><input type="checkbox" name="allowPublication" checked={form.allowPublication} onChange={change} /><span>I give permission for Secret Sharz to consider publishing an edited, anonymous version of my message after moderation. Publication is not automatic; my name and email will not be published.</span></label>
           <div className="spf-honeypot" aria-hidden="true"><label>Leave this field empty<input name="website" tabIndex={-1} autoComplete="off" value={form.website} onChange={change} /></label></div>
           {notice.text && <p className={`spf-notice ${notice.type}`} role={notice.type === 'error' ? 'alert' : 'status'}>{notice.text}</p>}
           <button className="spf-submit" type="submit" disabled={submitting}>{submitting ? 'Sending…' : 'Send feedback'} <span aria-hidden="true">→</span></button>
