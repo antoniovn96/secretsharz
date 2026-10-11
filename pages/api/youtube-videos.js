@@ -98,7 +98,7 @@ export default async function handler(req, res) {
         watchUrl: `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`,
         embedUrl: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`,
       };
-    }).filter((item) => item.videoId && item.privacyStatus !== 'private');
+    }).filter((item) => item.videoId && item.privacyStatus === 'public');
 
     res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     return res.status(200).json({
