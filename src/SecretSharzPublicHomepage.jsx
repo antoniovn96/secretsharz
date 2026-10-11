@@ -5,44 +5,59 @@ const programmes = [
     id: 'spark',
     name: 'Sharz Spark',
     descriptor: 'Learning & Inclusion',
-    description: 'Learning support, inclusive tools and guidance that help every learner build on their strengths.',
+    description: 'Discover strengths, get the right support and unlock potential for every learner.',
     route: '/sharz-spark',
     tone: 'spark',
     icon: '✳',
-    items: ['Learning support', 'SEN resources', 'Inclusive learning'],
+    items: ['Learning Support', 'Inclusive Tools', 'SEN Resources', 'Guidance for Parents & Educators'],
+    image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=720&q=78',
+    alt: 'Learners taking part in a classroom activity',
   },
   {
     id: 'balance',
     name: 'Sharz Balance',
     descriptor: 'Mental Health & Wellbeing',
-    description: 'A welcoming place to explore emotional wellbeing, self-care and appropriate human support.',
+    description: 'Feel heard, build resilience and find the right support for a healthier, happier you.',
     route: '/sharz-balance',
     tone: 'balance',
     icon: '♡',
-    items: ['Wellbeing resources', 'Counselling pathways', 'Self-care tools'],
+    items: ['Counselling Support', 'Self-Care Tools', 'Wellbeing Resources', 'Professional Guidance'],
+    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=720&q=78',
+    alt: 'A young woman in soft natural light',
   },
   {
     id: 'compass',
     name: 'Sharz Compass',
     descriptor: 'Career Guidance & Discovery',
-    description: 'Understand your interests, explore education and career options, and plan your next steps.',
+    description: 'Explore interests, understand your options and create a future that fits you.',
     route: '/sharz-compass',
     tone: 'compass',
     icon: '⌖',
-    items: ['Career assessments', 'Course exploration', 'Career planning'],
+    items: ['Career Assessments', 'Course & Career Pathways', 'Mentoring Guidance', 'Tools for Decision-Making'],
+    image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=720&q=78',
+    alt: 'Students working together on their future',
   },
 ];
 
 const journey = [
-  ['Pause', 'Take a moment to notice what matters to you.'],
-  ['Understand', 'Explore your thoughts, needs, interests and strengths.'],
-  ['Connect', 'Find relevant resources, people or professional support.'],
-  ['Plan', 'Choose a next step that feels manageable.'],
-  ['Grow', 'Review what you learn and keep moving at your own pace.'],
+  ['Pause', 'Take time to check in with yourself.', '⌁'],
+  ['Understand', 'Explore your thoughts, needs and strengths.', '♧'],
+  ['Connect', 'Access the right support and opportunities.', '♙'],
+  ['Plan', 'Create a clear and personalised next step.', '◎'],
+  ['Grow', 'Build skills, confidence and a brighter future.', '↗'],
 ];
 
 export default function SecretSharzPublicHomepage({ navigate }) {
   const go = (path) => navigate?.(path);
+  const goToSection = (id) => {
+    if (typeof window === 'undefined') return;
+    if (window.location.pathname !== '/') {
+      go('/');
+      window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    } else {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
     <div className="ss-public-home">
@@ -50,56 +65,66 @@ export default function SecretSharzPublicHomepage({ navigate }) {
         <section className="ssh-hero" aria-labelledby="ssh-hero-title">
           <div className="ssh-hero-inner">
             <div className="ssh-hero-copy">
-              <p className="ssh-eyebrow"><span aria-hidden="true">✦</span> A safe space for every journey</p>
-              <h1 id="ssh-hero-title">Be heard.<br />Find your path.<br />Build a <em>brighter tomorrow.</em></h1>
+              <p className="ssh-eyebrow">A safe space for every journey</p>
+              <h1 id="ssh-hero-title">Be Heard.<br />Find Your Path.<br />Build a <em>Brighter Tomorrow.</em></h1>
               <p className="ssh-hero-lead">
-                Secret Sharz brings together emotional wellbeing, inclusive learning and career discovery
-                in one connected platform. Start with the part of life you want support with today.
+                Secret Sharz is a global platform for emotional wellbeing, learning support and career guidance.
+                We bring together students, parents, educators and professionals to help every individual feel
+                heard, supported, understood and empowered.
               </p>
               <div className="ssh-actions">
-                <a className="ssh-button ssh-button-primary" href="#programmes">Explore our programmes <span aria-hidden="true">→</span></a>
-                <button className="ssh-button ssh-button-secondary" type="button" onClick={() => go('/about')}>Get to know Secret Sharz</button>
+                <button className="ssh-button ssh-button-primary" type="button" onClick={() => goToSection('programmes')}>
+                  Explore Our Programmes <span aria-hidden="true">→</span>
+                </button>
               </div>
               <div className="ssh-principles" aria-label="Secret Sharz principles">
-                <span><b aria-hidden="true">◈</b> People first</span>
-                <span><b aria-hidden="true">◎</b> Inclusive by design</span>
-                <span><b aria-hidden="true">↗</b> Support for your next step</span>
+                <span><b aria-hidden="true">♢</b> Safe &amp; Confidential</span>
+                <span><b aria-hidden="true">♧</b> Evidence-Informed</span>
+                <span><b aria-hidden="true">◎</b> Global Community</span>
+                <span><b aria-hidden="true">♡</b> For Every Journey</span>
               </div>
             </div>
 
-            <div className="ssh-hero-art" aria-label="An abstract illustration representing a calmer mind and a clearer path">
-              <div className="ssh-art-glow" />
-              <div className="ssh-art-leaf leaf-a" />
-              <div className="ssh-art-leaf leaf-b" />
-              <div className="ssh-art-leaf leaf-c" />
-              <div className="ssh-art-path" />
-              <div className="ssh-art-sun" />
-              <div className="ssh-art-note note-a">A calmer mind</div>
-              <div className="ssh-art-note note-b">A clearer path</div>
-              <div className="ssh-art-card"><span>Your journey</span><strong>One step at a time.</strong><small>At your pace. In your way.</small></div>
+            <div className="ssh-hero-art" aria-label="A hopeful journey through a sunlit landscape">
+              <img className="ssh-landscape" src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1100&q=82" alt="" fetchPriority="high" />
+              <div className="ssh-hero-wash" />
+              <div className="ssh-hero-person-frame">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=82" alt="" fetchPriority="high" />
+              </div>
+              <span className="ssh-art-note note-a">A calmer mind</span>
+              <span className="ssh-art-note note-b">A clearer path</span>
+              <span className="ssh-art-note note-c">A brighter you</span>
+              <div className="ssh-art-quote">“A safe space<br />to be me,<br />understand me<br />and become more<br />of who I can be.”</div>
+              <div className="ssh-leaf leaf-one" aria-hidden="true" />
+              <div className="ssh-leaf leaf-two" aria-hidden="true" />
             </div>
           </div>
         </section>
 
         <section className="ssh-programmes" id="programmes" aria-labelledby="ssh-programmes-title">
           <div className="ssh-section-heading">
-            <div>
-              <p className="ssh-eyebrow">Three pathways. One shared purpose.</p>
-              <h2 id="ssh-programmes-title">Explore our programmes</h2>
-            </div>
-            <p>Choose the space that best fits what you are looking for. Each programme has its own information, tools and secure workspace.</p>
+            <h2 id="ssh-programmes-title">Our Programmes</h2>
+            <span className="ssh-heading-pill">Three areas. One shared purpose.</span>
+            <button className="ssh-outline-button" type="button" onClick={() => goToSection('programmes')}>Explore all programmes <span aria-hidden="true">→</span></button>
           </div>
           <div className="ssh-programme-grid">
             {programmes.map((program) => (
-              <article className={`ssh-programme-card ${program.tone}`} key={program.id}>
-                <div className="ssh-programme-orb" aria-hidden="true">{program.icon}</div>
-                <p className="ssh-programme-label">{program.descriptor}</p>
-                <h3>{program.name}</h3>
-                <p className="ssh-programme-description">{program.description}</p>
-                <ul>{program.items.map((item) => <li key={item}>{item}</li>)}</ul>
-                <button type="button" className="ssh-programme-link" onClick={() => go(program.route)}>
-                  Explore {program.name} <span aria-hidden="true">→</span>
-                </button>
+              <article className={\`ssh-programme-card \${program.tone}\`} key={program.id}>
+                <div className="ssh-card-copy">
+                  <div className="ssh-programme-orb" aria-hidden="true">{program.icon}</div>
+                  <div className="ssh-programme-heading">
+                    <h3>{program.name}</h3>
+                    <p className="ssh-programme-label">{program.descriptor}</p>
+                  </div>
+                  <p className="ssh-programme-description">{program.description}</p>
+                  <ul>{program.items.map((item) => <li key={item}><span aria-hidden="true">✧</span>{item}</li>)}</ul>
+                  <button type="button" className="ssh-programme-link" onClick={() => go(program.route)}>
+                    Explore {program.name} <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+                <div className="ssh-programme-visual">
+                  <img src={program.image} alt={program.alt} loading="lazy" />
+                </div>
               </article>
             ))}
           </div>
@@ -107,85 +132,83 @@ export default function SecretSharzPublicHomepage({ navigate }) {
 
         <section className="ssh-journey" id="compass-journey" aria-labelledby="ssh-journey-title">
           <div className="ssh-section-heading">
-            <div>
-              <p className="ssh-eyebrow">A flexible guide, not a checklist</p>
-              <h2 id="ssh-journey-title">The Compass Journey</h2>
-            </div>
-            <p>You can begin wherever you are. The journey can look different depending on your needs and the support you choose.</p>
+            <h2 id="ssh-journey-title">The Compass Journey</h2>
+            <span className="ssh-heading-pill">A simple framework for real progress.</span>
+            <button className="ssh-outline-button" type="button" onClick={() => go('/about')}>See how it works <span aria-hidden="true">→</span></button>
           </div>
           <ol className="ssh-journey-grid">
-            {journey.map(([title, text], index) => (
+            {journey.map(([title, text, icon], index) => (
               <li className="ssh-journey-step" key={title}>
-                <span className={`ssh-journey-icon journey-${index + 1}`} aria-hidden="true">{['⌁', '◉', '◎', '↗', '✳'][index]}</span>
-                <div><h3>{title}</h3><p>{text}</p></div>
+                <span className={\`ssh-journey-icon journey-\${index + 1}\`} aria-hidden="true">{icon}</span>
+                <h3>{title}</h3><p>{text}</p>
                 {index < journey.length - 1 && <span className="ssh-journey-arrow" aria-hidden="true">→</span>}
               </li>
             ))}
           </ol>
-          <div className="ssh-journey-note"><span aria-hidden="true">✦</span><p>There is no single right way to begin. You can explore information first, seek support when you are ready, or return to your journey as your needs change.</p></div>
-        </section>
-
-        <section className="ssh-about-strip" aria-labelledby="ssh-about-title">
-          <div className="ssh-about-mark" aria-hidden="true">SS</div>
-          <div>
-            <p className="ssh-eyebrow">The idea behind Secret Sharz</p>
-            <h2 id="ssh-about-title">Support the whole person, while respecting every person's privacy.</h2>
-            <p>Learning, wellbeing and future planning can connect through a person's journey without making sensitive records visible across programmes.</p>
-          </div>
-          <button type="button" className="ssh-button ssh-button-light" onClick={() => go('/about')}>About Secret Sharz <span aria-hidden="true">→</span></button>
         </section>
       </main>
 
-      <style>{`
-        .ss-public-home{--ssh-ink:#123b39;--ssh-body:#40514e;--ssh-muted:#657571;--ssh-teal:#14564f;--ssh-cream:#fcfbf7;--ssh-line:#e2e9e2;background:var(--ssh-cream);color:var(--ssh-ink);overflow:hidden}
+      <style>{\`
+        .ss-public-home{--ssh-ink:#113c3d;--ssh-body:#4e5c62;--ssh-muted:#63736f;--ssh-teal:#064e4b;--ssh-cream:#fcfbf6;--ssh-line:#e7e9df;background:var(--ssh-cream);color:var(--ssh-ink);overflow:hidden;font-family:Arial,Helvetica,sans-serif}
         .ss-public-home *{box-sizing:border-box}.ss-public-home button,.ss-public-home a{font:inherit}.ss-public-home button{cursor:pointer}
         .ss-public-home button:focus-visible,.ss-public-home a:focus-visible{outline:3px solid #225d53;outline-offset:4px}
-        .ssh-hero{position:relative;padding:76px 5.5vw 68px;background:radial-gradient(ellipse at 72% 25%,rgba(210,225,208,.55),transparent 42%),linear-gradient(120deg,#fffdf9 2%,#f4f7ef 100%)}
-        .ssh-hero-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,.95fr);gap:48px;align-items:center}
-        .ssh-eyebrow{margin:0 0 14px;color:#3d7265;font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
-        .ssh-hero h1,.ssh-section-heading h2,.ssh-about-strip h2{font-family:Georgia,'Times New Roman',serif;font-weight:500;letter-spacing:-.045em}
-        .ssh-hero h1{max-width:780px;margin:0 0 22px;font-size:clamp(42px,5vw,72px);line-height:1.02}
-        .ssh-hero h1 em{color:#276f61;font-weight:500}
-        .ssh-hero-lead{max-width:650px;margin:0;color:var(--ssh-body);font-size:17px;line-height:1.7}
-        .ssh-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
-        .ssh-button{min-height:47px;padding:12px 18px;border-radius:999px;display:inline-flex;gap:12px;align-items:center;justify-content:center;text-decoration:none;font-size:13px;font-weight:750;border:1px solid transparent}
-        .ssh-button-primary{background:#124f49;color:#fff}.ssh-button-primary:hover{background:#0c3f3a}
-        .ssh-button-secondary{background:rgba(255,255,255,.8);color:#174b45;border-color:#a9c0b7}.ssh-button-secondary:hover{background:#eef5ee}
-        .ssh-principles{display:flex;gap:20px;flex-wrap:wrap;margin-top:28px;color:#526b63;font-size:11px}.ssh-principles span{display:flex;align-items:center;gap:7px}.ssh-principles b{font-size:17px;color:#397b6c}
-        .ssh-hero-art{position:relative;min-height:425px;border-radius:46% 54% 48% 52%/45% 42% 58% 55%;overflow:hidden;background:linear-gradient(145deg,#e3eee4 0%,#f7e9d8 45%,#d6e8df 100%);border:1px solid rgba(78,131,112,.15)}
-        .ssh-art-glow{position:absolute;inset:12% 10%;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(255,255,255,.95),rgba(255,255,255,.3) 42%,transparent 72%)}
-        .ssh-art-sun{position:absolute;right:16%;top:12%;width:94px;height:94px;border-radius:50%;background:radial-gradient(circle,#fff7d5 0%,#efd9a2 45%,rgba(239,217,162,0) 74%)}
-        .ssh-art-path{position:absolute;width:68%;height:77%;left:18%;top:17%;border:3px solid rgba(255,255,255,.82);border-left-color:transparent;border-bottom-color:rgba(255,255,255,.45);border-radius:50%;transform:rotate(-29deg)}
-        .ssh-art-leaf{position:absolute;width:110px;height:180px;border-radius:100% 0 100% 0;background:linear-gradient(135deg,#8db39c,#316e5f);opacity:.63;transform:rotate(26deg)}
-        .ssh-art-leaf:after{content:'';position:absolute;left:50%;top:8%;height:82%;border-left:1px solid rgba(255,255,255,.65);transform:rotate(-15deg)}
-        .ssh-art-leaf.leaf-a{left:4%;top:20%;transform:rotate(-38deg)}.ssh-art-leaf.leaf-b{left:22%;bottom:-15%;transform:rotate(52deg);background:linear-gradient(135deg,#bdd4b5,#5d8d6f)}.ssh-art-leaf.leaf-c{right:7%;bottom:2%;transform:rotate(75deg);width:90px;height:150px;background:linear-gradient(135deg,#b6d1c2,#5a8e7b)}
-        .ssh-art-note{position:absolute;font-family:Georgia,serif;font-style:italic;font-size:19px;color:#4c705e}.ssh-art-note.note-a{left:15%;top:12%;transform:rotate(-8deg)}.ssh-art-note.note-b{right:11%;top:32%;transform:rotate(5deg);color:#976744}
-        .ssh-art-card{position:absolute;left:22%;right:17%;bottom:15%;padding:22px 24px;border:1px solid rgba(255,255,255,.8);border-radius:22px;background:rgba(255,253,247,.83);box-shadow:0 18px 50px rgba(33,76,61,.08);backdrop-filter:blur(8px);display:grid;gap:7px}.ssh-art-card span{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#52806d;font-weight:800}.ssh-art-card strong{font-family:Georgia,serif;font-size:24px;font-weight:500;color:#174740}.ssh-art-card small{font-size:12px;color:#667771}
-        .ssh-programmes,.ssh-journey{padding:72px 5.5vw;max-width:1440px;margin:0 auto}
-        .ssh-section-heading{display:flex;align-items:end;justify-content:space-between;gap:36px;margin-bottom:28px}.ssh-section-heading>div{max-width:620px}.ssh-section-heading h2{font-size:clamp(32px,4vw,48px);line-height:1.08;margin:0}.ssh-section-heading>p{max-width:455px;color:var(--ssh-muted);font-size:14px;line-height:1.65;margin:0}
-        .ssh-programme-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
-        .ssh-programme-card{position:relative;isolation:isolate;overflow:hidden;min-height:355px;padding:28px;border:1px solid var(--ssh-line);border-radius:24px;background:#fff;display:flex;flex-direction:column;align-items:flex-start}
-        .ssh-programme-card:before{content:'';position:absolute;z-index:-1;width:245px;height:245px;right:-82px;top:-100px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.8),transparent 72%)}
-        .ssh-programme-card.spark{background:linear-gradient(145deg,#fff7ed,#fbebda);border-color:#f0dfcd}.ssh-programme-card.balance{background:linear-gradient(145deg,#f1f8f2,#e4f0e7);border-color:#d7e7db}.ssh-programme-card.compass{background:linear-gradient(145deg,#f0f4ff,#e5ecfc);border-color:#d8e1f5}
-        .ssh-programme-orb{width:56px;height:56px;display:grid;place-items:center;border-radius:50%;font-size:31px;color:#174b45;background:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.9);margin-bottom:20px}
-        .spark .ssh-programme-orb{color:#a34d20}.balance .ssh-programme-orb{color:#236956}.compass .ssh-programme-orb{color:#3659a7}
-        .ssh-programme-label{margin:0 0 6px;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:#687671}
-        .ssh-programme-card h3{font-family:Georgia,'Times New Roman',serif;font-size:31px;letter-spacing:-.03em;font-weight:500;margin:0 0 12px;color:#153e39}
-        .spark h3{color:#91471f}.compass h3{color:#294d9a}
-        .ssh-programme-description{margin:0;color:#4a5b55;font-size:14px;line-height:1.65;max-width:360px}
-        .ssh-programme-card ul{list-style:none;padding:0;margin:20px 0 26px;display:flex;flex-wrap:wrap;gap:8px}.ssh-programme-card li{border:1px solid rgba(73,104,89,.16);background:rgba(255,255,255,.6);border-radius:999px;padding:7px 10px;font-size:11px;color:#536a5f}
-        .ssh-programme-link{margin-top:auto;display:inline-flex;align-items:center;gap:14px;border:0;background:#15564f;color:#fff;border-radius:999px;padding:12px 17px;font-size:12px;font-weight:800}.ssh-programme-link:hover{filter:brightness(.94)}.spark .ssh-programme-link{background:#98491d}.compass .ssh-programme-link{background:#2f519d}
-        .ssh-journey{border-top:1px solid #e5ebe4;border-bottom:1px solid #e5ebe4;background:#f4f7f1;max-width:none}
-        .ssh-journey>.ssh-section-heading,.ssh-journey-grid,.ssh-journey-note{max-width:1280px;margin-left:auto;margin-right:auto}.ssh-journey-grid{padding:0;list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px}
-        .ssh-journey-step{position:relative;display:flex;gap:13px;align-items:flex-start;padding:18px 12px;border-radius:18px;background:rgba(255,255,255,.68);border:1px solid #e2e9e0;min-width:0}
-        .ssh-journey-icon{flex:0 0 43px;height:43px;display:grid;place-items:center;border-radius:50%;background:#dcefe4;color:#276e5b;font-size:21px}.journey-2{background:#f9e5d5;color:#9a542e}.journey-3{background:#e4e9fa;color:#4059a0}.journey-4{background:#f5e9d2;color:#896334}.journey-5{background:#e7e0f6;color:#6e5599}
-        .ssh-journey-step h3{margin:3px 0 7px;font-family:Georgia,serif;font-size:20px;font-weight:500;color:#173e39}.ssh-journey-step p{margin:0;color:#65736c;font-size:12px;line-height:1.6}.ssh-journey-arrow{position:absolute;right:-17px;top:30px;z-index:2;color:#8ba79a;font-size:18px}
-        .ssh-journey-note{display:flex;gap:13px;align-items:flex-start;margin-top:18px;padding:16px 19px;border-radius:16px;background:#e8f0e6;color:#416054}.ssh-journey-note span{font-size:20px}.ssh-journey-note p{margin:0;font-size:13px;line-height:1.65}
-        .ssh-about-strip{padding:44px max(5.5vw,calc((100vw - 1280px)/2));background:#164b44;color:#fff;display:flex;gap:25px;align-items:center}.ssh-about-strip .ssh-about-mark{flex:0 0 64px;height:64px;border-radius:20px;display:grid;place-items:center;background:rgba(255,255,255,.11);font-family:Georgia,serif;font-size:25px}.ssh-about-strip>div:nth-child(2){flex:1}.ssh-about-strip .ssh-eyebrow{color:#c3e4d2}.ssh-about-strip h2{max-width:740px;font-size:clamp(26px,3vw,38px);line-height:1.12;margin:0 0 10px}.ssh-about-strip p:not(.ssh-eyebrow){max-width:780px;margin:0;color:#e0eee7;font-size:13px;line-height:1.7}.ssh-button-light{background:#fff;color:#174b45;white-space:nowrap}
-        @media(max-width:1050px){.ssh-hero-inner{grid-template-columns:1fr 0.9fr;gap:28px}.ssh-hero-art{min-height:360px}.ssh-journey-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ssh-journey-arrow{display:none}.ssh-about-strip{flex-wrap:wrap}.ssh-about-strip>div:nth-child(2){min-width:calc(100% - 100px)}}
-        @media(max-width:760px){.ssh-hero{padding:54px 20px 48px}.ssh-hero-inner{grid-template-columns:1fr;gap:32px}.ssh-hero h1{font-size:clamp(42px,11vw,62px)}.ssh-hero-lead{font-size:16px}.ssh-hero-art{min-height:300px;max-width:570px;width:100%;margin:0 auto}.ssh-programmes,.ssh-journey{padding:52px 20px}.ssh-section-heading{align-items:flex-start;flex-direction:column;gap:12px}.ssh-programme-grid{grid-template-columns:1fr}.ssh-programme-card{min-height:0}.ssh-journey-grid{grid-template-columns:1fr}.ssh-journey-step{min-height:94px}.ssh-about-strip{padding:38px 20px;align-items:flex-start}.ssh-about-strip>div:nth-child(2){min-width:0;width:calc(100% - 90px)}.ssh-about-strip .ssh-button-light{width:100%}}
+        .ssh-hero{padding:28px clamp(22px,4.2vw,64px) 30px;background:linear-gradient(110deg,#fffdf8 0%,#f3f5ed 100%)}
+        .ssh-hero-inner{max-width:1450px;margin:0 auto;display:grid;grid-template-columns:minmax(330px,.83fr) minmax(420px,1.17fr);gap:clamp(20px,3vw,45px);align-items:center;min-height:400px}
+        .ssh-eyebrow{margin:0 0 16px;color:#386a64;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+        .ssh-hero h1,.ssh-section-heading h2{font-family:Georgia,'Times New Roman',serif;font-weight:500;letter-spacing:-.045em}
+        .ssh-hero h1{max-width:670px;margin:0 0 16px;font-size:clamp(38px,4.2vw,62px);line-height:.99}
+        .ssh-hero h1 em{color:#247264;font-weight:500}
+        .ssh-hero-lead{max-width:570px;margin:0;color:var(--ssh-body);font-size:14px;line-height:1.55}
+        .ssh-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:19px}
+        .ssh-button{min-height:42px;padding:11px 20px;border-radius:999px;display:inline-flex;gap:16px;align-items:center;justify-content:center;text-decoration:none;font-size:12px;font-weight:750;border:1px solid transparent}
+        .ssh-button-primary{background:#064e4b;color:#fff;box-shadow:0 4px 11px rgba(6,78,75,.13)}.ssh-button-primary:hover{background:#043e3c}
+        .ssh-principles{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px;color:#526b67;font-size:10px}.ssh-principles span{display:flex;align-items:center;gap:6px;white-space:nowrap}.ssh-principles b{font-size:17px;font-weight:400;color:#246b65}
+        .ssh-hero-art{position:relative;isolation:isolate;min-height:385px;border-radius:48% 42% 42% 46%/43% 40% 54% 52%;overflow:hidden;background:#e9ece0}
+        .ssh-landscape{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:-2}
+        .ssh-hero-wash{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(240,245,232,.92) 0%,rgba(239,242,225,.42) 38%,rgba(255,238,202,.12) 100%)}
+        .ssh-hero-person-frame{position:absolute;left:14%;bottom:0;width:43%;height:88%;border-radius:48% 50% 8% 42%/42% 42% 9% 24%;overflow:hidden;border:7px solid rgba(255,255,255,.3);box-shadow:0 24px 50px rgba(28,62,52,.13);mask-image:linear-gradient(to bottom,#000 0%,#000 76%,transparent 100%)}
+        .ssh-hero-person-frame img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+        .ssh-art-note{position:absolute;z-index:2;font-family:Georgia,serif;font-size:clamp(13px,1.5vw,19px);font-style:italic;color:#7f6647;white-space:nowrap}
+        .ssh-art-note.note-a{left:20%;top:11%;transform:rotate(-12deg)}.ssh-art-note.note-b{right:12%;top:17%;transform:rotate(-7deg)}.ssh-art-note.note-c{right:27%;bottom:22%;transform:rotate(-6deg)}
+        .ssh-art-quote{position:absolute;right:2%;top:42%;padding:12px 13px;color:#234c4b;background:rgba(255,253,246,.78);border-radius:56% 44% 47% 53%;font-family:Georgia,serif;font-style:italic;font-size:clamp(11px,1.2vw,15px);line-height:1.5;transform:rotate(4deg);text-align:left}
+        .ssh-leaf{position:absolute;width:72px;height:124px;border-radius:100% 0 100% 0;background:linear-gradient(135deg,rgba(101,151,124,.85),rgba(39,95,78,.25));border:1px solid rgba(255,255,255,.32);z-index:3;pointer-events:none}.ssh-leaf:after{content:'';position:absolute;top:10%;bottom:9%;left:51%;border-left:1px solid rgba(255,255,255,.72);transform:rotate(13deg)}
+        .ssh-leaf.leaf-one{left:2%;top:23%;transform:rotate(-37deg)}.ssh-leaf.leaf-two{right:3%;bottom:8%;transform:rotate(30deg);width:59px;height:103px}
+        .ssh-programmes{padding:21px clamp(22px,4.2vw,64px) 24px;max-width:1500px;margin:0 auto}
+        .ssh-section-heading{display:flex;align-items:center;gap:15px;margin-bottom:14px}.ssh-section-heading h2{font-size:clamp(26px,2.65vw,36px);line-height:1.1;margin:0}
+        .ssh-heading-pill{font-size:9px;letter-spacing:.035em;text-transform:uppercase;color:#466e68;background:#edf2e9;padding:7px 12px;border-radius:999px;white-space:nowrap}
+        .ssh-outline-button{margin-left:auto;border:1px solid #60918b;background:transparent;color:#164c4b;border-radius:999px;padding:8px 14px;font-size:10px;font-weight:700;white-space:nowrap}.ssh-outline-button:hover{background:#edf4ee}
+        .ssh-programme-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+        .ssh-programme-card{position:relative;isolation:isolate;overflow:hidden;min-height:350px;padding:18px 16px 14px;border:1px solid #ecdfd0;border-radius:13px;background:#fff;display:flex}
+        .ssh-programme-card.spark{background:linear-gradient(145deg,#fff7ef,#fceade);border-color:#f2dfd0}.ssh-programme-card.balance{background:linear-gradient(145deg,#f1f8f3,#e6f0e8);border-color:#dce8dc}.ssh-programme-card.compass{background:linear-gradient(145deg,#f1f5ff,#e6effe);border-color:#dce6f9}
+        .ssh-card-copy{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;align-items:flex-start;padding-bottom:0}
+        .ssh-programme-orb{width:52px;height:52px;flex:0 0 52px;display:grid;place-items:center;border-radius:50%;font-size:26px;color:#a64c22;background:rgba(255,255,255,.68);border:1px solid rgba(255,255,255,.92);margin-bottom:12px;box-shadow:0 2px 12px rgba(67,86,68,.05)}
+        .balance .ssh-programme-orb{color:#216e5a}.compass .ssh-programme-orb{color:#335db4}
+        .ssh-programme-heading{position:absolute;left:66px;top:4px;right:0}.ssh-programme-card h3{font-family:Georgia,'Times New Roman',serif;font-size:clamp(21px,2vw,28px);letter-spacing:-.025em;font-weight:500;margin:0 0 4px;color:#913e1a}
+        .balance .ssh-programme-card h3,.ssh-programme-card.balance h3{color:#124b46}.ssh-programme-card.compass h3{color:#234a9c}
+        .ssh-programme-label{margin:0;font-family:Georgia,serif;font-size:14px;color:#9d4f2c}.ssh-programme-card.balance .ssh-programme-label{color:#255f54}.ssh-programme-card.compass .ssh-programme-label{color:#3155a4}
+        .ssh-programme-description{position:relative;z-index:2;margin:0 0 10px;max-width:250px;color:#4e5e61;font-size:12px;line-height:1.42}
+        .ssh-programme-card ul{position:relative;z-index:3;list-style:none;padding:0;margin:0 0 11px;display:grid;gap:7px}
+        .ssh-programme-card li{display:flex;gap:7px;align-items:center;font-size:10px;color:#50605e;line-height:1.3}.ssh-programme-card li span{display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:rgba(255,255,255,.75);color:#a64c22;font-size:12px;flex:0 0 19px}
+        .ssh-programme-card.balance li span{color:#26715c}.ssh-programme-card.compass li span{color:#315bbb}
+        .ssh-programme-link{position:relative;z-index:4;margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:10px;border:0;background:#9d431d;color:#fff;border-radius:999px;padding:10px 17px;min-width:168px;font-size:10px;font-weight:800}.ssh-programme-link:hover{filter:brightness(.94)}
+        .ssh-programme-card.balance .ssh-programme-link{background:#075148}.ssh-programme-card.compass .ssh-programme-link{background:#254c8e}
+        .ssh-programme-visual{position:absolute;z-index:1;right:0;bottom:0;width:58%;height:58%;overflow:hidden;border-radius:50% 0 0 0;opacity:.96;mask-image:linear-gradient(to bottom,transparent 0%,#000 28%,#000 100%)}
+        .ssh-programme-visual img{height:100%;width:100%;object-fit:cover;object-position:center;display:block;mix-blend-mode:multiply}
+        .ssh-programme-card.spark .ssh-programme-visual{width:65%;height:56%;right:-2%;bottom:0;mask-image:linear-gradient(120deg,transparent 0%,#000 24%,#000 100%)}
+        .ssh-programme-card.balance .ssh-programme-visual{width:64%;height:57%;right:-2%;bottom:-3%;mask-image:linear-gradient(115deg,transparent 0%,#000 28%,#000 100%)}
+        .ssh-programme-card.compass .ssh-programme-visual{width:65%;height:58%;right:-1%;bottom:0;mask-image:linear-gradient(115deg,transparent 0%,#000 24%,#000 100%)}
+        .ssh-journey{padding:20px clamp(22px,4.2vw,64px) 22px;border-top:1px solid #edece4;border-bottom:1px solid #edece4;background:linear-gradient(90deg,#fbfaf5,#f7f8f0,#fbfaf5)}
+        .ssh-journey .ssh-section-heading,.ssh-journey-grid{max-width:1370px;margin-left:auto;margin-right:auto}
+        .ssh-journey-grid{padding:0;list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:15px}
+        .ssh-journey-step{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0;padding:6px 8px;border-radius:14px}
+        .ssh-journey-icon{display:grid;place-items:center;width:55px;height:55px;border-radius:50%;background:#dcefe4;color:#23705b;font-size:28px;margin-bottom:6px;box-shadow:0 1px 10px rgba(36,76,57,.05)}
+        .journey-2{background:#ffeadc;color:#ac4f23}.journey-3{background:#e9e8fc;color:#3152ad}.journey-4{background:#e0eafa;color:#2959b5}.journey-5{background:#ffefd9;color:#ad5b17}
+        .ssh-journey-step h3{margin:0 0 5px;font-family:Georgia,serif;font-size:17px;font-weight:500;color:#173e39}.ssh-journey-step p{max-width:180px;margin:0;color:#566663;font-size:10px;line-height:1.45}.ssh-journey-arrow{position:absolute;right:-18px;top:22px;z-index:2;color:#647f7c;font-size:21px}
+        @media(max-width:1000px){.ssh-hero-inner{grid-template-columns:minmax(290px,.9fr) minmax(340px,1fr);gap:18px}.ssh-hero-art{min-height:345px}.ssh-principles{gap:10px}.ssh-programme-card{padding:14px 12px 12px;min-height:370px}.ssh-programme-heading{left:62px}.ssh-programme-card h3{font-size:22px}.ssh-programme-label{font-size:12px}.ssh-programme-description{max-width:210px}.ssh-programme-link{min-width:145px}.ssh-programme-card ul{gap:6px}}
+        @media(max-width:720px){.ssh-hero{padding:28px 18px 24px}.ssh-hero-inner{grid-template-columns:1fr;gap:24px}.ssh-hero h1{font-size:clamp(40px,11vw,56px)}.ssh-hero-lead{font-size:13px}.ssh-hero-art{min-height:300px;max-width:590px;width:100%;margin:0 auto}.ssh-hero-person-frame{left:16%;width:45%;height:87%}.ssh-art-quote{right:2%;top:40%;font-size:11px}.ssh-programmes,.ssh-journey{padding:22px 18px}.ssh-section-heading{align-items:flex-start;flex-wrap:wrap;gap:9px}.ssh-section-heading h2{font-size:29px}.ssh-heading-pill{margin-top:6px}.ssh-outline-button{margin-left:0}.ssh-programme-grid{grid-template-columns:1fr;gap:12px}.ssh-programme-card{min-height:300px;padding:18px 16px 14px}.ssh-programme-heading{left:67px}.ssh-programme-card h3{font-size:25px}.ssh-programme-label{font-size:14px}.ssh-programme-description{max-width:300px;font-size:12px}.ssh-programme-card ul{gap:7px}.ssh-programme-card li{font-size:10px}.ssh-programme-visual{width:52%;height:58%}.ssh-journey-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.ssh-journey-step{padding:12px 5px}.ssh-journey-arrow{display:none}}
+        @media(max-width:440px){.ssh-principles{gap:9px}.ssh-principles span{font-size:9px}.ssh-hero-art{min-height:250px}.ssh-programme-card{min-height:330px}.ssh-programme-visual{width:68%;height:49%}.ssh-programme-card ul{max-width:65%}.ssh-programme-link{min-width:150px}.ssh-journey-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
         @media(prefers-reduced-motion:reduce){.ss-public-home *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
-      `}</style>
+      \`}</style>
     </div>
   );
 }
