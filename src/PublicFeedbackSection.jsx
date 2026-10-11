@@ -83,7 +83,7 @@ export default function PublicFeedbackSection() {
               <div><p className="spf-eyebrow">Your feedback matters</p><h2 id="spf-modal-title">Share feedback</h2><p>Tell us what worked well or what we could improve.</p></div>
               <button className="spf-close" type="button" aria-label="Close feedback form" onClick={() => setShowForm(false)}>×</button>
             </div>
-            {notice.text && <p className={\`spf-notice \${notice.type}\`} role={notice.type === 'error' ? 'alert' : 'status'}>{notice.text}</p>}
+            {notice.text && <p className={`spf-notice ${notice.type}`} role={notice.type === 'error' ? 'alert' : 'status'}>{notice.text}</p>}
             {notice.type !== 'success' && (
               <form className="spf-form" onSubmit={submit}>
                 <label>What would you like to share?
@@ -117,7 +117,7 @@ export default function PublicFeedbackSection() {
         </div>
       )}
 
-      <style>{\`
+      <style>{`
         .ss-public-feedback{position:relative;background:linear-gradient(100deg,#edf4ec 0%,#f9faf3 54%,#edf4ec 100%);padding:24px clamp(22px,4.2vw,64px);overflow:hidden;color:#153f3b}
         .ss-public-feedback:before,.ss-public-feedback:after{content:'❧';position:absolute;color:rgba(81,137,105,.2);font-size:94px;line-height:1;pointer-events:none}.ss-public-feedback:before{left:-12px;bottom:-25px;transform:rotate(-45deg)}.ss-public-feedback:after{right:-10px;bottom:-25px;transform:rotate(28deg)}
         .spf-inner{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:70px minmax(0,1fr) minmax(240px,.82fr);gap:20px;align-items:center;position:relative;z-index:1}
@@ -135,7 +135,7 @@ export default function PublicFeedbackSection() {
         .spf-two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}.spf-privacy-warning{margin:0;color:#77867d;font-size:10px;line-height:1.5}.spf-consent{display:grid!important;grid-template-columns:16px 1fr;gap:9px!important;align-items:start;font-size:10px!important;line-height:1.5;font-weight:500!important}.spf-consent input{margin-top:2px;accent-color:#0e6255}.spf-honeypot{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}.spf-form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:3px}.spf-cancel,.spf-submit{border-radius:999px;padding:10px 15px;font-size:11px;font-weight:800;cursor:pointer}.spf-cancel{border:1px solid #d2dfd4;background:white;color:#275047}.spf-submit{border:1px solid #064e4b;background:#064e4b;color:white}.spf-submit:disabled{opacity:.6;cursor:wait}.spf-notice{padding:11px 13px;border-radius:9px;font-size:11px;line-height:1.5}.spf-notice.success{background:#e9f6e9;color:#27623e}.spf-notice.error{background:#fff0ed;color:#943d32}
         @media(max-width:760px){.ss-public-feedback{padding:24px 18px}.spf-inner{grid-template-columns:54px minmax(0,1fr);gap:12px}.spf-symbol{width:48px;height:48px;font-size:26px}.spf-copy h2{font-size:27px}.spf-privacy{grid-column:1 / -1;border-left:0;border-top:1px solid #cddbd0;padding:15px 0 0;min-height:0}.spf-public-items{grid-template-columns:1fr}.spf-two-col{grid-template-columns:1fr}.spf-modal{padding:20px}.spf-modal-head h2{font-size:27px}}
         @media(prefers-reduced-motion:reduce){.ss-public-feedback *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
-      \`}</style>
+      `}</style>
     </>
   );
 }
