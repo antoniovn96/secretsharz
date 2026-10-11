@@ -6,6 +6,7 @@ export default function PublicFeedbackSection() {
   const [form, setForm] = useState(EMPTY);
   const [published, setPublished] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
+  const [reviewsUnavailable, setReviewsUnavailable] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState({ type: '', text: '' });
 
@@ -14,7 +15,7 @@ export default function PublicFeedbackSection() {
     fetch('/api/website-feedback?view=published', { cache: 'no-store' })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error('Feedback is temporarily unavailable.')))
       .then((data) => { if (active) setPublished(Array.isArray(data.items) ? data.items : []); })
-      .catch(() => { if (active) setPublished([]); })
+      .catch(() => { if (active) { setPublished([]); setReviewsUnavailable(true); } })
       .finally(() => { if (active) setLoadingReviews(false); });
     return () => { active = false; };
   }, []);
@@ -54,6 +55,8 @@ export default function PublicFeedbackSection() {
               <h3>Shared with permission</h3>
               {published.map((item) => <blockquote key={item.id}><p>“{item.message}”</p><footer>— {item.displayName || 'Anonymous'}</footer></blockquote>)}
             </div>
+          ) : reviewsUnavailable ? (
+            <div className="spf-empty"><span aria-hidden="true">♡</span><div><strong>Feedback is temporarily unavailable.</strong><p>Please check back later or send your feedback using the form.</p></div></div>
           ) : (
             <div className="spf-empty">
               <span aria-hidden="true">♡</span>
