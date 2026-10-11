@@ -249,10 +249,10 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
                 const isActive = pathReady && currentPath === item.path;
                 return (
                   <button
-                    key={item.path}
+                    key={item.label}
                     ref={index === 0 ? firstMenuItemRef : undefined}
                     className={`ss-mobile-link ${isActive ? 'is-active' : ''}`}
-                    onClick={() => go(item.path)}
+                    onClick={() => item.section ? goSection(item.section) : go(item.path)}
                     aria-current={isActive ? 'page' : undefined}
                   >
                     {item.label}
