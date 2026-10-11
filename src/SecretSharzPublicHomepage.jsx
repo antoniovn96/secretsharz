@@ -109,7 +109,7 @@ export default function SecretSharzPublicHomepage({ navigate }) {
           </div>
           <div className="ssh-programme-grid">
             {programmes.map((program) => (
-              <article className={\`ssh-programme-card \${program.tone}\`} key={program.id}>
+              <article className={`ssh-programme-card ${program.tone}`} key={program.id}>
                 <div className="ssh-card-copy">
                   <div className="ssh-programme-orb" aria-hidden="true">{program.icon}</div>
                   <div className="ssh-programme-heading">
@@ -139,7 +139,7 @@ export default function SecretSharzPublicHomepage({ navigate }) {
           <ol className="ssh-journey-grid">
             {journey.map(([title, text, icon], index) => (
               <li className="ssh-journey-step" key={title}>
-                <span className={\`ssh-journey-icon journey-\${index + 1}\`} aria-hidden="true">{icon}</span>
+                <span className={`ssh-journey-icon journey-${index + 1}`} aria-hidden="true">{icon}</span>
                 <h3>{title}</h3><p>{text}</p>
                 {index < journey.length - 1 && <span className="ssh-journey-arrow" aria-hidden="true">→</span>}
               </li>
@@ -148,7 +148,7 @@ export default function SecretSharzPublicHomepage({ navigate }) {
         </section>
       </main>
 
-      <style>{\`
+      <style>{`
         .ss-public-home{--ssh-ink:#113c3d;--ssh-body:#4e5c62;--ssh-muted:#63736f;--ssh-teal:#064e4b;--ssh-cream:#fcfbf6;--ssh-line:#e7e9df;background:var(--ssh-cream);color:var(--ssh-ink);overflow:hidden;font-family:Arial,Helvetica,sans-serif}
         .ss-public-home *{box-sizing:border-box}.ss-public-home button,.ss-public-home a{font:inherit}.ss-public-home button{cursor:pointer}
         .ss-public-home button:focus-visible,.ss-public-home a:focus-visible{outline:3px solid #225d53;outline-offset:4px}
@@ -208,7 +208,7 @@ export default function SecretSharzPublicHomepage({ navigate }) {
         @media(max-width:720px){.ssh-hero{padding:28px 18px 24px}.ssh-hero-inner{grid-template-columns:1fr;gap:24px}.ssh-hero h1{font-size:clamp(40px,11vw,56px)}.ssh-hero-lead{font-size:13px}.ssh-hero-art{min-height:300px;max-width:590px;width:100%;margin:0 auto}.ssh-hero-person-frame{left:16%;width:45%;height:87%}.ssh-art-quote{right:2%;top:40%;font-size:11px}.ssh-programmes,.ssh-journey{padding:22px 18px}.ssh-section-heading{align-items:flex-start;flex-wrap:wrap;gap:9px}.ssh-section-heading h2{font-size:29px}.ssh-heading-pill{margin-top:6px}.ssh-outline-button{margin-left:0}.ssh-programme-grid{grid-template-columns:1fr;gap:12px}.ssh-programme-card{min-height:300px;padding:18px 16px 14px}.ssh-programme-heading{left:67px}.ssh-programme-card h3{font-size:25px}.ssh-programme-label{font-size:14px}.ssh-programme-description{max-width:300px;font-size:12px}.ssh-programme-card ul{gap:7px}.ssh-programme-card li{font-size:10px}.ssh-programme-visual{width:52%;height:58%}.ssh-journey-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.ssh-journey-step{padding:12px 5px}.ssh-journey-arrow{display:none}}
         @media(max-width:440px){.ssh-principles{gap:9px}.ssh-principles span{font-size:9px}.ssh-hero-art{min-height:250px}.ssh-programme-card{min-height:330px}.ssh-programme-visual{width:68%;height:49%}.ssh-programme-card ul{max-width:65%}.ssh-programme-link{min-width:150px}.ssh-journey-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
         @media(prefers-reduced-motion:reduce){.ss-public-home *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
-      \`}</style>
+      `}</style>
     </div>
   );
 }
