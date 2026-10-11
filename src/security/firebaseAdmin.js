@@ -74,20 +74,25 @@ export function getAdminApp() {
     return _app;
   }
 
-  // Production mode: real credentials required.
+  // Production mode: real credentials required. Resolve the project ID
+  // from the explicit runtime setting first, then from the service-account
+  // JSON. ECS injects FIREBASE_SERVICE_ACCOUNT from Secrets Manager; deriving
+  // the project here avoids depending on a NEXT_PUBLIC_* build-time setting
+  // being present in the running container.
   const credentialConfig = readServiceAccountConfig();
-  _app = initializeApp(
-    credentialConfig
-      ? {
-          credential: cert(credentialConfig),
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
-        }
-      : {
-          // Application Default Credentials path (GOOGLE_APPLICATION_CREDENTIALS
-          // or ambient ADC on Vercel/Cloud Run).
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
-        }
-  );
+  const projectId =
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+    credentialConfig?.project_id ||
+    credentialConfig?.projectId;
+
+  const options = {};
+  if (credentialConfig) options.credential = cert(credentialConfig);
+  if (projectId) options.projectId = projectId;
+
+  // If neither an explicit ID nor ADC/service-account credentials can resolve
+  // the Firebase project, the Admin SDK will fail closed instead of silently
+  // targeting a different project.
+  _app = initializeApp(options);
   return _app;
 }
 
