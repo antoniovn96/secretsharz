@@ -6,6 +6,20 @@ The October 1–11 cost export showed an estimated bill of **US$77.26** and **US
 
 The monthly target is **US$100 maximum, including variable usage and tax**. This is a target, not a guaranteed ceiling.
 
+
+## Deploy the approved homepage to AWS non-production
+
+This deploy path is prepared in the non-production Terraform plan/apply workflows. It is not executed by this PR.
+
+1. Review the separate homepage preview and merge its draft PR to `rebuild/platform-foundation-v1` only after approving it. Do not merge into `main`.
+2. From GitHub Actions, run **Secret Sharz Container Publish** against `rebuild/platform-foundation-v1`, selecting environment `nonprod`. It builds and pushes an immutable SHA-tagged image to ECR; it does **not** update ECS.
+3. Copy the immutable ECR URI from that workflow's summary.
+4. Run **Secret Sharz Nonprod Terraform Plan** with that exact `ecs_image_uri`. The workflow verifies the ECR account, repository and SHA tag before planning. Review the plan and do not proceed if it shows database replacement or unexpected deletion.
+5. Only after reviewing the plan, run **Secret Sharz Nonprod Terraform Apply** with the same image URI and enter `APPLY_NONPROD`. This is the explicit apply gate. Stage 1 leaves NAT enabled.
+6. Check ECS service/ALB target health, `/healthz`, login, and database connectivity before planning Stage 2.
+
+Both Terraform workflows default to the current known image only for backwards-compatible planning; explicitly provide the newly published URI to deploy the homepage commit. Never select the `production` environment for this rollout.
+
 ## Stage 1 — Move non-production ECS outbound traffic off NAT (this change)
 
 - Keep the NAT Gateway enabled while validating.
