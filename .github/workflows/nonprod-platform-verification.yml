@@ -62,7 +62,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          PRIVATE_SUBNETS="$(aws ec2 describe-subnets             --filters "Name=tag:Name,Values=secretsharz-nonprod-private-*"             --region "$AWS_REGION"             --query 'Subnets[*].SubnetId'             --output text | tr '\t' ',' | sed 's/^/[/; s/$/]/')"
+          PUBLIC_SUBNETS="$(aws ec2 describe-subnets             --filters "Name=tag:Name,Values=secretsharz-nonprod-public-*"             --region "$AWS_REGION"             --query 'Subnets[*].SubnetId'             --output text | tr '\t' ',' | sed 's/^/[/; s/$/]/')"
 
           VPC_ID="$(aws ec2 describe-vpcs             --filters "Name=tag:Name,Values=secretsharz-nonprod"             --region "$AWS_REGION"             --query 'Vpcs[0].VpcId'             --output text)"
 
@@ -138,7 +138,7 @@ jobs:
 
           OVERRIDES="$(jq -n             --arg name "secretsharz-nonprod-assessment-migrations"             --arg script "$DIAG_SCRIPT"             '{containerOverrides:[{name:$name,command:["node","-e",$script]}]}')"
 
-          TASK_ARN="$(aws ecs run-task             --cluster secretsharz-nonprod-assessment-migrations             --task-definition secretsharz-nonprod-assessment-migrations             --launch-type FARGATE             --overrides "$OVERRIDES"             --network-configuration "awsvpcConfiguration={subnets=$PRIVATE_SUBNETS,securityGroups=[$APPLICATION_SG],assignPublicIp=DISABLED}"             --region "$AWS_REGION"             --query 'tasks[0].taskArn'             --output text)"
+          TASK_ARN="$(aws ecs run-task             --cluster secretsharz-nonprod-assessment-migrations             --task-definition secretsharz-nonprod-assessment-migrations             --launch-type FARGATE             --overrides "$OVERRIDES"             --network-configuration "awsvpcConfiguration={subnets=$PUBLIC_SUBNETS,securityGroups=[$APPLICATION_SG],assignPublicIp=ENABLED}"             --region "$AWS_REGION"             --query 'tasks[0].taskArn'             --output text)"
 
           test -n "$TASK_ARN"
           echo "Schema verification task: $TASK_ARN"
