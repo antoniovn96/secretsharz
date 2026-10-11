@@ -64,6 +64,7 @@ function feedbackPayload(doc) {
     email: data.email || '',
     allowPublication: data.allowPublication === true,
     status: data.status || 'pending',
+    publicMessage: data.publicMessage || '',
     createdAt,
   };
 }
@@ -146,11 +147,13 @@ export default async function handler(req, res) {
       const body = req.body && typeof req.body === 'object' ? req.body : {};
       const id = clean(body.id, 128);
       const action = clean(body.action, 20);
+      const publicMessage = clean(body.publicMessage, MAX_MESSAGE_LENGTH);
       if (!id || !['publish', 'reject'].includes(action)) return jsonError(res, 400, 'A feedback ID and valid moderation action are required.');
+      if (action === 'publish' && (publicMessage.length < 10 || publicMessage.length > MAX_MESSAGE_LENGTH)) {
+        return jsonError(res, 400, 'Provide an edited public version between 10 and 1,500 characters.');
+      }
       const db = getAdminFirestore();
       const ref = db.collection('websiteFeedbackInbox').doc(id);
-      const snapshot = await ref.get();
-      if (!snapshot.exists) return jsonError(res, 404, 'Feedback submission was not found.');
       const isFounder = moderator.email_verified === true && moderator.email === FOUNDER_EMAIL;
       await db.runTransaction(async (transaction) => {
         const latest = await transaction.get(ref);
@@ -162,8 +165,8 @@ export default async function handler(req, res) {
         const publicRef = db.collection('websitePublicFeedback').doc(ref.id);
         if (action === 'publish') {
           transaction.set(publicRef, {
-            message: data.message || '',
-            displayName: data.displayName || 'Anonymous',
+            message: publicMessage,
+            displayName: 'Anonymous',
             createdAt: data.createdAt || FieldValue.serverTimestamp(),
             sourceSubmissionId: ref.id,
           });
@@ -172,6 +175,7 @@ export default async function handler(req, res) {
         }
         transaction.update(ref, {
           status: action === 'publish' ? 'published' : 'rejected',
+          ...(action === 'publish' ? { publicMessage } : {}),
           moderatedAt: FieldValue.serverTimestamp(),
           moderatedBy: moderator.uid,
           moderatorType: isFounder ? 'founder' : 'super_admin',
