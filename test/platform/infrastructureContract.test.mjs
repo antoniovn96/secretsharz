@@ -46,3 +46,33 @@ test('migration runner has database environment-variable inputs', () => {
   assert.match(main, /var\.environment_variables/);
   assert.match(main, /DATABASE_SSL/);
 });
+
+
+test('nonprod Fargate tasks can use public egress while PostgreSQL remains private', () => {
+  const nonprod = read('infra/terraform/environments/nonprod/main.tf');
+  const runtime = read('infra/terraform/modules/application-runtime/main.tf');
+  const variables = read('infra/terraform/modules/application-runtime/variables.tf');
+
+  assert.match(nonprod, /subnet_ids\s*=\s*module\.network\.private_subnet_ids/);
+  assert.match(nonprod, /task_subnet_ids\s*=\s*module\.network\.public_subnet_ids/);
+  assert.match(nonprod, /task_assign_public_ip\s*=\s*true/);
+  assert.match(runtime, /subnets\s*=\s*length\(var\.task_subnet_ids\)\s*>\s*0\s*\?\s*var\.task_subnet_ids\s*:\s*var\.private_subnet_ids/);
+  assert.match(runtime, /assign_public_ip\s*=\s*var\.task_assign_public_ip/);
+  assert.match(variables, /variable "task_assign_public_ip"[\s\S]*?default\s*=\s*false/);
+});
+
+test('nonprod one-off ECS maintenance tasks use public egress without opening app ports to the internet', () => {
+  const workflows = [
+    '.github/workflows/nonprod-platform-verification.yml',
+    '.github/workflows/nonprod-db-connectivity-diagnostic.yml',
+    '.github/workflows/nonprod-db-migration-apply-bootstrap.yml',
+    '.github/workflows/nonprod-db-migrate.yml',
+    '.github/workflows/nonprod-schema-verify-bootstrap.yml',
+  ];
+
+  for (const path of workflows) {
+    const source = read(path);
+    assert.match(source, /assignPublicIp=ENABLED/, `${path} should give a public-subnet maintenance task outbound access`);
+    assert.doesNotMatch(source, /assignPublicIp=DISABLED/, `${path} should not rely on NAT for its task`);
+  }
+});

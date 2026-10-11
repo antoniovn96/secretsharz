@@ -99,6 +99,8 @@ module "application_runtime" {
   vpc_id                        = module.network.vpc_id
   public_subnet_ids             = module.network.public_subnet_ids
   private_subnet_ids            = module.network.private_subnet_ids
+  task_subnet_ids               = module.network.public_subnet_ids
+  task_assign_public_ip         = true
   application_security_group_id = module.network.application_security_group_id
   image_uri                     = var.ecs_image_uri
 

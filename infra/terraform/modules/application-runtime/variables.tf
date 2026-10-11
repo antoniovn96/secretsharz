@@ -19,6 +19,18 @@ variable "private_subnet_ids" {
   type = list(string)
 }
 
+variable "task_subnet_ids" {
+  description = "Optional explicit subnet list for Fargate tasks; defaults to private_subnet_ids."
+  type        = list(string)
+  default     = []
+}
+
+variable "task_assign_public_ip" {
+  description = "Whether Fargate task ENIs receive public IPs. Disabled by default to preserve private production placement."
+  type        = bool
+  default     = false
+}
+
 variable "application_security_group_id" {
   type = string
 }

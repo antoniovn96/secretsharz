@@ -252,9 +252,9 @@ resource "aws_ecs_service" "this" {
   }
 
   network_configuration {
-    subnets          = var.private_subnet_ids
+    subnets          = length(var.task_subnet_ids) > 0 ? var.task_subnet_ids : var.private_subnet_ids
     security_groups  = [var.application_security_group_id]
-    assign_public_ip = false
+    assign_public_ip = var.task_assign_public_ip
   }
 
   load_balancer {

@@ -68,12 +68,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          PRIVATE_SUBNETS="$(terraform output -json private_subnet_ids | jq -r '.[]' | paste -sd, -)"
+          PUBLIC_SUBNETS="$(terraform output -json public_subnet_ids | jq -r '.[]' | paste -sd, -)"
           APPLICATION_SG="$(terraform output -raw application_security_group_id)"
           CLUSTER="$(terraform output -raw assessment_migration_runner_cluster_name)"
           TASK_DEFINITION="$(terraform output -raw assessment_migration_runner_task_definition_arn)"
 
-          TASK_ARN="$(aws ecs run-task             --cluster "$CLUSTER"             --task-definition "$TASK_DEFINITION"             --launch-type FARGATE             --network-configuration "awsvpcConfiguration={subnets=[$PRIVATE_SUBNETS],securityGroups=[$APPLICATION_SG],assignPublicIp=DISABLED}"             --region "$AWS_REGION"             --query 'tasks[0].taskArn'             --output text)"
+          TASK_ARN="$(aws ecs run-task             --cluster "$CLUSTER"             --task-definition "$TASK_DEFINITION"             --launch-type FARGATE             --network-configuration "awsvpcConfiguration={subnets=[$PUBLIC_SUBNETS],securityGroups=[$APPLICATION_SG],assignPublicIp=ENABLED}"             --region "$AWS_REGION"             --query 'tasks[0].taskArn'             --output text)"
 
           test -n "$TASK_ARN"
           echo "Migration task: $TASK_ARN"

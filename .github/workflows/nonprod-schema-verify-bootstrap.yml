@@ -61,7 +61,7 @@ jobs:
         working-directory: infra/terraform/environments/nonprod
         run: |
           set -euo pipefail
-          echo "private_subnets=$(terraform output -json private_subnet_ids | jq -r 'join(",")')" >> "$GITHUB_OUTPUT"
+          echo "public_subnets=$(terraform output -json public_subnet_ids | jq -r 'join(",")')" >> "$GITHUB_OUTPUT"
           echo "application_sg=$(terraform output -raw application_security_group_id)" >> "$GITHUB_OUTPUT"
           echo "cluster=$(terraform output -raw assessment_migration_runner_cluster_name)" >> "$GITHUB_OUTPUT"
           echo "task_definition=$(terraform output -raw assessment_migration_runner_task_definition_arn)" >> "$GITHUB_OUTPUT"
@@ -79,7 +79,7 @@ jobs:
             --cluster "${{ steps.tf.outputs.cluster }}" \
             --task-definition "${{ steps.tf.outputs.task_definition }}" \
             --launch-type FARGATE \
-            --network-configuration "awsvpcConfiguration={subnets=[${{ steps.tf.outputs.private_subnets }}],securityGroups=[${{ steps.tf.outputs.application_sg }}],assignPublicIp=DISABLED}" \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ steps.tf.outputs.public_subnets }}],securityGroups=[${{ steps.tf.outputs.application_sg }}],assignPublicIp=ENABLED}" \
             --overrides "$OVERRIDE_JSON" \
             --region "$AWS_REGION" \
             --query 'tasks[0].taskArn' \

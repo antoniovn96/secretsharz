@@ -1,7 +1,11 @@
-name: Secret Sharz Nonprod Terraform Plan
-
 on:
   workflow_dispatch:
+    inputs:
+      ecs_image_uri:
+        description: "Immutable SHA-tagged ECR image URI for secretsharz-nonprod in ap-southeast-2"
+        required: true
+        type: string
+        default: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod:c216bb1831ce3ea27fb4b57d4c42b6f089f28b4e"
 
 permissions:
   contents: read
@@ -23,9 +27,9 @@ jobs:
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
       TF_VAR_ecs_enabled: "true"
-      TF_VAR_ecs_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod:c216bb1831ce3ea27fb4b57d4c42b6f089f28b4e"
+      TF_VAR_ecs_image_uri: "${{ inputs.ecs_image_uri }}"
       TF_VAR_assessment_migration_runner_enabled: "true"
-      TF_VAR_assessment_migration_runner_image_uri: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod:c216bb1831ce3ea27fb4b57d4c42b6f089f28b4e"
+      TF_VAR_assessment_migration_runner_image_uri: "${{ inputs.ecs_image_uri }}"
 
     steps:
       - name: Checkout
@@ -36,6 +40,24 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+      - name: Validate immutable nonprod image URI
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "$TF_VAR_ecs_image_uri" =~ ^[0-9]{12}\.dkr\.ecr\.ap-southeast-2\.amazonaws\.com/secretsharz-nonprod:[0-9a-f]{40}$ ]]; then
+            echo "::error::Use an immutable 40-character SHA tag in the secretsharz-nonprod ECR repository in ap-southeast-2."
+            exit 1
+          fi
+          EXPECTED_REGISTRY="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.$AWS_REGION.amazonaws.com"
+          ACTUAL_REGISTRY="${TF_VAR_ecs_image_uri%%/*}"
+          if [ "$ACTUAL_REGISTRY" != "$EXPECTED_REGISTRY" ]; then
+            echo "::error::The ECR image account does not match the configured nonprod AWS account."
+            exit 1
+          fi
+          IMAGE_TAG="${TF_VAR_ecs_image_uri##*:}"
+          aws ecr describe-images --repository-name secretsharz-nonprod --image-ids imageTag="$IMAGE_TAG" --region "$AWS_REGION" >/dev/null
+          echo "- ECS image URI: `$TF_VAR_ecs_image_uri`" >> "$GITHUB_STEP_SUMMARY"
+
 
       - name: Verify remote state configuration
         run: |

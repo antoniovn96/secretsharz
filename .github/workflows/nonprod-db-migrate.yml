@@ -20,7 +20,6 @@ jobs:
       AWS_REGION: ap-southeast-2
       MIGRATION_CLUSTER_NAME: ${{ vars.MIGRATION_CLUSTER_NAME }}
       MIGRATION_TASK_DEFINITION: ${{ vars.MIGRATION_TASK_DEFINITION }}
-      MIGRATION_SUBNET_IDS: ${{ vars.MIGRATION_SUBNET_IDS }}
       MIGRATION_SECURITY_GROUP_ID: ${{ vars.MIGRATION_SECURITY_GROUP_ID }}
       MIGRATION_CONTAINER_NAME: ${{ vars.MIGRATION_CONTAINER_NAME }}
 
@@ -30,6 +29,18 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Resolve public subnets for migration task egress
+        shell: bash
+        run: |
+          set -euo pipefail
+          PUBLIC_SUBNETS="$(aws ec2 describe-subnets --filters "Name=tag:Name,Values=secretsharz-nonprod-public-*" --region "$AWS_REGION" --query 'Subnets[*].SubnetId' --output text)"
+          if [ -z "$PUBLIC_SUBNETS" ] || [ "$PUBLIC_SUBNETS" = "None" ]; then
+            echo "::error::No Secret Sharz nonprod public subnets were found."
+            exit 1
+          fi
+          SUBNET_LIST="$(printf '%s' "$PUBLIC_SUBNETS" | tr '\t' ',')"
+          echo "MIGRATION_SUBNET_IDS=[$SUBNET_LIST]" >> "$GITHUB_ENV"
 
       - name: Verify required migration runtime configuration
         run: |
@@ -53,7 +64,7 @@ jobs:
 
           OVERRIDES=$(printf '{"containerOverrides":[{"name":"%s","command":["sh","-lc","node scripts/run-postgres-migrations.mjs && node scripts/verify-assessment-schema.mjs"]}]}' "$MIGRATION_CONTAINER_NAME")
 
-          TASK_ARN=$(aws ecs run-task             --cluster "$MIGRATION_CLUSTER_NAME"             --task-definition "$MIGRATION_TASK_DEFINITION"             --launch-type FARGATE             --network-configuration "awsvpcConfiguration={subnets=$MIGRATION_SUBNET_IDS,securityGroups=$MIGRATION_SECURITY_GROUP_ID,assignPublicIp=DISABLED}"             --overrides "$OVERRIDES"             --query 'tasks[0].taskArn'             --output text             --region "$AWS_REGION")
+          TASK_ARN=$(aws ecs run-task             --cluster "$MIGRATION_CLUSTER_NAME"             --task-definition "$MIGRATION_TASK_DEFINITION"             --launch-type FARGATE             --network-configuration "awsvpcConfiguration={subnets=$MIGRATION_SUBNET_IDS,securityGroups=$MIGRATION_SECURITY_GROUP_ID,assignPublicIp=ENABLED}"             --overrides "$OVERRIDES"             --query 'tasks[0].taskArn'             --output text             --region "$AWS_REGION")
 
           if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" = "None" ]; then
             echo "::error::ECS did not return a migration task ARN."
