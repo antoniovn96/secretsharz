@@ -88,14 +88,24 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
     }
   };
 
+  const goSection = (id) => {
+    const wasHome = window.location.pathname === '/';
+    go('/');
+    window.setTimeout(() => {
+      if (!wasHome) window.location.hash = '';
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, wasHome ? 0 : 120);
+  };
+
   const navItems = [
     { label: 'Home', path: '/' },
-    { label: 'Sharz Spark', path: '/sharz-spark' },
-    { label: 'Sharz Balance', path: '/sharz-balance' },
-    { label: 'Sharz Compass', path: '/sharz-compass' },
-    { label: 'How it works', path: '/about' },
-    { label: 'Resources', path: '/resources' },
-    { label: 'Videos', path: '/videos' },
+    { label: 'About', path: '/about' },
+    { label: 'Our Programmes', path: '/', section: 'programmes' },
+    { label: 'How It Works', path: '/about' },
+    { label: 'Resources', path: '/support' },
+    { label: 'For Schools', path: '/support' },
+    { label: 'For Professionals', path: '/support' },
+    { label: 'Contact', path: '/support' },
   ];
 
   if (currentPath.startsWith('/admin')) return null;
@@ -125,9 +135,9 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
               const isActive = pathReady && currentPath === item.path;
               return (
                 <button
-                  key={item.path}
+                  key={item.label}
                   className={`ss-nav-link ${isActive ? 'is-active' : ''}`}
-                  onClick={() => go(item.path)}
+                  onClick={() => item.section ? goSection(item.section) : go(item.path)}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   {item.label}
@@ -202,7 +212,8 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
                 <button className="ss-signout-btn" onClick={() => handleLogout?.()}>Sign out</button>
               </>
             ) : (
-              <button className="ss-join-btn" onClick={() => go('/auth')}>Join Secret Sharz</button>
+              <button className="ss-login-btn" onClick={() => go('/auth')}>Log in</button>
+              <button className="ss-join-btn" onClick={() => go('/auth')}>Get Started <span aria-hidden="true">→</span></button>
             )}
           </div>
 
@@ -271,20 +282,22 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
         .ss-skip-link{position:fixed;left:16px;top:-100px;z-index:10000;background:#17352a;color:#fff;padding:12px 18px;border-radius:10px;font-weight:700;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.2)}
         .ss-skip-link:focus{top:16px;outline:3px solid #F4C95D;outline-offset:3px}
         .ss-header{position:sticky;top:0;z-index:3000;background:rgba(253,252,250,.96);border-bottom:1px solid rgba(30,40,32,.12);backdrop-filter:blur(16px)}
-        .ss-header-inner{max-width:1440px;margin:0 auto;min-height:72px;padding:10px 28px;display:flex;align-items:center;gap:24px}
+        .ss-header-inner{max-width:1480px;margin:0 auto;min-height:60px;padding:7px clamp(16px,3.5vw,42px);display:flex;align-items:center;gap:15px}
         .ss-brand{border:0;background:none;padding:4px;display:flex;align-items:center;cursor:pointer;border-radius:12px}
-        .ss-brand-logo{display:block;height:42px;width:auto}
-        .ss-desktop-nav{display:flex;align-items:center;gap:4px;margin-left:auto}
+        .ss-brand-logo{display:block;height:38px;width:auto}
+        .ss-desktop-nav{display:flex;align-items:center;gap:1px;margin-left:auto}
         .ss-nav-link,.ss-admin-link,.ss-signout-btn,.ss-text-btn{font:inherit;border:0;background:transparent;cursor:pointer}
-        .ss-nav-link{color:#33443a;font-size:14px;font-weight:650;padding:10px 12px;border-radius:10px}
+        .ss-nav-link{color:#344e4c;font-size:10px;font-weight:650;padding:9px 7px;border-radius:8px;white-space:nowrap}
         .ss-nav-link:hover,.ss-nav-link.is-active{background:#EBF4EE;color:#24583a}
         .ss-nav-link:focus-visible,.ss-admin-link:focus-visible,.ss-signout-btn:focus-visible,.ss-accessibility-btn:focus-visible,.ss-icon-btn:focus-visible,.ss-dashboard-btn:focus-visible,.ss-join-btn:focus-visible,.ss-menu-btn:focus-visible,.ss-mobile-link:focus-visible,.ss-mobile-join:focus-visible{outline:3px solid #1F6B46;outline-offset:3px}
         .ss-header-actions{display:flex;align-items:center;gap:8px}
         .ss-accessibility-btn{border:1px solid #9CAAA0;background:#fff;color:#26372d;border-radius:10px;padding:9px 11px;font-size:12px;font-weight:700;cursor:pointer}
         .ss-icon-btn{position:relative;width:42px;height:42px;border-radius:11px;border:1px solid #CBD5CE;background:#fff;color:#20352a;cursor:pointer;font-size:18px}
         .ss-alert-badge{position:absolute;right:-5px;top:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:#B42318;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
-        .ss-dashboard-btn,.ss-join-btn{border:0;background:#2E6B4A;color:#fff;border-radius:12px;padding:11px 16px;font-weight:800;cursor:pointer}
-        .ss-dashboard-btn:hover,.ss-join-btn:hover{background:#214F37}
+        .ss-dashboard-btn,.ss-join-btn{border:0;background:#064e4b;color:#fff;border-radius:10px;padding:10px 13px;font-size:10px;font-weight:800;white-space:nowrap;cursor:pointer}
+        .ss-login-btn{border:1px solid #6e9b96;background:#fff;color:#164c4b;border-radius:10px;padding:9px 13px;font-size:10px;font-weight:750;white-space:nowrap;cursor:pointer}
+        .ss-join-btn:hover{background:#043e3c}.ss-login-btn:hover{background:#f0f6f2}
+        .ss-dashboard-btn:hover{background:#043e3c}
         .ss-admin-link{color:#8A5B00;font-size:13px;font-weight:800;padding:9px}
         .ss-signout-btn{color:#7A2E2E;font-size:13px;font-weight:750;padding:9px}
         .ss-menu-btn{display:none;width:44px;height:44px;border-radius:11px;border:1px solid #CBD5CE;background:#fff;font-size:24px;cursor:pointer;color:#1E2820}
@@ -307,7 +320,7 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
         .ss-mobile-heading{display:flex;align-items:center;justify-content:space-between;font-family:Fraunces,serif;font-size:24px;font-weight:700;color:#24583a;margin-bottom:24px}
         .ss-mobile-nav{display:flex;flex-direction:column;gap:6px}.ss-mobile-link{border:0;background:transparent;text-align:left;color:#24342b;font:inherit;font-size:17px;font-weight:700;padding:14px 12px;border-radius:12px;cursor:pointer}.ss-mobile-link:hover,.ss-mobile-link.is-active{background:#EBF4EE;color:#24583a}.ss-mobile-link.danger{color:#8B2E2E}.ss-mobile-divider{height:1px;background:#DCE3DE;margin:18px 0}.ss-mobile-join{width:100%;border:0;background:#2E6B4A;color:#fff;border-radius:12px;padding:14px;font:inherit;font-weight:800;cursor:pointer;margin-top:8px}
         @media(max-width:1100px){.ss-desktop-nav{display:none}.ss-header-actions{margin-left:auto}.ss-menu-btn{display:block}}
-        @media(max-width:680px){.ss-header-inner{padding:10px 16px}.ss-brand-logo{height:38px}.ss-header-actions{gap:4px}.ss-accessibility-btn,.ss-admin-link,.ss-signout-btn{display:none}.ss-dashboard-btn,.ss-join-btn{padding:9px 12px;font-size:12px}}
+        @media(max-width:680px){.ss-header-inner{padding:8px 12px}.ss-brand-logo{height:34px}.ss-header-actions{gap:4px}.ss-accessibility-btn,.ss-admin-link,.ss-signout-btn{display:none}.ss-dashboard-btn,.ss-join-btn,.ss-login-btn{padding:8px 10px;font-size:10px}}
         @media(prefers-reduced-motion:reduce){.ss-header *{scroll-behavior:auto!important}}
       `}</style>
     </>
