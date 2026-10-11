@@ -20,7 +20,7 @@ export default function Footer({ navigate }) {
           </button>
           <p>A global platform for emotional wellbeing, learning support and career guidance.</p>
           <div className="ssf-socials" aria-label="Secret Sharz social media">
-            {social.map((item) => <a key={item.name} href={item.url} target="_blank" rel="noopener noreferrer" aria-label={\`Secret Sharz on \${item.name}\`}>{item.mark}</a>)}
+            {social.map((item) => <a key={item.name} href={item.url} target="_blank" rel="noopener noreferrer" aria-label={`Secret Sharz on ${item.name}`}>{item.mark}</a>)}
           </div>
         </div>
         <div className="ssf-column">
@@ -60,7 +60,7 @@ export default function Footer({ navigate }) {
         <span>© {new Date().getFullYear()} Secret Sharz. All rights reserved.</span>
         <span>People • Potential • Brighter Tomorrows</span>
       </div>
-      <style>{\`
+      <style>{`
         .ss-site-footer{background:#fffefa;color:#244541;border-top:1px solid #e8ebe2;padding:28px clamp(20px,4.2vw,64px) 14px;font-family:Arial,Helvetica,sans-serif}
         .ss-site-footer *{box-sizing:border-box}.ssf-inner{max-width:1420px;margin:0 auto;display:grid;grid-template-columns:1.55fr 1fr .88fr .98fr 1.05fr;gap:clamp(18px,2.6vw,38px);align-items:start}
         .ssf-brand{min-width:0}.ssf-logo-button{display:inline-flex;padding:0;border:0;background:none;cursor:pointer}.ssf-logo-button img{display:block;max-width:180px;width:100%;height:auto;max-height:44px;object-fit:contain;object-position:left center}
@@ -71,7 +71,7 @@ export default function Footer({ navigate }) {
         .ssf-bottom{max-width:1420px;margin:22px auto 0;padding-top:11px;border-top:1px solid #edf0e8;display:flex;justify-content:space-between;gap:12px;color:#8a9790;font-size:9px}
         @media(max-width:980px){.ssf-inner{grid-template-columns:repeat(3,minmax(0,1fr))}.ssf-brand{grid-column:span 2}.ssf-motto{border-left:0;border-top:1px solid #dbe3db;padding:18px 0 0;min-height:0}}
         @media(max-width:560px){.ss-site-footer{padding:26px 20px 14px}.ssf-inner{grid-template-columns:repeat(2,minmax(0,1fr));gap:23px 18px}.ssf-brand{grid-column:1 / -1}.ssf-motto{grid-column:1 / -1;border-top:1px solid #dbe3db}.ssf-bottom{flex-direction:column}.ssf-logo-button img{max-width:165px}}
-      \`}</style>
+      `}</style>
     </footer>
   );
 }
