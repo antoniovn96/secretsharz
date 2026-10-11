@@ -5,7 +5,7 @@ on:
         description: "Immutable SHA-tagged ECR image URI for secretsharz-nonprod in ap-southeast-2"
         required: true
         type: string
-        default: "${{ inputs.ecs_image_uri }}"
+        default: "078809710022.dkr.ecr.ap-southeast-2.amazonaws.com/secretsharz-nonprod:c216bb1831ce3ea27fb4b57d4c42b6f089f28b4e"
 
 permissions:
   contents: read
