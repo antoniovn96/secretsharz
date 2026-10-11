@@ -151,26 +151,31 @@ export default async function handler(req, res) {
       const ref = db.collection('websiteFeedbackInbox').doc(id);
       const snapshot = await ref.get();
       if (!snapshot.exists) return jsonError(res, 404, 'Feedback submission was not found.');
-      const data = snapshot.data();
-      if (action === 'publish' && data.allowPublication !== true) {
-        return jsonError(res, 409, 'This person did not give permission for public display.');
-      }
       const isFounder = moderator.email_verified === true && moderator.email === FOUNDER_EMAIL;
-      if (action === 'publish') {
-        await db.collection('websitePublicFeedback').doc(ref.id).set({
-          message: data.message || '',
-          displayName: data.displayName || 'Anonymous',
-          createdAt: data.createdAt || FieldValue.serverTimestamp(),
-          sourceSubmissionId: ref.id,
+      await db.runTransaction(async (transaction) => {
+        const latest = await transaction.get(ref);
+        if (!latest.exists) throw Object.assign(new Error('Feedback submission was not found.'), { status: 404 });
+        const data = latest.data();
+        if (action === 'publish' && data.allowPublication !== true) {
+          throw Object.assign(new Error('This person did not give permission for public display.'), { status: 409 });
+        }
+        const publicRef = db.collection('websitePublicFeedback').doc(ref.id);
+        if (action === 'publish') {
+          transaction.set(publicRef, {
+            message: data.message || '',
+            displayName: data.displayName || 'Anonymous',
+            createdAt: data.createdAt || FieldValue.serverTimestamp(),
+            sourceSubmissionId: ref.id,
+          });
+        } else {
+          transaction.delete(publicRef);
+        }
+        transaction.update(ref, {
+          status: action === 'publish' ? 'published' : 'rejected',
+          moderatedAt: FieldValue.serverTimestamp(),
+          moderatedBy: moderator.uid,
+          moderatorType: isFounder ? 'founder' : 'super_admin',
         });
-      } else {
-        await db.collection('websitePublicFeedback').doc(ref.id).delete().catch(() => {});
-      }
-      await ref.update({
-        status: action === 'publish' ? 'published' : 'rejected',
-        moderatedAt: FieldValue.serverTimestamp(),
-        moderatedBy: moderator.uid,
-        moderatorType: isFounder ? 'founder' : 'super_admin',
       });
       return res.status(200).json({ updated: true, status: action === 'publish' ? 'published' : 'rejected' });
     } catch (error) {
