@@ -113,7 +113,6 @@ if ($clusters -and $clusters.clusterArns) {
   foreach ($clusterArn in $clusters.clusterArns) {
     $services = Invoke-AwsJson -Arguments @("ecs", "list-services", "--cluster", $clusterArn, "--output", "json")
     if (-not $services -or -not $services.serviceArns -or $services.serviceArns.Count -eq 0) { continue }
-    $described = Invoke-AwsJson -Arguments @("ecs", "describe-services", "--cluster", $clusterArn, "--services") 
     # Describe each service separately to keep argument handling compatible across PowerShell versions.
     foreach ($serviceArn in $services.serviceArns) {
       $one = Invoke-AwsJson -Arguments @("ecs", "describe-services", "--cluster", $clusterArn, "--services", $serviceArn, "--output", "json")
