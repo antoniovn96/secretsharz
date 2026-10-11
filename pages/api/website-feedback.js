@@ -116,14 +116,12 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     if (req.query.view === 'published') {
       try {
-        const snapshot = await getAdminFirestore().collection('websiteFeedbackInbox').where('status', '==', 'published').orderBy('createdAt', 'desc').limit(6).get();
-        const items = snapshot.docs
-          .filter((doc) => doc.data().allowPublication === true)
-          .map((doc) => ({
-            id: doc.id,
-            message: doc.data().message || '',
-            displayName: doc.data().displayName || 'Anonymous',
-          }));
+        const snapshot = await getAdminFirestore().collection('websitePublicFeedback').orderBy('createdAt', 'desc').limit(6).get();
+        const items = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          message: doc.data().message || '',
+          displayName: doc.data().displayName || 'Anonymous',
+        }));
         return res.status(200).json({ items });
       } catch (error) {
         console.error('[website-feedback] published feedback lookup failed:', error?.message || 'unknown error');
@@ -158,6 +156,16 @@ export default async function handler(req, res) {
         return jsonError(res, 409, 'This person did not give permission for public display.');
       }
       const isFounder = moderator.email_verified === true && moderator.email === FOUNDER_EMAIL;
+      if (action === 'publish') {
+        await db.collection('websitePublicFeedback').doc(ref.id).set({
+          message: data.message || '',
+          displayName: data.displayName || 'Anonymous',
+          createdAt: data.createdAt || FieldValue.serverTimestamp(),
+          sourceSubmissionId: ref.id,
+        });
+      } else {
+        await db.collection('websitePublicFeedback').doc(ref.id).delete().catch(() => {});
+      }
       await ref.update({
         status: action === 'publish' ? 'published' : 'rejected',
         moderatedAt: FieldValue.serverTimestamp(),
