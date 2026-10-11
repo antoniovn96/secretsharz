@@ -71,6 +71,7 @@ export default function WebsiteFeedbackReview() {
             <p className="sfa-message">{item.message}</p>
             <div className="sfa-contact"><span><strong>Name:</strong> {item.displayName || 'Not provided'}</span><span><strong>Email:</strong> {item.email || 'Not provided'}</span><span><strong>Publication permission:</strong> {item.allowPublication ? 'Yes' : 'No'}</span></div>
             {item.status === 'pending' && <div className="sfa-actions">{item.allowPublication && <button type="button" disabled={busyId === item.id} onClick={() => moderate(item, 'publish')}>{busyId === item.id ? 'Saving…' : 'Approve & publish'}</button>}<button type="button" className="reject" disabled={busyId === item.id} onClick={() => moderate(item, 'reject')}>Reject</button></div>}
+            {item.status === 'published' && <div className="sfa-actions"><button type="button" className="reject" disabled={busyId === item.id} onClick={() => moderate(item, 'reject')}>{busyId === item.id ? 'Saving…' : 'Remove from public site'}</button></div>}
           </article>
         ))}</div>
       )}
