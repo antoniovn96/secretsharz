@@ -212,8 +212,10 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
                 <button className="ss-signout-btn" onClick={() => handleLogout?.()}>Sign out</button>
               </>
             ) : (
-              <button className="ss-login-btn" onClick={() => go('/auth')}>Log in</button>
-              <button className="ss-join-btn" onClick={() => go('/auth')}>Get Started <span aria-hidden="true">→</span></button>
+              <>
+                <button className="ss-login-btn" onClick={() => go('/auth')}>Log in</button>
+                <button className="ss-join-btn" onClick={() => go('/auth')}>Get Started <span aria-hidden="true">→</span></button>
+              </>
             )}
           </div>
 
