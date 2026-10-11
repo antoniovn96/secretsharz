@@ -1,9 +1,10 @@
 import React, { useEffect, useState, startTransition } from 'react';
 import SecretSharzApp from '../src/App';
-import FoundationHomepage from '../src/FoundationHomepage';
-import FrontDoorExperienceV2 from '../src/FrontDoorExperienceV2';
-import JourneyBridge from '../src/JourneyBridge';
 import LiveYouTubeSection from '../src/LiveYouTubeSection';
+import SecretSharzPublicHomepage from '../src/SecretSharzPublicHomepage';
+import ProgrammeLandingPage from '../src/ProgrammeLandingPage';
+import PublicFeedbackSection from '../src/PublicFeedbackSection';
+import WebsiteFeedbackReview from '../src/dashboards/admin/WebsiteFeedbackReview';
 import VideoLibraryPage from '../src/VideoLibraryPage';
 import SupportHub from '../src/SupportHub';
 import WayfinderPage from '../src/WayfinderPage';
@@ -70,6 +71,13 @@ export default function IndexPage() {
     const isAdmin=isFounder||userData?.role==='super_admin';
     const isParent=userData?.role==='parent';
     const isInstitutionCoordinator=userData?.role==='institution_member'&&userData?.institutionRole==='coordinator';
+    const handlePublicRouteLogout=async()=>{await signOut(auth);navigate('/')};
+
+    // Public subsidiary pages are intentionally separate from their dashboards.
+    const programmeRoute = path === '/sharz-spark' ? 'spark' : path === '/sharz-balance' ? 'balance' : path === '/sharz-compass' ? 'compass' : null;
+    if (programmeRoute) {
+      return <><Header navigate={navigate} currentUser={currentUser} handleLogout={handlePublicRouteLogout} isAdmin={isAdmin}/><ProgrammeLandingPage programme={programmeRoute} navigate={navigate} currentUser={currentUser}/><Footer navigate={navigate} currentUser={currentUser} handleLogout={handlePublicRouteLogout} setModal={()=>{}}/></>;
+    }
 
     // Do not route protected pages until Firebase Auth + the Firestore profile
     // have both resolved. This prevents the old role=undefined -> /dashboard
@@ -79,6 +87,11 @@ export default function IndexPage() {
     }
 
     if(currentUser&&consentChecked&&!accountConsent&&!isFounder)return <AccountConsentGate user={currentUser} onAccepted={()=>setAccountConsent(true)} onDecline={async()=>{await signOut(auth);navigate('/');}}/>;
+
+    if(path==='/dashboard/admin/website-feedback'){
+      if(!currentUser||!isAdmin){navigate('/auth');return null;}
+      return <><Header navigate={navigate} currentUser={currentUser} handleLogout={handlePublicRouteLogout} isAdmin={isAdmin}/><WebsiteFeedbackReview/><Footer navigate={navigate} currentUser={currentUser} handleLogout={handlePublicRouteLogout} setModal={()=>{}}/></>;
+    }
 
     // Professional service boundary: the outer router blocks cross-service
     // access before the legacy App router can mount another professional view.
@@ -152,5 +165,5 @@ export default function IndexPage() {
   }
 
   const isAdmin=userData?.role==='super_admin'||currentUser?.email?.toLowerCase()===MASTER_EMAIL;const handleLogout=async()=>{await signOut(auth);navigate('/')};
-  return <><Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin}/><FrontDoorExperienceV2 navigate={navigate} currentUser={currentUser}/><JourneyBridge navigate={navigate} currentUser={currentUser}/><FoundationHomepage navigate={navigate} currentUser={currentUser}/><LiveYouTubeSection navigate={navigate}/><style>{`.ss-foundation-page .ss-fh-video{display:none!important}`}</style><Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={()=>{}}/></>;
+  return <><Header navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} isAdmin={isAdmin}/><SecretSharzPublicHomepage navigate={navigate}/><LiveYouTubeSection navigate={navigate}/><PublicFeedbackSection/><Footer navigate={navigate} currentUser={currentUser} handleLogout={handleLogout} setModal={()=>{}}/></>;
 }
