@@ -45,8 +45,8 @@ export default function WebsiteFeedbackReview() {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Could not update the submission.');
-      setNotice(action === 'publish' ? 'Feedback published.' : 'Feedback rejected.');
       await load();
+      setNotice(action === 'publish' ? 'Feedback published.' : 'Feedback rejected.');
     } catch (error) {
       setNotice(error.message || 'Could not update the submission.');
     } finally {
