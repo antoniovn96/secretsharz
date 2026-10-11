@@ -90,11 +90,12 @@ export default function Header({ navigate, currentUser, handleLogout, isAdmin })
 
   const navItems = [
     { label: 'Home', path: '/' },
-    { label: 'Support', path: '/mindspace' },
-    { label: 'Career', path: '/vidyavantage' },
-    { label: 'Community', path: '/wall' },
+    { label: 'Sharz Spark', path: '/sharz-spark' },
+    { label: 'Sharz Balance', path: '/sharz-balance' },
+    { label: 'Sharz Compass', path: '/sharz-compass' },
+    { label: 'How it works', path: '/about' },
     { label: 'Resources', path: '/resources' },
-    { label: 'About', path: '/about' },
+    { label: 'Videos', path: '/videos' },
   ];
 
   if (currentPath.startsWith('/admin')) return null;
